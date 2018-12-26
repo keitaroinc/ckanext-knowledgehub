@@ -6,7 +6,7 @@ from ckan.model.domain_object import DomainObject
 from sqlalchemy import types, ForeignKey, Column, Table, desc
 
 
-class AnalysisFramework(DomainObject):
+class AnalyticalFramework(DomainObject):
 
     @classmethod
     def get_all(cls, limit=5):
@@ -14,8 +14,8 @@ class AnalysisFramework(DomainObject):
         return obj.limit(limit).all()
 
 
-analysis_framework_table = Table(
-    'analysis_framework',
+analytical_framework_table = Table(
+    'analytical_framework',
     metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('theme', types.UnicodeText),
@@ -26,8 +26,8 @@ analysis_framework_table = Table(
 )
 
 mapper(
-    AnalysisFramework,
-    analysis_framework_table,
+    AnalyticalFramework,
+    analytical_framework_table,
 )
 
 def af_db_setup():
