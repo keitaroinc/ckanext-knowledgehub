@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This package contains knowledfehub's data models
+"""This package contains knowledgehub's data models
 """
 
 from ckanext.knowledgehub.model.analysis_framework import (AnalysisFramework,
