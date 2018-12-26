@@ -2,11 +2,11 @@
 """This package contains knowledgehub's data models
 """
 
-from ckanext.knowledgehub.model.analysis_framework import (AnalysisFramework,
+from ckanext.knowledgehub.model.analytical_framework import (AnalyticalFramework,
                                                            af_db_setup)
 
 
 __all__ = (
-    'AnalysisFramework',
+    'AnalyticalFramework',
     'af_db_setup'
 )
