@@ -1,4 +1,6 @@
 from ckan import model
+from ckan.common import _
+import ckan.logic as logic
 from ckan.model.meta import metadata, mapper, Session
 from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
@@ -12,6 +14,17 @@ class AnalyticalFramework(DomainObject):
     def get_all(cls, limit=5):
         obj = Session.query(cls).autoflush(False)
         return obj.limit(limit).all()
+
+    @classmethod
+    def delete(cls, id):
+        query = {'id': id}
+        obj = Session.query(cls).filter_by(**query).first()
+        if obj:
+            Session.delete(obj)
+            Session.commit()
+        else:
+            raise logic.NotFound(_('analytical framework'))
+
 
 
 analytical_framework_table = Table(
