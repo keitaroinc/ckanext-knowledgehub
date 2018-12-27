@@ -1,0 +1,319 @@
+@bootstrap-path: "../node_modules/bootstrap/less/";
+@gray-line: #ececec;
+@text-gray: #99938b;
+@group-icon-size: 90px;
+//** Resources
+@resource-list-actions-border: 1px solid #ccc;
+// @imagePath: "../../../../base/images";
+/*!
+ * Bootstrap v3.3.7 (http://getbootstrap.com)
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ */
+
+// Core variables and mixins
+@import "_bootstrap-variables.less";
+@import "@{bootstrap-path}mixins.less";
+// Reset and dependencies
+@import "@{bootstrap-path}normalize.less";
+@import "@{bootstrap-path}print.less";
+// @import "@{bootstrap-path}glyphicons.less";
+// Core CSS
+@import "@{bootstrap-path}scaffolding.less";
+@import "@{bootstrap-path}type.less";
+@import "@{bootstrap-path}code.less";
+@import "@{bootstrap-path}grid.less";
+@import "@{bootstrap-path}tables.less";
+@import "@{bootstrap-path}forms.less";
+@import "@{bootstrap-path}buttons.less";
+// Components
+@import "@{bootstrap-path}component-animations.less";
+@import "@{bootstrap-path}dropdowns.less";
+@import "@{bootstrap-path}button-groups.less";
+@import "@{bootstrap-path}input-groups.less";
+@import "@{bootstrap-path}navs.less";
+@import "@{bootstrap-path}navbar.less";
+@import "@{bootstrap-path}breadcrumbs.less";
+@import "@{bootstrap-path}pagination.less";
+@import "@{bootstrap-path}pager.less";
+@import "@{bootstrap-path}labels.less";
+@import "@{bootstrap-path}badges.less";
+@import "@{bootstrap-path}jumbotron.less";
+@import "@{bootstrap-path}thumbnails.less";
+@import "@{bootstrap-path}alerts.less";
+@import "@{bootstrap-path}progress-bars.less";
+@import "@{bootstrap-path}media.less";
+@import "@{bootstrap-path}list-group.less";
+@import "@{bootstrap-path}panels.less";
+@import "@{bootstrap-path}responsive-embed.less";
+@import "@{bootstrap-path}wells.less";
+@import "@{bootstrap-path}close.less";
+// Components w/ JavaScript
+@import "@{bootstrap-path}modals.less";
+@import "@{bootstrap-path}tooltip.less";
+@import "@{bootstrap-path}popovers.less";
+@import "@{bootstrap-path}carousel.less";
+// Utility classes
+@import "@{bootstrap-path}utilities.less";
+@import "@{bootstrap-path}responsive-utilities.less";
+/* Custom CSS */
+
+@import "_flex.less";
+@import "_mixins.less";
+@import "_buttons.less";
+@import "_hero.less";
+/* Override Bootstrap 3 default */
+
+.radio input[type="radio"],
+.radio-inline input[type="radio"],
+.checkbox input[type="checkbox"],
+.checkbox-inline input[type="checkbox"] {
+  position: static;
+  margin-left: auto;
+}
+
+/* .toolbar */
+
+.toolbar {
+  .breadcrumb {
+    font-size: @font-size-base;
+  }
+}
+
+/* .account-masthead */
+
+.account-masthead {
+  background: @brand-primary;
+  .account {
+    ul {
+      li {
+        border-left: none;
+        a {
+          color: @gray-lighter;
+          &:hover {
+            color: @white;
+            background-color: transparent;
+          }
+        }
+      }
+    }
+    .notifications {
+      a {
+        span {
+          &.badge {
+            background-color: @gray-base;
+            color: @white;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* .masthead */
+
+.masthead {
+  background: @brand-primary;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  color: inherit;
+  .logo {
+    display: inline-block;
+    margin-bottom: @grid-gutter-width / 1.5;
+    img {
+      max-height: @grid-gutter-width+20;
+      max-width: 100%;
+    }
+  }
+  .debug {
+    top: -30px;
+    display: inline-block;
+    font-size: smaller;
+    opacity: 0.3;
+  }
+  hgroup {
+    h1 {
+      margin: @grid-gutter-width / 3 0;
+    }
+    h2 {
+      .text-muted;
+      position: static;
+      margin: (@grid-gutter-width - 10) @grid-gutter-width / 2;
+    }
+  }
+  a {
+    color: @brand-primary;
+  }
+  input[type="text"] {
+    border-color: @input-border;
+    &:focus {
+      border-color: @input-border-focus;
+    }
+  }
+
+  .navigation {
+    font-size: @font-size-large;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    .nav-pills {
+      li {
+        &.active {
+          a {
+            color: @brand-accent;
+            background-color: transparent;
+          }
+        }
+        a {
+          &:hover,
+          &:focus,
+          &:active {
+            color: @brand-accent;
+            background-color: transparent;
+          }
+        }
+      }
+    }
+  }
+}
+
+[role="main"] {
+  background: @white;
+  &:nth-child(odd) {
+    background: @white;
+  }
+}
+
+.navbar-toggle {
+  color: lighten(@brand-primary, 60%);
+  background-color: @brand-primary;
+  &:hover {
+    background-color: darken(@brand-primary, 5%);
+  }
+}
+.homepage .stats ul li {
+  a {
+    color: @white;
+    font-size: large;
+
+    &:hover {
+      color: @brand-accent;
+    }
+  }
+  span {
+    color: @brand-accent;
+    font-size: larger;
+  }
+}
+
+.box {
+  background-color: transparent;
+  border: transparent;
+  border-radius: 0px;
+}
+.homepage {
+  .hero {
+    // Override must be more specific.
+    padding: 0;
+  }
+}
+
+.primary {
+  img {
+    max-width: 100%;
+    height: auto !important; // required for inlined heights
+  }
+}
+
+/* .datasets-page */
+
+.stages li.active .highlight {
+  background: lighten(@brand-primary, 40%);
+}
+
+/* .site-footer */
+
+.site-footer {
+  padding-top: @grid-gutter-width;
+  padding-bottom: @grid-gutter-width;
+  background: @gray-base;
+  color: @gray-lighter;
+  a {
+    color: inherit;
+  }
+  hr {
+    border-top-color: @gray-light;
+  }
+  dt {
+    margin-bottom: @grid-gutter-width / 6;
+  }
+  dd {
+    margin-bottom: @grid-gutter-width / 3;
+  }
+  .title {
+    color: @white;
+    margin-bottom: @grid-gutter-width / 2;
+  }
+  .btn {
+    border-color: transparent;
+  }
+}
+
+.list-logos {
+  &,
+  li {
+    .flex;
+  }
+  li {
+    .justify-content-between;
+    flex-grow: 1;
+    margin: @grid-gutter-width / 2 auto;
+  }
+  a {
+    .flex;
+    .flex-wrap;
+    .align-items-center;
+    .justify-content-center;
+    flex-basis: 100%;
+    flex-shrink: 1;
+    padding: @grid-gutter-width / 2;
+    background: @white;
+    border-radius: @border-radius-large*2;
+  }
+}
+
+.footer-links {
+  ul {
+    .list-unstyled;
+  }
+  dt {
+    &:after {
+      content: ":";
+    }
+  }
+}
+
+.footer-nav {
+  .title,
+  ul,
+  ol {
+    .text-uppercase;
+  }
+  ul {
+    li {
+      .font-awesome("\f0da", @brand-warning);
+    }
+  }
+}
+
+.attribution {
+  .text-right;
+  .ckan-footer-logo {
+    text-align: left;
+    display: inline-block;
+    margin: 0 @grid-gutter-width / 3;
+  }
+}
+
+/* Media queries */
+
+/* Up to the small size breakpoint */

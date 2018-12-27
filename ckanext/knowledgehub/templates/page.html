@@ -1,0 +1,39 @@
+{% ckan_extends %}
+
+{%- block content %}
+  {% block maintag %}{{ super() }}{% endblock %}
+    <div id="content" class="container-fluid">
+      <div class="row">
+        <div class="col-lg-10 col-lg-offset-1">
+          {% block main_content %}
+            {% block flash %}
+              {{ super() }}
+            {% endblock %}
+
+            {% block toolbar %}
+              {{ super() }}
+            {% endblock %}
+
+            <div class="row {% if self.secondary()|trim == '' or c.action=='resource_read' %} no-nav{% endif %}">
+              {#
+              The pre_primary block can be used to add content to before the
+              rendering of the main content columns of the page.
+              #}
+              {% block pre_primary %}
+                {{ super() }}
+              {% endblock %}
+
+              {% block secondary %}
+                {{ super() }}
+              {% endblock %}
+
+              {% block primary %}
+                {{ super() }}
+              {% endblock %}
+            </div>
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock -%}

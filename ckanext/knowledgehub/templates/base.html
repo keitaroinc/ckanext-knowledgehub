@@ -1,0 +1,11 @@
+{% ckan_extends %} {% set locale_root = h.url_for('/', qualified=true) %} {%
+block links %}
+
+{{ super() }}
+
+<link
+  href="https://fonts.googleapis.com/css?family=Lato:400,700,900"
+  rel="stylesheet"
+/>
+{% endblock %} {% block styles %} {{ super() }} {% resource
+'knowledgehub/css/main.css' %} {% endblock %}
