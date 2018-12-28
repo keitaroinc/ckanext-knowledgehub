@@ -1,0 +1,22 @@
+{
+  "name": "knowledgehub",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^5.0.0",
+    "gulp-clean-css": "^3.9.4",
+    "gulp-less": "^3.5.0",
+    "npm": "^6.0.1"
+  },
+  "devDependencies": {
+    "bootstrap": "^3.4.0",
+    "less": "^2.7.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Miroslav Gruevski Miro",
+  "license": "ISC"
+}

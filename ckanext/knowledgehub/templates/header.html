@@ -1,0 +1,39 @@
+{% ckan_extends %} {% block header_wrapper %} {% block header_account %}
+<header class="account-masthead">
+  <div class="container-fluid">
+    {% block header_account_container_content %} {{ super() }} {% endblock %}
+  </div>
+</header>
+{% endblock %}
+<header class="navbar navbar-static-top masthead">
+  {% block header_debug %} {% if g.debug and not g.debug_supress_header %}
+  <div class="debug">
+    Controller : {{ c.controller }}<br />Action : {{ c.action }}
+  </div>
+  {% endif %} {% endblock %}
+  <div class="container-fluid">
+    <div class="navbar-right">
+      <button data-target="#main-navigation-toggle" data-toggle="collapse" class="navbar-toggle collapsed" type="button">
+        <span class="fa fa-bars"></span>
+      </button>
+    </div>
+    <hgroup class="{{ g.header_class }} navbar-left">
+      {% block header_logo %} {{ super() }} {% endblock %}
+    </hgroup>
+
+    <div class="collapse navbar-collapse" id="main-navigation-toggle">
+      {% block header_site_navigation %}
+      <nav class="section navigation">
+            <ul class="nav nav-pills">
+      {% block header_site_navigation_tabs %} {{ h.build_nav_main( ('analytical_framework.search', _('Analytical Framework')), ('search', _('Datasets')), ('organizations_index', _('Organizations')),
+      ('group_index', _('Groups')), ('home.about', _('About')) ) }} {% endblock %}
+             </ul>
+      </nav>
+      {% endblock %}
+      {% block header_site_search %}
+      {{ super() }}
+      {% endblock %}
+    </div>
+  </div>
+</header>
+{% endblock %}
