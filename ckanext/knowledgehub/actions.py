@@ -6,6 +6,7 @@ from ckan.logic import (check_access,
 
 from ckanext.knowledgehub.model import AnalyticalFramework
 
+
 @toolkit.side_effect_free
 def analytical_framework_delete(context, data_dict):
     try:
@@ -20,3 +21,15 @@ def analytical_framework_delete(context, data_dict):
         raise
 
     return 'OK'
+
+
+@toolkit.side_effect_free
+def analytical_framework_list(context, data_dict):
+    check_access('analytical_framework_list', context, data_dict)
+
+    limit = data_dict.get('limit', None)
+
+    if limit:
+        return AnalyticalFramework.get_all(limit=limit)
+    else:
+        return AnalyticalFramework.get_all()

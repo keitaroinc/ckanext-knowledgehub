@@ -23,14 +23,16 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
         af_db_setup()
         return config
 
-    # IActions
+   # IActions
     def get_actions(self):
         return {
             'analytical_framework_delete': knowledgehub_actions.analytical_framework_delete,
+            'analytical_framework_list': knowledgehub_actions.analytical_framework_list,
         }
 
     # IAuthFunctions
     def get_auth_functions(self):
         return {
             'analytical_framework_delete': knowledgehub_auth.analytical_framework_delete,
+            'analytical_framework_list': knowledgehub_actions.analytical_framework_list,
         }

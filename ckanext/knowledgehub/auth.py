@@ -12,3 +12,7 @@ def analytical_framework_delete(context, data_dict):
         raise NotAuthorized(_('authenticated user must have KHA role'))
 
     return {'success': True}
+
+
+def analytical_framework_list(context, data_dict):
+    return {'success': True}
