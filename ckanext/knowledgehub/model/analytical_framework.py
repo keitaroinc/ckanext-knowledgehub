@@ -45,4 +45,3 @@ mapper(
 
 def af_db_setup():
     metadata.create_all(model.meta.engine)
-

@@ -3,8 +3,13 @@ from ckan.plugins import toolkit
 from ckan.logic import (check_access,
                         NotAuthorized,
                         NotFound)
+import ckan.lib.navl.dictization_functions
 
 from ckanext.knowledgehub.model import AnalyticalFramework
+
+from pprint import pprint as pprint
+
+_table_dictize = ckan.lib.dictization.table_dictize
 
 
 @toolkit.side_effect_free
@@ -25,11 +30,13 @@ def analytical_framework_delete(context, data_dict):
 
 @toolkit.side_effect_free
 def analytical_framework_list(context, data_dict):
-    check_access('analytical_framework_list', context, data_dict)
-
-    limit = data_dict.get('limit', None)
-
+    limit = data_dict.get('limit')
+    af_list = []
     if limit:
-        return AnalyticalFramework.get_all(limit=limit)
+        af_db_list = AnalyticalFramework.get_all(limit=limit)
     else:
-        return AnalyticalFramework.get_all()
+        af_db_list = AnalyticalFramework.get_all()
+
+    for entry in af_db_list:
+        af_list.append(_table_dictize(entry, context))
+    return af_list
