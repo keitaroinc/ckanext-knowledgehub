@@ -1,0 +1,83 @@
+
+
+.site-footer {
+  padding-top: @grid-gutter-width;
+  padding-bottom: @grid-gutter-width;
+  background: @gray-base;
+  color: @gray-lighter;
+  a {
+    color: inherit;
+  }
+  hr {
+    border-top-color: @gray-light;
+  }
+  dt {
+    margin-bottom: @grid-gutter-width / 6;
+  }
+  dd {
+    margin-bottom: @grid-gutter-width / 3;
+  }
+  .title {
+    color: @white;
+    margin-bottom: @grid-gutter-width / 2;
+  }
+  .btn {
+    border-color: transparent;
+  }
+}
+
+.list-logos {
+  &,
+  li {
+    .flex;
+  }
+  li {
+    .justify-content-between;
+    flex-grow: 1;
+    margin: @grid-gutter-width / 2 auto;
+  }
+  a {
+    .flex;
+    .flex-wrap;
+    .align-items-center;
+    .justify-content-center;
+    flex-basis: 100%;
+    flex-shrink: 1;
+    padding: @grid-gutter-width / 2;
+    background: @white;
+    border-radius: @border-radius-large*2;
+  }
+}
+
+.footer-links {
+  ul {
+    .list-unstyled;
+  }
+  dt {
+    &:after {
+      content: ":";
+    }
+  }
+}
+
+.footer-nav {
+  .title,
+  ul,
+  ol {
+    .text-uppercase;
+  }
+  ul {
+    li {
+      .font-awesome("\f0da", @brand-warning);
+    }
+  }
+}
+
+.attribution {
+  .text-right;
+  .ckan-footer-logo {
+    text-align: left;
+    display: inline-block;
+    margin: 0 @grid-gutter-width / 3;
+  }
+}
