@@ -23,7 +23,7 @@ class AnalyticalFramework(DomainObject):
             Session.delete(obj)
             Session.commit()
         else:
-            raise logic.NotFound(_('analytical framework'))
+            raise logic.NotFound
 
 
 

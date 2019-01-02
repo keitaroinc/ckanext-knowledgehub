@@ -35,9 +35,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
     def get_auth_functions(self):
         return {
             'analytical_framework_delete': knowledgehub_auth.analytical_framework_delete,
-            'analytical_framework_list': knowledgehub_actions.analytical_framework_list,
+            'analytical_framework_list': knowledgehub_auth.analytical_framework_list,
         }
-      
+
     # IBlueprint
     def get_blueprint(self):
         return _register_blueprints()

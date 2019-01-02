@@ -1,13 +1,9 @@
 from ckan.common import _
 from ckan.plugins import toolkit
-from ckan.logic import (check_access,
-                        NotAuthorized,
-                        NotFound)
+import ckan.logic as logic
 import ckan.lib.navl.dictization_functions
 
 from ckanext.knowledgehub.model import AnalyticalFramework
-
-from pprint import pprint as pprint
 
 _table_dictize = ckan.lib.dictization.table_dictize
 
@@ -15,15 +11,15 @@ _table_dictize = ckan.lib.dictization.table_dictize
 @toolkit.side_effect_free
 def analytical_framework_delete(context, data_dict):
     try:
-        check_access('analytical_framework_delete', context, data_dict)
-    except:
-        raise
+        logic.check_access('analytical_framework_delete', context, data_dict)
+    except logic.NotAuthorized:
+        raise logic.NotAuthorized(_(u'Need to be system administrator to administer'))
 
     af_id = data_dict.get('id', '')
     try:
         AnalyticalFramework.delete(af_id)
-    except:
-        raise
+    except logic.NotFound:
+        raise logic.NotFound(_(u'analytical framework'))
 
     return 'OK'
 
