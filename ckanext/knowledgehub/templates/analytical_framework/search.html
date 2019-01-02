@@ -5,5 +5,21 @@
 {% block subtitle %}{{ _("Analytical Framework") }}{% endblock %}
 
 {% block breadcrumb_content %}
-  <li class="active">{{ h.nav_link(_('Analytical Framework'), named_route='analytical_framework.search',) }}</li>
+  <li class="active">{{ h.nav_link(_('Analytical Framework'), named_route='analytical_framework.search') }}</li>
+{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+{% block page_primary_action %}
+
+  {% if h.check_access('organization_create') %}
+
+    {% link_for _('Add Analytical Framework'), named_route='analytical_framework.new', class_='btn btn-primary', icon='plus-square' %}
+
+  {% endif %}
+
+{% endblock %}
+
+{% block secondary_content %}
+  {% snippet "analytical_framework/snippets/helper.html" %}
 {% endblock %}
