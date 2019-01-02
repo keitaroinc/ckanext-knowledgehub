@@ -26,13 +26,16 @@ def analytical_framework_delete(context, data_dict):
 
 @toolkit.side_effect_free
 def analytical_framework_list(context, data_dict):
-    limit = data_dict.get('limit')
+    page_size = int(data_dict.get('pageSize', 10))
+    page = int(data_dict.get('page', 1))
+    offset = (page - 1) * page_size
     af_list = []
-    if limit:
-        af_db_list = AnalyticalFramework.get_all(limit=limit)
-    else:
-        af_db_list = AnalyticalFramework.get_all()
+
+    af_db_list = AnalyticalFramework.get(limit=page_size, offset=offset, order_by='createdAt desc')
 
     for entry in af_db_list:
         af_list.append(_table_dictize(entry, context))
-    return af_list
+
+    total = len(AnalyticalFramework.get())
+
+    return {'total': total, 'page': page, 'pageSize': page_size, 'data': af_list}
