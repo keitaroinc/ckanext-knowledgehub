@@ -1,9 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
-from ckanext.knowledgehub.model import af_db_setup
-from ckanext.knowledgehub import actions as knowledgehub_actions
-from ckanext.knowledgehub import auth as knowledgehub_auth
 from ckanext.knowledgehub.helpers import _register_blueprints
 
 class KnowledgehubPlugin(plugins.SingletonPlugin):
