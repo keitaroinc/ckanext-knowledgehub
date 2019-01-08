@@ -54,8 +54,8 @@ class CreateView(MethodView):
             u'save': self._is_save()
         }
         try:
-            check_access(u'package_create', context)
-        except NotAuthorized:
+            logic.check_access(u'package_create', context)
+        except logic.NotAuthorized:
             return base.abort(403, _(u'Unauthorized to create a package'))
         return context
 

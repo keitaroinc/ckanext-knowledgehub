@@ -8,26 +8,6 @@
 .. image:: https://coveralls.io/repos/duskobogdanovski/ckanext-knowledgehub/badge.svg
   :target: https://coveralls.io/r/duskobogdanovski/ckanext-knowledgehub
 
-.. image:: https://pypip.in/download/ckanext-knowledgehub/badge.svg
-    :target: https://pypi.python.org/pypi//ckanext-knowledgehub/
-    :alt: Downloads
-
-.. image:: https://pypip.in/version/ckanext-knowledgehub/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-knowledgehub/
-    :alt: Latest Version
-
-.. image:: https://pypip.in/py_versions/ckanext-knowledgehub/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-knowledgehub/
-    :alt: Supported Python versions
-
-.. image:: https://pypip.in/status/ckanext-knowledgehub/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-knowledgehub/
-    :alt: Development Status
-
-.. image:: https://pypip.in/license/ckanext-knowledgehub/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-knowledgehub/
-    :alt: License
-
 =============
 ckanext-knowledgehub
 =============

@@ -5,12 +5,15 @@ import inspect
 
 from flask import Blueprint
 
+
 log = logging.getLogger(__name__)
+
 
 def _register_blueprints():
     u'''Return all blueprints defined in the `views` folder
     '''
     blueprints = []
+
     def is_blueprint(mm):
         return isinstance(mm, Blueprint)
 
@@ -22,3 +25,25 @@ def _register_blueprints():
             blueprints.append(blueprint[1])
             log.debug(u'Registered blueprint: {0!r}'.format(blueprint[0]))
     return blueprints
+
+
+def _get_functions(module_root, functions={}):
+    u'''
+     Helper function that scans extension
+     specified dir for all functions.
+     '''
+    for module_name in ['create', 'update', 'delete', 'get']:
+        module_path = '%s.%s' % (module_root, module_name,)
+
+        module = __import__(module_path)
+
+        for part in module_path.split('.')[1:]:
+            module = getattr(module, part)
+
+        for key, value in module.__dict__.items():
+            if not key.startswith('_') \
+                    and (hasattr(value, '__call__')
+                         and (value.__module__ == module_path)):
+                functions[key] = value
+
+    return functions
