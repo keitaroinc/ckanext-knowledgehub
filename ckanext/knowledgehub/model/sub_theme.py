@@ -20,9 +20,48 @@ sub_themes_table = None
 class SubThemes(DomainObject):
 
     @classmethod
-    def get(cls, limit=10):
-        obj = Session.query(cls).autoflush(False)
-        return obj.limit(limit).all()
+    def get(cls, **kwargs):
+        limit = kwargs.get('limit')
+        offset = kwargs.get('offset')
+        order_by = kwargs.get('order_by')
+
+        kwargs.pop('limit', None)
+        kwargs.pop('offset', None)
+        kwargs.pop('order_by', None)
+
+        query = Session.query(cls).autoflush(False)
+        query = query.filter_by(**kwargs)
+
+        if order_by:
+            column = order_by.split(' ')[0]
+            order = order_by.split(' ')[1]
+            query.order_by("%s %s" % (column, order))
+
+        if limit:
+            query = query.limit(limit)
+
+        if offset:
+            query = query.offset(offset)
+
+        return query
+
+    @classmethod
+    def update(cls, filter, data):
+        obj = Session.query(cls).filter_by(**filter).update(data)
+        Session.commit()
+
+        return obj
+
+    @classmethod
+    def delete(cls, id):
+        query = {'id': id}
+        obj = Session.query(cls).filter_by(**query).first()
+        if obj:
+            Session.delete(obj)
+            Session.commit()
+        else:
+            raise logic.NotFound
+
 
 sub_themes_table = Table(
     'sub_themes',
