@@ -11,7 +11,7 @@ from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
 
 
-df = lib.navl.dictization_functions
+_df = lib.navl.dictization_functions
 
 
 @toolkit.side_effect_free
@@ -21,7 +21,7 @@ def sub_theme_create(context, data_dict):
     except logic.NotAuthorized:
         raise logic.NotAuthorized(_(u'Need to be system administrator to administer'))
 
-    data, errors = df.validate(data_dict, knowledgehub_schema.sub_theme_create(), context)
+    data, errors = _df.validate(data_dict, knowledgehub_schema.sub_theme_create(), context)
     if errors:
         raise logic.ValidationError(errors)
 
