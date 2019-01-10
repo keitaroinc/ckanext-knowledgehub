@@ -14,3 +14,15 @@ def research_question_show(context, data_dict):
         raise toolkit.NotFound
 
     return _table_dictize(rq, context)
+
+
+@toolkit.side_effect_free
+def research_question_list(context, data_dict):
+    rq_list = []
+
+    rq_db_list = ResearchQuestion.all()
+
+    for e in rq_db_list:
+        rq_list.append(_table_dictize(e, context))
+
+    return rq_list
