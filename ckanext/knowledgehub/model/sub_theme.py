@@ -47,15 +47,15 @@ class SubThemes(DomainObject):
 
     @classmethod
     def update(cls, filter, data):
-        obj = Session.query(cls).filter_by(**filter).update(data)
+        obj = Session.query(cls).filter_by(**filter)
+        obj.update(data)
         Session.commit()
 
-        return obj
+        return obj.first()
 
     @classmethod
-    def delete(cls, id):
-        query = {'id': id}
-        obj = Session.query(cls).filter_by(**query).first()
+    def delete(cls, filter):
+        obj = Session.query(cls).filter_by(**filter).first()
         if obj:
             Session.delete(obj)
             Session.commit()
