@@ -2,10 +2,11 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
 import ckanext.knowledgehub.helpers as h
+from ckanext.knowledgehub.model.theme import theme_db_setup
 
 from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.model.research_question import setup as research_question_db_setup
-
+from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin):
@@ -14,6 +15,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
+    plugins.implements(plugins.IConfigurable)
 
     # IConfigurer
     def update_config(self, config_):
@@ -23,6 +25,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
 
     # IConfigurable
     def configure(self, config):
+        # Initialize DB
+        theme_db_setup()
+        sub_theme_db_setup()
         research_question_db_setup()
         return config
 

@@ -11,19 +11,19 @@ log = logging.getLogger(__name__)
 
 
 __all__ = [
-    'ResearchQuestion', 'research_question_table',
+    'ResearchQuestion', 'research_question',
 ]
 
-research_question_table = None
+research_question = None
 
 
 def setup():
-    if research_question_table is None:
+    if research_question is None:
         define_research_question_table()
         log.debug('research_question table defined in memory')
 
-        if not research_question_table.exists():
-            research_question_table.create()
+        if not research_question.exists():
+            research_question.create()
     else:
         log.debug('research_question table already exist')
 
@@ -31,15 +31,30 @@ def setup():
 class ResearchQuestion(DomainObject):
 
     @classmethod
-    def get(cls, id):
-        kwds = {'id': id}
-        o = Session.query(cls).autoflush(False)
-        o = o.filter_by(**kwds).first()
-        if o:
-            return o
-        else:
-            raise toolkit.ObjectNotFound
+    def get(cls, **kwargs):
+        limit = kwargs.get('limit')
+        offset = kwargs.get('offset')
+        order_by = kwargs.get('order_by')
 
+        kwargs.pop('limit', None)
+        kwargs.pop('offset', None)
+        kwargs.pop('order_by', None)
+
+        query = Session.query(cls).autoflush(False)
+        query = query.filter_by(**kwargs)
+
+        if order_by:
+            column = order_by.split(' ')[0]
+            order = order_by.split(' ')[1]
+            query.order_by("%s %s" % (column, order))
+
+        if limit:
+            query = query.limit(limit)
+
+        if offset:
+            query = query.offset(offset)
+
+        return query
 
     @classmethod
     def search(cls, text_query):
@@ -72,11 +87,11 @@ class ResearchQuestion(DomainObject):
 
 
 def define_research_question_table():
-    global research_question_table
-    research_question_table = Table('research_question', metadata,
+    global research_question
+    research_question = Table('research_question', metadata,
                                     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
                                     Column('theme', types.UnicodeText, ForeignKey('theme.id')),
-                                    Column('sub_theme', types.UnicodeText, ForeignKey('sub_theme.id')),
+                                    Column('sub_theme', types.UnicodeText, ForeignKey('sub_themes.id')),
                                     Column('content', types.UnicodeText),
                                     Column('author', types.UnicodeText, ForeignKey('user.id')),
                                     Column('created', types.DateTime, default=datetime.datetime.now),
@@ -86,5 +101,5 @@ def define_research_question_table():
 
     mapper(
         ResearchQuestion,
-        research_question_table
+        research_question
     )
