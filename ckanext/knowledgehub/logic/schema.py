@@ -17,14 +17,14 @@ def theme_schema():
                  unicode],
         'title': [not_empty, unicode],
         'description': [ignore_missing, unicode],
-        'created': [ignore_missing, isodate],
-        'modified': [ignore_missing, isodate],
+        'created_at': [ignore_missing, isodate],
+        'modified_at': [ignore_missing, isodate],
     }
 
 
 def sub_theme_create():
     return {
-        'name': [not_empty, unicode],
+        'name': [not_empty, name_validator, unicode],
         'description': [ignore_empty, unicode],
         'theme_id': [not_empty, unicode]
     }
@@ -32,7 +32,7 @@ def sub_theme_create():
 
 def sub_theme_update():
     return {
-        'name': [not_empty, unicode],
+        'name': [not_empty, name_validator, unicode],
         'description': [ignore_empty, unicode],
         'theme_id': [not_empty, unicode]
     }

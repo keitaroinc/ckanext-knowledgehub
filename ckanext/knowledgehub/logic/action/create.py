@@ -56,8 +56,8 @@ def theme_create(context, data_dict):
     for item in items:
         setattr(theme, item, data.get(item))
 
-    theme.created = datetime.datetime.utcnow()
-    theme.modified = datetime.datetime.utcnow()
+    theme.created_at = datetime.datetime.utcnow()
+    theme.modified_at = datetime.datetime.utcnow()
     theme.save()
 
     session.add(theme)

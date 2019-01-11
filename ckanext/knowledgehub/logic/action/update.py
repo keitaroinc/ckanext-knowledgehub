@@ -41,7 +41,7 @@ def theme_update(context, data_dict):
     if 'name' not in data_dict:
         raise ValidationError({"name": ["Missing value"]})
 
-    theme = Theme.get(id=data_dict['id'])
+    theme = Theme.get(id=data_dict['id']).first()
 
     if not theme:
         log.debug('Could not find theme %s', id)
@@ -65,7 +65,7 @@ def theme_update(context, data_dict):
     for item in items:
         setattr(theme, item, data.get(item))
 
-    theme.modified = datetime.datetime.utcnow()
+    theme.modified_at = datetime.datetime.utcnow()
     theme.save()
 
     session.add(theme)
