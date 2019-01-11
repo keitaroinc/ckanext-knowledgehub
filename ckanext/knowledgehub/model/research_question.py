@@ -31,14 +31,15 @@ def setup():
 class ResearchQuestion(DomainObject):
 
     @classmethod
-    def get(cls, id, default=None):
+    def get(cls, id):
         kwds = {'id': id}
         o = Session.query(cls).autoflush(False)
         o = o.filter_by(**kwds).first()
         if o:
             return o
         else:
-            return default
+            raise toolkit.ObjectNotFound
+
 
     @classmethod
     def search(cls, text_query):
