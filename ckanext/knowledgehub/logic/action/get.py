@@ -7,14 +7,15 @@ from ckan import lib
 
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
+from ckanext.knowledgehub.model import ResearchQuestion
 
 
 log = logging.getLogger(__name__)
 
 _table_dictize = lib.dictization.table_dictize
-check_access = logic.check_access
+check_access = toolkit.check_access
 NotFound = logic.NotFound
-ValidationError = logic.ValidationError
+ValidationError = toolkit.ValidationError
 
 
 @toolkit.side_effect_free
@@ -123,3 +124,53 @@ def sub_theme_list(context, data_dict):
 
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': st_list}
+
+
+@toolkit.side_effect_free
+def research_question_show(context, data_dict):
+    '''Show a single research question.
+
+    :param id: Research question database id
+    :type id: string
+
+    :returns: a research question
+    :rtype: dictionary
+    '''
+    id = data_dict.get('id')
+
+    rq = ResearchQuestion.get(id=id).first()
+    print rq
+    if not rq:
+        raise toolkit.ObjectNotFound
+    return rq.as_dict()
+
+
+@toolkit.side_effect_free
+def research_question_list(context, data_dict):
+    ''' List research questions
+
+    :param page: current page in pagination (optional, default: ``1``)
+    :type page: int
+    :param pageSize: the number of items to return (optional, default: ``10``)
+    :type pageSize: int
+
+    :returns: a dictionary including total items, page number, page size and data
+    :rtype: dictionary
+    '''
+
+    page_size = int(data_dict.get('pageSize', 10))
+    page = int(data_dict.get('page', 1))
+    offset = (page - 1) * page_size
+    rq_list = []
+
+    rq_db_list = ResearchQuestion.get(limit=page_size,
+                                      offset=offset,
+                                      order_by='name asc').all()
+
+    for entry in rq_db_list:
+        rq_list.append(_table_dictize(entry, context))
+
+    total = len(ResearchQuestion.get().all())
+
+    return {'total': total, 'page': page,
+            'pageSize': page_size, 'data': rq_list}

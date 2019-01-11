@@ -10,21 +10,20 @@ from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
 
-from ckanext.knowledgehub.logic import schema
-from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
+from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
+from ckanext.knowledgehub.model import ResearchQuestion
 
 
 log = logging.getLogger(__name__)
 
 _df = lib.navl.dictization_functions
 _table_dictize = lib.dictization.table_dictize
-check_access = logic.check_access
-check_access = logic.check_access
+check_access = toolkit.check_access
 NotFound = logic.NotFound
-ValidationError = logic.ValidationError
-NotAuthorized = logic.NotAuthorized
+ValidationError = toolkit.ValidationError
+NotAuthorized = toolkit.NotAuthorized
 
 
 def theme_create(context, data_dict):
@@ -43,7 +42,7 @@ def theme_create(context, data_dict):
     # we need the theme name in the context for name validation
     context['theme'] = data_dict['name']
     session = context['session']
-    data, errors = _df.validate(data_dict, schema.theme_schema(),
+    data, errors = _df.validate(data_dict, knowledgehub_schema.theme_schema(),
                                 context)
 
     if errors:
@@ -107,3 +106,41 @@ def sub_theme_create(context, data_dict):
         raise
 
     return st.as_dict()
+
+def research_question_create(context, data_dict):
+    '''Create new research question.
+
+    :param content: The research question.
+    :type content: string
+    :param theme: Theme of the research question.
+    :type value: string
+    :param sub_theme: SubTheme of the research question.
+    :type value: string
+    :param state: State of the research question. Default is active.
+    :type state: string
+    '''
+    check_access('research_question_create', context, data_dict)
+
+    data, errors = _df.validate(data_dict, knowledgehub_schema.research_question_schema(), context)
+
+    if errors:
+        raise toolkit.ValidationError(errors)
+
+    user_obj = context.get('auth_user_obj')
+    user_id = user_obj.id
+
+    theme = data.get('theme')
+    sub_theme = data.get('sub_theme')
+    content = data.get('content')
+    state = data.get('state', 'active')
+
+    research_question = ResearchQuestion(
+        theme=theme,
+        sub_theme=sub_theme,
+        content=content,
+        author=user_id,
+        state=state
+    )
+    research_question.save()
+
+    return _table_dictize(research_question, context)

@@ -6,13 +6,14 @@ from ckan.common import _
 
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
+from ckanext.knowledgehub.model import ResearchQuestion
 
 
 log = logging.getLogger(__name__)
 
-check_access = logic.check_access
-ValidationError = logic.ValidationError
-NotAuthorized = logic.NotAuthorized
+check_access = toolkit.check_access
+ValidationError = toolkit.ValidationError
+NotAuthorized = toolkit.NotAuthorized
 NotFound = logic.NotFound
 
 
@@ -57,3 +58,19 @@ def sub_theme_delete(context, data_dict):
         raise NotFound(_(u'Sub-theme'))
 
     return 'OK'
+
+
+def research_question_delete(context, data_dict):
+    '''Delete research question.
+
+    :param id: Research question database id.
+    :type id: string
+    '''
+    check_access('research_question_delete', context, data_dict)
+
+    id = data_dict.get('id')
+    if not id:
+        raise ValidationError({'id': 'Missing parameter'})
+        
+    ResearchQuestion.delete(id=id)
+    log.info("Research question id \'{}\' deleted successfully".format(id))

@@ -5,6 +5,7 @@ import ckanext.knowledgehub.helpers as h
 from ckanext.knowledgehub.model.theme import theme_db_setup
 
 from ckanext.knowledgehub.helpers import _register_blueprints
+from ckanext.knowledgehub.model.research_question import setup as research_question_db_setup
 from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
 
 
@@ -25,9 +26,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
     # IConfigurable
     def configure(self, config):
         # Initialize DB
-        sub_theme_db_setup()
         theme_db_setup()
-
+        sub_theme_db_setup()
+        research_question_db_setup()
         return config
 
     # IBlueprint

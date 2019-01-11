@@ -1,5 +1,4 @@
 from ckan.plugins import toolkit
-
 from ckanext.knowledgehub.logic import validators
 
 not_empty = toolkit.get_validator('not_empty')
@@ -35,4 +34,13 @@ def sub_theme_update():
         'name': [not_empty, name_validator, unicode],
         'description': [ignore_empty, unicode],
         'theme_id': [not_empty, unicode]
+    }
+
+
+def research_question_schema():
+    return {
+        'id': [ignore_missing, unicode],
+        'theme': [not_empty, unicode],
+        'sub_theme': [not_empty, unicode],
+        'content': [not_empty, unicode],
     }
