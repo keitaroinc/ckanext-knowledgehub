@@ -8,3 +8,8 @@ def research_question_schema():
         'theme': [not_empty, unicode],
         'sub_theme': [not_empty, unicode]
     }
+
+def research_question_delete_schema():
+    return {
+        'id': [not_empty, unicode],
+    }
