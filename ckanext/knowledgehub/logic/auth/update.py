@@ -1,4 +1,13 @@
 import ckan.authz as authz
+import ckan.logic as logic
+
+
+def theme_update(context, data_dict):
+    '''
+        Authorization check for updating theme
+    '''
+    # sysadmins only
+    return {'success': False}
 
 
 def sub_theme_update(context, data_dict):
