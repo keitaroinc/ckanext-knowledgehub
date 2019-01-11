@@ -10,7 +10,7 @@ def sub_theme_delete(context, data_dict):
     ''' Deletes a sub-theme
 
     :param id: the sub-theme's ID
-    :type name: string
+    :type id: string
 
     :returns: OK
     :rtype: string

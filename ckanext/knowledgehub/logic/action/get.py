@@ -14,7 +14,7 @@ def sub_theme_show(context, data_dict):
     ''' Shows a sub-theme
 
     :param id: the sub-theme's ID
-    :type name: string
+    :type id: string
 
     :returns: a sub-theme
     :rtype: dictionary
@@ -33,9 +33,9 @@ def sub_theme_list(context, data_dict):
     ''' List sub-themes
 
     :param page: current page in pagination (optional, default: ``1``)
-    :type name: int
+    :type page: int
     :param pageSize: the number of items to return (optional, default: ``10``)
-    :type description: int
+    :type pageSize: int
 
     :returns: a dictionary including total items, page number, page size and data(sub-themes)
     :rtype: dictionary

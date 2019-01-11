@@ -22,7 +22,7 @@ def sub_theme_update(context, data_dict):
     :param description: a description of the sub-theme (optional)
     :type description: string
     :param theme_id: the ID of the theme
-    :type: string
+    :type theme_id: string
 
     :returns: the updated sub-theme
     :rtype: dictionary
