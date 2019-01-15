@@ -6,7 +6,7 @@ from ckan.model.meta import metadata, mapper, Session
 from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
 
-from sqlalchemy import types, ForeignKey, Column, Table, desc
+from sqlalchemy import types, ForeignKey, Column, Table, desc, asc
 
 __all__ = [
     'SubThemes',
@@ -21,10 +21,12 @@ class SubThemes(DomainObject):
 
     @classmethod
     def get(cls, **kwargs):
+        q = kwargs.get('q')
         limit = kwargs.get('limit')
         offset = kwargs.get('offset')
         order_by = kwargs.get('order_by')
 
+        kwargs.pop('q', None)
         kwargs.pop('limit', None)
         kwargs.pop('offset', None)
         kwargs.pop('order_by', None)
@@ -32,10 +34,13 @@ class SubThemes(DomainObject):
         query = Session.query(cls).autoflush(False)
         query = query.filter_by(**kwargs)
 
+        if q:
+            query = query.filter(cls.name.ilike(r"%{}%".format(q)))
+
         if order_by:
             column = order_by.split(' ')[0]
             order = order_by.split(' ')[1]
-            query.order_by("%s %s" % (column, order))
+            query = query.order_by("%s %s" % (column, order))
 
         if limit:
             query = query.limit(limit)
@@ -69,7 +74,7 @@ sub_themes_table = Table(
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('name', types.UnicodeText, nullable=False, unique=True),
     Column('description', types.UnicodeText),
-    Column('theme_id', types.UnicodeText, nullable=False),
+    Column('theme', types.UnicodeText, nullable=False),
     Column('created_at', types.DateTime, default=datetime.datetime.now),
     Column('modified_at', types.DateTime, onupdate=datetime.datetime.now),
     Column('created_by', types.UnicodeText, nullable=False),

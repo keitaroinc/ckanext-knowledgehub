@@ -73,8 +73,8 @@ def sub_theme_create(context, data_dict):
     :type name: string
     :param description: a description of the sub-theme (optional)
     :type description: string
-    :param theme_id: the ID of the theme
-    :type theme_id: string
+    :param theme: the ID of the theme
+    :type theme: string
 
     :returns: the newly created sub-theme
     :rtype: dictionary

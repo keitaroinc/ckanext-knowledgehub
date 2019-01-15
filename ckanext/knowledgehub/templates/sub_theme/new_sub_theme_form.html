@@ -1,0 +1,16 @@
+{% import "macros/form.html" as form %}
+
+<form id="sub-theme-form" action="" method="post">
+    {{ form.errors(error_summary) }}
+    {{ form.input("name", id="field-name", label=_("Name"), placeholder=_("name"), value=data.name, error=errors.name, classes=["control-medium"], is_required=True) }}
+    {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('A little information about my sub-theme...'), value=data.description, error=errors.description) }}
+    {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, is_required=True) }}
+
+    {{ form.required_message() }}
+
+    <div class="form-actions">
+        {% block form_actions %}
+        <button class="btn btn-primary" type="submit" name="save">{{ _("Create a Sub-Theme") }}</button>
+        {% endblock %}
+    </div>
+</form>

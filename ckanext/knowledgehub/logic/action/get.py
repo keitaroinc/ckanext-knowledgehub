@@ -128,14 +128,18 @@ def sub_theme_list(context, data_dict):
     :rtype: dictionary
     '''
 
+    q = data_dict.get('q', '')
     page_size = int(data_dict.get('pageSize', 10))
     page = int(data_dict.get('page', 1))
+    order_by = data_dict.get('order_by', 'name asc')
+
     offset = (page - 1) * page_size
     st_list = []
 
-    st_db_list = SubThemes.get(limit=page_size,
+    st_db_list = SubThemes.get(q=q,
+                               limit=page_size,
                                offset=offset,
-                               order_by='name asc').all()
+                               order_by=order_by).all()
 
     for entry in st_db_list:
         st_list.append(_table_dictize(entry, context))

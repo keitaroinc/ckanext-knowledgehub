@@ -1,0 +1,9 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _("Sub-Themes") }}{% endblock %}
+
+{% block breadcrumb_content %}
+<li class="active">{{ h.nav_link(_('Sub-Themes'), named_route='sub_theme.search') }}</li>
+{% endblock %}
+
+{% block page_header %}{% endblock %}
