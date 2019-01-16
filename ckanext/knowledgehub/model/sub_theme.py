@@ -38,9 +38,7 @@ class SubThemes(DomainObject):
             query = query.filter(cls.name.ilike(r"%{}%".format(q)))
 
         if order_by:
-            column = order_by.split(' ')[0]
-            order = order_by.split(' ')[1]
-            query = query.order_by("%s %s" % (column, order))
+            query = query.order_by(order_by)
 
         if limit:
             query = query.limit(limit)

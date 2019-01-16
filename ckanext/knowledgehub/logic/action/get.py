@@ -144,7 +144,7 @@ def sub_theme_list(context, data_dict):
     for entry in st_db_list:
         st_list.append(_table_dictize(entry, context))
 
-    total = len(SubThemes.get().all())
+    total = len(SubThemes.get(q=q).all())
 
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': st_list}

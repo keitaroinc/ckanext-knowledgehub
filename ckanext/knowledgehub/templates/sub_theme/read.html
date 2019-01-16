@@ -3,7 +3,33 @@
 {% block subtitle %}{{ _("Sub-Themes") }}{% endblock %}
 
 {% block breadcrumb_content %}
-<li class="active">{{ h.nav_link(_('Sub-Themes'), named_route='sub_theme.search') }}</li>
+<li>{{ h.nav_link(_('Sub-Themes'), named_route='sub_theme.search') }}</li>
+<li class="active">{{ h.nav_link(sub_theme.get('name', ''), named_route='sub_theme.search') }}</li>
 {% endblock %}
 
-{% block page_header %}{% endblock %}
+{% block content_action %}
+  {{ h.nav_link(_('Manage'), named_route='sub_theme.edit', id=sub_theme.get('id', ''), class_='btn btn-default', icon='wrench') }}
+{% endblock %}
+
+{% block primary_content_inner %}
+  {{ super() }}
+
+  <h1>
+    {{ sub_theme.get('name', '') }}
+  </h1>
+  {% if sub_theme.get('description', None) %}
+    <div class="notes embedded-content">
+      {{ h.markdown_extract(sub_theme.get('description', ''), extract_length=truncate_desc) }}
+    </div>
+  {% else %}
+    <p class="empty">{{ _("This sub-theme has no description") }}</p>
+  {% endif %}
+  <span class="insert-comment-thread"></span>
+
+  {% snippet "sub_theme/snippets/additional_info.html", sub_theme=sub_theme, created_by=created_by, modified_by=modified_by %}
+{% endblock %}
+
+{% block secondary_content %}
+  {% snippet 'sub_theme/snippets/info.html', sub_theme=sub_theme %}
+{% endblock %}
+
