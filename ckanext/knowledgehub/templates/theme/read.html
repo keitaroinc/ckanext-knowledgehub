@@ -1,0 +1,50 @@
+{% extends "page.html" %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Themes'), named_route='theme.index') }}</li>
+  <li class="active">{{ h.nav_link(theme.title|truncate(30), named_route='theme.read', name=theme.name) }}</li>
+{% endblock %}
+
+{% block subtitle %}{{ h.dataset_display_name(theme) }} {{ g.template_title_delimiter }} {{ super() }}{% endblock %}
+
+{% block content_action %}
+  {% if h.check_access('theme_update') %}
+    {% link_for _('Manage'), named_route='theme.edit', name=theme.name, class_='btn btn-default', icon='wrench' %}
+  {% endif %}
+{% endblock %}
+
+{% block primary_content_inner %}
+
+    <h1>
+      {% block page_heading %}
+        {{ h.dataset_display_name(theme) }}
+      {% endblock %}
+    </h1>
+
+    {% block theme_description %}
+      {% if theme.description %}
+        <div class="notes embedded-content">
+          {{ h.render_markdown(h.get_translated(theme, 'description')) }}
+        </div>
+      {% endif %}
+    {% endblock %}
+
+  {% block theme_additional_info %}
+    {% snippet "theme/snippets/additional_info.html", theme=theme %}
+  {% endblock %}
+
+{% endblock %}
+
+{% block secondary_content %}
+
+  {% block secondary_help_content %}{% endblock %}
+
+  {% block theme_info %}
+    {% snippet 'theme/snippets/info.html', theme=theme %}
+  {% endblock %}
+
+  {% block package_social %}
+    {% snippet "snippets/social.html" %}
+  {% endblock %}
+
+{% endblock %}

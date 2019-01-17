@@ -37,10 +37,10 @@ def theme_create(context, data_dict):
     check_access('theme_create', context)
 
     if 'name' not in data_dict:
-        raise ValidationError({"name": ["Missing value"]})
+        raise ValidationError({"name": _('Missing value')})
 
-    # we need the theme name in the context for name validation
-    context['theme'] = data_dict['name']
+    # we need the old theme name in the context for name validation
+    context['theme'] = None
     session = context['session']
     data, errors = _df.validate(data_dict, knowledgehub_schema.theme_schema(),
                                 context)
@@ -107,6 +107,7 @@ def sub_theme_create(context, data_dict):
 
     return st.as_dict()
 
+
 def research_question_create(context, data_dict):
     '''Create new research question.
 
@@ -121,7 +122,9 @@ def research_question_create(context, data_dict):
     '''
     check_access('research_question_create', context, data_dict)
 
-    data, errors = _df.validate(data_dict, knowledgehub_schema.research_question_schema(), context)
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.research_question_schema(),
+                                context)
 
     if errors:
         raise toolkit.ValidationError(errors)

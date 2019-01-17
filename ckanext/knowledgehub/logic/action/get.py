@@ -23,18 +23,27 @@ def theme_show(context, data_dict):
     '''
         Returns existing analytical framework Theme
 
-    :param id
+    :param id: id of the resource that you
+    want to search against.
+    :type id: string
+
+    :param name: name of the resource
+    that you want to search against. (Optional)
+    :type name: string
+
+    :returns: single theme dict
+    :rtype: dictionary
     '''
+    name_or_id = data_dict.get("id") or data_dict.get("name")
 
-    check_access('theme_update', context)
+    if name_or_id is None:
+        raise ValidationError({'id': _('Missing value')})
 
-    if 'id' not in data_dict:
-        raise ValidationError({"id": "Missing parameter"})
-
-    theme = Theme.get(id=data_dict['id']).first()
+    theme = Theme.get(name_or_id)
 
     if not theme:
-        log.debug('Could not find theme %s', id)
+        log.debug(u'Could not find theme %s',
+                  name_or_id)
         raise NotFound(_(u'Theme was not found.'))
 
     return _table_dictize(theme, context)
@@ -44,32 +53,43 @@ def theme_show(context, data_dict):
 def theme_list(context, data_dict):
     ''' List themes
 
-    :param page: current page in pagination (optional, default: ``1``)
-    :type page: int
-    :param pageSize: the number of items to return (optional, default: ``10``)
-    :type pageSize: int
+    :param page: current page in pagination (optional, default to 1)
+    :type page: integer
+    :param sort: sorting of the search results.  Optional.  Default:
+        "name asc" string of field name and sort-order. The allowed fields are
+        'name', and 'title'
+    :type sort: string
+    :param limit: Limit the search criteria (defaults to 10000).
+    :type limit: integer
+    :param offset: Offset for the search criteria (defaults to 0).
+    :type offset: integer
 
     :returns: a dictionary including total items,
-     page number, page size and data(themes)
+     page number, items per page and data(themes)
     :rtype: dictionary
     '''
 
-    page_size = int(data_dict.get('pageSize', 10))
-    page = int(data_dict.get('page', 1))
-    offset = (page - 1) * page_size
+    page = int(data_dict.get(u'page', 1))
+    limit = int(data_dict.get(u'limit', 10000))
+    offset = int(data_dict.get(u'offset', 0))
+    sort = data_dict.get(u'sort', u'name asc')
+    q = data_dict.get(u'q', u'')
+
     themes = []
 
-    t_db_list = Theme.get(limit=page_size,
-                          offset=offset,
-                          order_by='name asc').all()
+    t_db_list = Theme.search(q=q,
+                             limit=limit,
+                             offset=offset,
+                             order_by=sort)\
+        .all()
 
-    for entry in t_db_list:
-        themes.append(_table_dictize(entry, context))
+    for theme in t_db_list:
+        themes.append(_table_dictize(theme, context))
 
-    total = len(Theme.get().all())
+    total = len(Theme.search().all())
 
-    return {'total': total, 'page': page,
-            'pageSize': page_size, 'data': themes}
+    return {u'total': total, u'page': page,
+            u'items_per_page': limit, u'data': themes}
 
 
 @toolkit.side_effect_free
@@ -151,10 +171,12 @@ def research_question_list(context, data_dict):
 
     :param page: current page in pagination (optional, default: ``1``)
     :type page: int
-    :param pageSize: the number of items to return (optional, default: ``10``)
+    :param pageSize: the number of items
+    to return (optional, default: ``10``)
     :type pageSize: int
 
-    :returns: a dictionary including total items, page number, page size and data
+    :returns: a dictionary including total
+     items, page number, page size and data
     :rtype: dictionary
     '''
 

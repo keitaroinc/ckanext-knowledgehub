@@ -1,0 +1,22 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Create Theme') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Themes'), named_route='theme.index') }}</li>
+  <li class="active">{{ h.nav_link(_('Create Theme'), named_route='theme.new') }}</li>
+{% endblock %}
+
+{% block page_header %}
+{% endblock %}
+
+{% block primary_content_inner %}
+  <h1 class="{% block page_heading_class %}page-heading{% endblock %}">
+    {% block page_heading %}{{ _('Create Theme') }}{% endblock %}
+  </h1>
+  {% snippet 'theme/new_theme_form.html', data=data, errors=errors %}
+{% endblock %}
+
+{% block secondary_content %}
+  {% snippet "theme/snippets/helper.html" %}
+{% endblock %}

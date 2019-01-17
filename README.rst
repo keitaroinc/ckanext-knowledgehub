@@ -56,11 +56,11 @@ To install ckanext-knowledgehub:
 Config Settings
 ---------------
 
-Document any optional config settings here. For example::
+These are the optional configuration settings used by the extension::
 
-    # The minimum number of hours to wait before re-checking a resource
-    # (optional, default: 24).
-    ckanext.knowledgehub.some_setting = some_default_value
+    # The number of themes shown per page
+    # (optional, default: 10).
+    ckanext.knowledgehub.themes_per_page = 20
 
 
 ------------------------

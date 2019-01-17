@@ -1,0 +1,23 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Edit') }} {{ theme.title }} {{ g.template_title_delimiter }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Themes'), named_route='theme.index') }}</li>
+  <li>{{ h.nav_link( theme.title|truncate(35), named_route='theme.read', name=theme.name) }}</li>
+  <li class="active">{{ h.nav_link(_('Edit'), named_route='theme.edit', name=theme.name) }}</li>
+{% endblock %}
+
+{% block page_header %}
+{% endblock %}
+
+{% block primary_content_inner %}
+  <h1 class="{% block page_heading_class %}page-heading{% endblock %}">
+    {% block page_heading %}{{ _('Edit Theme') }}{% endblock %}
+  </h1>
+  {% snippet 'theme/edit_theme_form.html', data=theme, errors=errors %}
+{% endblock %}
+
+{% block secondary_content %}
+  {% snippet "theme/snippets/info.html", theme=theme %}
+{% endblock %}

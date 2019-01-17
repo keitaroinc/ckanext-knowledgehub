@@ -36,25 +36,23 @@ def theme_update(context, data_dict):
     '''
     check_access('theme_update', context)
 
-    if 'id' not in data_dict:
-        raise ValidationError({"id": ["Missing value"]})
+    name_or_id = data_dict.get("id") or data_dict.get("name")
 
-    if 'name' not in data_dict:
-        raise ValidationError({"name": ["Missing value"]})
+    if name_or_id is None:
+        raise ValidationError({'id': _('Missing value')})
 
-    theme = Theme.get(id=data_dict['id']).first()
+    theme = Theme.get(name_or_id)
 
     if not theme:
-        log.debug('Could not find theme %s', id)
+        log.debug('Could not find theme %s', name_or_id)
         raise NotFound(_('Theme was not found.'))
 
-    # we need the theme name in the context for name validation
-    context['theme'] = data_dict['name']
+    # we need the old theme name in the context for name validation
+    context['theme'] = theme.name
     session = context['session']
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.theme_schema(),
                                 context)
-
     if errors:
         raise ValidationError(errors)
 
@@ -136,7 +134,9 @@ def research_question_update(context, data_dict):
     check_access('research_question_update', context)
 
     from pprint import pprint as pprint
-    data, errors = _df.validate(data_dict, knowledgehub_schema.research_question_schema(), context)
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.research_question_schema(),
+                                context)
 
     if errors:
         raise toolkit.ValidationError(errors)
