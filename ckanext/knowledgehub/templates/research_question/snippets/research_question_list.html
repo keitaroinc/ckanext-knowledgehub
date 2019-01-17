@@ -1,0 +1,13 @@
+{#
+Display a grid of research question items.
+
+ Example:
+
+ {% snippet "research_question/snippets/research_question_list.html" %}
+
+ #}
+<ul class="list-unstyled">
+  {% for rq in research_question_list %}
+    {% snippet "research_question/snippets/research_question_item.html", rq=rq %}
+  {% endfor %}
+</ul>

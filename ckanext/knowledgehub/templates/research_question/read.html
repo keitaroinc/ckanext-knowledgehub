@@ -1,0 +1,49 @@
+{% extends "page.html" %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Research questions'), named_route='research_question.search') }}</li>
+  <li class="active">{{ h.nav_link(rq.content|truncate(30), named_route='research_question.read', id=rq.id) }}</li>
+{% endblock %}
+
+{% block subtitle %}{{ h.dataset_display_name(rq.content) }} {{ g.template_title_delimiter }} {{ super() }}{% endblock %}
+
+{% block content_action %}
+  {% if h.check_access('research_question_update') %}
+    {% link_for _('Manage'), named_route='research_question.edit', id=rq.id, class_='btn btn-default', icon='wrench' %}
+  {% endif %}
+{% endblock %}
+
+{% block primary_content_inner %}
+    <h1>
+      {% block page_heading %}
+        {{ rq.content }}</br>
+      {% endblock %}
+    </h1>
+
+    {% block research_question_description %}
+      {% if rq.description %}
+        <div class="notes embedded-content">
+          {#{{ h.render_markdown(h.get_translated(rq.description, 'description')) }}#}
+        </div>
+      {% endif %}
+    {% endblock %}
+
+  {% block research_question_additional_info %}
+    {% snippet "research_question/snippets/additional_info.html", rq=rq %}
+  {% endblock %}
+
+{% endblock %}
+
+{% block secondary_content %}
+
+  {% block secondary_help_content %}{% endblock %}
+
+  {% block research_question_info %}
+    {% snippet 'research_question/snippets/info.html', rq=rq %}
+  {% endblock %}
+
+  {% block package_social %}
+    {# {% snippet "snippets/social.html" %} #}
+  {% endblock %}
+
+{% endblock %}

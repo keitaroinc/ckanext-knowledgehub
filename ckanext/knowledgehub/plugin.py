@@ -16,6 +16,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IConfigurable)
+    plugins.implements(plugins.ITemplateHelpers)
 
     # IConfigurer
     def update_config(self, config_):
@@ -48,3 +49,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
         auth_functions = h._get_functions(module_root)
 
         return auth_functions
+
+    # ITemplateHelpers
+    def get_helpers(self):
+        return {
+            'id_to_name': h.id_to_name,
+        }

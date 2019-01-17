@@ -26,7 +26,7 @@ def theme_show(context, data_dict):
     :param id
     '''
 
-    check_access('theme_update', context)
+    # check_access('theme_update', context)
 
     if 'id' not in data_dict:
         raise ValidationError({"id": "Missing parameter"})
@@ -139,7 +139,6 @@ def research_question_show(context, data_dict):
     id = data_dict.get('id')
 
     rq = ResearchQuestion.get(id=id).first()
-    print rq
     if not rq:
         raise toolkit.ObjectNotFound
     return rq.as_dict()
@@ -157,15 +156,17 @@ def research_question_list(context, data_dict):
     :returns: a dictionary including total items, page number, page size and data
     :rtype: dictionary
     '''
-
+    q = data_dict.get('q', '')
     page_size = int(data_dict.get('pageSize', 10))
     page = int(data_dict.get('page', 1))
     offset = (page - 1) * page_size
+    order_by = data_dict.get('order_by', 'name asc')
     rq_list = []
 
-    rq_db_list = ResearchQuestion.get(limit=page_size,
+    rq_db_list = ResearchQuestion.get(q=q,
+                                      limit=page_size,
                                       offset=offset,
-                                      order_by='name asc').all()
+                                      order_by=order_by).all()
 
     for entry in rq_db_list:
         rq_list.append(_table_dictize(entry, context))

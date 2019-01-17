@@ -135,7 +135,6 @@ def research_question_update(context, data_dict):
     '''
     check_access('research_question_update', context)
 
-    from pprint import pprint as pprint
     data, errors = _df.validate(data_dict, knowledgehub_schema.research_question_schema(), context)
 
     if errors:

@@ -1,0 +1,16 @@
+{% import "macros/form.html" as form %}
+
+ <form id="research-question-form" action="" method="post">
+    {{ form.errors(error_summary) }}
+    {{ form.input("content", id="field-content", label=_("Question"), placeholder=_("Your research question"), value=data.name, error=errors.name, classes=["control-medium"], is_required=True) }}
+    {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, is_required=True) }}
+    {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, is_required=True) }}
+
+     {{ form.required_message() }}
+
+     <div class="form-actions">
+        {% block form_actions %}
+        <button class="btn btn-primary" type="submit" name="save">{{ _("Create a Research question") }}</button>
+        {% endblock %}
+    </div>
+</form>

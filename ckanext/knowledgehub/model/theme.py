@@ -31,9 +31,9 @@ theme_table = Table(
            nullable=False, unique=True),
     Column('title', types.UnicodeText),
     Column('description', types.UnicodeText),
-    Column('created_at', types.DateTime,
+    Column('created', types.DateTime,
            default=datetime.datetime.utcnow),
-    Column('modified_at', types.DateTime,
+    Column('modified', types.DateTime,
            default=datetime.datetime.utcnow),
     )
 

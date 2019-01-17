@@ -1,0 +1,25 @@
+{% extends "page.html" %}
+
+ {% block breadcrumb_content %}
+<li>{{ h.nav_link(_('Research questions'), named_route='research_question.search') }}</li>
+<li class="active">{{ h.nav_link(_('Create a Research question'), named_route='research_question.new') }}</li>
+{% endblock %}
+
+ {% block page_header %}{% endblock %}
+
+ {% block primary_content %}
+<article class="module">
+    <div class="module-content">
+        {% block primary_content_inner %}
+        <h1 class="page-heading">
+            {% block page_heading %}{{ _('Create a Research question') }}{% endblock %}
+        </h1>
+        {{ form | safe }}
+        {% endblock %}
+    </div>
+</article>
+{% endblock %}
+
+ {% block secondary_content %}
+{% snippet "research_question/snippets/helper.html" %}
+{% endblock %}

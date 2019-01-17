@@ -32,10 +32,12 @@ class ResearchQuestion(DomainObject):
 
     @classmethod
     def get(cls, **kwargs):
+        q = kwargs.get('q')
         limit = kwargs.get('limit')
         offset = kwargs.get('offset')
         order_by = kwargs.get('order_by')
 
+        kwargs.pop('q', None)
         kwargs.pop('limit', None)
         kwargs.pop('offset', None)
         kwargs.pop('order_by', None)
@@ -43,10 +45,13 @@ class ResearchQuestion(DomainObject):
         query = Session.query(cls).autoflush(False)
         query = query.filter_by(**kwargs)
 
+        if q:
+            query = query.filter(cls.content.ilike(r"%{}%".format(q)))
+
         if order_by:
             column = order_by.split(' ')[0]
             order = order_by.split(' ')[1]
-            query.order_by("%s %s" % (column, order))
+            query = query.order_by("%s %s" % (column, order))
 
         if limit:
             query = query.limit(limit)
@@ -55,14 +60,6 @@ class ResearchQuestion(DomainObject):
             query = query.offset(offset)
 
         return query
-
-    @classmethod
-    def search(cls, text_query):
-        text_query = text_query.strip().lower()
-        q = Session.query(cls).filter(cls.content.ilike(r"%{}%".format(text_query)))
-        q = q.filter(cls.state == 'active')
-        q = q.order_by(cls.content)
-        return q.all()
 
     @classmethod
     def all(cls, theme=None, sub_theme=None, state=('active',)):
