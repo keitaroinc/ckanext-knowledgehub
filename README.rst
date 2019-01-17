@@ -56,7 +56,7 @@ To install ckanext-knowledgehub:
 Config Settings
 ---------------
 
-These are the optional configuration options used by the extension::
+These are the optional configuration settings used by the extension::
 
     # The number of themes shown per page
     # (optional, default: 10).
