@@ -5,7 +5,7 @@
 {% block breadcrumb_content %}
   <li>{{ h.nav_link(_('Themes'), named_route='theme.index') }}</li>
   <li>{{ h.nav_link( theme.title|truncate(35), named_route='theme.read', name=theme.name) }}</li>
-  <li class="active">{{ h.nav_link(_('Manage'), named_route='theme.edit', name=theme.name) }}</li>
+  <li class="active">{{ h.nav_link(_('Edit'), named_route='theme.edit', name=theme.name) }}</li>
 {% endblock %}
 
 {% block page_header %}
