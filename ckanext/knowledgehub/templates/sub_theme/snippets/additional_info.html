@@ -8,10 +8,10 @@
             </tr>
         </thead>
         <tbody>
-            {% if sub_theme.get('theme', None) %}
+            {% if theme.get('title', None) %}
             <tr>
                 <th scope="row" class="dataset-label">{{ _("Theme") }}</th>
-                <td class="dataset-details">{{ sub_theme['theme'] }}</td>
+                <td class="dataset-details">{{ theme['title'] }}</td>
             </tr>
             {% endif %}
 

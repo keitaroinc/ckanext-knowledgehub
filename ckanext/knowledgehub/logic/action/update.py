@@ -106,15 +106,8 @@ def sub_theme_update(context, data_dict):
     user = context.get('user')
     data_dict['modified_by'] = model.User.by_name(user.decode('utf8')).id
 
-    try:
-        filter = {'id': id}
-        st = SubThemes.update(filter, data_dict)
-    except exc.IntegrityError as e:
-        if e.orig.pgcode == pg_errorcodes.UNIQUE_VIOLATION:
-            raise logic.ValidationError({
-                    'name': ['Already exists']
-                })
-        raise
+    filter = {'id': id}
+    st = SubThemes.update(filter, data_dict)
 
     return st.as_dict()
 

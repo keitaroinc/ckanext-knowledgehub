@@ -21,20 +21,23 @@ sub_theme = Blueprint(
     url_prefix=u'/sub-theme'
 )
 
-@sub_theme.before_request
-def before_request():
-    try:
-        context = dict(model=model, user=g.user, auth_user_obj=g.userobj)
-        logic.check_access(u'sysadmin', context)
-    except logic.NotAuthorized:
-        base.abort(403, _(u'Need to be system administrator to administer'))
+# @sub_theme.before_request
+# def before_request():
+#     try:
+#         context = dict(model=model, user=g.user, auth_user_obj=g.userobj)
+#         logic.check_access(u'sysadmin', context)
+#     except logic.NotAuthorized:
+#         base.abort(403, _(u'Need to be system administrator to administer'))
+
 
 def search():
     q = request.params.get(u'q', u'')
     page = request.params.get(u'page', 1)
     order_by = request.params.get(u'sort', u'name asc')
-    limit = int(
-        request.params.get(u'limit', config.get(u'ckanext.knowledgehub.sub_theme_limit', 2)))
+    limit = int(request.params.get(
+        u'limit',
+        config.get(u'ckanext.knowledgehub.sub_theme_limit', 10)
+    ))
 
     data_dict = {
         u'q': q,
@@ -62,24 +65,36 @@ def search():
             u'sub_themes': sub_themes.get('data', []),
             u'q': q,
             u'order_by': order_by,
-            u'page': page
+            u'page': page,
+            u'user': g.user
         })
 
-def read(id):
+
+def read(name):
     try:
-        sub_theme = logic.get_action(u'sub_theme_show')({}, {'id': id})
+        sub_theme = logic.get_action(u'sub_theme_show')({}, {'name': name})
     except logic.NotFound:
         base.abort(404, _(u'Sub-Theme not found'))
 
     try:
-        created_by = logic.get_action(u'user_show')({}, {'id': sub_theme.get('created_by', '')})
+        theme = logic.get_action(u'theme_show')({'user': g.user},
+                                                {'id': sub_theme.get('theme')})
+    except logic.NotFound:
+        base.abort(404, _(u'Theme not found'))
+
+    try:
+        created_by = logic.get_action(u'user_show')(
+            {}, {'id': sub_theme.get('created_by', '')}
+        )
     except logic.NotFound:
         base.abort(403, _(u'Not authorized to see this page'))
     except logic.NotAuthorized:
         base.abort(403, _(u'Not authorized to see this page'))
 
     try:
-        modified_by = logic.get_action(u'user_show')({}, {'id': sub_theme.get('modified_by', '')})
+        modified_by = logic.get_action(u'user_show')(
+            {}, {'id': sub_theme.get('modified_by', '')}
+        )
     except logic.NotFound:
         modified_by = {}
     except logic.NotAuthorized:
@@ -88,10 +103,14 @@ def read(id):
     return base.render(
         u'sub_theme/read.html',
         extra_vars={
+            u'theme': theme,
             u'sub_theme': sub_theme,
             u'created_by': created_by,
-            u'modified_by': modified_by
-    })
+            u'modified_by': modified_by,
+            u'user': g.user
+        }
+    )
+
 
 def delete(id):
     data_dict = {u'id': id}
@@ -106,8 +125,13 @@ def delete(id):
         logic.get_action(u'sub_theme_delete')(context, data_dict)
     except logic.NotAuthorized:
         base.abort(403, _(u'Unauthorized to delete the sub-theme'))
+    except logic.NotFound:
+        base.abort(404, _(u'Sub-Theme not found'))
+    except ValidationError as e:
+        h.flash_error(e.error_dict['message'])
 
     return h.redirect_to('sub_theme.search')
+
 
 class CreateView(MethodView):
     ''' Create new Sub-theme view '''
@@ -163,7 +187,9 @@ class CreateView(MethodView):
             base.abort(400, _(u'Integrity Error'))
 
         try:
-            sub_theme = logic.get_action(u'sub_theme_create')(context, data_dict)
+            sub_theme = logic.get_action(u'sub_theme_create')(
+                context, data_dict
+            )
         except logic.NotAuthorized:
             base.abort(403, _(u'Unauthorized to create a sub-theme'))
         except logic.ValidationError as e:
@@ -171,7 +197,7 @@ class CreateView(MethodView):
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
 
-        return h.redirect_to(u'sub_theme.read', id=sub_theme.get(u'id'))
+        return h.redirect_to(u'sub_theme.read', name=sub_theme.get(u'name'))
 
 
 class EditView(MethodView):
@@ -180,7 +206,7 @@ class EditView(MethodView):
     def _is_save(self):
         return u'save' in request.form
 
-    def _prepare(self, data=None):
+    def _prepare(self, name=None):
 
         context = {
             u'model': model,
@@ -189,19 +215,24 @@ class EditView(MethodView):
             u'auth_user_obj': g.userobj,
             u'save': self._is_save()
         }
+
+        try:
+            sub_theme = logic.get_action(u'sub_theme_show')({}, {'name': name})
+        except logic.NotFound:
+            base.abort(404, _(u'Sub-Theme not found'))
+
+        context['sub_theme'] = sub_theme
+
         try:
             logic.check_access(u'sub_theme_update', context)
         except logic.NotAuthorized:
-            return base.abort(403, _(u'Unauthorized to create a sub-theme'))
+            return base.abort(403, _(u'Unauthorized to edit a sub-theme'))
+
         return context
 
-    def get(self, id=None, data=None, errors=None, error_summary=None):
-        context = self._prepare()
-
-        try:
-            sub_theme = logic.get_action(u'sub_theme_show')({}, {'id': id})
-        except logic.NotFound:
-            base.abort(404, _(u'Sub-Theme not found'))
+    def get(self, name=None, data=None, errors=None, error_summary=None):
+        context = self._prepare(name)
+        sub_theme = context['sub_theme']
 
         theme_options = []
         themes = logic.get_action(u'theme_list')(context, {})
@@ -210,7 +241,7 @@ class EditView(MethodView):
             theme_options.append(opt)
 
         form_vars = {
-            u'id': id,
+            u'id': sub_theme.get('id'),
             u'user': context.get('user'),
             u'data': data or sub_theme,
             u'theme': sub_theme.get('theme', ''),
@@ -227,34 +258,41 @@ class EditView(MethodView):
             }
         )
 
-    def post(self, id=None):
-        context = self._prepare()
+    def post(self, name=None):
+        context = self._prepare(name)
+        sub_theme = context['sub_theme']
 
         try:
             data_dict = logic.clean_dict(
                 dictization_functions.unflatten(
                     logic.tuplize_dict(logic.parse_params(request.form))))
+            data_dict.pop('save', '')
         except dictization_functions.DataError:
             base.abort(400, _(u'Integrity Error'))
 
-        data_dict['id'] = id
-        data_dict.pop('save', '')
+        data_dict['id'] = sub_theme.get('id')
 
         try:
-            sub_theme = logic.get_action(u'sub_theme_update')(context, data_dict)
+            sub_theme = logic.get_action(u'sub_theme_update')(
+                context, data_dict
+            )
         except logic.NotAuthorized:
             base.abort(403, _(u'Unauthorized to update the sub-theme'))
         except logic.ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
-            return self.get(data_dict, errors, error_summary)
+            return self.get(name, data_dict, errors, error_summary)
 
-        return h.redirect_to(u'sub_theme.read', id=sub_theme.get(u'id'))
+        return h.redirect_to(u'sub_theme.read', name=sub_theme.get(u'name'))
 
 
-sub_theme.add_url_rule(u'/', view_func=search, strict_slashes=False)
-sub_theme.add_url_rule(u'/new', view_func=CreateView.as_view(str(u'new')))
-sub_theme.add_url_rule(u'/<id>', view_func=read)
-sub_theme.add_url_rule(u'/edit/<id>', view_func=EditView.as_view(str(u'edit')))
-sub_theme.add_url_rule(u'/delete/<id>', view_func=delete, methods=(u'POST', ))
-
+sub_theme.add_url_rule(u'/',
+                       view_func=search, strict_slashes=False)
+sub_theme.add_url_rule(u'/new',
+                       view_func=CreateView.as_view(str(u'new')))
+sub_theme.add_url_rule(u'/<name>',
+                       view_func=read)
+sub_theme.add_url_rule(u'/edit/<name>',
+                       view_func=EditView.as_view(str(u'edit')))
+sub_theme.add_url_rule(u'/delete/<id>',
+                       view_func=delete, methods=(u'POST', ))

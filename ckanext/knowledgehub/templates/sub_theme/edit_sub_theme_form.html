@@ -2,8 +2,20 @@
 
 <form id="sub-theme-form" action="" method="post">
   {{ form.errors(error_summary) }}
-  {{ form.input("name", id="field-name", label=_("Name"), placeholder=_("name"), value=data.name, error=errors.name, classes=["control-medium"], is_required=True) }}
+
+  {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
+
+  {{ form.input('title', label=_('Name'), id='field-name', placeholder=_('My Sub-Theme'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs, is_required=true) }}
+
+  {%- set prefix = h.url_for('/sub-theme/') -%}
+  {%- set domain = h.url_for('/sub-theme/', qualified=true) -%}
+  {% set domain = domain|replace("http://", "")|replace("https://", "") %}
+  {% set attrs = {'data-module': 'slug-preview-slug', 'class': 'form-control input-sm', 'data-module-prefix': domain, 'data-module-placeholder': '<' + 'sub-theme' + '>'} %}
+
+  {{ form.prepend('name', label=_('URL'), prepend=prefix, id='field-url', placeholder=_('my-sub-theme'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
+
   {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('A little information about my sub-theme...'), value=data.description, error=errors.description) }}
+
   {{ form.select('theme', label=_('Theme'), options=theme_options, selected=theme, error=errors.theme, is_required=True) }}
 
   {{ form.required_message() }}

@@ -23,7 +23,11 @@ def theme_schema():
 
 def sub_theme_create():
     return {
-        'name': [not_empty, unicode],
+        'title': [not_empty, unicode],
+        'name': [not_empty,
+                 name_validator,
+                 validators.sub_theme_name_validator,
+                 unicode],
         'description': [ignore_empty, unicode],
         'theme': [not_empty, unicode]
     }
@@ -31,7 +35,11 @@ def sub_theme_create():
 
 def sub_theme_update():
     return {
-        'name': [not_empty, unicode],
+        'title': [not_empty, unicode],
+        'name': [not_empty,
+                 name_validator,
+                 validators.sub_theme_name_validator,
+                 unicode],
         'description': [ignore_empty, unicode],
         'theme': [not_empty, unicode]
     }

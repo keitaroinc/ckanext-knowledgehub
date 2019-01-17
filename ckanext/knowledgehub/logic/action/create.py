@@ -69,6 +69,8 @@ def theme_create(context, data_dict):
 def sub_theme_create(context, data_dict):
     ''' Creates a new sub-theme
 
+    :param title: title of the sub-theme
+    :type title: string
     :param name: name of the sub-theme
     :type name: string
     :param description: a description of the sub-theme (optional)
@@ -95,15 +97,8 @@ def sub_theme_create(context, data_dict):
     user = context.get('user')
     data['created_by'] = model.User.by_name(user.decode('utf8')).id
 
-    try:
-        st = SubThemes(**data)
-        st.save()
-    except exc.IntegrityError as e:
-        if e.orig.pgcode == pg_errorcodes.UNIQUE_VIOLATION:
-            raise ValidationError({
-                    'name': ['Already exists']
-                })
-        raise
+    st = SubThemes(**data)
+    st.save()
 
     return st.as_dict()
 
