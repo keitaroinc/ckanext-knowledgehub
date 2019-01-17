@@ -42,6 +42,8 @@ def before_request():
 
 
 def index():
+    u''' Themes index view function '''
+
     extra_vars = {}
 
     context = {
@@ -98,6 +100,8 @@ def index():
 
 
 def read(name):
+    u''' Theme read item view function '''
+
     extra_vars = {}
 
     data_dict = {u'name': name}
@@ -121,6 +125,7 @@ def read(name):
 
 
 def delete(id):
+    u''' Theme delete view function '''
 
     data_dict = {u'id': id}
     context = {
