@@ -5,7 +5,7 @@ from ckanext.knowledgehub.model.theme import Theme
 
 def theme_name_validator(key, data, errors, context):
     session = context['session']
-    theme_name = context.get('name')
+    theme_name = context.get('theme')
 
     if theme_name and theme_name == data[key]:
         return

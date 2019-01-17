@@ -26,11 +26,11 @@ def theme_delete(context, data_dict):
     check_access('theme_delete', context)
 
     if 'id' not in data_dict:
-        raise ValidationError({"id": "Missing parameter"})
+        raise ValidationError({"id": _('Missing value')})
 
     Theme.delete({'id': data_dict['id']})
 
-    return {"message": ["Theme deleted."]}
+    return {"message": _('Theme deleted.')}
 
 
 @toolkit.side_effect_free
@@ -71,6 +71,6 @@ def research_question_delete(context, data_dict):
     id = data_dict.get('id')
     if not id:
         raise ValidationError({'id': 'Missing parameter'})
-        
+
     ResearchQuestion.delete(id=id)
     log.info("Research question id \'{}\' deleted successfully".format(id))
