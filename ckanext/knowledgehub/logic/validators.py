@@ -23,7 +23,7 @@ def theme_name_validator(key, data, errors, context):
 
 def sub_theme_name_validator(key, data, errors, context):
     session = context['session']
-    sub_theme_name = context.get('name')
+    sub_theme_name = context.get('sub_theme')
 
     if sub_theme_name and sub_theme_name == data[key]:
         return

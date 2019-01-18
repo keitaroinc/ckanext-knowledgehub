@@ -281,6 +281,7 @@ class EditView(MethodView):
             sub_theme = logic.get_action(u'sub_theme_update')(
                 context, data_dict
             )
+            h.flash_notice(_(u'Sub-Theme has been updated.'))
         except logic.NotAuthorized:
             base.abort(403, _(u'Unauthorized to update the sub-theme'))
         except logic.ValidationError as e:
