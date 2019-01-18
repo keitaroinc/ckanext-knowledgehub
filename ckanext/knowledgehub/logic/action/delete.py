@@ -62,6 +62,14 @@ def sub_theme_delete(context, data_dict):
                               u'administrator to administer'))
 
     id = logic.get_or_bust(data_dict, 'id')
+
+    questions = Session.query(ResearchQuestion) \
+        .filter_by(sub_theme=id) \
+        .count()
+    if questions:
+        raise logic.ValidationError(_('Sub-Theme cannot be deleted while it '
+                                      'still has research questions'))
+
     try:
         filter = {'id': id}
         SubThemes.delete(filter)

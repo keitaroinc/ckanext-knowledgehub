@@ -110,7 +110,7 @@ def sub_theme_show(context, data_dict):
     if not id_or_name:
         raise ValidationError({u'id': _(u'Missing value')})
 
-    st = SubThemes.get(id_or_name=id_or_name).first()
+    st = SubThemes.get(id_or_name=id_or_name, status='active').first()
 
     if not st:
         raise NotFound(_(u'Sub-theme'))
@@ -145,7 +145,8 @@ def sub_theme_list(context, data_dict):
     st_db_list = SubThemes.get(q=q,
                                limit=page_size,
                                offset=offset,
-                               order_by=order_by).all()
+                               order_by=order_by,
+                               status='active').all()
 
     for entry in st_db_list:
         st_list.append(_table_dictize(entry, context))

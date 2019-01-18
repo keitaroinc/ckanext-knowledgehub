@@ -32,12 +32,12 @@ class SubThemes(DomainObject):
         kwargs.pop('order_by', None)
 
         query = Session.query(cls).autoflush(False)
+        query = query.filter_by(**kwargs)
+
         if id_or_name:
             query = query.filter(
                 or_(cls.id == id_or_name, cls.name == id_or_name)
             )
-        else:
-            query = query.filter_by(**kwargs)
 
         if q:
             query = query.filter(
@@ -81,6 +81,7 @@ sub_themes_table = Table(
     Column('title', types.UnicodeText),
     Column('description', types.UnicodeText),
     Column('theme', types.UnicodeText, ForeignKey('theme.id'), nullable=False),
+    Column('status', types.UnicodeText, default='active'),
     Column('created_at', types.DateTime, default=datetime.datetime.now),
     Column('modified_at', types.DateTime, onupdate=datetime.datetime.now),
     Column('created_by', types.UnicodeText, nullable=False),
