@@ -97,6 +97,13 @@ def sub_theme_update(context, data_dict):
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
 
+    sub_theme = SubThemes.get(id_or_name=id).first()
+
+    if not sub_theme:
+        log.debug('Could not find theme %s', id)
+        raise logic.NotFound(_('Sub-Theme was not found.'))
+
+    context['sub_theme'] = sub_theme.name
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.sub_theme_update(),
                                 context)
