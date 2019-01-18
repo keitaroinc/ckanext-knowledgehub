@@ -15,7 +15,7 @@
   <h1 class="{% block page_heading_class %}page-heading{% endblock %}">
     {% block page_heading %}{{ _('Edit Theme') }}{% endblock %}
   </h1>
-  {% snippet 'theme/edit_theme_form.html', data=theme, errors=errors %}
+  {% snippet 'theme/edit_theme_form.html', data=theme, errors=errors, error_summary=error_summary %}
 {% endblock %}
 
 {% block secondary_content %}
