@@ -9,18 +9,29 @@
     </thead>
     <tbody>
       {% block theme_additional_info %}
+        {% if theme.author_email %}
+          <tr>
+            <th scope="row" class="theme-label">{{ _("Author") }}</th>
+            <td class="theme-details" property="dc:creator">{{ h.mail_to(email_address=theme.author_email, name=theme.author) }}</td>
+          </tr>
+        {% elif theme.author %}
+          <tr>
+            <th scope="row" class="theme-label">{{ _("Author") }}</th>
+            <td class="theme-details" property="dc:creator">{{ theme.author }}</td>
+          </tr>
+        {% endif %}
         {% if theme.modified_at %}
           <tr>
-            <th scope="row" class="dataset-label">{{ _("Last Updated") }}</th>
-            <td class="dataset-details">
+            <th scope="row" class="theme-label">{{ _("Last Updated") }}</th>
+            <td class="theme-details">
                 {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=theme.modified_at %}
             </td>
           </tr>
         {% endif %}
         {% if theme.created_at %}
           <tr>
-            <th scope="row" class="dataset-label">{{ _("Created") }}</th>
-            <td class="dataset-details">
+            <th scope="row" class="theme-label">{{ _("Created") }}</th>
+            <td class="theme-details">
                 {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=theme.created_at %}
             </td>
           </tr>

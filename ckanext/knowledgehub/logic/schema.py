@@ -6,6 +6,7 @@ ignore_missing = toolkit.get_validator('ignore_missing')
 name_validator = toolkit.get_validator('name_validator')
 isodate = toolkit.get_validator('isodate')
 ignore_empty = toolkit.get_validator('ignore_empty')
+email_validator = toolkit.get_validator('email_validator')
 
 
 def theme_schema():
@@ -18,6 +19,10 @@ def theme_schema():
         'description': [ignore_missing, unicode],
         'created_at': [ignore_missing, isodate],
         'modified_at': [ignore_missing, isodate],
+        'author': [ignore_missing],
+        'author_email': [ignore_missing,
+                         email_validator],
+        'state': [ignore_missing]
     }
 
 
