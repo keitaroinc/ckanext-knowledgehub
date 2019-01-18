@@ -121,6 +121,8 @@ def delete(id):
         u'auth_user_obj': g.userobj,
     }
 
+    # Instead of deletion we may need to change
+    # the status only to `deleted` in future
     try:
         logic.get_action(u'sub_theme_delete')(context, data_dict)
         h.flash_notice(_(u'Sub-Theme has been deleted.'))
@@ -128,8 +130,8 @@ def delete(id):
         base.abort(403, _(u'Unauthorized to delete the sub-theme'))
     except logic.NotFound:
         base.abort(404, _(u'Sub-Theme not found'))
-    except ValidationError as e:
-        h.flash_error(e.error_dict['message'])
+    except logic.ValidationError as e:
+        h.flash_error(e.error_dict.get('message', ''))
 
     return h.redirect_to('sub_theme.search')
 
