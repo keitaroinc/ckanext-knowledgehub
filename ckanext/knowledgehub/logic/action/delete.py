@@ -1,11 +1,6 @@
 import logging
 
-from ckan.model.meta import (
-    metadata,
-    mapper,
-    Session,
-    engine
-    )
+from ckan.model.meta import Session
 
 import ckan.logic as logic
 from ckan.plugins import toolkit
