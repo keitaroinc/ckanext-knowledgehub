@@ -40,7 +40,9 @@ class SubThemes(DomainObject):
             query = query.filter_by(**kwargs)
 
         if q:
-            query = query.filter(cls.name.ilike(r"%{}%".format(q)))
+            query = query.filter(
+                or_(cls.name.contains(q), cls.name.ilike(r"%{}%".format(q)))
+            )
 
         if order_by:
             query = query.order_by(order_by)

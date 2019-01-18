@@ -123,6 +123,7 @@ def delete(id):
 
     try:
         logic.get_action(u'sub_theme_delete')(context, data_dict)
+        h.flash_notice(_(u'Sub-Theme has been deleted.'))
     except logic.NotAuthorized:
         base.abort(403, _(u'Unauthorized to delete the sub-theme'))
     except logic.NotFound:
@@ -157,8 +158,12 @@ class CreateView(MethodView):
     def get(self, data=None, errors=None, error_summary=None):
         context = self._prepare()
 
-        theme_options = []
         themes = logic.get_action(u'theme_list')(context, {})
+        if not themes.get(u'data', []):
+            h.flash_notice(_(u'Create a theme first then sub-theme'))
+            return h.redirect_to('theme.new')
+
+        theme_options = []
         for theme in themes.get(u'data', []):
             opt = {u'text': theme[u'title'], u'value': theme[u'id']}
             theme_options.append(opt)

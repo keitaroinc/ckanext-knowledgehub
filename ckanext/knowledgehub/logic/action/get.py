@@ -137,7 +137,7 @@ def sub_theme_list(context, data_dict):
     q = data_dict.get('q', '')
     page_size = int(data_dict.get('pageSize', 10))
     page = int(data_dict.get('page', 1))
-    order_by = data_dict.get('order_by', 'name asc')
+    order_by = data_dict.get('order_by', 'title asc')
 
     offset = (page - 1) * page_size
     st_list = []

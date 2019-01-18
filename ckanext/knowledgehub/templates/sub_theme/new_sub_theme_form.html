@@ -16,7 +16,7 @@
 
   {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('A little information about my sub-theme...'), value=data.description, error=errors.description) }}
 
-  {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, is_required=True) }}
+  {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=data.theme, is_required=True) }}
 
   {{ form.required_message() }}
 
