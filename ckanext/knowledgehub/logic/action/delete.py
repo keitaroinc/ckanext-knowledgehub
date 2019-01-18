@@ -1,5 +1,7 @@
 import logging
 
+from ckan.model.meta import Session
+
 import ckan.logic as logic
 from ckan.plugins import toolkit
 from ckan.common import _
@@ -27,6 +29,13 @@ def theme_delete(context, data_dict):
 
     if 'id' not in data_dict:
         raise ValidationError({"id": _('Missing value')})
+
+    sub_themes = Session.query(SubThemes) \
+        .filter_by(theme=data_dict['id']) \
+        .count()
+    if sub_themes:
+        raise ValidationError(_('Theme cannot be deleted while it '
+                                'still has sub-themes'))
 
     Theme.delete({'id': data_dict['id']})
 

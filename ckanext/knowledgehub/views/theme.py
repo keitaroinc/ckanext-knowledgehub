@@ -146,6 +146,8 @@ def delete(id):
         base.abort(404, _(u'Theme not found'))
     except ValidationError as e:
         h.flash_error(e.error_dict['message'])
+        return h.redirect_to(u'theme.edit',
+                             name=id)
 
     return h.redirect_to(u'theme.index')
 
