@@ -1,0 +1,25 @@
+{% extends "page.html" %}
+
+{% block breadcrumb_content %}
+<li>{{ h.nav_link(_('Sub-Themes'), named_route='sub_theme.search') }}</li>
+<li class="active">{{ h.nav_link(_('Create a Sub-Theme'), named_route='sub_theme.new') }}</li>
+{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+{% block primary_content %}
+<article class="module">
+    <div class="module-content">
+        {% block primary_content_inner %}
+        <h1 class="page-heading">
+            {% block page_heading %}{{ _('Create a Sub-Theme') }}{% endblock %}
+        </h1>
+        {{ form | safe }}
+        {% endblock %}
+    </div>
+</article>
+{% endblock %}
+
+{% block secondary_content %}
+{% snippet "sub_theme/snippets/helper.html" %}
+{% endblock %}

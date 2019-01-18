@@ -99,12 +99,18 @@ def sub_theme_show(context, data_dict):
     :param id: the sub-theme's ID
     :type id: string
 
+    :param name the sub-theme's name
+    :type name: string
+
     :returns: a sub-theme
     :rtype: dictionary
     '''
 
-    id = logic.get_or_bust(data_dict, 'id')
-    st = SubThemes.get(id=id).first()
+    id_or_name = data_dict.get('id') or data_dict.get('name')
+    if not id_or_name:
+        raise ValidationError({u'id': _(u'Missing value')})
+
+    st = SubThemes.get(id_or_name=id_or_name).first()
 
     if not st:
         raise NotFound(_(u'Sub-theme'))
@@ -128,19 +134,23 @@ def sub_theme_list(context, data_dict):
     :rtype: dictionary
     '''
 
+    q = data_dict.get('q', '')
     page_size = int(data_dict.get('pageSize', 10))
     page = int(data_dict.get('page', 1))
+    order_by = data_dict.get('order_by', 'title asc')
+
     offset = (page - 1) * page_size
     st_list = []
 
-    st_db_list = SubThemes.get(limit=page_size,
+    st_db_list = SubThemes.get(q=q,
+                               limit=page_size,
                                offset=offset,
-                               order_by='name asc').all()
+                               order_by=order_by).all()
 
     for entry in st_db_list:
         st_list.append(_table_dictize(entry, context))
 
-    total = len(SubThemes.get().all())
+    total = len(SubThemes.get(q=q).all())
 
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': st_list}

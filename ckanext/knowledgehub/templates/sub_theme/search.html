@@ -1,0 +1,36 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _("Sub-themes") }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li class="active">{{ h.nav_link(_('Sub-Themes'), named_route='sub_theme.search') }}</li>
+{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+{% block page_primary_action %}
+  {% if h.check_access('sub_theme_create', {'user': user}) %}
+    {% link_for _('Add Sub-theme'), named_route='sub_theme.new', class_='btn btn-primary', icon='plus-square' %}
+  {% endif %}
+{% endblock %}
+
+{% block primary_content_inner %}
+{% snippet 'snippets/search_form.html', form_id='sub-theme-search-form', type='sub-theme', query=q, sorting_selected=order_by, count=total, placeholder=_('Search sub-themes...'), show_empty=request.params, no_bottom_border=true if sub_themes, sorting = [(_('Name Ascending'), 'title asc'), (_('Name Descending'), 'title desc')] %}
+  {% if sub_themes %}
+      {% snippet "sub_theme/snippets/sub_theme_list.html", sub_themes=sub_themes %}
+  {% else %}
+    <p class="empty">
+      {{ _('There are currently no sub-themes for this site') }}.
+      {% if h.check_access('sub_theme_create') %}
+        {{ h.nav_link(_('How about creating one?'), named_route='sub_theme.new') }}.
+      {% endif %}
+    </p>
+  {% endif %}
+  {% block page_pagination %}
+    {{ page.pager(q=q or '', sort=order_by or '') }}
+  {% endblock %}
+{% endblock %}
+
+{% block secondary_content %}
+{% snippet "sub_theme/snippets/helper.html" %}
+{% endblock %}
