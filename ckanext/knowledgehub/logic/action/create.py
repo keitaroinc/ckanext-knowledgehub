@@ -39,9 +39,11 @@ def theme_create(context, data_dict):
     if 'name' not in data_dict:
         raise ValidationError({"name": _('Missing value')})
 
+    user = context['user']
+    session = context['session']
+
     # we need the old theme name in the context for name validation
     context['theme'] = None
-    session = context['session']
     data, errors = _df.validate(data_dict, knowledgehub_schema.theme_schema(),
                                 context)
 
@@ -57,6 +59,13 @@ def theme_create(context, data_dict):
 
     theme.created_at = datetime.datetime.utcnow()
     theme.modified_at = datetime.datetime.utcnow()
+    theme.author = user
+
+    if user:
+        user_obj = model.User.by_name(user.decode('utf8'))
+        if user_obj:
+            theme.author_email = user_obj.email
+
     theme.save()
 
     session.add(theme)

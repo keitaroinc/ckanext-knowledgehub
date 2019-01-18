@@ -36,7 +36,9 @@ def theme_delete(context, data_dict):
     if sub_themes:
         raise ValidationError(_('Theme cannot be deleted while it '
                                 'still has sub-themes'))
-
+    # TODO we might need to change the
+    #  status of the theme and child elements
+    #  when deleting theme
     Theme.delete({'id': data_dict['id']})
 
     return {"message": _('Theme deleted.')}

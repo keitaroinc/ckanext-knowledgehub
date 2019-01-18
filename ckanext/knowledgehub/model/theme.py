@@ -36,6 +36,10 @@ theme_table = Table(
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,
            default=datetime.datetime.utcnow),
+    Column('state', types.UnicodeText,
+           default=u'active'),
+    Column('author', types.UnicodeText),
+    Column('author_email', types.UnicodeText),
     )
 
 
