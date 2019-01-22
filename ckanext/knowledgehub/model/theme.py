@@ -5,6 +5,7 @@ from sqlalchemy import (
     types,
     Column,
     Table,
+    or_,
 )
 
 from ckan.common import _
@@ -35,28 +36,50 @@ theme_table = Table(
            default=datetime.datetime.utcnow),
     Column('modified', types.DateTime,
            default=datetime.datetime.utcnow),
+    Column('state', types.UnicodeText,
+           default=u'active'),
+    Column('author', types.UnicodeText),
+    Column('author_email', types.UnicodeText),
     )
 
 
 class Theme(DomainObject):
 
     @classmethod
-    def get(cls, **kwargs):
+    def get(cls, reference):
+        '''Returns a theme object referenced by its id or name.'''
+        if not reference:
+            return None
+
+        theme = Session.query(cls).get(reference)
+        if theme is None:
+            theme = cls.by_name(reference)
+        return theme
+
+    @classmethod
+    def search(cls, **kwargs):
         limit = kwargs.get('limit')
         offset = kwargs.get('offset')
         order_by = kwargs.get('order_by')
+        q = kwargs.get('q')
 
         kwargs.pop('limit', None)
         kwargs.pop('offset', None)
         kwargs.pop('order_by', None)
+        kwargs.pop('q', None)
 
-        query = Session.query(cls).autoflush(False)
-        query = query.filter_by(**kwargs)
+        if q:
+            query = Session.query(cls) \
+                .filter(or_(cls.name.contains(q),
+                            cls.title.ilike('%' + q + '%')))
+        else:
+            query = Session.query(cls) \
+                .filter_by(**kwargs)
 
         if order_by:
             column = order_by.split(' ')[0]
             order = order_by.split(' ')[1]
-            query.order_by("%s %s" % (column, order))
+            query = query.order_by("%s %s" % (column, order))
 
         if limit:
             query = query.limit(limit)

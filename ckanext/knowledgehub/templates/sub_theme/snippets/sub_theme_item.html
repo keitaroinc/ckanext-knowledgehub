@@ -1,0 +1,32 @@
+{#
+Displays a single sub-theme.
+
+sub-theme        - A sub-theme to display.
+item_class     - The class name to use on the list item.
+truncate       - The length to trucate the description to (default: 180)
+truncate_title - The length to truncate the title to (default: 80).
+
+Example:
+
+  {% snippet 'sub_theme/snippets/sub_theme_item.html', sub_theme=sub_theme %}
+
+#}
+{% set truncate = truncate or 180 %}
+{% set truncate_title = truncate_title or 80 %}
+{% set title = sub_theme['title'] %}
+{% set description = h.markdown_extract(sub_theme['description'], extract_length=truncate) %}
+
+
+<li class="sub-theme-item">
+  <div class="sub-theme-content">
+    <h3 class="sub-theme-heading">
+      {{ h.nav_link(h.truncate(title, truncate_title), named_route='sub_theme.read', name=sub_theme['name']) }}
+    </h3>
+    {% if description %}
+      <p>{{ description }}</p>
+    {% else %}
+      <p class="empty">{{ _("This sub-theme has no description") }}</p>
+    {% endif %}
+  </div>
+</li>
+

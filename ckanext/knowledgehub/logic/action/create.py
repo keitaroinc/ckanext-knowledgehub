@@ -37,11 +37,13 @@ def theme_create(context, data_dict):
     check_access('theme_create', context)
 
     if 'name' not in data_dict:
-        raise ValidationError({"name": ["Missing value"]})
+        raise ValidationError({"name": _('Missing value')})
 
-    # we need the theme name in the context for name validation
-    context['theme'] = data_dict['name']
+    user = context['user']
     session = context['session']
+
+    # we need the old theme name in the context for name validation
+    context['theme'] = None
     data, errors = _df.validate(data_dict, knowledgehub_schema.theme_schema(),
                                 context)
 
@@ -57,6 +59,13 @@ def theme_create(context, data_dict):
 
     theme.created_at = datetime.datetime.utcnow()
     theme.modified_at = datetime.datetime.utcnow()
+    theme.author = user
+
+    if user:
+        user_obj = model.User.by_name(user.decode('utf8'))
+        if user_obj:
+            theme.author_email = user_obj.email
+
     theme.save()
 
     session.add(theme)
@@ -69,12 +78,14 @@ def theme_create(context, data_dict):
 def sub_theme_create(context, data_dict):
     ''' Creates a new sub-theme
 
+    :param title: title of the sub-theme
+    :type title: string
     :param name: name of the sub-theme
     :type name: string
     :param description: a description of the sub-theme (optional)
     :type description: string
-    :param theme_id: the ID of the theme
-    :type theme_id: string
+    :param theme: the ID of the theme
+    :type theme: string
 
     :returns: the newly created sub-theme
     :rtype: dictionary
@@ -95,17 +106,11 @@ def sub_theme_create(context, data_dict):
     user = context.get('user')
     data['created_by'] = model.User.by_name(user.decode('utf8')).id
 
-    try:
-        st = SubThemes(**data)
-        st.save()
-    except exc.IntegrityError as e:
-        if e.orig.pgcode == pg_errorcodes.UNIQUE_VIOLATION:
-            raise ValidationError({
-                    'name': ['Already exists']
-                })
-        raise
+    st = SubThemes(**data)
+    st.save()
 
     return st.as_dict()
+
 
 def research_question_create(context, data_dict):
     '''Create new research question.
@@ -121,7 +126,9 @@ def research_question_create(context, data_dict):
     '''
     check_access('research_question_create', context, data_dict)
 
-    data, errors = _df.validate(data_dict, knowledgehub_schema.research_question_schema(), context)
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.research_question_schema(),
+                                context)
 
     if errors:
         raise toolkit.ValidationError(errors)

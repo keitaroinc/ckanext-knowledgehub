@@ -6,6 +6,7 @@ import inspect
 from flask import Blueprint
 
 import ckan.plugins.toolkit as toolkit
+from ckan import logic
 
 
 log = logging.getLogger(__name__)

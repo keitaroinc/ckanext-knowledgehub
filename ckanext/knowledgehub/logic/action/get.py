@@ -26,7 +26,7 @@ def theme_show(context, data_dict):
     :param id
     '''
 
-    # check_access('theme_update', context)
+    check_access('theme_update', context)
 
     if 'id' not in data_dict:
         raise ValidationError({"id": "Missing parameter"})

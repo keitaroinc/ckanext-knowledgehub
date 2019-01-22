@@ -36,25 +36,23 @@ def theme_update(context, data_dict):
     '''
     check_access('theme_update', context)
 
-    if 'id' not in data_dict:
-        raise ValidationError({"id": ["Missing value"]})
+    name_or_id = data_dict.get("id") or data_dict.get("name")
 
-    if 'name' not in data_dict:
-        raise ValidationError({"name": ["Missing value"]})
+    if name_or_id is None:
+        raise ValidationError({'id': _('Missing value')})
 
-    theme = Theme.get(id=data_dict['id']).first()
+    theme = Theme.get(name_or_id)
 
     if not theme:
-        log.debug('Could not find theme %s', id)
+        log.debug('Could not find theme %s', name_or_id)
         raise NotFound(_('Theme was not found.'))
 
-    # we need the theme name in the context for name validation
-    context['theme'] = data_dict['name']
+    # we need the old theme name in the context for name validation
+    context['theme'] = theme.name
     session = context['session']
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.theme_schema(),
                                 context)
-
     if errors:
         raise ValidationError(errors)
 
@@ -83,8 +81,8 @@ def sub_theme_update(context, data_dict):
     :type name: string
     :param description: a description of the sub-theme (optional)
     :type description: string
-    :param theme_id: the ID of the theme
-    :type theme_id: string
+    :param theme: the ID of the theme
+    :type theme: string
 
     :returns: the updated sub-theme
     :rtype: dictionary
@@ -99,6 +97,13 @@ def sub_theme_update(context, data_dict):
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
 
+    sub_theme = SubThemes.get(id_or_name=id).first()
+
+    if not sub_theme:
+        log.debug('Could not find theme %s', id)
+        raise logic.NotFound(_('Sub-Theme was not found.'))
+
+    context['sub_theme'] = sub_theme.name
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.sub_theme_update(),
                                 context)
@@ -108,15 +113,8 @@ def sub_theme_update(context, data_dict):
     user = context.get('user')
     data_dict['modified_by'] = model.User.by_name(user.decode('utf8')).id
 
-    try:
-        filter = {'id': id}
-        st = SubThemes.update(filter, data_dict)
-    except exc.IntegrityError as e:
-        if e.orig.pgcode == pg_errorcodes.UNIQUE_VIOLATION:
-            raise logic.ValidationError({
-                    'name': ['Already exists']
-                })
-        raise
+    filter = {'id': id}
+    st = SubThemes.update(filter, data_dict)
 
     return st.as_dict()
 
@@ -135,7 +133,9 @@ def research_question_update(context, data_dict):
     '''
     check_access('research_question_update', context)
 
-    data, errors = _df.validate(data_dict, knowledgehub_schema.research_question_schema(), context)
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.research_question_schema(),
+                                context)
 
     if errors:
         raise toolkit.ValidationError(errors)

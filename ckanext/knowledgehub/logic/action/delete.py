@@ -1,5 +1,7 @@
 import logging
 
+from ckan.model.meta import Session
+
 import ckan.logic as logic
 from ckan.plugins import toolkit
 from ckan.common import _
@@ -26,11 +28,20 @@ def theme_delete(context, data_dict):
     check_access('theme_delete', context)
 
     if 'id' not in data_dict:
-        raise ValidationError({"id": "Missing parameter"})
+        raise ValidationError({"id": _('Missing value')})
 
+    sub_themes = Session.query(SubThemes) \
+        .filter_by(theme=data_dict['id']) \
+        .count()
+    if sub_themes:
+        raise ValidationError(_('Theme cannot be deleted while it '
+                                'still has sub-themes'))
+    # TODO we might need to change the
+    #  status of the theme and child elements
+    #  when deleting theme
     Theme.delete({'id': data_dict['id']})
 
-    return {"message": ["Theme deleted."]}
+    return {"message": _('Theme deleted.')}
 
 
 @toolkit.side_effect_free
@@ -51,6 +62,14 @@ def sub_theme_delete(context, data_dict):
                               u'administrator to administer'))
 
     id = logic.get_or_bust(data_dict, 'id')
+
+    questions = Session.query(ResearchQuestion) \
+        .filter_by(sub_theme=id) \
+        .count()
+    if questions:
+        raise logic.ValidationError(_('Sub-Theme cannot be deleted while it '
+                                      'still has research questions'))
+
     try:
         filter = {'id': id}
         SubThemes.delete(filter)
@@ -71,6 +90,6 @@ def research_question_delete(context, data_dict):
     id = data_dict.get('id')
     if not id:
         raise ValidationError({'id': 'Missing parameter'})
-        
+
     ResearchQuestion.delete(id=id)
     log.info("Research question id \'{}\' deleted successfully".format(id))

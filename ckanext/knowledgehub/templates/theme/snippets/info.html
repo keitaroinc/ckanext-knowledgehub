@@ -1,0 +1,25 @@
+{#
+Displays a sidebard module with information for given theme
+
+theme    - The theme dict that owns the info.
+
+Example:
+
+  {% snippet "theme/snippets/info.html"%}
+
+#}
+{% block theme_info %}
+  {% if theme %}
+    <section class="module module-narrow">
+      <div class="module context-info">
+        <div class="module-content">
+          {% block theme_info_inner %}
+            {% block heading %}
+              <h1 class="heading">{{ theme.title }}</h1>
+            {% endblock %}
+          {% endblock %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

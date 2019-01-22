@@ -1,0 +1,28 @@
+{#
+Displays a sidebard module with information for given sub_theme
+
+sub_theme    - The sub-theme dict
+
+Example:
+
+  {% snippet "sub_theme/snippets/info.html", sub_theme=sub_theme %}
+
+#}
+
+{% set truncate_desc = truncate_desc or 120 %}
+
+{% if sub_theme %}
+  <section class="module module-narrow">
+    <div class="module context-info">
+      <div class="module-content">
+          <h1 class="heading">{{ sub_theme.get('title', '') }}</h1>
+
+          {% if sub_theme.get('description', None) %}
+            <p>{{ h.markdown_extract(sub_theme['description'], extract_length=truncate_desc) }}</p>
+          {% else %}
+            <p class="empty">{{ _("This sub-theme has no description") }}</p>
+          {% endif %}
+      </div>
+    </div>
+  </section>
+{% endif %}

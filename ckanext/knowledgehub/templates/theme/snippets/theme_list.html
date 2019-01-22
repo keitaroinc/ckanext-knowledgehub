@@ -1,0 +1,22 @@
+{#
+Display a grid of theme items.
+
+themes - A list of themes.
+
+Example:
+
+    {% snippet "theme/snippets/theme_list.html" %}
+
+#}
+
+{% block theme_list %}
+  {% if themes %}
+    <ul class="theme-list list-unstyled">
+    	{% block theme_list_inner %}
+	      {% for theme in themes %}
+	        {% snippet "theme/snippets/theme_item.html", theme=theme, position=loop.index %}
+	      {% endfor %}
+	    {% endblock %}
+    </ul>
+  {% endif %}
+{% endblock %}
