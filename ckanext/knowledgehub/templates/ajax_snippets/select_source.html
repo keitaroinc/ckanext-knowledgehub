@@ -1,0 +1,10 @@
+{% import "macros/form.html" as form %}
+
+{% set source_options = [{'value': '', 'text': 'Choose source'},
+                         {'value': 'data_source_1', 'text': 'Data Source 1'},
+                         {'value': 'data_source_2', 'text': 'Data Source 2'}] %}
+
+{% set attrs = {'class': 'form-control select-sources'} %}
+
+{{ form.select('data_source', label=_('Sources'), options=source_options, attrs=attrs, is_required=True) }}
+
