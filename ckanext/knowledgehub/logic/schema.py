@@ -52,8 +52,13 @@ def sub_theme_update():
 
 def research_question_schema():
     return {
-        'id': [ignore_missing, unicode],
+        'name': [not_empty,
+                 name_validator,
+                 validators.research_question_name_validator,
+                 unicode],
         'theme': [not_empty, unicode],
-        'sub_theme': [not_empty, unicode],
-        'content': [not_empty, unicode],
+        'sub_theme': [not_empty,
+                      validators.check_sub_theme_parent,
+                      unicode],
+        'title': [not_empty, unicode],
     }

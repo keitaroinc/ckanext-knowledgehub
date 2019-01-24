@@ -15,7 +15,7 @@
 {% endblock %}
 
  {% block primary_content_inner %}
-{% snippet 'snippets/search_form.html', form_id='research-question-search-form', type='research_question', query=q, sorting_selected=order_by, count=total, placeholder=_('Search research questions...'), show_empty=request.params, no_bottom_border=true if research_question, sorting = [(_('Name Ascending'), 'name asc'), (_('Name Descending'), 'name desc')] %}
+{% snippet 'snippets/search_form.html', form_id='research-question-search-form', type='research question', query=q, sorting_selected=order_by, count=total, placeholder=_('Search research questions...'), show_empty=request.params, no_bottom_border=true if research_question, sorting = [(_('Name Ascending'), 'name asc'), (_('Name Descending'), 'name desc')] %}
   {% if research_questions %}
       {% snippet "research_question/snippets/research_question_list.html", research_question_list=research_questions %}
   {% else %}

@@ -151,7 +151,7 @@ def research_question_update(context, data_dict):
 
     rq.theme = theme
     rq.sub_theme = sub_theme
-    rq.content = content
+    rq.title = content
     rq.modified = datetime.datetime.now()
     rq.save()
     session.add(rq)

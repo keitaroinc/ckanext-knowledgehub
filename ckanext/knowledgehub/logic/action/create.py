@@ -138,13 +138,16 @@ def research_question_create(context, data_dict):
 
     theme = data.get('theme')
     sub_theme = data.get('sub_theme')
-    content = data.get('content')
-    state = data.get('state', 'active')
+    url_slug = data.get('name')
 
+    title = data.get('title')
+    state = data.get('state', 'active')
+    #FIXME if theme or subtheme id not exists, return notfound
     research_question = ResearchQuestion(
+        name=url_slug,
         theme=theme,
         sub_theme=sub_theme,
-        content=content,
+        title=title,
         author=user_id,
         state=state
     )

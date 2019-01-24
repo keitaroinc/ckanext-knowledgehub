@@ -1,12 +1,23 @@
 {% import "macros/form.html" as form %}
 
  <form id="research-question-form" action="" method="post">
-    {{ form.errors(error_summary) }}
-    {{ form.input("content", id="field-content", label=_("Question"), placeholder=_("Your research question"), value=data.name, error=errors.name, classes=["control-medium"], is_required=True) }}
-    {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, is_required=True) }}
-    {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, is_required=True) }}
+   {{ form.errors(error_summary) }}
 
-     {{ form.required_message() }}
+   {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
+
+   {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=data.theme, is_required=True) }}
+   {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, selected=data.sub_theme, is_required=True) }}
+   {{ form.input('title', label=_('Question'), id='field-title', placeholder=_('Your research question'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs, is_required=true) }}
+
+   {%- set prefix = h.url_for('/research-question/') -%}
+   {%- set domain = h.url_for('/research-question/', qualified=true) -%}
+   {% set domain = domain|replace("http://", "")|replace("https://", "") %}
+   {% set attrs = {'data-module': 'slug-preview-slug', 'class': 'form-control input-sm', 'data-module-prefix': domain, 'data-module-placeholder': '<' + 'research-question' + '>'} %}
+
+   {{ form.prepend('name', label=_('URL'), prepend=prefix, id='field-url', placeholder=_('my-research-question'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
+
+
+   {{ form.required_message() }}
 
      <div class="form-actions">
         {% block form_actions %}

@@ -41,7 +41,7 @@ def before_request():
 def search():
     q = request.params.get(u'q', u'')
     page = request.params.get(u'page', 1)
-    order_by = request.params.get(u'sort', u'content desc')
+    order_by = request.params.get(u'sort', u'title desc')
     limit = int(request.params.get(u'limit', config.get(
         u'ckanext.knowledgehub.research_question_limit', 10)))
 
@@ -142,7 +142,7 @@ class CreateView(MethodView):
         sub_theme_list = get_action(u'sub_theme_list')(context, {})
 
         for sub_theme in sub_theme_list.get(u'data', []):
-            opt = {u'text': sub_theme[u'name'], u'value': sub_theme[u'id']}
+            opt = {u'text': sub_theme[u'title'], u'value': sub_theme[u'id']}
             sub_theme_options.append(opt)
 
         form_vars = {
@@ -169,8 +169,7 @@ class CreateView(MethodView):
             abort(400, _(u'Integrity Error'))
 
         try:
-            research_question = logic.get_action(
-                u'research_question_create')(context, data_dict)
+            research_question = logic.get_action(u'research_question_create')(context, data_dict)
         except NotAuthorized:
             abort(403)
         except ValidationError as e:
@@ -178,7 +177,7 @@ class CreateView(MethodView):
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
 
-        return h.redirect_to(u'research_question.read', id=research_question.get(u'id'))
+        return h.redirect_to(u'research_question.read', id=research_question.get(u'name'))
 
 
 class EditView(MethodView):
@@ -264,7 +263,7 @@ class EditView(MethodView):
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
 
-        return h.redirect_to(u'research_question.read', id=research_question.get(u'id'))
+        return h.redirect_to(u'research_question.read', id=research_question.get(u'name'))
 
 
 

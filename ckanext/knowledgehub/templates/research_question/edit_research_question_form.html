@@ -3,7 +3,7 @@
   {{ form.errors(error_summary) }}
   {{ form.select('theme', label=_('Theme'), selected=data.theme, options=theme_options, error=errors.theme, is_required=True) }}
   {{ form.select('sub_theme', label=_('Sub-Theme'), selected=data.sub_theme, options=sub_theme_options, error=errors.theme, is_required=True) }}
-  {{ form.input("content", id="field-content", label=_("Question"), placeholder=_("Your research question"), value=data.content, error=errors.name, classes=["control-medium"], is_required=True) }}
+  {{ form.input("content", id="field-content", label=_("Question"), placeholder=_("Your research question"), value=data.title, error=errors.name, classes=["control-medium"], is_required=True) }}
 
   {{ form.required_message() }}
 

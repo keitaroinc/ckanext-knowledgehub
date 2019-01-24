@@ -13,11 +13,11 @@ truncate_title - The length to truncate the title to (default: 80).
  #}
 {% set truncate = truncate or 180 %}
 {% set truncate_title = truncate_title or 80 %}
-{% set title = rq['content'] %}
+{% set title = rq['title'] %}
  <li class="">
   <div class="">
     <h3 class="">
-    {{ h.link_to(h.truncate(title, truncate_title), h.url_for('research_question.read', id=rq['id'])) }}
+    {{ h.link_to(h.truncate(title, truncate_title), h.url_for('research_question.read', id=rq['name'])) }}
     </h3>
   </div>
 </li>

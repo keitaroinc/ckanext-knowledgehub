@@ -167,11 +167,15 @@ def research_question_show(context, data_dict):
     :returns: a research question
     :rtype: dictionary
     '''
-    id = data_dict.get('id')
+    id_or_name = data_dict.get('id') or data_dict.get('name')
+    if not id_or_name:
+        raise ValidationError({u'id': _(u'Missing value')})
 
-    rq = ResearchQuestion.get(id=id).first()
+    rq = ResearchQuestion.get(id_or_name=id_or_name).first()
+
     if not rq:
-        raise toolkit.ObjectNotFound
+        raise NotFound(_(u'Research question'))
+
     return rq.as_dict()
 
 
