@@ -1,10 +1,21 @@
 {% import "macros/form.html" as form %}
 
-{% set source_options = [{'value': '', 'text': 'Choose source'},
-                         {'value': 'data_source_1', 'text': 'Data Source 1'},
+{% set source_options = [{'value': 'data_source_1', 'text': 'Data Source 1'},
                          {'value': 'data_source_2', 'text': 'Data Source 2'}] %}
 
-{% set attrs = {'class': 'form-control select-sources'} %}
 
-{{ form.select('data_source', label=_('Sources'), options=source_options, attrs=attrs, is_required=True) }}
+<div class="form-group control-select">
+    <label class="control-label" for="data_source">
+        <span title="This field is required" class="control-required">*</span>
+        Data Sources
+    </label>
+    <div class="controls">
+        <select id="data_source" name="data_source" class="form-control select-source">
+            <option value="" disabled selected hidden>Please Choose...</option>
+            {% for opt in source_options %}
+                <option value="{{ opt.value }}">{{ opt.text or opt.value }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
 

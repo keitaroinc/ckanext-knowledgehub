@@ -1,7 +1,9 @@
 {% import "macros/form.html" as form %}
 
-{{ form.input('server_name', id='field-server-name', label=_('Server Name'), placeholder=_('eg. localhost:8500'), value=data.server_name, error=errors.server_name, classes=['control-full'], is_required=True) }}
+{{ form.input('server_name', id='field-server-name', label=_('Server Name'), placeholder=_('eg. localhost:8500'), classes=['control-full'], is_required=True) }}
 
-{{ form.input('username', id='field-username', label=_('Username'), placeholder=_('DB username'), value=data.username, error=errors.username, classes=['control-full'], is_required=True) }}
+{{ form.input('username', id='field-username', label=_('Username'), placeholder=_('DB username'), classes=['control-full'], is_required=True) }}
 
-{{ form.input("password", id="field-password", label=_("Password"), type="password", placeholder="••••••••", value=data.password, error=errors.password, classes=["control-medium"], is_required=True) }}
+{{ form.input("password", id="field-password", label=_("Password"), type="password", placeholder="••••••••", classes=["control-medium"], is_required=True) }}
+
+{{ form.textarea('query', id='field-dquery', label=_('SQL Query'), placeholder=_('eg. SELECT * FROM table_name')) }}
