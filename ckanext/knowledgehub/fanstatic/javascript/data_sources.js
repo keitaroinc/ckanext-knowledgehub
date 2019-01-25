@@ -32,14 +32,19 @@
 		var image_upload_div = $('div.image-upload')
 		var data_source_select_div = $('div.data-source div.select-form')
 		var connection_params_div = $('div.data-source div.connection-params')
+		var field_image_url_input = $('input#field-image-url')
+
+		if (field_image_url_input.val() != '') {
+			data_source_btn.hide();
+		}
 
 		$('div.image-upload div.form-group div.controls').click(function (e) {
 			if (e.target.innerText == 'Link') {
-				data_source_btn.hide()
+				data_source_btn.hide();
 			}
 
 			if (e.target.innerText == 'Remove') {
-				data_source_btn.show()
+				data_source_btn.show();
 			}
 		});
 
@@ -47,14 +52,14 @@
 			// Button for resetting the form when there is a data source select component
 			var removeText = _('Remove');
 			var remove_button = $('<a href="javascript:;" class="btn btn-danger btn-remove-data-source pull-right">'
-								+ removeText + '</a>')
-								.prop('title', removeText)
-								.on('click', {
-									data_source_select_div: data_source_select_div,
-									connection_params_div: connection_params_div,
-									data_source_btn: data_source_btn,
-									image_upload_div: image_upload_div
-								}, onRemove)
+			+ removeText + '</a>')
+			.prop('title', removeText)
+			.on('click', {
+				data_source_select_div: data_source_select_div,
+				connection_params_div: connection_params_div,
+				data_source_btn: data_source_btn,
+				image_upload_div: image_upload_div
+			}, onRemove)
 
 			image_upload_div.hide();
 			data_source_btn.hide();
@@ -71,7 +76,7 @@
 
 		$('body').on('change', '.select-source', function () {
 			if (this.value != '') {
-				connection_params_div.empty()
+				connection_params_div.empty();
 				api.getTemplate('mssql_connection_params.html', {
 					data: {},
 					errors: {}
@@ -81,7 +86,10 @@
 				})
 			}
 		});
-	});
 
+		field_image_url_input.change(function () {
+			alert("Handler for .change() called.");
+		});
+	});
 
 })(ckan.i18n.ngettext, $);
