@@ -12,6 +12,8 @@
 @gray: lighten(@gray-base, 33.5%); // #555
 @gray-light: lighten(@gray-base, 46.7%); // #777
 @gray-lighter: lighten(@gray-base, 93.5%); // #eee
+@gray-lightest: #f6f6f6;
+@gray-line:#ddd;
 @gray-brand-lightest: #cccccc;
 @gray-brand-light: #999999;
 @gray-brand: #666666;
@@ -19,8 +21,8 @@
 @white: #fff;
 
 @brand-primary: #0072bc;
-@brand-secondary: #000000;
-@brand-success: #000000;
+@brand-secondary: @gray-dark;
+@brand-success: @brand-secondary;
 @brand-info: #0072bc;
 @brand-warning: orange;
 @brand-danger: red;
@@ -36,14 +38,14 @@
 //## Settings for some of the most global styles.
 
 //** Background color for `<body>`.
-@body-bg: #fff;
+@body-bg: #000;
 //** Global text color on `<body>`.
 @text-color: @gray-dark;
 
 //** Global textual link color.
 @link-color: @brand-primary;
 //** Link hover color set via `darken()` function.
-@link-hover-color: darken(@link-color, 15%);
+@link-hover-color: darken(@link-color, 10%);
 //** Link hover decoration.
 @link-hover-decoration: underline;
 
@@ -362,21 +364,21 @@
 
 // Basics of a navbar
 @navbar-height: 50px;
-@navbar-margin-bottom: @line-height-computed;
+@navbar-margin-bottom: 0px;
 @navbar-border-radius: @border-radius-base;
 @navbar-padding-horizontal: floor((@grid-gutter-width / 2));
 @navbar-padding-vertical: ((@navbar-height - @line-height-computed) / 2);
 @navbar-collapse-max-height: 340px;
 
-@navbar-default-color: #777;
-@navbar-default-bg: #f8f8f8;
-@navbar-default-border: darken(@navbar-default-bg, 6.5%);
+@navbar-default-color: #333;
+@navbar-default-bg: @white;
+@navbar-default-border: darken(@navbar-default-bg, 20%);
 
 // Navbar links
-@navbar-default-link-color: #777;
-@navbar-default-link-hover-color: #333;
+@navbar-default-link-color: @gray-dark;
+@navbar-default-link-hover-color: @brand-primary;
 @navbar-default-link-hover-bg: transparent;
-@navbar-default-link-active-color: #555;
+@navbar-default-link-active-color: @brand-primary;
 @navbar-default-link-active-bg: darken(@navbar-default-bg, 6.5%);
 @navbar-default-link-disabled-color: #ccc;
 @navbar-default-link-disabled-bg: transparent;
@@ -432,7 +434,7 @@
 
 @nav-tabs-link-hover-border-color: @gray-lighter;
 
-@nav-tabs-active-link-hover-bg: @body-bg;
+@nav-tabs-active-link-hover-bg: transparent;
 @nav-tabs-active-link-hover-color: @gray;
 @nav-tabs-active-link-hover-border-color: #ddd;
 
