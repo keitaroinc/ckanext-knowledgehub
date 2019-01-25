@@ -19,6 +19,8 @@
   {% block errors %}{{ form.errors(error_summary) }}{% endblock %}
 
   <input name="id" value="{{ data.id }}" type="hidden"/>
+  <input id="form-data" value="{{ data }}" type="hidden"/>
+  <input id="form-errors" value="{{ errors }}" type="hidden"/>
 
   {% block basic_fields %}
     {% block basic_fields_url %}
@@ -56,6 +58,8 @@
         </span>
       {% endcall %}
     {% endblock %}
+
+    {{ form.required_message() }}
   {% endblock basic_fields %}
 
   {% block metadata_fields %}

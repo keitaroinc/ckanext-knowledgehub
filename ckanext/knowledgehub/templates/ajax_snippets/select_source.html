@@ -13,7 +13,7 @@
         <select id="data_source" name="data_source" class="form-control select-source">
             <option value="" disabled selected hidden>Please Choose...</option>
             {% for opt in source_options %}
-                <option value="{{ opt.value }}">{{ opt.text or opt.value }}</option>
+                <option value="{{ opt.value }}" {% if opt.value == data_source %} selected {% endif %}>{{ opt.text or opt.value }}</option>
             {% endfor %}
         </select>
     </div>
