@@ -29,7 +29,7 @@
       <nav class="section navigation">
         <ul class="nav nav-pills">
           {% block header_site_navigation_tabs %}
-          {{ h.build_nav_main( ('theme.index', _('Themes')), ('sub_theme.search', _('Sub-Themes')), ('search', _('Datasets')), ('organizations_index', _('Organizations')),
+          {{ h.build_nav_main( ('search', _('Datasets')), ('organizations_index', _('Organizations')),
       ('group_index', _('Groups')), ('home.about', _('About')) ) }}
           {% endblock %}
         </ul>
@@ -54,8 +54,8 @@
     </div>
     <div class="collapse navbar-collapse" id="sub-menu-collapse">
       <ul class="nav navbar-nav">
-        <li><a href="#">Themes</a></li>
-        <li><a href="#">Sub-Themes</a></li>
+        <li><a href="{% url_for 'theme.index' %}">{{ _('Themes') }}</a></li>
+        <li><a href="{% url_for 'sub_theme.search' %}">{{ _('Sub-Themes') }}</a></li>
         <li><a href="#">Research Questions</a></li>
         <li><a href="#">Indicators</a></li>
       </ul>
