@@ -17,9 +17,9 @@ Example:
 {% set description = h.markdown_extract(sub_theme['description'], extract_length=truncate) %}
 
 
-<li class="sub-theme-item">
-  <div class="sub-theme-content">
-    <h3 class="sub-theme-heading">
+<li class="component-item">
+  <div class="component-content">
+    <h3 class="component-heading">
       {{ h.nav_link(h.truncate(title, truncate_title), named_route='sub_theme.read', name=sub_theme['name']) }}
     </h3>
     {% if description %}

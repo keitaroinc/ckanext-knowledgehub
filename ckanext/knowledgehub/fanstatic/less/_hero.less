@@ -1,17 +1,15 @@
 .homepage {
   .hero {
-    background: url("../img/hero-bg.jpg") top 23% center no-repeat;
+    background: url("../img/hero-bg.jpg") top 30% center no-repeat;
     background-size: cover;
-    min-height: 420px;
   }
 }
 
 .hero {
   padding: 0;
-  color: lighten(@brand-primary, 70%);
+  color: @white;
   min-height: auto;
   .intro {
-    background: @brand-primary;
     .module-content {
       .flex;
       .flex-column;
@@ -41,26 +39,13 @@
       margin-top: @grid-gutter-width / 2;
     }
   }
-  .accent {
-    background-color: fade(darken(@brand-primary, 10%), 90%);
-  }
-  .intro,
-  .accent {
-    padding: @grid-gutter-width*1.5 @grid-gutter-width;
-  }
-  .accent {
-    .flex;
-    .flex-wrap;
-    .flex-column;
-    .justify-content-center;
-  }
   .module-search {
     border: none;
     box-shadow: none;
     padding: 0;
     margin: @grid-gutter-width / 2 0;
     .module-content {
-      padding-bottom: 0;
+      padding: 0;
       .heading {
         .text-uppercase;
       }
