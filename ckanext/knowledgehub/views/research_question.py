@@ -66,13 +66,13 @@ def search():
         items_per_page=limit)
 
     return render(u'research_question/search.html',
-                          extra_vars={
-                              u'total': research_question_list.get('total', 0),
-                              u'research_questions': research_question_list.get('data', []),
-                              u'q': q,
-                              u'order_by': order_by,
-                              u'page': page
-                          })
+                  extra_vars={
+                      u'total': research_question_list.get('total', 0),
+                      u'research_questions': research_question_list.get('data', []),
+                      u'q': q,
+                      u'order_by': order_by,
+                      u'page': page
+                  })
 
 
 def read(id):
@@ -92,6 +92,7 @@ def read(id):
 
     return render(u'research_question/read.html', extra_vars={'rq': rq})
 
+
 def delete(id):
     data_dict = {u'id': id}
     context = {
@@ -107,7 +108,6 @@ def delete(id):
         abort(403, _(u'Unauthorized to delete this research question'))
 
     return h.redirect_to('research_question.search')
-
 
 
 class CreateView(MethodView):
@@ -131,6 +131,7 @@ class CreateView(MethodView):
 
     def get(self, data=None, errors=None, error_summary=None):
         context = self._prepare()
+        theme_selected = request.params.get('theme', None)
 
         theme_options = []
         theme_list = get_action(u'theme_list')(context, {})
@@ -139,11 +140,17 @@ class CreateView(MethodView):
             theme_options.append(opt)
 
         sub_theme_options = []
-        sub_theme_list = get_action(u'sub_theme_list')(context, {})
 
-        for sub_theme in sub_theme_list.get(u'data', []):
-            opt = {u'text': sub_theme[u'title'], u'value': sub_theme[u'id']}
-            sub_theme_options.append(opt)
+        if theme_selected:
+            sub_theme_list = get_action(u'sub_theme_list')(context,
+                                                           {'theme': theme_selected})
+
+            for sub_theme in sub_theme_list.get(u'data', []):
+                opt = {u'text': sub_theme[u'title'],
+                       u'value': sub_theme[u'id']}
+                sub_theme_options.append(opt)
+
+        theme_options.insert(0, {'text': 'Select theme', 'value': ''})
 
         form_vars = {
             u'data': data or {},
@@ -169,7 +176,8 @@ class CreateView(MethodView):
             abort(400, _(u'Integrity Error'))
 
         try:
-            research_question = logic.get_action(u'research_question_create')(context, data_dict)
+            research_question = logic.get_action(
+                u'research_question_create')(context, data_dict)
         except NotAuthorized:
             abort(403)
         except ValidationError as e:
@@ -204,7 +212,8 @@ class EditView(MethodView):
         context = self._prepare()
 
         try:
-            research_question = get_action(u'research_question_show')({}, {'id': id})
+            research_question = get_action(
+                u'research_question_show')({}, {'id': id})
         except NotFound:
             abort(404, _(u'Research question not found'))
 
@@ -255,7 +264,8 @@ class EditView(MethodView):
         data_dict.pop('save', '')
 
         try:
-            research_question = get_action(u'research_question_update')(context, data_dict)
+            research_question = get_action(
+                u'research_question_update')(context, data_dict)
         except NotAuthorized:
             abort(403, _(u'Unauthorized to update this research question'))
         except ValidationError as e:
@@ -266,11 +276,11 @@ class EditView(MethodView):
         return h.redirect_to(u'research_question.read', id=research_question.get(u'name'))
 
 
-
-
-
 research_question.add_url_rule(u'/', view_func=search, strict_slashes=False)
-research_question.add_url_rule(u'/new', view_func=CreateView.as_view(str(u'new')))
-research_question.add_url_rule(u'/edit/<id>', view_func=EditView.as_view(str(u'edit')))
+research_question.add_url_rule(
+    u'/new', view_func=CreateView.as_view(str(u'new')))
+research_question.add_url_rule(
+    u'/edit/<id>', view_func=EditView.as_view(str(u'edit')))
 research_question.add_url_rule(u'/<id>', view_func=read)
-research_question.add_url_rule(u'/delete/<id>', view_func=delete, methods=(u'POST', ))
+research_question.add_url_rule(
+    u'/delete/<id>', view_func=delete, methods=(u'POST', ))

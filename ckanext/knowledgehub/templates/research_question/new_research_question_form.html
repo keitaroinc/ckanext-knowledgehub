@@ -4,9 +4,12 @@
    {{ form.errors(error_summary) }}
 
    {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
+  {% set sel = request.args.get('theme') or data.theme %}
 
-   {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=data.theme, is_required=True) }}
+   {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=sel, is_required=True) }}
+   {% if sub_theme_options %}
    {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, selected=data.sub_theme, is_required=True) }}
+   {% endif %}
    {{ form.input('title', label=_('Question'), id='field-title', placeholder=_('Your research question'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs, is_required=true) }}
 
    {%- set prefix = h.url_for('/research-question/') -%}
@@ -25,3 +28,40 @@
         {% endblock %}
     </div>
 </form>
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  $('#theme option')[0].disabled = true;
+
+  $("#theme").change(function(){
+       var val = $(this).val();
+       console.log(val);
+       var pag = window.location.pathname;
+       var url = window.location.search;
+           url = url.replace("?", "").split("&");
+           console.log(url);
+       var n = 0;
+       for (var count = 0; count < url.length; count++) {
+           if (!url[count].indexOf("theme")) {
+               n = count;
+               break;
+           }
+       }
+
+       if (n !=0) {
+          url.splice(n,1);
+       }
+
+       var len = url.length;
+       var newUrl = url.join("&");
+
+       if (len > 0) {
+          newUrl = pag + "?" + newUrl + "&theme=" + val;
+       } else {
+          newUrl = pag + newUrl + "?theme=" + val;
+       }
+       window.location.href = newUrl;
+    });
+});
+</script>

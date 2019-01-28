@@ -135,18 +135,27 @@ def sub_theme_list(context, data_dict):
     '''
 
     q = data_dict.get('q', '')
+    theme = data_dict.get('theme', None)
     page_size = int(data_dict.get('pageSize', 10))
     page = int(data_dict.get('page', 1))
     order_by = data_dict.get('order_by', 'title asc')
-
     offset = (page - 1) * page_size
+    status = 'active'
+
+    kwargs = {}
+
+    if theme:
+        kwargs['theme'] = theme
+
+    kwargs['q'] = q
+    kwargs['limit'] = page_size
+    kwargs['offset'] = offset
+    kwargs['order_by'] = order_by
+    kwargs['status'] = status
+
     st_list = []
 
-    st_db_list = SubThemes.get(q=q,
-                               limit=page_size,
-                               offset=offset,
-                               order_by=order_by,
-                               status='active').all()
+    st_db_list = SubThemes.get(**kwargs).all()
 
     for entry in st_db_list:
         st_list.append(_table_dictize(entry, context))
