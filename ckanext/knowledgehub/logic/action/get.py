@@ -176,6 +176,7 @@ def research_question_show(context, data_dict):
     :returns: a research question
     :rtype: dictionary
     '''
+    print "RQ>SHOW>DATADIKT ", data_dict
     id_or_name = data_dict.get('id') or data_dict.get('name')
     if not id_or_name:
         raise ValidationError({u'id': _(u'Missing value')})

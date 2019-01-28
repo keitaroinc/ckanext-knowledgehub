@@ -133,27 +133,47 @@ def research_question_update(context, data_dict):
     '''
     check_access('research_question_update', context)
 
+    # id = data_dict.get('id')
+    #
+    # rq = ResearchQuestion.get(id_or_name=id).first()
+    #
+    # context['research_question'] = rq.name
+    # data, errors = _df.validate(data_dict,
+    #                             knowledgehub_schema.research_question_schema(),
+    #                             context)
+    #
+    # if errors:
+    #     raise toolkit.ValidationError(errors)
+    #
+    # session = context['session']
+    # user = context.get('user')
+    # data['modified_by'] = model.User.by_name(user.decode('utf8')).id
+    # filter = {'id': id}
+    # rq = ResearchQuestion.update(filter, data)
+    # return rq.as_dict()
+    id = logic.get_or_bust(data_dict, 'id')
+
+    research_question = ResearchQuestion.get(id_or_name=id).first()
+
+    if not research_question:
+        log.debug('Could not find research question %s', id)
+        raise logic.NotFound(_('Research question not found.'))
+
+    context['research_question'] = research_question.name
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.research_question_schema(),
                                 context)
-
     if errors:
-        raise toolkit.ValidationError(errors)
+        raise logic.ValidationError(errors)
 
-    id = data.get('id')
-    theme = data.get('theme')
-    sub_theme = data.get('sub_theme')
-    content = data.get('content')
+    user = context.get('user')
+    data['modified_by'] = model.User.by_name(user.decode('utf8')).id
+    # HACK
+    data['id'] = data['__extras']['id']
+    print data
+    data['theme'] = data['__extras']['theme']
+    data = data.pop('__extras')
+    filter = {'id': id}
+    rq = ResearchQuestion.update(filter, data)
 
-    session = context['session']
-
-    rq = ResearchQuestion.get(id=id).first()
-
-    rq.theme = theme
-    rq.sub_theme = sub_theme
-    rq.title = content
-    rq.modified = datetime.datetime.now()
-    rq.save()
-    session.add(rq)
-    session.commit()
-    return _table_dictize(rq, context)
+    return rq.as_dict()

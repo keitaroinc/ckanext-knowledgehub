@@ -2,14 +2,14 @@
 
 {% block breadcrumb_content %}
   <li>{{ h.nav_link(_('Research questions'), named_route='research_question.search') }}</li>
-  <li class="active">{{ h.nav_link(rq.title|truncate(30), named_route='research_question.read', id=rq.name) }}</li>
+  <li class="active">{{ h.nav_link(rq.title|truncate(30), named_route='research_question.read', name=rq.name) }}</li>
 {% endblock %}
 
 {% block subtitle %}{{ h.dataset_display_name(rq.title) }} {{ g.template_title_delimiter }} {{ super() }}{% endblock %}
 
 {% block content_action %}
   {% if h.check_access('research_question_update') %}
-    {% link_for _('Manage'), named_route='research_question.edit', id=rq.name, class_='btn btn-default', icon='wrench' %}
+    {% link_for _('Manage'), named_route='research_question.edit', name=rq.name, class_='btn btn-default', icon='wrench' %}
   {% endif %}
 {% endblock %}
 

@@ -75,8 +75,8 @@ def search():
                   })
 
 
-def read(id):
-    data_dict = {'id': id}
+def read(name):
+    data_dict = {'name': name}
 
     context = {
         u'model': model,
@@ -193,7 +193,7 @@ class EditView(MethodView):
     def _is_save(self):
         return u'save' in request.form
 
-    def _prepare(self, data=None):
+    def _prepare(self, name=None):
 
         context = {
             u'model': model,
@@ -203,19 +203,24 @@ class EditView(MethodView):
             u'save': self._is_save()
         }
         try:
-            check_access(u'research_question_update', context)
-        except NotAuthorized:
-            return abort(403, _(u'Unauthorized to create a sub-theme'))
-        return context
+            research_question = logic.get_action(u'research_question_show')({}, {'name': name})
+        except logic.NotFound:
+            base.abort(404, _(u'Research question not found'))
 
-    def get(self, id=None, data=None, errors=None, error_summary=None):
-        context = self._prepare()
+        context['research_question'] = research_question
 
         try:
-            research_question = get_action(
-                u'research_question_show')({}, {'id': id})
-        except NotFound:
-            abort(404, _(u'Research question not found'))
+            logic.check_access(u'research_question_update', context)
+        except logic.NotAuthorized:
+            return base.abort(403, _(u'Unauthorized to edit research question'))
+
+        return context
+
+
+    def get(self, name=None, data=None, errors=None, error_summary=None):
+        context = self._prepare(name)
+        research_question = context['research_question']
+
 
         theme_options = []
         theme_list = get_action(u'theme_list')(context, {})
@@ -231,7 +236,7 @@ class EditView(MethodView):
             sub_theme_options.append(opt)
 
         form_vars = {
-            u'id': id,
+            u'id': research_question.get('id', ''),
             u'user': context.get('user'),
             u'data': data or research_question,
             u'theme': research_question.get('theme', ''),
@@ -250,8 +255,9 @@ class EditView(MethodView):
             }
         )
 
-    def post(self, id=None):
-        context = self._prepare()
+    def post(self, name=None):
+        context = self._prepare(name)
+        research_question = context['research_question']
 
         try:
             data_dict = logic.clean_dict(
@@ -260,8 +266,9 @@ class EditView(MethodView):
         except dictization_functions.DataError:
             abort(400, _(u'Integrity Error'))
 
-        data_dict['id'] = id
+        data_dict['id'] = research_question.get('id')
         data_dict.pop('save', '')
+        print data_dict
 
         try:
             research_question = get_action(
@@ -269,6 +276,7 @@ class EditView(MethodView):
         except NotAuthorized:
             abort(403, _(u'Unauthorized to update this research question'))
         except ValidationError as e:
+            print "EDIT>POST>VALIDATIONERROR ", e
             errors = e.error_dict
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
@@ -280,7 +288,7 @@ research_question.add_url_rule(u'/', view_func=search, strict_slashes=False)
 research_question.add_url_rule(
     u'/new', view_func=CreateView.as_view(str(u'new')))
 research_question.add_url_rule(
-    u'/edit/<id>', view_func=EditView.as_view(str(u'edit')))
-research_question.add_url_rule(u'/<id>', view_func=read)
+    u'/edit/<name>', view_func=EditView.as_view(str(u'edit')))
+research_question.add_url_rule(u'/<name>', view_func=read)
 research_question.add_url_rule(
     u'/delete/<id>', view_func=delete, methods=(u'POST', ))

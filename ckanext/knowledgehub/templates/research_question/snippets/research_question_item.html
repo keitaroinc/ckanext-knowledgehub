@@ -17,7 +17,7 @@ truncate_title - The length to truncate the title to (default: 80).
  <li class="">
   <div class="">
     <h3 class="">
-    {{ h.link_to(h.truncate(title, truncate_title), h.url_for('research_question.read', id=rq['name'])) }}
+    {{ h.link_to(h.truncate(title, truncate_title), h.url_for('research_question.read', name=rq['name'])) }}
     </h3>
   </div>
 </li>

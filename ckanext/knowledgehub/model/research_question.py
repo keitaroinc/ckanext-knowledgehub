@@ -67,6 +67,15 @@ class ResearchQuestion(DomainObject):
         return query
 
     @classmethod
+    def update(cls, filter, data):
+        obj = Session.query(cls).filter_by(**filter)
+        obj.update(data)
+        Session.commit()
+
+        return obj.first()
+
+
+    @classmethod
     def all(cls, theme=None, sub_theme=None, state=('active',)):
         # TODO Handle filtering by sub/theme properly
         q = Session.query(cls)
