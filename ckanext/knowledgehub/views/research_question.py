@@ -220,7 +220,7 @@ class EditView(MethodView):
     def get(self, name=None, data=None, errors=None, error_summary=None):
         context = self._prepare(name)
         research_question = context['research_question']
-
+        new_theme_selected = request.params.get('theme', None)
 
         theme_options = []
         theme_list = get_action(u'theme_list')(context, {})
@@ -229,7 +229,13 @@ class EditView(MethodView):
             theme_options.append(opt)
 
         sub_theme_options = []
-        sub_theme_list = get_action(u'sub_theme_list')(context, {})
+
+        if new_theme_selected:
+            theme = new_theme_selected
+        else:
+            theme = research_question['theme']
+
+        sub_theme_list = get_action(u'sub_theme_list')(context, {'theme': theme})
 
         for sub_theme in sub_theme_list.get(u'data', []):
             opt = {u'text': sub_theme[u'name'], u'value': sub_theme[u'id']}
