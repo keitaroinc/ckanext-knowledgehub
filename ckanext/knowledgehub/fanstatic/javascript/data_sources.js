@@ -1,6 +1,12 @@
 (function (_, jQuery) {
 	'use strict';
 
+    // Define all data source snippets
+    var data_source_snippets = {
+        'data_source_1': 'mssql_connection_params.html',
+        'data_source_2': 'mssql_connection_params.html',
+    }
+
 	// Fetch CKAN snippet
 	var api = {
 		getTemplate: function(filename, params, success, error) {
@@ -18,12 +24,6 @@
 			return $.get(url, params || {}).then(success, error);
 		}
 	};
-
-	// Define all data source snippets
-	var data_source_snippets = {
-		'data_source_1': 'mssql_connection_params.html',
-		'data_source_2': 'mssql_connection_params.html',
-	}
 
 	// Render CKAN snippet by passing data and errors values
 	function renderSnippet(snippet, append_to, data, errors) {
@@ -145,7 +145,7 @@
 			data_source_btn.hide();
 		});
 
-		// If remvoe button is clicked show data source button.
+		// If remove button is clicked show data source button.
 		// If link button is clicked hide data source button
 		image_upload_div.click(function (e) {
 			if (e.target.innerText === 'Link') {
@@ -157,7 +157,7 @@
 			}
 		});
 
-		// Habdle click on data source button
+		// Handle click on data source button
 		data_source_btn.click(function (e) {
 			var remove_button = removeButton(data_source_select_div,
 											 connection_params_div,
