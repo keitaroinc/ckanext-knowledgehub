@@ -268,7 +268,7 @@ class EditView(MethodView):
 
         data_dict['id'] = research_question.get('id')
         data_dict.pop('save', '')
-        print data_dict
+        print "EDIT>POST>DATA_DICT ", data_dict
 
         try:
             research_question = get_action(
@@ -281,7 +281,7 @@ class EditView(MethodView):
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
 
-        return h.redirect_to(u'research_question.read', id=research_question.get(u'name'))
+        return h.redirect_to(u'research_question.read', name=research_question.get(u'name'))
 
 
 research_question.add_url_rule(u'/', view_func=search, strict_slashes=False)

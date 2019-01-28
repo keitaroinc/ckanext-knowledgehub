@@ -151,6 +151,7 @@ def research_question_update(context, data_dict):
     # filter = {'id': id}
     # rq = ResearchQuestion.update(filter, data)
     # return rq.as_dict()
+    from pprint import pprint as pprint
     id = logic.get_or_bust(data_dict, 'id')
 
     research_question = ResearchQuestion.get(id_or_name=id).first()
@@ -168,12 +169,16 @@ def research_question_update(context, data_dict):
 
     user = context.get('user')
     data['modified_by'] = model.User.by_name(user.decode('utf8')).id
-    # HACK
-    data['id'] = data['__extras']['id']
-    print data
-    data['theme'] = data['__extras']['theme']
-    data = data.pop('__extras')
-    filter = {'id': id}
-    rq = ResearchQuestion.update(filter, data)
 
+    # HACK
+    if 'id' in data['__extras']:
+        data['id'] = data['__extras']['id']
+    if 'theme' in data['__extras']:
+        data['theme'] = data['__extras']['theme']
+    del data['__extras']
+    filter = {'id': id}
+    print "PRE UPDATE DICT ", data
+    pprint(data)
+    rq = ResearchQuestion.update(filter, data)
+    print "UPDATE>RQ ", rq
     return rq.as_dict()
