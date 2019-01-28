@@ -76,23 +76,38 @@
 		var connection_params_div = $('div.data-source div.connection-params');
 		var field_image_url_input = $('input#field-image-url');
 		var field_image_upload_input = $('input#field-image-upload');
-		var data = JSON.parse(
-			$('input#form-data').val()
-				.replace(/u/g, '')
-				.replace(/'/g, '"')
-				.replace(/None/g, '""')
-				.replace(/True/g, 'true')
-				.replace(/False/g, 'false')
-		);
-		var errors = JSON.parse(
-			$('input#form-errors').val()
-				.replace(/u/g, '')
-				.replace(/'/g, '"')
-				.replace(/None/g, '""')
-				.replace(/True/g, 'true')
-				.replace(/False/g, 'false')
-		);
 
+		try {
+			var data = JSON.parse(
+				$('input#form-data').val()
+					.replace(/u/g, '')
+					.replace(/'/g, '"')
+					.replace(/None/g, '""')
+					.replace(/True/g, 'true')
+					.replace(/False/g, 'false')
+			);
+		} catch (error) {
+			data = ''
+			if (console) {
+				console.error('Error parsing input#form-data: ' + error);
+			}
+		}
+
+		try {
+			var errors = JSON.parse(
+				$('input#form-errors').val()
+					.replace(/u/g, '')
+					.replace(/'/g, '"')
+					.replace(/None/g, '""')
+					.replace(/True/g, 'true')
+					.replace(/False/g, 'false')
+			);
+		} catch (error) {
+			error = ''
+			if (console) {
+				console.error('Error parsing input#form-errors: ' + error);
+			}
+		}
 
 		// If there is already selected resource, hide data source button
 		if (field_image_url_input.val() !== '' || field_image_upload_input.val() !== '') {
