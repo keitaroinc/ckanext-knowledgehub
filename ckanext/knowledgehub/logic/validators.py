@@ -61,7 +61,6 @@ def research_question_name_validator(key, data, errors, context):
 
 
 def check_sub_theme_parent(key, data, errors, context):
-    from pprint import pprint as pprint
     session = context['session']
     clean_data = df.unflatten(data)
 

@@ -133,25 +133,6 @@ def research_question_update(context, data_dict):
     '''
     check_access('research_question_update', context)
 
-    # id = data_dict.get('id')
-    #
-    # rq = ResearchQuestion.get(id_or_name=id).first()
-    #
-    # context['research_question'] = rq.name
-    # data, errors = _df.validate(data_dict,
-    #                             knowledgehub_schema.research_question_schema(),
-    #                             context)
-    #
-    # if errors:
-    #     raise toolkit.ValidationError(errors)
-    #
-    # session = context['session']
-    # user = context.get('user')
-    # data['modified_by'] = model.User.by_name(user.decode('utf8')).id
-    # filter = {'id': id}
-    # rq = ResearchQuestion.update(filter, data)
-    # return rq.as_dict()
-    from pprint import pprint as pprint
     id = logic.get_or_bust(data_dict, 'id')
 
     research_question = ResearchQuestion.get(id_or_name=id).first()
@@ -177,8 +158,5 @@ def research_question_update(context, data_dict):
         data['theme'] = data['__extras']['theme']
     del data['__extras']
     filter = {'id': id}
-    print "PRE UPDATE DICT ", data
-    pprint(data)
     rq = ResearchQuestion.update(filter, data)
-    print "UPDATE>RQ ", rq
     return rq.as_dict()

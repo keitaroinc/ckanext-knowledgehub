@@ -268,15 +268,12 @@ class EditView(MethodView):
 
         data_dict['id'] = research_question.get('id')
         data_dict.pop('save', '')
-        print "EDIT>POST>DATA_DICT ", data_dict
-
         try:
             research_question = get_action(
                 u'research_question_update')(context, data_dict)
         except NotAuthorized:
             abort(403, _(u'Unauthorized to update this research question'))
         except ValidationError as e:
-            print "EDIT>POST>VALIDATIONERROR ", e
             errors = e.error_dict
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
