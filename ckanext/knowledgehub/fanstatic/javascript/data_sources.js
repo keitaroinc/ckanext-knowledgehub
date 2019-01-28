@@ -75,7 +75,8 @@
 		var data_source_select_div = $('div.data-source div.select-form');
 		var connection_params_div = $('div.data-source div.connection-params');
 		var field_image_url_input = $('input#field-image-url');
-		var field_image_upload_input = $('input#field-image-upload');
+        var field_image_upload_input = $('input#field-image-upload');
+        var field_name_input = $('input#field-name');
 
 		try {
 			var data = JSON.parse(
@@ -140,7 +141,7 @@
 			);
 		}
 
-		// If file is chosen from file system then hide the data source button
+		// If file is chosen from file field-nameystem then hide the data source button
 		field_image_upload_input.change(function () {
 			data_source_btn.hide();
 		});
@@ -153,7 +154,8 @@
 			}
 
 			if (e.target.innerText === 'Remove') {
-				data_source_btn.show();
+                data_source_btn.show();
+                field_name_input.val('');
 			}
 		});
 
