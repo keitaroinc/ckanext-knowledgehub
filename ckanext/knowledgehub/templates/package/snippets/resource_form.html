@@ -28,19 +28,14 @@
       {{ form.image_upload(data, errors, field_url='url', field_upload='upload', field_clear='clear_upload',
          is_upload_enabled=h.uploads_enabled(), is_url=data.url and not is_upload, is_upload=is_upload,
          upload_label=_('Data'), url_label=_('URL'), placeholder=_('http://example.com/external-data.csv'), field_name='name') }}
+         <div class="input-group-btn">
+            <button class="btn btn-default btn-data-source" type="button"><i class="fa fa-database"></i>{{ _('Source') }}</button>
+        </div>
     {% endblock %}
-
-    <div style="position: absolute; top: 132px; left: 240px;">
-      <span class="input-group-btn">
-        <button class="btn btn-default btn-data-source" type="button"><i class="fa fa-database"></i>{{ _('Source') }}</button>
-      </span>
-    </div>
-
     <div class="data-source">
       <div class="select-form"></div>
       <div class="connection-params"></div>
     </div>
-
     {% block basic_fields_name %}
       {{ form.input('name', id='field-name', label=_('Name'), placeholder=_('eg. January 2011 Gold Prices'), value=data.name, error=errors.name, classes=['control-full']) }}
     {% endblock %}
