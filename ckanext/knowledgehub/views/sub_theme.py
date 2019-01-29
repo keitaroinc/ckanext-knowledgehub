@@ -163,7 +163,7 @@ class CreateView(MethodView):
         themes = logic.get_action(u'theme_list')(context, {})
         if not themes.get(u'data', []):
             h.flash_notice(_(u'Create a theme first then sub-theme'))
-            return h.redirect_to('theme.new')
+            return h.redirect_to(u'theme.index')
 
         theme_options = []
         for theme in themes.get(u'data', []):

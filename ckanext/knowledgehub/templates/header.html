@@ -13,27 +13,55 @@
   {% endif %} {% endblock %}
   <div class="container-fluid">
     <div class="navbar-right">
-      <button data-target="#main-navigation-toggle" data-toggle="collapse" class="navbar-toggle collapsed" type="button">
+      <button
+        data-target="#main-navigation-toggle"
+        data-toggle="collapse"
+        class="navbar-toggle collapsed"
+        type="button">
         <span class="fa fa-bars"></span>
       </button>
     </div>
     <hgroup class="{{ g.header_class }} navbar-left">
       {% block header_logo %} {{ super() }} {% endblock %}
     </hgroup>
-
     <div class="collapse navbar-collapse" id="main-navigation-toggle">
       {% block header_site_navigation %}
       <nav class="section navigation">
-            <ul class="nav nav-pills">
-      {% block header_site_navigation_tabs %} {{ h.build_nav_main( ('theme.index', _('Themes')), ('sub_theme.search', _('Sub-Themes')), ('research_question.search', _('Research questions')), ('search', _('Datasets')), ('organizations_index', _('Organizations')),
-      ('group_index', _('Groups')), ('home.about', _('About')) ) }} {% endblock %}
-             </ul>
+        <ul class="nav nav-pills">
+          {% block header_site_navigation_tabs %}
+          {{ h.build_nav_main( ('search', _('Datasets')), ('organizations_index', _('Organizations')),
+      ('group_index', _('Groups')), ('home.about', _('About')) ) }}
+          {% endblock %}
+        </ul>
       </nav>
-      {% endblock %}
-      {% block header_site_search %}
-      {{ super() }}
-      {% endblock %}
+      {% endblock %} {% block header_site_search %} {{ super() }} {% endblock %}
+    </div>
+</header>
+<header>
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button
+        type="button"
+        class="navbar-toggle collapsed"
+        data-toggle="collapse"
+        data-target="#sub-menu-collapse"
+        aria-expanded="false" >
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="collapse navbar-collapse" id="sub-menu-collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="{% url_for 'theme.index' %}">{{ _('Themes') }}</a></li>
+        <li><a href="{% url_for 'sub_theme.search' %}">{{ _('Sub-Themes') }}</a></li>
+        <li><a href="#">Research Questions</a></li>
+        <li><a href="#">Indicators</a></li>
+      </ul>
     </div>
   </div>
+</nav>
 </header>
+</div>
 {% endblock %}
