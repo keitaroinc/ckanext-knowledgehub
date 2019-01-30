@@ -274,6 +274,7 @@ class EditView(MethodView):
 
         data_dict['id'] = research_question.get('id')
         data_dict.pop('save', '')
+
         try:
             research_question = get_action(
                 u'research_question_update')(context, data_dict)
@@ -282,7 +283,7 @@ class EditView(MethodView):
         except ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
-            return self.get(data_dict, errors, error_summary)
+            return self.get(name, data_dict, errors, error_summary)
 
         return h.redirect_to(u'research_question.read', name=research_question.get(u'name'))
 

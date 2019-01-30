@@ -107,6 +107,7 @@ def sub_theme_update(context, data_dict):
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.sub_theme_update(),
                                 context)
+
     if errors:
         raise logic.ValidationError(errors)
 
@@ -134,6 +135,7 @@ def research_question_update(context, data_dict):
     check_access('research_question_update', context)
 
     id = logic.get_or_bust(data_dict, 'id')
+    data_dict.pop('id')
 
     research_question = ResearchQuestion.get(id_or_name=id).first()
 
@@ -145,18 +147,13 @@ def research_question_update(context, data_dict):
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.research_question_schema(),
                                 context)
+
     if errors:
         raise logic.ValidationError(errors)
 
     user = context.get('user')
     data['modified_by'] = model.User.by_name(user.decode('utf8')).id
 
-    # HACK
-    if 'id' in data['__extras']:
-        data['id'] = data['__extras']['id']
-    if 'theme' in data['__extras']:
-        data['theme'] = data['__extras']['theme']
-    del data['__extras']
     filter = {'id': id}
     rq = ResearchQuestion.update(filter, data)
     return rq.as_dict()
