@@ -185,7 +185,7 @@ class CreateView(MethodView):
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
 
-        return h.redirect_to(u'research_question.read', id=research_question.get(u'name'))
+        return h.redirect_to(u'research_question.read', name=research_question.get(u'name'))
 
 
 class EditView(MethodView):
