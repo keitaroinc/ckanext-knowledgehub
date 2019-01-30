@@ -220,7 +220,7 @@ def research_question_list(context, data_dict):
     for entry in rq_db_list:
         rq_list.append(_table_dictize(entry, context))
 
-    total = len(ResearchQuestion.get().all())
+    total = len(ResearchQuestion.get(q=q).all())
 
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': rq_list}

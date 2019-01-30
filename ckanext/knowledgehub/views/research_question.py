@@ -41,7 +41,7 @@ def before_request():
 def search():
     q = request.params.get(u'q', u'')
     page = request.params.get(u'page', 1)
-    order_by = request.params.get(u'sort', u'title desc')
+    order_by = request.params.get(u'sort', u'name asc')
     limit = int(request.params.get(u'limit', config.get(
         u'ckanext.knowledgehub.research_question_limit', 10)))
 
