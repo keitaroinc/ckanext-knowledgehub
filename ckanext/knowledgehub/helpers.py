@@ -52,9 +52,9 @@ def _get_functions(module_root, functions={}):
     return functions
 
 
-def id_to_name(model, id):
+def id_to_title(model, id):
     data_dict = {}
     data_dict['id'] = id
     if model:
         entry = toolkit.get_action('{}_show'.format(model))({}, data_dict)
-    return entry['name']
+    return entry.get('title') or entry.get('name')

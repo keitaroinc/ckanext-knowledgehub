@@ -11,14 +11,14 @@
             {% if rq.get('theme', None) %}
             <tr>
                 <th scope="row" class="dataset-label">{{ _("Theme") }}</th>
-                <td class="dataset-details">{{ h.id_to_name('theme', rq.theme) }}</td>
+                <td class="dataset-details">{{ h.id_to_title('theme', rq.theme) }}</td>
             </tr>
             {% endif %}
 
             {% if rq.get('sub_theme', None) %}
             <tr>
                 <th scope="row" class="dataset-label">{{ _("Sub-Theme") }}</th>
-                <td class="dataset-details">{{ h.id_to_name('sub_theme', rq.sub_theme) }}</td>
+                <td class="dataset-details">{{ h.id_to_title('sub_theme', rq.sub_theme) }}</td>
             </tr>
             {% endif %}
 
@@ -26,7 +26,7 @@
             {% if rq.get('author', None) %}
             <tr>
                 <th scope="row" class="dataset-label">{{ _("Created by") }}</th>
-                <td class="dataset-details">{{ h.id_to_name('user', rq.author)}}</td>
+                <td class="dataset-details">{{ h.id_to_title('user', rq.author)}}</td>
             </tr>
             {% endif %}
 

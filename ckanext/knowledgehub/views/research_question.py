@@ -238,7 +238,7 @@ class EditView(MethodView):
         sub_theme_list = get_action(u'sub_theme_list')(context, {'theme': theme})
 
         for sub_theme in sub_theme_list.get(u'data', []):
-            opt = {u'text': sub_theme[u'name'], u'value': sub_theme[u'id']}
+            opt = {u'text': sub_theme[u'title'], u'value': sub_theme[u'id']}
             sub_theme_options.append(opt)
 
         form_vars = {

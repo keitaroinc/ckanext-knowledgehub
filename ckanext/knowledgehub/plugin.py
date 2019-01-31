@@ -53,5 +53,5 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
     # ITemplateHelpers
     def get_helpers(self):
         return {
-            'id_to_name': h.id_to_name,
+            'id_to_title': h.id_to_title,
         }
