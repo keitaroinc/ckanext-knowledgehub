@@ -1,0 +1,27 @@
+{% extends "page.html" %}
+
+{% block breadcrumb_content %}
+<li>{{ h.nav_link(_('Research questions'), named_route='research_question.search') }}</li>
+<li>{{ h.nav_link(rq.title|truncate(30), named_route='research_question.read', name=rq.name) }}</li>
+
+<li class="active">{{ h.nav_link(_('Manage'), named_route='research_question.edit', name=rq.name) }}</li>
+{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+{% block primary_content %}
+<article class="module">
+    <div class="module-content">
+        {% block primary_content_inner %}
+        <h1 class="page-heading">
+            {% block page_heading %}{{ _('Edit the research question') }}{% endblock %}
+        </h1>
+        {{ form | safe }}
+        {% endblock %}
+    </div>
+</article>
+{% endblock %}
+
+{% block secondary_content %}
+{% snippet "research_question/snippets/helper.html" %}
+{% endblock %}

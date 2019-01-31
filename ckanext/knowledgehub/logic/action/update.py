@@ -107,6 +107,7 @@ def sub_theme_update(context, data_dict):
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.sub_theme_update(),
                                 context)
+
     if errors:
         raise logic.ValidationError(errors)
 
@@ -133,28 +134,26 @@ def research_question_update(context, data_dict):
     '''
     check_access('research_question_update', context)
 
-    from pprint import pprint as pprint
+    id = logic.get_or_bust(data_dict, 'id')
+    data_dict.pop('id')
+
+    research_question = ResearchQuestion.get(id_or_name=id).first()
+
+    if not research_question:
+        log.debug('Could not find research question %s', id)
+        raise logic.NotFound(_('Research question not found.'))
+
+    context['research_question'] = research_question.name
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.research_question_schema(),
                                 context)
 
     if errors:
-        raise toolkit.ValidationError(errors)
+        raise logic.ValidationError(errors)
 
-    id = data.get('id')
-    theme = data.get('theme')
-    sub_theme = data.get('sub_theme')
-    content = data.get('content')
+    user = context.get('user')
+    data['modified_by'] = model.User.by_name(user.decode('utf8')).id
 
-    session = context['session']
-
-    rq = ResearchQuestion.get(id=id).first()
-
-    rq.theme = theme
-    rq.sub_theme = sub_theme
-    rq.content = content
-    rq.modified = datetime.datetime.now()
-    rq.save()
-    session.add(rq)
-    session.commit()
-    return _table_dictize(rq, context)
+    filter = {'id': id}
+    rq = ResearchQuestion.update(filter, data)
+    return rq.as_dict()

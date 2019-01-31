@@ -1,0 +1,23 @@
+{#
+Displays a single research question.
+
+rq             - A research question to display.
+item_class     - The class name to use on the list item.
+truncate       - The length to trucate the description to (default: 180)
+truncate_title - The length to truncate the title to (default: 80).
+
+ Example:
+
+   {% snippet 'research_question/snippets/research_question_item.html', rq=rq %}
+
+ #}
+{% set truncate = truncate or 180 %}
+{% set truncate_title = truncate_title or 80 %}
+{% set title = rq['title'] %}
+ <li class="">
+  <div class="">
+    <h3 class="">
+    {{ h.link_to(h.truncate(title, truncate_title), h.url_for('research_question.read', name=rq['name'])) }}
+    </h3>
+  </div>
+</li>

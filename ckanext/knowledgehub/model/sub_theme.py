@@ -81,7 +81,7 @@ sub_themes_table = Table(
     Column('title', types.UnicodeText),
     Column('description', types.UnicodeText),
     Column('theme', types.UnicodeText, ForeignKey('theme.id'), nullable=False),
-    Column('status', types.UnicodeText, default='active'),
+    Column('status', types.UnicodeText, default=u'active'),
     Column('created_at', types.DateTime, default=datetime.datetime.now),
     Column('modified_at', types.DateTime, onupdate=datetime.datetime.now),
     Column('created_by', types.UnicodeText, nullable=False),

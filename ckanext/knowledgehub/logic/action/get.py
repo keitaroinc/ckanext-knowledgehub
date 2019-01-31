@@ -135,18 +135,27 @@ def sub_theme_list(context, data_dict):
     '''
 
     q = data_dict.get('q', '')
+    theme = data_dict.get('theme', None)
     page_size = int(data_dict.get('pageSize', 10))
     page = int(data_dict.get('page', 1))
     order_by = data_dict.get('order_by', 'title asc')
-
     offset = (page - 1) * page_size
+    status = 'active'
+
+    kwargs = {}
+
+    if theme:
+        kwargs['theme'] = theme
+
+    kwargs['q'] = q
+    kwargs['limit'] = page_size
+    kwargs['offset'] = offset
+    kwargs['order_by'] = order_by
+    kwargs['status'] = status
+
     st_list = []
 
-    st_db_list = SubThemes.get(q=q,
-                               limit=page_size,
-                               offset=offset,
-                               order_by=order_by,
-                               status='active').all()
+    st_db_list = SubThemes.get(**kwargs).all()
 
     for entry in st_db_list:
         st_list.append(_table_dictize(entry, context))
@@ -167,12 +176,17 @@ def research_question_show(context, data_dict):
     :returns: a research question
     :rtype: dictionary
     '''
-    id = data_dict.get('id')
 
-    rq = ResearchQuestion.get(id=id).first()
-    print rq
+    id_or_name = data_dict.get('id') or data_dict.get('name')
+
+    if not id_or_name:
+        raise ValidationError({u'id': _(u'Missing value')})
+
+    rq = ResearchQuestion.get(id_or_name=id_or_name).first()
+
     if not rq:
-        raise toolkit.ObjectNotFound
+        raise NotFound(_(u'Research question'))
+
     return rq.as_dict()
 
 
@@ -180,7 +194,8 @@ def research_question_show(context, data_dict):
 def research_question_list(context, data_dict):
     ''' List research questions
 
-    :param page: current page in pagination (optional, default: ``1``)
+    :param page: current page in pagination
+    (optional, default: ``1``)
     :type page: int
     :param pageSize: the number of items
     to return (optional, default: ``10``)
@@ -190,20 +205,22 @@ def research_question_list(context, data_dict):
      items, page number, page size and data
     :rtype: dictionary
     '''
-
+    q = data_dict.get('q', '')
     page_size = int(data_dict.get('pageSize', 10))
     page = int(data_dict.get('page', 1))
     offset = (page - 1) * page_size
+    order_by = data_dict.get('order_by', 'name asc')
     rq_list = []
 
-    rq_db_list = ResearchQuestion.get(limit=page_size,
+    rq_db_list = ResearchQuestion.get(q=q,
+                                      limit=page_size,
                                       offset=offset,
-                                      order_by='name asc').all()
+                                      order_by=order_by).all()
 
     for entry in rq_db_list:
         rq_list.append(_table_dictize(entry, context))
 
-    total = len(ResearchQuestion.get().all())
+    total = len(ResearchQuestion.get(q=q).all())
 
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': rq_list}
