@@ -17,7 +17,7 @@
 {% block primary_content_inner %}
   <h1 class="hide-heading">{% block page_heading %}{{ _('Themes') }}{% endblock %}</h1>
   {% block themes_search_form %}
-    {% snippet 'snippets/search_form.html', form_id='theme-search-form', type='theme', query=q, sorting_selected=sort_by_selected, count=page.item_count, placeholder=_('Search themes...'), show_empty=request.params, no_bottom_border=true if page.items, sorting = [(_('Name Ascending'), 'name asc'), (_('Name Descending'), 'name desc')] %}
+    {% snippet 'snippets/search_form.html', form_id='theme-search-form', type='theme', query=q, sorting_selected=sort_by_selected, count=page.item_count, placeholder=_('Search themes...'), sorting = [(_('Name Ascending'), 'name asc'), (_('Name Descending'), 'name desc')] %}
   {% endblock %}
   {% block themes_list %}
     {% if page.items %}
