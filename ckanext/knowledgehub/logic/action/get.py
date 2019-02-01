@@ -1,4 +1,5 @@
 import logging
+import os
 
 import ckan.logic as logic
 from ckan.plugins import toolkit
@@ -8,6 +9,8 @@ from ckan import lib
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+
+from ckanext.knowledgehub.backend.factory import get_backend
 
 
 log = logging.getLogger(__name__)
@@ -224,3 +227,11 @@ def research_question_list(context, data_dict):
 
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': rq_list}
+
+
+@toolkit.side_effect_free
+def test_import(context, data_dict):
+    # Example how to use backend factory
+    backend = get_backend(data_dict)
+    backend.configure(data_dict)
+    return backend.search_sql(data_dict)
