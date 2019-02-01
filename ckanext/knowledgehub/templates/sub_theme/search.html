@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block primary_content_inner %}
-{% snippet 'snippets/search_form.html', form_id='sub-theme-search-form', type='sub-theme', query=q, sorting_selected=order_by, count=total, placeholder=_('Search sub-themes...'), show_empty=request.params, no_bottom_border=true if sub_themes, sorting = [(_('Name Ascending'), 'title asc'), (_('Name Descending'), 'title desc')] %}
+{% snippet 'snippets/search_form.html', form_id='sub-theme-search-form', type='sub-theme', query=q, sorting_selected=order_by, count=total, placeholder=_('Search sub-themes...'), sorting = [(_('Name Ascending'), 'title asc'), (_('Name Descending'), 'title desc')] %}
   {% if sub_themes %}
       {% snippet "sub_theme/snippets/sub_theme_list.html", sub_themes=sub_themes %}
   {% else %}
