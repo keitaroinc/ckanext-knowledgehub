@@ -11,6 +11,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 
 from ckanext.knowledgehub.backend.factory import get_backend
+from ckanext.knowledgehub.lib.writer import WriterService
 
 
 log = logging.getLogger(__name__)
@@ -234,4 +235,12 @@ def test_import(context, data_dict):
     # Example how to use backend factory
     backend = get_backend(data_dict)
     backend.configure(data_dict)
-    return backend.search_sql(data_dict)
+    data = backend.search_sql(data_dict)
+    # Example how to use csv file writer
+    writer = WriterService()
+    stream = writer.csv_writer(data.get('fields'),
+                               data.get('records'),
+                               ',')
+    print stream.getvalue()
+
+    return data
