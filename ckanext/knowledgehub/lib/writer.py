@@ -1,0 +1,34 @@
+# -*- coding: utf-8 -*-
+import logging
+import csv
+import cStringIO
+
+log = logging.getLogger(__name__)
+
+
+class WriterService():
+
+    def csv_writer(self, fields, records, delimiter):
+
+        d = str(delimiter).lower()
+
+        columns = [x['id'].encode("utf-8") for x in fields]
+        output = cStringIO.StringIO()
+
+        if d == 'semicolon':
+            writer = csv.writer(output, delimiter=';')
+        elif d == 'pipe':
+            writer = csv.writer(output, delimiter='|')
+        elif d == 'tab':
+            writer = csv.writer(output, dialect='excel-tab')
+        else:
+            writer = csv.writer(output, delimiter=',')
+
+        # Writing headers
+        writer.writerow([f['id'].encode("utf-8") for f in fields])
+
+        # Writing records
+        for record in records:
+            writer.writerow([record[column] for column in columns])
+
+        return cStringIO.StringIO(output.getvalue())
