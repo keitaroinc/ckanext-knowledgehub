@@ -142,7 +142,7 @@ def research_question_create(context, data_dict):
 
     title = data.get('title')
     state = data.get('state', 'active')
-    #FIXME if theme or subtheme id not exists, return notfound
+    # FIXME if theme or subtheme id not exists, return notfound
     research_question = ResearchQuestion(
         name=url_slug,
         theme=theme,
@@ -154,3 +154,22 @@ def research_question_create(context, data_dict):
     research_question.save()
 
     return _table_dictize(research_question, context)
+
+
+def resource_create(context, data_dict):
+    # validate params if data source is selected
+    # fetch data
+    # convert data
+    # create File Storage obj
+    # set upload property
+
+    # import StringIO
+    # file = StringIO.StringIO()
+    # file.write("This man is no ordinary man. ")
+    # file.write("This is Mr. F. G. Superman.")
+    from werkzeug.datastructures import FileStorage as FlaskFileStorage
+    f = open("/home/vladimir/Downloads/roads.csv", "rb")
+    data_dict['upload'] = FlaskFileStorage(f, 'test.csv')
+
+    from ckan.logic.action.create import resource_create as ckan_rsc_create
+    ckan_rsc_create(context, data_dict)
