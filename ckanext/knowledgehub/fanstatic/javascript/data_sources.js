@@ -3,8 +3,8 @@
 
     // Define all data source snippets
     var data_source_snippets = {
-        'data_source_1': 'mssql_connection_params.html',
-        'data_source_2': 'mssql_connection_params.html',
+        'mssql': 'mssql_connection_params.html',
+        'postgresql': 'mssql_connection_params.html',
     }
 
     // Fetch CKAN snippet
@@ -28,16 +28,20 @@
     // Render CKAN snippet by passing data and errors values
     function renderSnippet(snippet, append_to, data, errors) {
         api.getTemplate(snippet, {
-            data_source: data.data_source,
-            server_name: data.server_name,
-            db_username: data.db_username,
-            db_password: data.db_password,
-            query: data.query,
-            data_source_error: errors.data_source,
-            server_name_error: errors.server_name,
-            db_username_error: errors.db_username,
-            db_password_error: errors.db_password,
-            query_error: errors.query
+            db_type: data.db_type,
+            db_name: data.db_name,
+            host: data.host,
+            port: data.port,
+            username: data.username,
+            password: data.password,
+            sql: data.sql,
+            db_type_error: errors.db_type,
+            db_name_error: errors.db_name,
+            host_error: errors.host,
+            port_error: errors.port,
+            username_error: errors.username,
+            password_error: errors.password,
+            sql_error: errors.sql
         })
         .done(function (data) {
             append_to.append(data);
@@ -81,7 +85,7 @@
         try {
             var data = JSON.parse(
                 $('input#form-data').val()
-                    .replace(/u/g, '')
+                    .replace(/u'/g, '\'')
                     .replace(/'/g, '"')
                     .replace(/None/g, '""')
                     .replace(/True/g, 'true')
@@ -116,9 +120,9 @@
         }
 
         // If there is already selected data source, show it with populated fields
-        if (data.data_source) {
+        if ('db_type' in data) {
             var remove_button = removeButton(data_source_select_div,
-                                              connection_params_div,
+                                             connection_params_div,
                                              data_source_btn,
                                              image_upload_div)
 
@@ -133,12 +137,17 @@
                 errors
             );
 
-            renderSnippet(
-                data_source_snippets[data.data_source],
-                data_source_select_div,
-                data,
-                errors
-            );
+
+            console.log(data)
+
+            if (data.db_type) {
+                renderSnippet(
+                    data_source_snippets[data.db_type],
+                    data_source_select_div,
+                    data,
+                    errors
+                );
+            }
         }
 
         // If file is chosen from file field-nameystem then hide the data source button
