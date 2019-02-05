@@ -1,19 +1,19 @@
 {% import "macros/form.html" as form %}
 
-{% set source_options = [{'value': 'data_source_1', 'text': 'Data Source 1'},
-                         {'value': 'data_source_2', 'text': 'Data Source 2'}] %}
+{% set source_options = [{'value': 'mssql', 'text': 'MSSQL'},
+                         {'value': 'postgresql', 'text': 'PostgreSQL'}] %}
 
 
 <div class="form-group control-select">
     <label class="control-label" for="data_source">
         <span title="This field is required" class="control-required">*</span>
-        Data Sources
+        DB Type
     </label>
     <div class="controls">
-        <select id="data_source" name="data_source" class="form-control select-source">
-            <option value="" disabled selected hidden>Please Choose...</option>
+        <select id="db_type" name="db_type" class="form-control select-source">
+            <option value="" {% if "" == db_type %} selected {% endif %} hidden>Please Choose...</option>
             {% for opt in source_options %}
-                <option value="{{ opt.value }}" {% if opt.value == data_source %} selected {% endif %}>{{ opt.text or opt.value }}</option>
+                <option value="{{ opt.value }}" {% if opt.value == db_type %} selected {% endif %}>{{ opt.text or opt.value }}</option>
             {% endfor %}
         </select>
     </div>
