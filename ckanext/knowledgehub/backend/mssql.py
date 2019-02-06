@@ -9,13 +9,19 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import url
 from sqlalchemy.exc import (ProgrammingError, IntegrityError,
                             DBAPIError, DataError)
+
 import ckan.plugins.toolkit as toolkit
+from ckan import lib
+import ckan.logic as logic
+from ckan.common import _
 
 import ckanext.datastore.helpers as datastore_helpers
 from ckanext.knowledgehub.backend import Backend
+from ckanext.knowledgehub.backend import schema as backend_schema
 
 log = logging.getLogger(__name__)
 
+_df = lib.navl.dictization_functions
 ValidationError = toolkit.ValidationError
 
 is_single_statement = datastore_helpers.is_single_statement
@@ -91,12 +97,19 @@ class MssqlBackend(Backend):
         :type username: string
         '''
 
+        data, errors = _df.validate(config, backend_schema.mssql(), {})
+        if errors:
+            raise ValidationError(errors)
+        else:
+            # We don't want to store DB password for now
+            config.pop('password', None)
+
         # check for required connection parameters
-        host = toolkit.get_or_bust(config, 'host')
-        port = toolkit.get_or_bust(config, 'port')
-        username = toolkit.get_or_bust(config, 'username')
-        password = toolkit.get_or_bust(config, 'password')
-        database = toolkit.get_or_bust(config, 'db_name')
+        host = data.get('host')
+        port = data.get('port')
+        username = data.get('username')
+        password = data.get('password')
+        database = data.get('db_name')
 
         kwargs = {
             'drivername': 'mssql+pymssql',
@@ -106,6 +119,7 @@ class MssqlBackend(Backend):
             'password': password,
             'database': database
         }
+
         # set the connection url for the
         # appropriate engine type
         self.read_url = url.URL(**kwargs)
@@ -127,24 +141,26 @@ class MssqlBackend(Backend):
 
         if not is_single_statement(sql):
             raise toolkit.ValidationError({
-                'query': ['Query is not a single statement.']
+                'query': [_('Query is not a single statement.')]
             })
 
-        engine = self._get_engine()
-        connection = engine.connect()
+        try:
+            engine = self._get_engine()
+            connection = engine.connect()
+        except Exception as e:
+            log.error(e)
+            raise logic.ValidationError({
+                'connection_parameters':
+                [_('Unable to connect to Database, please check!')]
+            })
 
         try:
-            # types = connection.execute("SELECT COLUMN_NAME, DATA_TYPE  "
-            #                            "FROM INFORMATION_SCHEMA.COLUMNS"
-            #                            " WHERE TABLE_NAME = 'Products'")
             results = connection.execute(sql)
             return format_results(results)
         except ProgrammingError as e:
-            # TODO handle errors
             log.error(e)
             raise
         except DBAPIError as e:
-            # TODO handle errors
             log.error(e)
             raise ValidationError(e)
         finally:
