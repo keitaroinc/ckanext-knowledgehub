@@ -3,17 +3,21 @@ import datetime
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
+from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
-import ckan.logic as logic
+from ckan import logic
 from ckan.common import _
 from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
+from ckan.logic.action.create import resource_create as ckan_rsc_create
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub.backend.factory import get_backend
+from ckanext.knowledgehub.lib.writer import WriterService
 
 
 log = logging.getLogger(__name__)
@@ -157,19 +161,25 @@ def research_question_create(context, data_dict):
 
 
 def resource_create(context, data_dict):
-    # validate params if data source is selected
-    # fetch data
-    # convert data
-    # create File Storage obj
-    # set upload property
+    '''Override the existing resource_create to
+    support data upload from data sources
+    '''
 
-    # import StringIO
-    # file = StringIO.StringIO()
-    # file.write("This man is no ordinary man. ")
-    # file.write("This is Mr. F. G. Superman.")
-    from werkzeug.datastructures import FileStorage as FlaskFileStorage
-    f = open("/home/vladimir/Downloads/roads.csv", "rb")
-    data_dict['upload'] = FlaskFileStorage(f, 'test.csv')
+    if data_dict.get('db_type') is not None:
+        if data_dict.get('db_type') == '':
+            raise logic.ValidationError({
+                'db_type': [u'Please select the DB Type']
+            })
 
-    from ckan.logic.action.create import resource_create as ckan_rsc_create
+        backend = get_backend(data_dict)
+        backend.configure(data_dict)
+        data = backend.search_sql(data_dict)
+
+        writer = WriterService()
+        stream = writer.csv_writer(data.get('fields'),
+                                   data.get('records'),
+                                   ',')
+
+        data_dict['upload'] = FlaskFileStorage(stream, 'test.csv')
+
     ckan_rsc_create(context, data_dict)
