@@ -137,9 +137,6 @@
                 errors
             );
 
-
-            console.log(data)
-
             if (data.db_type) {
                 renderSnippet(
                     data_source_snippets[data.db_type],
