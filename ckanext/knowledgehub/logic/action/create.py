@@ -1,5 +1,6 @@
 import logging
 import datetime
+import os
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
@@ -168,7 +169,7 @@ def resource_create(context, data_dict):
     if data_dict.get('db_type') is not None:
         if data_dict.get('db_type') == '':
             raise logic.ValidationError({
-                'db_type': [u'Please select the DB Type']
+                'db_type': [_('Please select the DB Type')]
             })
 
         backend = get_backend(data_dict)
@@ -180,6 +181,12 @@ def resource_create(context, data_dict):
                                    data.get('records'),
                                    ',')
 
-        data_dict['upload'] = FlaskFileStorage(stream, 'test.csv')
+        filename = '{}_{}.{}'.format(
+            data_dict.get('db_type'),
+            str(datetime.datetime.utcnow()),
+            'csv'
+        )
+
+        data_dict['upload'] = FlaskFileStorage(stream, filename)
 
     ckan_rsc_create(context, data_dict)
