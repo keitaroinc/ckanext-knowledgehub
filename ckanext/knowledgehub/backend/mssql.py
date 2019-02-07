@@ -141,7 +141,7 @@ class MssqlBackend(Backend):
 
         if not is_single_statement(sql):
             raise toolkit.ValidationError({
-                'query': [_('Query is not a single statement.')]
+                'sql': [_('SQL Query is not a single statement.')]
             })
 
         try:
@@ -159,9 +159,13 @@ class MssqlBackend(Backend):
             return format_results(results)
         except ProgrammingError as e:
             log.error(e)
-            raise
+            raise ValidationError({
+                'Error': [_('Please check the SQL!')]
+            })
         except DBAPIError as e:
             log.error(e)
-            raise ValidationError(e)
+            raise ValidationError({
+                'DB_API_Error': [_('Please check the SQL!')]
+            })
         finally:
             connection.close()
