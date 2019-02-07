@@ -176,17 +176,18 @@ def resource_create(context, data_dict):
         backend.configure(data_dict)
         data = backend.search_sql(data_dict)
 
-        writer = WriterService()
-        stream = writer.csv_writer(data.get('fields'),
-                                   data.get('records'),
-                                   ',')
+        if data.get('records', []):
+            writer = WriterService()
+            stream = writer.csv_writer(data.get('fields'),
+                                       data.get('records'),
+                                       ',')
 
-        filename = '{}_{}.{}'.format(
-            data_dict.get('db_type'),
-            str(datetime.datetime.utcnow()),
-            'csv'
-        )
+            filename = '{}_{}.{}'.format(
+                data_dict.get('db_type'),
+                str(datetime.datetime.utcnow()),
+                'csv'
+            )
 
-        data_dict['upload'] = FlaskFileStorage(stream, filename)
+            data_dict['upload'] = FlaskFileStorage(stream, filename)
 
     ckan_rsc_create(context, data_dict)
