@@ -150,9 +150,9 @@
                 errors
             );
 
-            // sleep 0.1s to be sure that select_source.html
+            // sleep 0.2s to be sure that select_source.html
             // will be rendered first always
-            sleep(100).then(() => {
+            sleep(200).then(() => {
                 if (data.db_type) {
                     renderSnippet(
                         data_source_snippets[data.db_type],
