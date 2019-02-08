@@ -164,7 +164,7 @@
             });
         }
 
-        // If file is chosen from file field-nameystem then hide the data source button
+        // If file is chosen from file system then hide the data source button
         field_image_upload_input.change(function () {
             data_source_btn.hide();
         });
