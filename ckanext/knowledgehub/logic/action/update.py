@@ -166,6 +166,21 @@ def research_question_update(context, data_dict):
 def resource_update(context, data_dict):
     '''Override the existing resource_update to
     support data upload from data sources
+
+    :param db_type: title of the sub-theme
+    :type db_type: string
+
+    ```MSSQL```
+    :param host: hostname
+    :type host: string
+    :param port: the port
+    :type port: int
+    :param username: DB username
+    :type username: string
+    :param password: DB password
+    :type password: string
+    :param sql: SQL Query
+    :type sql: string
     '''
 
     if data_dict.get('db_type') is not None:
