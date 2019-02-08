@@ -104,6 +104,7 @@
             data = ''
             if (console) {
                 console.error('Error parsing input#form-data: ' + error);
+                console.log($('input#form-data').val());
             }
         }
 
@@ -120,6 +121,7 @@
             error = ''
             if (console) {
                 console.error('Error parsing input#form-errors: ' + error);
+                console.log($('input#form-errors').val());
             }
         }
 
