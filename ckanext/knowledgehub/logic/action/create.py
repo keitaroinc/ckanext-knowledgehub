@@ -188,6 +188,9 @@ def resource_create(context, data_dict):
                 'csv'
             )
 
+            if not data_dict.get('name'):
+                data_dict['name'] = filename
+
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
     ckan_rsc_create(context, data_dict)
