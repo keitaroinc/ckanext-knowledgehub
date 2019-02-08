@@ -4,6 +4,7 @@ import logging
 import ckan.plugins.toolkit as toolkit
 
 from ckanext.knowledgehub.backend.mssql import MssqlBackend
+from ckanext.knowledgehub.backend.postgresql import PostgresqlBackend
 
 
 log = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ _SUPPORTED_BACKENDS = [u'mssql',
 
 _backends = {
     u'mssql': MssqlBackend(),
-    u'postgresql': None
+    u'postgresql': PostgresqlBackend()
 }
 
 

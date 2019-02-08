@@ -1,4 +1,8 @@
 import logging
+import json
+import datetime
+
+from six import string_types, text_type
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import url
@@ -6,30 +10,41 @@ from sqlalchemy.exc import (ProgrammingError, IntegrityError,
                             DBAPIError, DataError)
 
 import ckan.plugins.toolkit as toolkit
-from ckan import lib
-import ckan.logic as logic
-from ckan.common import _
-
-import ckanext.datastore.helpers as datastore_helpers
 from ckanext.knowledgehub.backend import Backend
-from ckanext.knowledgehub.backend import schema as backend_schema
 
 log = logging.getLogger(__name__)
 
-_df = lib.navl.dictization_functions
 ValidationError = toolkit.ValidationError
 
-is_single_statement = datastore_helpers.is_single_statement
+_TIMEOUT = 60000  # milliseconds
 
-_TIMEOUT = 10  # seconds
-_DATE_FORMATS = ['%Y-%m-%d',
-                 '%Y-%m-%d %H:%M:%S',
-                 '%Y-%m-%dT%H:%M:%S',
-                 '%Y-%m-%dT%H:%M:%SZ',
-                 '%d/%m/%Y',
-                 '%m/%d/%Y',
-                 '%d-%m-%Y',
-                 '%m-%d-%Y']
+_PG_ERR_CODE = {
+    'unique_violation': '23505',
+    'query_canceled': '57014',
+    'undefined_object': '42704',
+    'syntax_error': '42601',
+    'permission_denied': '42501',
+    'duplicate_table': '42P07',
+    'duplicate_alias': '42712',
+}
+
+
+def convert(data, type_name):
+    if data is None:
+        return None
+    if type_name == 'nested':
+        return json.loads(data[0])
+    # array type
+    if type_name.startswith('_'):
+        sub_type = type_name[1:]
+        return [convert(item, sub_type) for item in data]
+    if type_name == 'tsvector':
+        return text_type(data, 'utf-8')
+    if isinstance(data, datetime.datetime):
+        return data.isoformat()
+    if isinstance(data, (int, float)):
+        return data
+    return text_type(data)
 
 
 def format_results(results):
@@ -47,7 +62,8 @@ def format_results(results):
     for row in results:
         table_row = {}
         for field in fields:
-            table_row[field['id']] = row[field['id']]
+            table_row[field['id']] = \
+                convert(row[field['id']], '')
         records.append(table_row)
 
     data['records'] = records
@@ -56,7 +72,7 @@ def format_results(results):
     return data
 
 
-class MssqlBackend(Backend):
+class PostgresqlBackend(Backend):
 
     def __init__(self):
         self._engine = None
@@ -64,9 +80,7 @@ class MssqlBackend(Backend):
     def _get_engine(self):
         if not self._engine:
             self._engine = \
-                create_engine(
-                    self.read_url,
-                    connect_args={'timeout': _TIMEOUT})
+                create_engine(self.read_url)
         return self._engine
 
     def configure(self, config):
@@ -92,32 +106,25 @@ class MssqlBackend(Backend):
         :type username: string
         '''
 
-        data, errors = _df.validate(config, backend_schema.mssql(), {})
-        if errors:
-            raise ValidationError(errors)
-        else:
-            # We don't want to store DB password for now
-            config.pop('password', None)
-
         # check for required connection parameters
-        host = data.get('host')
-        port = data.get('port')
-        username = data.get('username')
-        password = data.get('password')
-        database = data.get('db_name')
+        host = toolkit.get_or_bust(config, 'host')
+        port = toolkit.get_or_bust(config, 'port')
+        username = toolkit.get_or_bust(config, 'username')
+        password = toolkit.get_or_bust(config, 'password')
+        database = toolkit.get_or_bust(config, 'db_name')
 
         kwargs = {
-            'drivername': 'mssql+pymssql',
+            'drivername': 'postgresql',
             'host': host,
             'port': port,
             'username': username,
             'password': password,
             'database': database
         }
-
         # set the connection url for the
         # appropriate engine type
         self.read_url = url.URL(**kwargs)
+        print self.read_url
 
     def search_sql(self, data_dict):
         '''
@@ -132,35 +139,42 @@ class MssqlBackend(Backend):
         :type records: list of dictionaries
         '''
 
-        sql = toolkit.get_or_bust(data_dict, 'sql')
+        engine = self._get_engine()
+        connection = engine.connect()
 
-        if not is_single_statement(sql):
-            raise toolkit.ValidationError({
-                'sql': [_('SQL Query is not a single statement.')]
-            })
+        sql = data_dict['sql']
 
         try:
-            engine = self._get_engine()
-            connection = engine.connect()
-        except Exception as e:
-            log.error(e)
-            raise logic.ValidationError({
-                'connection_parameters':
-                [_('Unable to connect to Database, please check!')]
-            })
+            connection.execute(
+                u'SET LOCAL statement_timeout TO {0}'.format(_TIMEOUT))
 
-        try:
             results = connection.execute(sql)
+
             return format_results(results)
+
         except ProgrammingError as e:
-            log.error(e)
+            if e.orig.pgcode == _PG_ERR_CODE['permission_denied']:
+                raise toolkit.NotAuthorized({
+                    'permissions': ['Not authorized to read resource.']
+                })
+
+            def _remove_explain(msg):
+                return (msg.replace('EXPLAIN (VERBOSE, FORMAT JSON) ', '')
+                        .replace('EXPLAIN ', ''))
+
             raise ValidationError({
-                'Error': [_('Please check the SQL!')]
+                'query': [_remove_explain(str(e))],
+                'info': {
+                    'statement': [_remove_explain(e.statement)],
+                    'params': [e.params],
+                    'orig': [_remove_explain(str(e.orig))]
+                }
             })
         except DBAPIError as e:
-            log.error(e)
-            raise ValidationError({
-                'DB_API_Error': [_('Please check the SQL!')]
-            })
+            if e.orig.pgcode == _PG_ERR_CODE['query_canceled']:
+                raise ValidationError({
+                    'query': ['Query took too long']
+                })
+            raise
         finally:
             connection.close()
