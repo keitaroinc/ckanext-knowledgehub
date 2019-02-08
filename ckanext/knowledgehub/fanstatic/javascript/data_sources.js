@@ -99,6 +99,7 @@
                     .replace(/None/g, '""')
                     .replace(/True/g, 'true')
                     .replace(/False/g, 'false')
+                    .replace(/"size"\:\s\d+L,/, '') // Sometimes size property has `L` at the end e.g: 'size': 32L,
             );
         } catch (error) {
             data = ''
