@@ -3,8 +3,8 @@
 
     // Define all data source snippets
     var data_source_snippets = {
-        'data_source_1': 'mssql_connection_params.html',
-        'data_source_2': 'mssql_connection_params.html',
+        'mssql': 'mssql_connection_params.html',
+        'postgresql': 'mssql_connection_params.html',
     }
 
     // Fetch CKAN snippet
@@ -28,16 +28,19 @@
     // Render CKAN snippet by passing data and errors values
     function renderSnippet(snippet, append_to, data, errors) {
         api.getTemplate(snippet, {
-            data_source: data.data_source,
-            server_name: data.server_name,
-            db_username: data.db_username,
-            db_password: data.db_password,
-            query: data.query,
-            data_source_error: errors.data_source,
-            server_name_error: errors.server_name,
-            db_username_error: errors.db_username,
-            db_password_error: errors.db_password,
-            query_error: errors.query
+            db_type: data.db_type,
+            db_name: data.db_name,
+            host: data.host,
+            port: data.port,
+            username: data.username,
+            sql: data.sql,
+            db_type_error: errors.db_type,
+            db_name_error: errors.db_name,
+            host_error: errors.host,
+            port_error: errors.port,
+            username_error: errors.username,
+            password_error: errors.password,
+            sql_error: errors.sql
         })
         .done(function (data) {
             append_to.append(data);
@@ -45,7 +48,7 @@
     }
 
     // Button for resetting the form when there is a data source select component
-    function removeButton(data_source_select_div, connection_params_div, data_source_btn, image_upload_div) {
+    function removeButton(data_source_select_div, connection_params_div, data_source_btn, image_upload_div, error_exp_div) {
         var removeText = _('Remove');
 
         return $('<a href="javascript:;" class="btn btn-danger btn-remove-data-source pull-right">'
@@ -55,17 +58,26 @@
                 data_source_select_div: data_source_select_div,
                 connection_params_div: connection_params_div,
                 data_source_btn: data_source_btn,
-                image_upload_div: image_upload_div
+                image_upload_div: image_upload_div,
+                error_exp_div: error_exp_div,
             }, onRemove)
     }
 
     // Handle on remove data source component
     function onRemove(e) {
+        if (e.data.error_exp_div) {
+            e.data.error_exp_div.hide();
+        }
         e.data.data_source_select_div.empty()
         e.data.connection_params_div.empty()
         e.data.data_source_btn.show();
         e.data.image_upload_div.show();
         $(this).hide();
+    }
+
+    // Sleep time expects milliseconds
+    function sleep(time) {
+        return new Promise((resolve) => setTimeout(resolve, time));
     }
 
     $(document).ready(function () {
@@ -77,20 +89,23 @@
         var field_image_url_input = $('input#field-image-url');
         var field_image_upload_input = $('input#field-image-upload');
         var field_name_input = $('input#field-name');
+        var error_exp_div = $('.error-explanation')
 
         try {
             var data = JSON.parse(
                 $('input#form-data').val()
-                    .replace(/u/g, '')
+                    .replace(/u'/g, '\'')
                     .replace(/'/g, '"')
                     .replace(/None/g, '""')
                     .replace(/True/g, 'true')
                     .replace(/False/g, 'false')
+                    .replace(/"size"\:\s\d+L,/, '') // Sometimes size property has `L` at the end e.g: 'size': 32L,
             );
         } catch (error) {
             data = ''
             if (console) {
                 console.error('Error parsing input#form-data: ' + error);
+                console.log($('input#form-data').val());
             }
         }
 
@@ -107,6 +122,7 @@
             error = ''
             if (console) {
                 console.error('Error parsing input#form-errors: ' + error);
+                console.log($('input#form-errors').val());
             }
         }
 
@@ -116,11 +132,12 @@
         }
 
         // If there is already selected data source, show it with populated fields
-        if (data.data_source) {
+        if ('db_type' in data) {
             var remove_button = removeButton(data_source_select_div,
-                                              connection_params_div,
+                                             connection_params_div,
                                              data_source_btn,
-                                             image_upload_div)
+                                             image_upload_div,
+                                             error_exp_div)
 
             image_upload_div.hide();
             data_source_btn.hide();
@@ -133,15 +150,21 @@
                 errors
             );
 
-            renderSnippet(
-                data_source_snippets[data.data_source],
-                data_source_select_div,
-                data,
-                errors
-            );
+            // sleep 0.2s to be sure that select_source.html
+            // will be rendered first always
+            sleep(200).then(() => {
+                if (data.db_type) {
+                    renderSnippet(
+                        data_source_snippets[data.db_type],
+                        data_source_select_div,
+                        data,
+                        errors
+                    );
+                }
+            });
         }
 
-        // If file is chosen from file field-nameystem then hide the data source button
+        // If file is chosen from file system then hide the data source button
         field_image_upload_input.change(function () {
             data_source_btn.hide();
         });

@@ -1,15 +1,16 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from ckan.lib.plugins import DefaultDatasetForm
 
 import ckanext.knowledgehub.helpers as h
 from ckanext.knowledgehub.model.theme import theme_db_setup
 
 from ckanext.knowledgehub.helpers import _register_blueprints
-from ckanext.knowledgehub.model.research_question import setup as research_question_db_setup
+from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
 from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
 
 
-class KnowledgehubPlugin(plugins.SingletonPlugin):
+class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IBlueprint)
@@ -17,6 +18,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IDatasetForm)
 
     # IConfigurer
     def update_config(self, config_):
@@ -29,7 +31,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
         # Initialize DB
         theme_db_setup()
         sub_theme_db_setup()
-        research_question_db_setup()
+        rq_db_setup()
         return config
 
     # IBlueprint
@@ -55,3 +57,37 @@ class KnowledgehubPlugin(plugins.SingletonPlugin):
         return {
             'id_to_title': h.id_to_title,
         }
+
+    # IDatasetForm
+    def _modify_package_schema(self, schema):
+        defaults = [toolkit.get_validator('ignore_missing')]
+
+        schema['resources'].update({
+            'db_type': defaults,
+            'db_name': defaults,
+            'host': defaults,
+            'port': defaults,
+            'username': defaults,
+            'password': defaults,
+            'sql': defaults,
+        })
+
+        return schema
+
+    def create_package_schema(self):
+        schema = super(KnowledgehubPlugin, self).create_package_schema()
+        return self._modify_package_schema(schema)
+
+    def update_package_schema(self):
+        schema = super(KnowledgehubPlugin, self).update_package_schema()
+        return self._modify_package_schema(schema)
+
+    def show_package_schema(self):
+        schema = super(KnowledgehubPlugin, self).show_package_schema()
+        return self._modify_package_schema(schema)
+
+    def is_fallback(self):
+        return True
+
+    def package_types(self):
+        return []

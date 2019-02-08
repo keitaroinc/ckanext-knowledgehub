@@ -1,19 +1,24 @@
 import logging
 import datetime
+import os
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
+from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
-import ckan.logic as logic
+from ckan import logic
 from ckan.common import _
 from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
+from ckan.logic.action.create import resource_create as ckan_rsc_create
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub.backend.factory import get_backend
+from ckanext.knowledgehub.lib.writer import WriterService
 
 
 log = logging.getLogger(__name__)
@@ -142,7 +147,7 @@ def research_question_create(context, data_dict):
 
     title = data.get('title')
     state = data.get('state', 'active')
-    #FIXME if theme or subtheme id not exists, return notfound
+    # FIXME if theme or subtheme id not exists, return notfound
     research_question = ResearchQuestion(
         name=url_slug,
         theme=theme,
@@ -154,3 +159,53 @@ def research_question_create(context, data_dict):
     research_question.save()
 
     return _table_dictize(research_question, context)
+
+
+def resource_create(context, data_dict):
+    '''Override the existing resource_create to
+    support data upload from data sources
+
+    :param db_type: title of the sub-theme
+    :type db_type: string
+
+    ```MSSQL```
+    :param host: hostname
+    :type host: string
+    :param port: the port
+    :type port: int
+    :param username: DB username
+    :type username: string
+    :param password: DB password
+    :type password: string
+    :param sql: SQL Query
+    :type sql: string
+    '''
+
+    if data_dict.get('db_type') is not None:
+        if data_dict.get('db_type') == '':
+            raise logic.ValidationError({
+                'db_type': [_('Please select the DB Type')]
+            })
+
+        backend = get_backend(data_dict)
+        backend.configure(data_dict)
+        data = backend.search_sql(data_dict)
+
+        if data.get('records', []):
+            writer = WriterService()
+            stream = writer.csv_writer(data.get('fields'),
+                                       data.get('records'),
+                                       ',')
+
+            filename = '{}_{}.{}'.format(
+                data_dict.get('db_type'),
+                str(datetime.datetime.utcnow()),
+                'csv'
+            )
+
+            if not data_dict.get('name'):
+                data_dict['name'] = filename
+
+            data_dict['upload'] = FlaskFileStorage(stream, filename)
+
+    ckan_rsc_create(context, data_dict)

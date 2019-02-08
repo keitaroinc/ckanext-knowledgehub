@@ -1,9 +1,13 @@
 {% import "macros/form.html" as form %}
 
-{{ form.input('server_name', id='field-server-name', label=_('Server Name'), placeholder=_('eg. localhost:8500'), value=server_name, error=server_name_error, classes=['control-full'], is_required=True) }}
+{{ form.input('db_name', id='field-db-name', label=_('DB Name'), placeholder=_('e.g. TestDB'), value=db_name, error=db_name_error, classes=['control-full'], is_required=True) }}
 
-{{ form.input('db_username', id='field-db-username', label=_('Username'), placeholder=_('DB username'), value=db_username, error=db_username_error, classes=['control-full'], is_required=True) }}
+{{ form.input('host', id='field-host', label=_('Host'), placeholder=_('eg. localhost'), value=host, error=host_error, classes=['control-full'], is_required=True) }}
 
-{{ form.input("db_password", id="field-db-password", label=_("Password"), type="password", placeholder="••••••••", value=db_password, error=db_password_error, classes=["control-medium"], is_required=True) }}
+{{ form.input('port', id='field-port', label=_('Port'), placeholder=_('eg. 1433'), value=port, error=port_error, classes=['control-full'], is_required=True) }}
 
-{{ form.textarea('query', id='field-dquery', label=_('SQL Query'), placeholder=_('eg. SELECT * FROM table_name'), value=query, error=query_error, is_required=True) }}
+{{ form.input('username', id='field-username', label=_('Username'), placeholder=_('e.g. SA'), value=username, error=username_error, classes=['control-full'], is_required=True) }}
+
+{{ form.input("password", id="field-password", label=_("Password"), type="password", placeholder="••••••••", value=dpassword, error=password_error, classes=["control-medium"], is_required=True) }}
+
+{{ form.textarea('sql', id='field-sql', label=_('SQL Query'), placeholder=_('eg. SELECT * FROM table_name'), value=sql, error=sql_error, is_required=True) }}
