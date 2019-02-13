@@ -95,11 +95,20 @@
             var data = JSON.parse(
                 $('input#form-data').val()
                     .replace(/u'/g, '\'')
+                    .replace(/u"/g, '\"')
                     .replace(/'/g, '"')
                     .replace(/None/g, '""')
                     .replace(/True/g, 'true')
                     .replace(/False/g, 'false')
                     .replace(/"size"\:\s\d+L,/, '') // Sometimes size property has `L` at the end e.g: 'size': 32L,
+                    .replace(/=\s?\"\w+"/gi, function (x) { // Fix eventID ='rsd06'
+                        x = x.replace(/"/g, '\'')
+                        return x;
+                    })
+                    .replace(/\(\".*\"\)/gi, function (x) { // Fix resultid in ('PRG029-566')
+                        x = x.replace(/"/g, '\'')
+                        return x;
+                    })
             );
         } catch (error) {
             data = ''
