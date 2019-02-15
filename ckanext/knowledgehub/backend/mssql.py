@@ -2,8 +2,8 @@ import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import url
-from sqlalchemy.exc import (ProgrammingError, IntegrityError,
-                            DBAPIError, DataError)
+from sqlalchemy.exc import (ProgrammingError,
+                            DBAPIError, OperationalError)
 
 import ckan.plugins.toolkit as toolkit
 from ckan import lib
@@ -142,8 +142,9 @@ class MssqlBackend(Backend):
         try:
             engine = self._get_engine()
             connection = engine.connect()
-        except Exception as e:
+        except OperationalError as e:
             log.error(e)
+
             raise logic.ValidationError({
                 'connection_parameters':
                 [_('Unable to connect to Database, please check!')]

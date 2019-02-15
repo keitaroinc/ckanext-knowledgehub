@@ -241,6 +241,6 @@ def test_import(context, data_dict):
     stream = writer.csv_writer(data.get('fields'),
                                data.get('records'),
                                ',')
-    print stream.getvalue()
+    # print stream.getvalue()
 
     return data
