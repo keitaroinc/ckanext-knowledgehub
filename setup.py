@@ -84,6 +84,10 @@ setup(
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
+
+        [console_scripts]
+        knowledgehub = ckanext.knowledgehub.cli.cli:knowledgehub
+
     ''',
 
     # If you are changing from the default layout of your extension, you may
