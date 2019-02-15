@@ -6,10 +6,12 @@ from six import string_types, text_type
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import url
-from sqlalchemy.exc import (ProgrammingError, IntegrityError,
-                            DBAPIError, DataError)
+from sqlalchemy.exc import (ProgrammingError,
+                            DBAPIError, OperationalError)
 
 import ckan.plugins.toolkit as toolkit
+from ckan.common import _
+
 from ckanext.knowledgehub.backend import Backend
 
 log = logging.getLogger(__name__)
@@ -124,7 +126,6 @@ class PostgresqlBackend(Backend):
         # set the connection url for the
         # appropriate engine type
         self.read_url = url.URL(**kwargs)
-        print self.read_url
 
     def search_sql(self, data_dict):
         '''
@@ -138,9 +139,17 @@ class PostgresqlBackend(Backend):
         :param records: list of matching results
         :type records: list of dictionaries
         '''
+        try:
+            engine = self._get_engine()
+            connection = engine.connect()
+        except OperationalError as e:
 
-        engine = self._get_engine()
-        connection = engine.connect()
+            log.error(e)
+
+            raise ValidationError({
+                'connection_parameters':
+                    [_('Unable to connect to Database, please check!')]
+            })
 
         sql = data_dict['sql']
 

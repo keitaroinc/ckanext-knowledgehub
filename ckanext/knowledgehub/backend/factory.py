@@ -16,8 +16,8 @@ _SUPPORTED_BACKENDS = [u'mssql',
                        ]
 
 _backends = {
-    u'mssql': MssqlBackend(),
-    u'postgresql': PostgresqlBackend()
+    u'mssql': MssqlBackend,
+    u'postgresql': PostgresqlBackend
 }
 
 
@@ -38,4 +38,4 @@ def get_backend(data_dict):
         raise ValidationError({
             'backend': [u'"{0}" backend type not supported'.format(type)]
         })
-    return _backends[type]
+    return _backends[type]()
