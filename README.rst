@@ -43,11 +43,15 @@ To install ckanext-knowledgehub:
 
      pip install ckanext-knowledgehub
 
-3. Add ``knowledgehub`` to the ``ckan.plugins`` setting in your CKAN
+3. Initialize the tables::
+
+     knowledgehub -c /etc/ckan/default/production.ini db init
+
+4. Add ``knowledgehub`` to the ``ckan.plugins`` setting in your CKAN
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
 
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
+5. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
 
      sudo service apache2 reload
 
@@ -77,6 +81,10 @@ do::
     cd ckanext-knowledgehub
     python setup.py develop
     pip install -r dev-requirements.txt
+
+To initialize the tables do::
+
+    knowledgehub -c /etc/ckan/default/production.ini db init
 
 
 -----------------
