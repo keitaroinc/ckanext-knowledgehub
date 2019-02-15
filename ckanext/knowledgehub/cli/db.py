@@ -1,11 +1,14 @@
 # encoding: utf-8
 
 import click
+import logging
 
 from ckanext.knowledgehub.cli import error_shout
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
 from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
+
+log = logging.getLogger(__name__)
 
 
 @click.group()
