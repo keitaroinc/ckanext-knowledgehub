@@ -28,10 +28,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
 
     # IConfigurable
     def configure(self, config):
-        # Initialize DB
-        theme_db_setup()
-        sub_theme_db_setup()
-        rq_db_setup()
         return config
 
     # IBlueprint
