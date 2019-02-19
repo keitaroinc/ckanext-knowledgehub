@@ -1,5 +1,5 @@
 import ckan.plugins.toolkit as toolkit
-from ckan.model.meta import metadata, mapper, Session
+from ckan.model.meta import metadata, mapper, Session, engine
 from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
 
@@ -14,18 +14,39 @@ __all__ = [
     'ResearchQuestion', 'research_question',
 ]
 
-research_question = None
 
-
-def setup():
-    if research_question is None:
-        define_research_question_table()
-        log.debug('research_question table defined in memory')
-
-        if not research_question.exists():
-            research_question.create()
-    else:
-        log.debug('research_question table already exist')
+research_question = Table(
+    'research_question',
+    metadata,
+    Column('id',
+           types.UnicodeText,
+           primary_key=True,
+           default=make_uuid),
+    Column('name', types.UnicodeText,
+           nullable=False,
+           unique=True),
+    Column('theme',
+           types.UnicodeText,
+           ForeignKey('theme.id')),
+    Column('sub_theme',
+           types.UnicodeText,
+           ForeignKey('sub_themes.id')),
+    Column('title',
+           types.UnicodeText),
+    Column('author',
+           types.UnicodeText),
+    Column('created_at',
+           types.DateTime,
+           default=datetime.datetime.now),
+    Column('modified_at',
+           types.DateTime,
+           onupdate=datetime.datetime.now),
+    Column('modified_by',
+           types.UnicodeText),
+    Column('state',
+           types.UnicodeText,
+           default=u'active'),
+    )
 
 
 class ResearchQuestion(DomainObject):
@@ -47,11 +68,13 @@ class ResearchQuestion(DomainObject):
 
         if id_or_name:
             query = query.filter(
-                or_(cls.id == id_or_name, cls.name == id_or_name)
+                or_(cls.id == id_or_name,
+                    cls.name == id_or_name)
             )
 
         if q:
-            query = query.filter(cls.title.ilike(r"%{}%".format(q)))
+            query = query.filter(
+                cls.title.ilike(r"%{}%".format(q)))
 
         if order_by:
             column = order_by.split(' ')[0]
@@ -74,9 +97,9 @@ class ResearchQuestion(DomainObject):
 
         return obj.first()
 
-
     @classmethod
-    def all(cls, theme=None, sub_theme=None, state=('active',)):
+    def all(cls, theme=None, sub_theme=None,
+            state=('active',)):
         # TODO Handle filtering by sub/theme properly
         q = Session.query(cls)
         if state:
@@ -87,7 +110,8 @@ class ResearchQuestion(DomainObject):
     @classmethod
     def delete(cls, id):
         kwds = {'id': id}
-        obj = Session.query(cls).filter_by(**kwds).first()
+        obj = Session.query(cls).\
+            filter_by(**kwds).first()
         if not obj:
             raise toolkit.ObjectNotFound
         Session.delete(obj)
@@ -97,23 +121,11 @@ class ResearchQuestion(DomainObject):
         return '<ResearchQuestion %s>' % self.title
 
 
-def define_research_question_table():
-    global research_question
-    research_question = Table('research_question', metadata,
-                        Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
-                        Column('name', types.UnicodeText, nullable=False, unique=True),
-                        Column('theme', types.UnicodeText, ForeignKey('theme.id')),
-                        Column('sub_theme', types.UnicodeText, ForeignKey('sub_themes.id')),
-                        Column('title', types.UnicodeText),
-                        Column('author', types.UnicodeText),
-                        Column('created_at', types.DateTime, default=datetime.datetime.now),
-                        Column('modified_at', types.DateTime, onupdate=datetime.datetime.now),
-                        Column('modified_by', types.UnicodeText),
-                        Column('state', types.UnicodeText, default=u'active'),
-                        )
+mapper(
+    ResearchQuestion,
+    research_question
+)
 
 
-    mapper(
-        ResearchQuestion,
-        research_question
-    )
+def setup():
+    metadata.create_all(engine)

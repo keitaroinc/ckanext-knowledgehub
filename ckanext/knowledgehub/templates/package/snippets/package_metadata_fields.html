@@ -1,0 +1,62 @@
+{% ckan_extends %}
+{% import 'macros/form.html' as form %}
+
+{% set theme_options = h.get_theme_options() %}
+{% set sub_theme_options = h.get_sub_theme_options() %}
+{% set rq_options = h.get_rq_options() %}
+
+{% block custom_fields %}
+
+{# Theme start #}
+      {% if data.theme %}
+        {% set existing_theme = data.theme %}
+      {% endif %}
+    <div class="form-group control-medium control-select">
+      <label for="field-theme" class="control-label">{{ _('Theme') }}</label>
+      <div class="controls">
+        <select id="field-theme" name="theme" class="form-control">
+        {% for option in theme_options %}
+          <option value="{{ option.value }}" {% if existing_theme == option.value %} selected="selected" {% endif %}>{{ option.text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+{# Theme end #}
+
+{# Sub-theme start #}
+    {% if data.sub_theme %}
+      {% set existing_sub_theme = data.sub_theme %}
+  {% endif %}
+    <div class="form-group control-medium control-select">
+      <label for="field-sub_theme" class="control-label">{{ _('Sub-theme') }}</label>
+      <div class="controls">
+        <select id="field-sub_theme" name="sub_theme" class="form-control">
+        {% for option in sub_theme_options %}
+          <option value="{{ option.value }}" {% if existing_sub_theme == option.value %} selected="selected" {% endif %}>{{ option.text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+{# Sub-theme end #}
+
+{# Research question start #}
+
+{% if data.research_question %}
+  {% set selected = h.pg_array_to_py_list(data.research_question) %}
+{% endif %}
+
+{{ form.selectmulti('research_question', label=_('Research question'), options=rq_options, selected=selected, id='field-research_question', error=errors.research_question, attrs={"multiple": "multiple", "data-module": "autocomplete"}, classes=['control-medium']) }}
+
+{# Research question end #}
+
+{{ super() }}
+
+{% endblock %}
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  $('#field-theme option')[0].disabled = true;
+  $('#field-sub_theme option')[0].disabled = true;
+});
+</script>

@@ -3,11 +3,8 @@ import ckan.plugins.toolkit as toolkit
 from ckan.lib.plugins import DefaultDatasetForm
 
 import ckanext.knowledgehub.helpers as h
-from ckanext.knowledgehub.model.theme import theme_db_setup
 
 from ckanext.knowledgehub.helpers import _register_blueprints
-from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
-from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
@@ -19,6 +16,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IDatasetForm)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -52,11 +50,27 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def get_helpers(self):
         return {
             'id_to_title': h.id_to_title,
+            'get_rq_options': h.get_rq_options,
+            'get_theme_options': h.get_theme_options,
+            'get_sub_theme_options': h.get_sub_theme_options,
+            'pg_array_to_py_list': h.pg_array_to_py_list,
         }
 
     # IDatasetForm
     def _modify_package_schema(self, schema):
         defaults = [toolkit.get_validator('ignore_missing')]
+
+        schema.update({
+            'theme': [toolkit.get_validator('ignore_missing'),
+                      toolkit.get_converter('convert_to_extras'),
+                      toolkit.get_converter('convert_to_list_if_string')],
+            'sub_theme': [toolkit.get_validator('ignore_missing'),
+                          toolkit.get_converter('convert_to_extras'),
+                          toolkit.get_converter('convert_to_list_if_string')],
+            'research_question': [toolkit.get_validator('ignore_missing'),
+                                  toolkit.get_converter('convert_to_extras'),
+                                  ]
+        })
 
         schema['resources'].update({
             'db_type': defaults,
@@ -80,10 +94,32 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
 
     def show_package_schema(self):
         schema = super(KnowledgehubPlugin, self).show_package_schema()
-        return self._modify_package_schema(schema)
+        defaults = [toolkit.get_validator('ignore_missing')]
+        schema.update({
+            'theme': [toolkit.get_converter('convert_from_extras'),
+                      toolkit.get_validator('ignore_missing')],
+            'sub_theme': [toolkit.get_converter('convert_from_extras'),
+                          toolkit.get_validator('ignore_missing')],
+            'research_question': [toolkit.get_converter('convert_from_extras'),
+                                  toolkit.get_validator('ignore_missing')]
+        })
+        schema['resources'].update({
+            'db_type': defaults,
+            'db_name': defaults,
+            'host': defaults,
+            'port': defaults,
+            'username': defaults,
+            'password': defaults,
+            'sql': defaults,
+        })
+        return schema
 
     def is_fallback(self):
         return True
 
     def package_types(self):
         return []
+
+    # IPackageController
+    def before_index(self, data_dict):
+        return data_dict
