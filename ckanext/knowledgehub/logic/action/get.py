@@ -130,7 +130,7 @@ def sub_theme_list(context, data_dict):
      (optional, default: ``1``)
     :type page: int
     :param pageSize: the number of items to
-    return (optional, default: ``10``)
+    return (optional, default: ``10000``)
     :type pageSize: int
 
     :returns: a dictionary including total
@@ -140,7 +140,7 @@ def sub_theme_list(context, data_dict):
 
     q = data_dict.get('q', '')
     theme = data_dict.get('theme', None)
-    page_size = int(data_dict.get('pageSize', 10))
+    page_size = int(data_dict.get('pageSize', 10000))
     page = int(data_dict.get('page', 1))
     order_by = data_dict.get('order_by', 'title asc')
     offset = (page - 1) * page_size
@@ -202,7 +202,7 @@ def research_question_list(context, data_dict):
     (optional, default: ``1``)
     :type page: int
     :param pageSize: the number of items
-    to return (optional, default: ``10``)
+    to return (optional, default: ``10000``)
     :type pageSize: int
 
     :returns: a dictionary including total
@@ -210,7 +210,7 @@ def research_question_list(context, data_dict):
     :rtype: dictionary
     '''
     q = data_dict.get('q', '')
-    page_size = int(data_dict.get('pageSize', 10))
+    page_size = int(data_dict.get('pageSize', 10000))
     page = int(data_dict.get('page', 1))
     offset = (page - 1) * page_size
     order_by = data_dict.get('order_by', 'name asc')

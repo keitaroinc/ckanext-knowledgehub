@@ -1,0 +1,32 @@
+{% ckan_extends %}
+
+{% block package_additional_info %}
+
+{{ super() }}
+
+{% if pkg_dict.theme %}
+<tr>
+  <th scope="row" class="dataset-label">{{ _("Theme") }}</th>
+  <td class="dataset-details">{{ pkg_dict.theme }}</td>
+</tr>
+{% endif %}
+
+{% if pkg_dict.sub_theme %}
+<tr>
+  <th scope="row" class="dataset-label">{{ _("Sub-theme") }}</th>
+  <td class="dataset-details">{{ pkg_dict.sub_theme }}</td>
+</tr>
+{% endif %}
+
+{% if pkg_dict.research_question %}
+{% set questions = h.pg_array_to_py_list(pkg_dict.research_question) %}
+
+{% for question in questions %}
+  <tr>
+    <th scope="row" class="dataset-label">{{ _("Research question") }}</th>
+    <td class="dataset-details">{{ question }}</td>
+  </tr>
+{% endfor %}
+
+{% endif %}
+{% endblock %}
