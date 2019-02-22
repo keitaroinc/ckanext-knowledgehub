@@ -17,8 +17,10 @@ from ckanext.knowledgehub.lib.writer import WriterService
 log = logging.getLogger(__name__)
 
 _table_dictize = lib.dictization.table_dictize
+model_dictize = lib.dictization.model_dictize
 check_access = toolkit.check_access
 NotFound = logic.NotFound
+_get_or_bust = logic.get_or_bust
 ValidationError = toolkit.ValidationError
 
 
@@ -244,3 +246,28 @@ def test_import(context, data_dict):
     # print stream.getvalue()
 
     return data
+
+
+def resource_view_list(context, data_dict):
+    '''
+    Return the list of resource views for a particular resource.
+
+    :param id: the id of the resource
+    :type id: string
+
+    :rtype: list of dictionaries.
+    '''
+    model = context['model']
+    id = _get_or_bust(data_dict, 'id')
+    resource = model.Resource.get(id)
+    if not resource:
+        raise NotFound
+    context['resource'] = resource
+    check_access('resource_view_list', context, data_dict)
+    q = model.Session.query(model.ResourceView).filter_by(resource_id=id)
+
+    resource_views = [
+        resource_view for resource_view
+        in q.order_by(model.ResourceView.order).all()
+    ]
+    return model_dictize.resource_view_list_dictize(resource_views, context)

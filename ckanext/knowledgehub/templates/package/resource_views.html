@@ -1,0 +1,34 @@
+{% ckan_extends %}
+
+{% block page_primary_action %}
+  <div class="btn-group">
+    <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+      <i class="fa fa-plus-square"></i>
+      {{ _('New view') }}
+      <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+      {% for option in h.get_allowed_view_types(c.resource, c.pkg_dict)  %}
+        {% set url = h.url_for(controller='package', action='edit_view', id=c.pkg_dict.name, resource_id=c.resource.id, view_type=option[0]) %}
+        <li><a href="{{ url }}"><i class="fa fa-{{ option[2] }}"></i> {{ option[1] }}</a></li>
+      {% endfor %}
+        <li><a href="{% url_for 'chart_view.new_chart', id=c.pkg_dict.name, resource_id=c.resource.id %}"><i class="fa fa-line-chart"></i> {{ _('Chart') }}</a></li>
+        <li><a href="{% url_for 'table_view.new_table', id=c.pkg_dict.name, resource_id=c.resource.id %}"><i class="fa fa-table"></i> {{ _('Table') }}</a></li>
+    </ul>
+  </div>
+  {% resource 'vendor/reorder' %}
+{% endblock %}
+
+
+{% block primary_content_inner %}
+
+  {{c.views}}
+
+ {# INFO: Commented for now until we implement custom view lists
+    {% if c.views %}
+      {% snippet "package/snippets/resource_views_list.html", views=c.views, pkg=pkg, is_edit=true, extra_attributes='data-module = resource-view-reorder data-module-id=' + c.resource.id, extra_class='resource-view-list nav-pills nav-stacked' %}
+    {% else %}
+      <p class="empty">{{ _('This resource has no views') }}</p>
+    {% endif %}
+  #}
+{% endblock %}
