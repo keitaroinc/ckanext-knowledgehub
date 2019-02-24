@@ -181,7 +181,18 @@ def resource_update(context, data_dict):
     :type password: string
     :param sql: SQL Query
     :type sql: string
+
+    ```Validation```
+    :param schema: schema to be userd for validation
+    :type schema: string
+    :param validation_options:
     '''
+
+    if (data_dict['schema'] == ''):
+        del data_dict['schema']
+
+    if (data_dict['validation_options'] == ''):
+        del data_dict['validation_options']
 
     if data_dict.get('db_type') is not None:
         if data_dict.get('db_type') == '':
