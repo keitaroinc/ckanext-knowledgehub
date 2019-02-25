@@ -54,6 +54,12 @@
       {% endcall %}
     {% endblock %}
 
+    {% snippet 'package/snippets/resource_schema.html', data=data, errors=errors, licenses=licenses, entity_type=entity_type, object_type=object_type %}
+    {% snippet 'package/snippets/validation_options.html', data=data, errors=errors, licenses=licenses, entity_type=entity_type, object_type=object_type %}
+
+    <input type="hidden" name="validation_status" value="{{ data['validation_status'] }}" />
+    <input type="hidden" name="validation_timestamp" value="{{ data['validation_timestamp'] }}" />
+
     {{ form.required_message() }}
   {% endblock basic_fields %}
 

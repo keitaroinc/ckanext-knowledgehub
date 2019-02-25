@@ -179,7 +179,19 @@ def resource_create(context, data_dict):
     :type password: string
     :param sql: SQL Query
     :type sql: string
+
+    ```Validation```
+    :param schema: schema to be used for validation
+    :type schema: string
+    :param validation_options: options to be used for validation
+    :type validation_options: string
     '''
+
+    if (data_dict['schema'] == ''):
+        del data_dict['schema']
+
+    if (data_dict['validation_options'] == ''):
+        del data_dict['validation_options']
 
     if data_dict.get('db_type') is not None:
         if data_dict.get('db_type') == '':
@@ -197,6 +209,7 @@ def resource_create(context, data_dict):
                                        data.get('records'),
                                        ',')
 
+            print('FIELDS: %s' % data.get('fields'))
             filename = '{}_{}.{}'.format(
                 data_dict.get('db_type'),
                 str(datetime.datetime.utcnow()),

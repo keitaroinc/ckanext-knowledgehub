@@ -83,7 +83,7 @@
     $(document).ready(function () {
         var data_source_div = $('div.data-source');
         var data_source_btn = $('button.btn-data-source');
-        var image_upload_div = $('div.image-upload');
+        var image_upload_div = $('div.image-upload').first();
         var data_source_select_div = $('div.data-source div.select-form');
         var connection_params_div = $('div.data-source div.connection-params');
         var field_image_url_input = $('input#field-image-url');
@@ -100,14 +100,21 @@
                     .replace(/None/g, '""')
                     .replace(/True/g, 'true')
                     .replace(/False/g, 'false')
+                    .replace(/(\\[rnt])+/g, '')
                     .replace(/"size"\:\s\d+L,/, '') // Sometimes size property has `L` at the end e.g: 'size': 32L,
-                    .replace(/=\s?\"\w+"/gi, function (x) { // Fix eventID ='rsd06'
-                        x = x.replace(/"/g, '\'')
-                        return x;
+                    .replace(/=\s?\"\w+"/gi, function (match) { // Fix eventID ='rsd06'
+                        match = match.replace(/"/g, '\'')
+                        return match;
                     })
-                    .replace(/\(\".*\"\)/gi, function (x) { // Fix resultid in ('PRG029-566')
-                        x = x.replace(/"/g, '\'')
-                        return x;
+                    .replace(/\(\".*\"\)/gi, function (match) { // Fix resultid in ('PRG029-566')
+                        match = match.replace(/"/g, '\'')
+                        return match;
+                    })
+                    .replace(/\:\s\"\{(.*)\}\"/, function (match, p1) { // When we have json in json
+                        var json = p1.replace(/"/g, '\'')
+                        match = match.replace(p1, json)
+
+                        return match;
                     })
             );
         } catch (error) {
