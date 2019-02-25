@@ -248,6 +248,10 @@ def test_import(context, data_dict):
     return data
 
 
+# Overwrite of the original 'resource_view_list'
+# action in order to return all existing resource
+# views instead just for the appropriate
+# view_plugins enabled
 def resource_view_list(context, data_dict):
     '''
     Return the list of resource views for a particular resource.
