@@ -58,3 +58,26 @@ def id_to_title(model, id):
     if model:
         entry = toolkit.get_action('{}_show'.format(model))({}, data_dict)
     return entry.get('title') or entry.get('name')
+
+#    @core_helper
+def resource_view_get_fields(resource):
+    '''Returns sorted list of text and time fields of a datastore resource.'''
+
+    if not resource.get('datastore_active'):
+        return []
+
+    data = {
+        'resource_id': resource['id'],
+        'limit': 0
+    }
+#   result = logic.get_action('datastore_search')({}, data)
+    try:
+        result = logic.get_action('datastore_search')({}, data)
+        fields = [field['id'] for field in result.get('fields', [])]
+
+#    fields = [field['id'] for field in result.get('fields', [])]
+        return sorted(fields)
+
+#    return sorted(fields)
+    except logic.NotFound:
+        return []

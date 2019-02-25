@@ -8,6 +8,7 @@ from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
 from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
+#from ckanext.knowledgehub.helpers import resource_view_get_fields
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
@@ -52,6 +53,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def get_helpers(self):
         return {
             'id_to_title': h.id_to_title,
+	    'resource_view_get_fields': h.resource_view_get_fields
         }
 
     # IDatasetForm
