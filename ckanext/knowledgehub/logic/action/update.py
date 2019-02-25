@@ -183,9 +183,10 @@ def resource_update(context, data_dict):
     :type sql: string
 
     ```Validation```
-    :param schema: schema to be userd for validation
+    :param schema: schema to be used for validation
     :type schema: string
-    :param validation_options:
+    :param validation_options: options to be used for validation
+    :type validation_options: string
     '''
 
     if (data_dict['schema'] == ''):

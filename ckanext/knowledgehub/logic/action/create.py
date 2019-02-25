@@ -181,9 +181,9 @@ def resource_create(context, data_dict):
     :type sql: string
 
     ```Validation```
-    :param schema: schema to be userd for validation
+    :param schema: schema to be used for validation
     :type schema: string
-    :param validation_options: options to be userd for validation
+    :param validation_options: options to be used for validation
     :type validation_options: string
     '''
 
