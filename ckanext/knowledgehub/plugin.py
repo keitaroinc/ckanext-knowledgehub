@@ -54,6 +54,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_theme_options': h.get_theme_options,
             'get_sub_theme_options': h.get_sub_theme_options,
             'pg_array_to_py_list': h.pg_array_to_py_list,
+            'resource_view_get_fields': h.resource_view_get_fields,
         }
 
     # IDatasetForm
