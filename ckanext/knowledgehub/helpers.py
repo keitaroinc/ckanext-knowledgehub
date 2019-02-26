@@ -6,10 +6,19 @@ import inspect
 from flask import Blueprint
 
 import ckan.plugins.toolkit as toolkit
+import ckan.model as model
+from ckan.common import g
 from ckan import logic
 
 
 log = logging.getLogger(__name__)
+
+
+def _get_context():
+    context = dict(model=model,
+                   user=g.user,
+                   auth_user_obj=g.userobj)
+    return context
 
 
 def _register_blueprints():
@@ -58,6 +67,48 @@ def id_to_title(model, id):
     if model:
         entry = toolkit.get_action('{}_show'.format(model))({}, data_dict)
     return entry.get('title') or entry.get('name')
+
+
+def get_rq_options():
+    context = _get_context()
+    rq_options = []
+    rq_list = toolkit.get_action('research_question_list')(context, {})
+
+    for rq in rq_list.get(u'data', []):
+        opt = {u'text': rq[u'title'], u'value': rq[u'title']}
+        rq_options.append(opt)
+    return rq_options
+
+
+def get_theme_options():
+    context = _get_context()
+    theme_options = []
+    theme_list = toolkit.get_action('theme_list')(context, {})
+    for theme in theme_list.get(u'data', []):
+        opt = {u'text': theme[u'title'], u'value': theme[u'title']}
+        theme_options.append(opt)
+    theme_options.insert(0, {'text': 'Select theme', 'value': ''})
+    return theme_options
+
+
+def get_sub_theme_options():
+    context = _get_context()
+    sub_theme_options = []
+    sub_theme_list = toolkit.get_action('sub_theme_list')(context, {})
+    for sub_theme in sub_theme_list.get(u'data', []):
+        opt = {u'text': sub_theme[u'title'], u'value': sub_theme[u'title']}
+        sub_theme_options.append(opt)
+    sub_theme_options.insert(0, {'text': 'Select sub-theme', 'value': ''})
+    return sub_theme_options
+
+
+def pg_array_to_py_list(rq_list):
+
+    if rq_list.startswith('{'):
+        ids = rq_list.replace('{', '').replace('}', '').split(',')
+    else:
+        ids = [rq_list]
+    return ids
 
 #    @core_helper
 def resource_view_get_fields(resource):
