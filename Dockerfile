@@ -35,7 +35,8 @@ RUN pip install cython && \
     pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-knowledgehub.git#egg=ckanext-knowledgehub" && \
     pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-knowledgehub/requirements.txt" && \
     # validation
-    pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation"
+    pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation" && \
+    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt"
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \

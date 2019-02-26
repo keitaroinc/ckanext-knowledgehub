@@ -67,12 +67,14 @@ def init_db():
 
     db_command = ['paster', '--plugin=ckan', 'db', 'init', '-c', ckan_ini]
     knowledgehub_db_command = ['knowledgehub', '-c', ckan_ini, 'db', 'init']
+    validation_command = ['paster', '--plugin=ckanext-validation', 'validation', 'init-db', '-c', ckan_ini]
 
     print '[prerun] Initializing or upgrading db - start using paster db init'
     try:
         # run init scripts
         subprocess.check_output(db_command, stderr=subprocess.STDOUT)
         subprocess.check_output(knowledgehub_db_command, stderr=subprocess.STDOUT)
+        subprocess.check_output(validation_command, stderr=subprocess.STDOUT)
 
         print '[prerun] Initializing or upgrading db - end'
     except subprocess.CalledProcessError, e:
