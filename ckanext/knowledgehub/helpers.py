@@ -109,3 +109,24 @@ def pg_array_to_py_list(rq_list):
     else:
         ids = [rq_list]
     return ids
+
+def resource_view_get_fields(resource):
+
+    if not resource.get('datastore_active'):
+        return []
+
+    data = {
+        'resource_id': resource['id'],
+        'limit': 0
+    }
+#   result = logic.get_action('datastore_search')({}, data)
+    try:
+        result = logic.get_action('datastore_search')({}, data)
+        fields = [field['id'] for field in result.get('fields', [])]
+
+#    fields = [field['id'] for field in result.get('fields', [])]
+        return sorted(fields)
+
+#    return sorted(fields)
+    except logic.NotFound:
+        return []
