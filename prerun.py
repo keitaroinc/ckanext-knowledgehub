@@ -186,7 +186,7 @@ def run_extra_scripts():
         print e.output
         raise e
 
-    print '[prerun] Extra scripts - finish
+    print '[prerun] Extra scripts - finish'
 
 if __name__ == '__main__':
 
