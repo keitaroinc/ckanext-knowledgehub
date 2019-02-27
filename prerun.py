@@ -174,6 +174,20 @@ def create_sysadmin():
         subprocess.call(command)
         print '[prerun] Made user {0} a sysadmin'.format(name)
 
+def run_extra_scripts():
+    print '[prerun] Running extra scripts'
+
+    extra_scripts_cmd = ['./extra_scripts.sh']
+
+    try:
+        subprocess.check_output(extra_scripts_cmd, stderr=subprocess.STDOUT)
+        print '[prerun] Extra scripts - end'
+    except subprocess.CalledProcessError, e:
+        print e.output
+        raise e
+
+    print '[prerun] Extra scripts - finish
+
 if __name__ == '__main__':
 
     maintenance = os.environ.get('MAINTENANCE_MODE', '').lower() == 'true'
@@ -187,4 +201,5 @@ if __name__ == '__main__':
         if os.environ.get('CKAN_DATASTORE_WRITE_URL'):
             init_datastore()
         create_sysadmin()
+        run_extra_scripts()
         #time.sleep(60000)   # don't end the prerun script to allow container dock and debug
