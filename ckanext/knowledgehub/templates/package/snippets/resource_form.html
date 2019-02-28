@@ -54,6 +54,69 @@
       {% endcall %}
     {% endblock %}
 
+<!--
+    {% block basic_fields_subject_name %}
+	{{ form.input('subject_name', id='field-sub-name', label=_('Subject Name'), placeholder=_('e.g. Giorgia'), value=data.sub_name, error=errors.sub_name, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_worker_title %}
+	{{ form.input('worker_title', id='field-worker-title', label=_('Title'), placeholder=_('e.g. Information Management Officer'), value=data.worker_title, error=errors.worker_title, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+-->
+    {% block basic_fields_unit_supported %}
+	{{ form.input('unit_supported', id='field-unit-supported', label=_('Unit Supported'), placeholder=_('e.g. Protection'), value=data.unit_supported, error=errors.unit_supported, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_im_product_name %}
+	{{ form.input('im_product_name', id='field-im-product-name', label=_('IM Product Name/Title'), placeholder=_('e.g. VAM - Food Security Analysis'), value=data.im_product_name, error=errors.im_product_name, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_indicator_label %}
+	{{ form.input('indicator_label', id='field-indicator-label', label=_('Indicator Label'), placeholder=_('e.g. Average price of carrots'), value=data.indicator_label, error=errors.indicator_label, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_indicator_code %}
+	{{ form.input('indicator_code', id='field-indicator-code', label=_('Indicator Code'), placeholder=_('e.g. SYR-19-01'), value=data.indicator_code, error=errors.indicator_code, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_indicator_old_name %}
+	{{ form.input('indicator_old_name', id='field-ind-old-name', label=_('Indicator Old Name'), placeholder=_('e.g. '), value=data.indicator_old_name, error=errors.ind_old_name, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_unit_focal_point %}
+	{{ form.input('unit_focal_point', id='field-unit-focal-point', label=_('Unit Focal Point'), placeholder=_('e.g. Secondary Data Review'), value=data.unit_focal_point, error=errors.unit_focal_point, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_sector %}
+	{{ form.input('sector', id='field-sector', label=_('Sector'), placeholder=_('e.g. Food security; Nutrition; Health'), value=data.sector, error=errors.sector_error, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_data_sources %}
+	{{ form.input('data_sources', id='field-data-sources', label=_('Data Sources'), placeholder=_('e.g. WFP on line VAM http://dataviz.vam.wfp.org/economic_explorer/prices?adm0=238'), value=data.data_sources, error=errors.data_sources, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_frequency_of_update %}
+	{{ form.input('frequency_of_update', id='field-freq-of-update', label=_('Frequency Of Update'), placeholder=_('e.g. Other'), value=data.frequency_of_update, error=errors.freq_of_update, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+<!--
+    {% block basic_fields_more_description %}
+      {{ form.markdown('more_description', id='field-description', label=_('Description'), placeholder=_('Some useful notes about the data'), value=data.more_description, error=errors.more_description) }}
+    {% endblock %}
+-->
+
+    {% block basic_fields_sub_themes %}
+	{{ form.input('sub_themes', id='field-sub-themes', label=_('Sub Themes'), placeholder=_('e.g. Cost of living'), value=data.sub_themes, error=errors.sub_themes, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_analytical_value %}
+	{{ form.input('analytical_value', id='field-analytical-value', label=_('Analytical Value'), placeholder=_('e.g. Risk'), value=data.analytical_value, error=errors.analytical_value, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
+    {% block basic_fields_indicator_type %}
+	{{ form.input('indicator_type', id='field-ind-type', label=_('Indicator Type'), placeholder=_('e.g. Quantitative'), value=data.indicator_type, error=errors.ind_type, classes=['control-full'], is_required=False) }}
+    {% endblock %}
+
     {{ form.required_message() }}
   {% endblock basic_fields %}
 
