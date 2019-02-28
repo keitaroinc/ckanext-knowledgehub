@@ -5,6 +5,11 @@
 {% endblock %}
 
 
-{% block form %}Chart form fields go here{% endblock %}
+{% block form %}
+
+{% snippet 'snippets/data_transformation.html', res=res %}
+
+
+{% endblock %}
 
  {% block preview %}Chart preview go here{% endblock %}
