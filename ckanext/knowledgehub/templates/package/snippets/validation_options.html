@@ -1,0 +1,23 @@
+{% import 'macros/form.html' as form %}
+{% set value = data['validation_options'] %}
+
+{% call form.textarea(
+    'validation_options',
+    id='field-validation_options',
+    label=_('Validation options'),
+    placeholder='{
+        "headers": 3,
+        "delimiter": ";",
+        "skip_checks": ["blank-rows"]
+}',
+    value=value if value else None,
+    error=errors['validation_options'],
+    is_required=False,
+    classes=['control-full', 'editor']
+    )
+%}
+<span class="editor-info-block">{% trans %} You can pass a JSON object of validation options. See <a
+        href="https://github.com/frictionlessdata/ckanext-validation#validation-options">here</a> for more
+    information.{% endtrans %}</span>
+
+{% endcall %}
