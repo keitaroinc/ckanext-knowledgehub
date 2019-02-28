@@ -56,6 +56,6 @@ VOLUME /var/lib/ckan/default
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.plugins = ${CKAN__PLUGINS}"
 
 COPY prerun.py /srv/app/prerun.py
-COPY extra_scripts.sh /srv/app/extra_scripts.sh
+COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
 
 CMD ["/srv/app/start_ckan.sh"]
