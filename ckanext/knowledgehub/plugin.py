@@ -81,6 +81,21 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'username': defaults,
             'password': defaults,
             'sql': defaults,
+	        #'some_name':defaults,
+	        #'worker_title': defaults,
+            'unit_supported': defaults,
+            'im_product_name': defaults,
+            'indicator_label': defaults,
+	        'indicator_code':defaults,
+	        'indicator_old_name': defaults,
+            'unit_focal_point': defaults,
+            'sector': defaults,
+            'data_sources': defaults,
+	        'frequency_of_update':defaults,
+	        #'ind_description': defaults,
+	        'sub_themes': defaults,
+            'analytical_value': defaults,
+            'indicator_type': defaults,
         })
 
         return schema
@@ -112,6 +127,21 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'username': defaults,
             'password': defaults,
             'sql': defaults,
+	        #'some_name':defaults,
+	        #'worker_title': defaults,
+            'unit_supported': defaults,
+            'im_product_name': defaults,
+            'indicator_label': defaults,
+	        'indicator_code':defaults,
+	        'indicator_old_name': defaults,
+            'unit_focal_point': defaults,
+            'sector': defaults,
+            'data_sources': defaults,
+	        'frequency_of_update':defaults,
+	        #'ind_description': defaults,
+	        'sub_themes': defaults,
+            'analytical_value': defaults,
+            'indicator_type': defaults,
         })
         return schema
 
@@ -124,3 +154,4 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     # IPackageController
     def before_index(self, data_dict):
         return data_dict
+
