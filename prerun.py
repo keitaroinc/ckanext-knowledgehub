@@ -177,7 +177,7 @@ def create_sysadmin():
 def run_extra_scripts():
     print '[prerun] Running extra scripts'
 
-    extra_scripts_cmd = ['./extra_scripts.sh']
+    extra_scripts_cmd = ['extra_scripts.sh']
 
     try:
         subprocess.check_output(extra_scripts_cmd, stderr=subprocess.STDOUT)
