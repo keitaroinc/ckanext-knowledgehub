@@ -86,7 +86,7 @@ def init_db():
             sys.exit(1)
         else:
             print e.output
-            raise e
+
     print '[prerun] Initializing or upgrading db - finish'
 
 
@@ -184,7 +184,6 @@ def run_extra_scripts():
         print '[prerun] Extra scripts - end'
     except subprocess.CalledProcessError, e:
         print e.output
-        raise e
 
     print '[prerun] Extra scripts - finish'
 
