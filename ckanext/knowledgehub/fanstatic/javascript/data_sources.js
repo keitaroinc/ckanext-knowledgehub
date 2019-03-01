@@ -70,9 +70,14 @@
         }
         e.data.data_source_select_div.empty()
         e.data.connection_params_div.empty()
-        e.data.data_source_btn.show();
         e.data.image_upload_div.show();
+        e.data.data_source_btn.show();
         $(this).hide();
+
+        // Cause there is a file name set image upload component shows input with file name and clear button.
+        // Simulate click on clear button and adjust the width on Upload button
+        $('.btn-remove-url').click()
+        $('#field-image-upload').css('width', e.data.data_source_btn.outerWidth())
     }
 
     // Sleep time expects milliseconds
@@ -81,6 +86,11 @@
     }
 
     $(document).ready(function () {
+        // Set focus on top of the page
+        sleep(100).then(() => {
+            $(window).scrollTop(0);
+        });
+
         var data_source_div = $('div.data-source');
         var data_source_btn = $('button.btn-data-source');
         var image_upload_div = $('div.image-upload').first();
@@ -110,7 +120,7 @@
                         match = match.replace(/"/g, '\'')
                         return match;
                     })
-                    .replace(/\:\s\"\{(.*)\}\"/, function (match, p1) { // When we have json in json
+                    .replace(/\:\s\"\{(.*?)\}\"/g, function (match, p1) { // When we have json in json e.g schema and validation options
                         var json = p1.replace(/"/g, '\'')
                         match = match.replace(p1, json)
 
@@ -216,6 +226,11 @@
                 errors
             );
         });
+
+        // When clear button is clicked on link input then show source button
+        $('body').on('click', '.btn-remove-url', function () {
+            data_source_btn.show()
+        })
 
         // Render snippet for db connection params and query when data source is chosen
         $('body').on('change', '.select-source', function () {
