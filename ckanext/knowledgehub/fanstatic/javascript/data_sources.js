@@ -120,7 +120,7 @@
                         match = match.replace(/"/g, '\'')
                         return match;
                     })
-                    .replace(/\:\s\"\{(.*)\}\"/, function (match, p1) { // When we have json in json
+                    .replace(/\:\s\"\{(.*?)\}\"/g, function (match, p1) { // When we have json in json e.g schema and validation options
                         var json = p1.replace(/"/g, '\'')
                         match = match.replace(p1, json)
 
