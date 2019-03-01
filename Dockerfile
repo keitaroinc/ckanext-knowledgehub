@@ -36,10 +36,7 @@ RUN pip install cython && \
     pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-knowledgehub/requirements.txt" && \
     # validation
     pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation" && \
-    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt" && \
-    # dataexplorer
-    pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-dataexplorer.git#egg=ckanext-dataexplorer" && \
-    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-dataexplorer/requirements.txt"
+    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt"
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
@@ -48,7 +45,7 @@ ENV CKAN__PLUGINS envvars \
                   stats \
                   text_view \
                   image_view \
-                  dataexplorer \
+                  recline_view \
                   datastore \
                   datapusher
 
@@ -57,8 +54,6 @@ VOLUME /var/lib/ckan/default
 
 # Load envvars plugin on ini file
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.plugins = ${CKAN__PLUGINS}"
-# We must replace the recline_view with dataexplorer view
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.default_views = image_view text_view dataexplorer"
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
