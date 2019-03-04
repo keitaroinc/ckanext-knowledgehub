@@ -87,7 +87,7 @@
 
     $(document).ready(function () {
         // Set focus on top of the page
-        sleep(400).then(() => {
+        sleep(100).then(() => {
             $(window).scrollTop(0);
         });
 
@@ -178,7 +178,7 @@
 
             // sleep 0.2s to be sure that select_source.html
             // will be rendered first always
-            sleep(400).then(() => {
+            sleep(200).then(() => {
                 if (data.db_type) {
                     renderSnippet(
                         data_source_snippets[data.db_type],
