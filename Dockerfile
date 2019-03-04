@@ -1,4 +1,4 @@
-FROM keitaro/ckan:2.8.2-clean
+FROM keitaro/ckan:2.8.1-v1
 
 MAINTAINER Keitaro <info@keitaro.com>
 
