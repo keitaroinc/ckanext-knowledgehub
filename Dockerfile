@@ -36,7 +36,11 @@ RUN pip install cython && \
     pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-knowledgehub/requirements.txt" && \
     # validation
     pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation" && \
-    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt"
+    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt" && \
+    # dataexplorer
+    pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-dataexplorer.git#egg=ckanext-dataexplorer" && \
+    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-dataexplorer/requirements.txt"
+
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
@@ -45,6 +49,7 @@ ENV CKAN__PLUGINS envvars \
                   stats \
                   text_view \
                   image_view \
+                  dataexplorer \
                   datastore \
                   datapusher
 
@@ -57,6 +62,6 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.plugins = $
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.default_views = image_view text_view"
 
 COPY prerun.py /srv/app/prerun.py
-# COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
+COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
 
 CMD ["/srv/app/start_ckan.sh"]
