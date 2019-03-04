@@ -57,6 +57,6 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.plugins = $
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.default_views = image_view text_view"
 
 COPY prerun.py /srv/app/prerun.py
-COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
+# COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
 
 CMD ["/srv/app/start_ckan.sh"]
