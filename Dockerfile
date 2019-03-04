@@ -1,4 +1,4 @@
-FROM keitaro/ckan:2.8.1-v1
+FROM keitaro/ckan:2.8.2-clean
 
 MAINTAINER Keitaro <info@keitaro.com>
 
@@ -36,11 +36,7 @@ RUN pip install cython && \
     pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-knowledgehub/requirements.txt" && \
     # validation
     pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation" && \
-    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt" && \
-    # dataexplorer
-    pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-dataexplorer.git#egg=ckanext-dataexplorer" && \
-    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-dataexplorer/requirements.txt"
-
+    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt"
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
@@ -49,7 +45,6 @@ ENV CKAN__PLUGINS envvars \
                   stats \
                   text_view \
                   image_view \
-                  dataexplorer \
                   datastore \
                   datapusher
 
