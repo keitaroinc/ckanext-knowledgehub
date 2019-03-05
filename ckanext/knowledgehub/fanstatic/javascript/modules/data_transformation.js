@@ -44,8 +44,7 @@ ckan.module('data-transformation', function($) {
   function initialize() {
     var self = this,
       resource_id = self.options.resourceId,
-      fields = self.options.fields,
-      dropdownTemplate = self.options.dropdownTemplate;
+      fields = self.options.fields;
     self.el.find("#add-filter-button").click(function() {
       addFilter(self, resource_id, fields);
     });
@@ -189,7 +188,7 @@ ckan.module('data-transformation', function($) {
 
       filter_value_select_id = filter_name_select_id.replace('name', 'value');
       $('.' + filter_value_select_id).removeClass('hidden');
-      $('#' + filter_value_select_id).select2("val", "");
+      $('#' + filter_value_select_id).select2('val', '');
 
       applyDropdown(self, filter_value_select, filter_name, resource_id)
 
