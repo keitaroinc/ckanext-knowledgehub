@@ -1,2 +1,2 @@
-pyodbc
-pymssql
+pyodbc==4.0.25
+pymssql==2.1.4
