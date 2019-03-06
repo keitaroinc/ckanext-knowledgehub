@@ -55,6 +55,17 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_sub_theme_options': h.get_sub_theme_options,
             'pg_array_to_py_list': h.pg_array_to_py_list,
             'resource_view_get_fields': h.resource_view_get_fields,
+            'get_resource_columns': h.get_resource_columns,
+            'get_chart_types': h.get_chart_types,
+            'get_uuid': h.get_uuid,
+            'get_visualization_size': h.get_visualization_size,
+            'get_color_scheme': h.get_color_scheme,
+            'get_map_color_scheme': h.get_map_color_scheme,
+            'parse_json': h.parse_json,
+            'get_chart_sort': h.get_chart_sort,
+            'get_tick_text_rotation': h.get_tick_text_rotation,
+            'get_charts_data_formats': h.get_charts_data_formats,
+            'dump_json': h.dump_json
         }
 
     # IDatasetForm

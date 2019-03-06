@@ -2,12 +2,14 @@ import logging
 import os
 import pkgutil
 import inspect
+import uuid
+import json
 
 from flask import Blueprint
 
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
-from ckan.common import g
+from ckan.common import g, _
 from ckan import logic
 
 
@@ -110,6 +112,7 @@ def pg_array_to_py_list(rq_list):
         ids = [rq_list]
     return ids
 
+
 def resource_view_get_fields(resource):
 
     if not resource.get('datastore_active'):
@@ -130,3 +133,200 @@ def resource_view_get_fields(resource):
 #    return sorted(fields)
     except logic.NotFound:
         return []
+
+
+def _isnt_id(v):
+    return v['id'] != '_id'
+
+
+def get_resource_columns(res_id, escape_columns=[]):
+    '''
+
+    Get the names of the columns for the resource stored in Datastore
+
+        - res_id: (string) ID of the CKAN resource
+        - escape_columns: (array) names of the columns that should be omitted
+
+    '''
+    data = {
+        'resource_id': res_id,
+        'limit': 0
+    }
+
+    try:
+        result = toolkit.get_action('datastore_search')({}, data)
+    except Exception:
+        return []
+
+    fields = [field['id'] for field in result.get('fields', [])
+              if field['id'] not in escape_columns and _isnt_id(field)]
+
+    return fields
+
+
+def get_chart_types():
+    '''
+    Get all available types of chart following c3 specification
+    :return:
+    '''
+    chart_types = [
+        {'text': _('Line'), 'value': 'line'},
+        {'text': _('Bar'), 'value': 'bar'},
+        {'text': _('Horizontal bar'), 'value': 'hbar'},
+        {'text': _('Stacked bar'), 'value': 'sbar'},
+        {'text': _('Stacked horizontal bar'), 'value': 'shbar'},
+        {'text': _('Area'), 'value': 'area'},
+        {'text': _('Stacked area'), 'value': 'area-spline'},
+        {'text': _('Spline'), 'value': 'spline'},
+        {'text': _('Donut'), 'value': 'donut'},
+        {'text': _('Pie'), 'value': 'pie'},
+        {'text': _('Scatter'), 'value': 'scatter'},
+        {'text': _('Bubble'), 'value': 'bscatter'}
+    ]
+    return chart_types
+
+
+def get_uuid():
+    return uuid.uuid4()
+
+
+def get_visualization_size():
+    '''
+    Get available sizes for displaying visualizations: charts, text box
+    :return:
+    '''
+    options = [{'text': _('Small Rectangle (1x2)'), 'value': 'size-sm'},
+               {'text': _('Small Wide Rectangle (1x6)'),
+                   'value': 'size-sm wide'},
+               {'text': _('Medium Square (2x2)'), 'value': 'size-sm square'},
+               {'text': _('Medium Rectangle (2x3)'), 'value': 'size-lg'},
+               {'text': _('Large Rectangle (2x4)'),
+                   'value': 'size-sm double square'},
+               {'text': _('Extra Large Rectangle (2x6)'), 'value': 'size-xl'},
+               {'text': _('Large Square (4x4)'), 'value': 'size-lg square'},
+               {'text': _('Medium Vertical (4x2)'),
+                   'value': 'size-sm vertical'},
+               {'text': _('Large Vertical (4x3)'),
+                   'value': 'size-lg vertical'}]
+    return options
+
+
+def get_color_scheme():
+    '''
+    Get color schemes for displaying the charts
+    :return:
+    '''
+    colors = [{'value': '#59a14f',
+               'text': _('Green')},
+              {'value': '#4e79a7',
+               'text': _('Blue')},
+              {'value': '#499894',
+               'text': _('Teal')},
+              {'value': '#b6992d',
+               'text': _('Golden')},
+              {'value': '#ffa600',
+               'text': _('Yellow')},
+              {'value': '#d87c26',
+               'text': _('Orange')},
+              {'value': '#9d7660',
+               'text': _('Brown')},
+              {'value': '#78549a',
+               'text': _('Purple')},
+              {'value': '#b2182b',
+               'text': _('Red')}
+              ]
+
+    return colors
+
+
+def get_map_color_scheme():
+    '''
+    Get color schemes for displaying the maps
+    :return:
+    '''
+    colors = [
+        {
+            'value': '#feedde,#fdbe85,#fd8d3c,#e6550d,#a63603',
+            'text': _('Sequential')
+        },
+        {
+            'value': '#7b3294,#c2a5cf,#f7f7f7,#a6dba0,#008837',
+            'text': _('Green-Purple')
+        },
+        {
+            'value': '#d7191c,#fdae61,#ffffbf,#abdda4,#2b83ba',
+            'text': _('Blue-Red')
+        },
+        {
+            'value': '#a6611a,#dfc27d,#f5f5f5,#80cdc1,#018571',
+            'text': _('Teal-Brown')
+        },
+        {
+            'value': '#e66101,#fdb863,#f7f7f7,#b2abd2,#5e3c99',
+            'text': _('Purple-Orange')
+        }
+    ]
+
+    return colors
+
+
+def parse_json(string):
+    return json.loads(string)
+
+
+def get_chart_sort():
+    '''
+    Get available values for sorting charts data
+    :return:
+    '''
+    options = [{'text': _('Default'), 'value': 'default'},
+               {'text': _('Ascending'), 'value': 'asc'},
+               {'text': _('Descending'), 'value': 'desc'}]
+    return options
+
+
+def get_tick_text_rotation():
+    '''
+       Get available options for rotating chart x axis
+       :return:
+    '''
+    options = [{'text': _('Horizontal'), 'value': '0'},
+               {'text': _('Diagonal'), 'value': '30'},
+               {'text': _('Vertical'), 'value': '90'},
+               {'text': _('Reverse'), 'value': '180'}]
+
+    return options
+
+
+def get_charts_data_formats(num=None):
+    '''
+        Get available formats for charts tooltip and axis ticks
+    :return:
+    '''
+    options = [{'text': _('Default'), 'value': ''},
+               {'text': _('Integer e.g 2'), 'value': '.0f'},
+               {'text': _('Decimal (1 digit) e.g 2.5'), 'value': '.1f'},
+               {'text': _('Decimal (2 digit) e.g 2.50'), 'value': '.2f'},
+               {'text': _('Decimal (3 digit) e.g 2.501'), 'value': '.3f'},
+               {'text': _('Decimal (4 digit) e.g 2.5012'), 'value': '.4f'},
+               {'text': _('Currency e.g. $2,000'), 'value': '$'},
+               {'text': _('Rounded e.g 2k'), 'value': 's'},
+               {'text': _('Percentage (0 digit) e.g 25% for 0.25'),
+                   'value': '.0%'},
+               {'text': _('Percentage (1 digit) e.g 25.1% for 0.251'),
+                   'value': '.1%'},
+               {'text': _('Percentage (2 digit) e.g 25.12% for 0.2512'),
+                   'value': '.2%'},
+               {'text': _('Comma thousands separator (0 digit) e.g 2,512'),
+                   'value': ',.0f'},
+               {'text': _('Comma thousands separator (1 digit) e.g 2,512.3'),
+                   'value': ',.1f'},
+               {'text': _('Comma thousands separator (2 digit) e.g 2,512.34'),
+                   'value': ',.2f'}]
+    if num:
+        return options[:num]
+    return options
+
+
+def dump_json(value):
+    return json.dumps(value)
