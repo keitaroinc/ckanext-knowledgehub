@@ -182,7 +182,6 @@ ckan.module('data-transformation', function($) {
     filter_name_select.change(function(event) {
       var elem = $(this);
       var filter_name = elem.val();
-      console.log(filter_name);
       var filter_name_select_id = elem.attr('id');
 
 

@@ -6,10 +6,8 @@
 
 
 {% block form %}
-
-{% snippet 'snippets/data_transformation.html', res=res %}
-
-
+  {% snippet 'snippets/data_transformation.html', res=res %}
+  Chart form go here including data transformation fields
 {% endblock %}
 
- {% block preview %}Chart preview go here{% endblock %}
+{% block preview %}Chart preview go here{% endblock %}
