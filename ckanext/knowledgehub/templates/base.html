@@ -11,3 +11,8 @@
 {{ super() }} 
 {% resource  'knowledgehub/css/main.css' %}
 {% endblock %}
+
+{% block scripts %}
+  {{ super() }} 
+  {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+{% endblock -%}
