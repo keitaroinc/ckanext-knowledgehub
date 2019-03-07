@@ -39,7 +39,7 @@ ckan.module('data-transformation', function($) {
 
       return $.get(url, params || {}).then(success, error);
     }
-  };
+  }
 
   function initialize() {
     var self = this,
@@ -49,7 +49,34 @@ ckan.module('data-transformation', function($) {
       addFilter(self, resource_id, fields);
     });
 
-  };
+  }
+
+  function addFilter(self, resource_id, fields) {
+    var filter_items = $('.filter_item');
+    var total_items = filter_items.length + 1;
+
+    api.getTemplate('filter_item.html', {
+        fields: fields.toString(),
+        n: total_items,
+        resource_id: resource_id,
+        class: 'hidden'
+      })
+      .done(function(data) {
+
+        self.el.append(data);
+
+        // Remove item event handler
+        var removeMediaItemBtn = $('.remove-filter-item-btn');
+        removeMediaItemBtn.on('click', function(e) {
+          $(e.target).closest('.filter_item').remove();
+          //                            _handleFilterItemsOrder();
+        });
+
+        handleRenderedFilters(self, total_items, resource_id, fields);
+
+      });
+
+  }
 
   function applyDropdown(self, inputField, filterName, resourceId) {
 
@@ -116,33 +143,6 @@ ckan.module('data-transformation', function($) {
         callback(data);
       },
     });
-  }
-
-  function addFilter(self, resource_id, fields) {
-    var filter_items = $('.filter_item');
-    var total_items = filter_items.length + 1;
-
-    api.getTemplate('filter_item.html', {
-        fields: fields.toString(),
-        n: total_items,
-        resource_id: resource_id,
-        class: 'hidden'
-      })
-      .done(function(data) {
-
-        self.el.append(data);
-
-        // Remove item event handler
-        var removeMediaItemBtn = $('.remove-filter-item-btn');
-        removeMediaItemBtn.on('click', function(e) {
-          $(e.target).closest('.filter_item').remove();
-          //                            _handleFilterItemsOrder();
-        });
-
-        handleRenderedFilters(self, total_items, resource_id, fields);
-
-      });
-
   }
 
   function handleRenderedFilters(self, item_id, resource_id, fields) {
