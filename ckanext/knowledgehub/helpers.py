@@ -4,6 +4,7 @@ import pkgutil
 import inspect
 import uuid
 import json
+import functools32
 
 from flask import Blueprint
 
@@ -330,3 +331,16 @@ def get_charts_data_formats(num=None):
 
 def dump_json(value):
     return json.dumps(value)
+
+
+@functools32.lru_cache(maxsize=128)
+def get_resource_data(sql_string):
+
+    response = toolkit.get_action('datastore_search_sql')(
+        {}, {'sql': sql_string}
+    )
+    records_to_lower = []
+    for record in response['records']:
+        records_to_lower.append({k.lower(): v for k, v in record.items()})
+
+    return records_to_lower

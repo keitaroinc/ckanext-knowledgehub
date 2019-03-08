@@ -65,7 +65,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_chart_sort': h.get_chart_sort,
             'get_tick_text_rotation': h.get_tick_text_rotation,
             'get_charts_data_formats': h.get_charts_data_formats,
-            'dump_json': h.dump_json
+            'dump_json': h.dump_json,
+            'get_resource_data': h.get_resource_data
         }
 
     # IDatasetForm
