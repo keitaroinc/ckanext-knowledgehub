@@ -9,7 +9,7 @@
   {% block header_debug %} {% if g.debug and not g.debug_supress_header %}
   <div class="debug">
     Controller : {{ c.controller }}<br />Action : {{ c.action }}
-  </div>
+search  </div>
   {% endif %} {% endblock %}
   <div class="container-fluid">
     <div class="navbar-right">
@@ -34,7 +34,7 @@
           {% endblock %}
         </ul>
       </nav>
-      {% endblock %} {% block header_site_search %} {{ super() }} {% endblock %}
+      {% endblock %} {% block header_site_search %} <!-- removed search box at the main menu --> {% endblock %}
     </div>
 </header>
 <header>
@@ -57,7 +57,7 @@
         <li><a href="{% url_for 'theme.index' %}">{{ _('Themes') }}</a></li>
         <li><a href="{% url_for 'sub_theme.search' %}">{{ _('Sub-Themes') }}</a></li>
         <li><a href="{% url_for 'research_question.search' %}">{{ _('Research Questions') }}</a></li>
-        <li><a href="#">Indicators</a></li>
+        <li><a href="#">Dashboards</a></li>
       </ul>
     </div>
   </div>

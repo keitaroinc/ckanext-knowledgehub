@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block form %}
+  {% snippet 'snippets/data_transformation.html', res=res %}
   {% set sql_string = 'SELECT * FROM "%s"' % chart_resource %}
 
   <div id="chart_field_{{ n }}" class="item chart_field visualization-fields-section">

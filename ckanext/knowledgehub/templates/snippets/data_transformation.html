@@ -1,0 +1,9 @@
+<div
+  id="data-transformation-module"
+  class="data-transformation-module"
+  data-module="data-transformation"
+  data-module-resource-id="{{ res['id'] }}"
+  data-module-fields="{{ h.dump_json(h.resource_view_get_fields(res)) }}">
+  <button class="btn btn-primary" id="add-filter-button" name="add-filter" type="button">{{ _('Add Filter') }}</button>
+  <hr>
+</div>
