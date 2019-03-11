@@ -2,12 +2,15 @@ import logging
 
 from flask import Blueprint
 from flask.views import MethodView
+
 import ckan.lib.base as base
 import ckan.lib.helpers as h
 import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, config, g, request
+
+from ckanext.knowledgehub import helpers as kwh_helpers
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
@@ -81,8 +84,17 @@ class CreateView(MethodView):
         errors = {}
         error_summary = {}
 
+        y_axis_values = kwh_helpers.get_resource_numeric_columns(resource_id)
+        columns = kwh_helpers.get_resource_columns(resource_id, y_axis_values)
+
         vars = {
-            'data': data,
+            'chart_resource': resource_id,
+            'chart_type': 'bar',
+            'x_axis': columns[0],
+            'y_axis': y_axis_values[0],
+            'y_axis_values': y_axis_values,
+            'columns': columns,
+            'measure_label': y_axis_values[0],
             'errors': errors,
             'error_summary': error_summary,
             'pkg': package,

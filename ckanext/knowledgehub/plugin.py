@@ -66,7 +66,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_tick_text_rotation': h.get_tick_text_rotation,
             'get_charts_data_formats': h.get_charts_data_formats,
             'dump_json': h.dump_json,
-            'get_resource_data': h.get_resource_data
+            'get_resource_data': h.get_resource_data,
+            'get_resource_numeric_columns': h.get_resource_numeric_columns
         }
 
     # IDatasetForm

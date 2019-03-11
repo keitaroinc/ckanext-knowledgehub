@@ -68,7 +68,6 @@ ckan.module('chart', function() {
         },
         // Enhance the SQL query with grouping and only select 2 columns.
         create_sql: function() {
-            this.options.sql_string = 'SELECT * FROM "a7ea3493-e94d-4535-8c58-99dc3f657747"';
             var parsedSqlString = this.options.sql_string.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
             // We need to encode some characters, eg, '+' sign:
@@ -86,18 +85,17 @@ ckan.module('chart', function() {
                 sqlStringExceptSelect = sqlStringExceptSelect + filterSql;
             }
 
-            // var sql;
-            // if (static_reference_column) {
-            //   sql = 'SELECT AVG("' + static_reference_column + '") as static_reference_column, "' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
-            // } else {
-            //   sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
-            // }
+            var sql;
+            if (static_reference_column) {
+              sql = 'SELECT AVG("' + static_reference_column + '") as static_reference_column, "' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            } else {
+              sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            }
 
-            return this.options.sql_string;
+            return sql
         },
         // Get the data from Datastore.
         get_resource_datа: function(sql) {
-
             var category = (this.options.category_name === true) ? '' : this.options.category_name;
             var x_axis = (this.options.x_axis === true) ? '' : this.options.x_axis;
             var y_axis = (this.options.y_axis === true) ? '' : this.options.y_axis;
@@ -157,7 +155,7 @@ ckan.module('chart', function() {
                           var values = [];
                           for (var row of this.fetched_data) {
                             // Values from server are strings..
-                            values.push(+row[y_axis.toLowerCase()]);
+                              values.push(+row[y_axis.toString().toLowerCase()]);
                           }
                           this.y_axis_max = Math.max.apply(null, values);
                           this.y_axis_avg = values.reduce(function (a, b) {return a+b;}, 0) / values.length;
@@ -200,8 +198,8 @@ ckan.module('chart', function() {
                 }.bind(this));
         },
         createChart: function(data) {
-            var x_axis = 'coo';
-            var y_axis = 'year';
+            var x_axis = this.options.x_axis.toString().toLowerCase();
+            var y_axis = this.options.y_axis.toString().toLowerCase();
             var records = data;
             var show_legend = this.options.show_legend;
             var x_text_rotate = this.options.x_text_rotate;
@@ -219,7 +217,7 @@ ckan.module('chart', function() {
             var y_label_hide = this.options.y_label_hide;
             var y_from_zero = this.options.y_from_zero;
             var data_sort = this.options.data_sort;
-            var measure_label = this.options.measure_label;
+            var measure_label = this.options.measure_label.toString().toLowerCase();
             var additionalCategory = (this.options.category_name === true) ? '' : this.options.category_name;
             var static_reference_label = (this.options.static_reference_label === true) ? '' : this.options.static_reference_label;
             var dynamic_reference_label = (this.options.dynamic_reference_label === true) ? '' : this.options.dynamic_reference_label;
@@ -229,7 +227,7 @@ ckan.module('chart', function() {
             var options = {
                 bindto: this.el[0],
                 color: {
-                    pattern: '#feedde,#fdbe85,#fd8d3c,#e6550d,#a63603'.split(',')
+                    pattern: this.options.colors.split(',')
                 },
                 padding: {
                     right: 50,
@@ -582,11 +580,11 @@ ckan.module('chart', function() {
             var chartPaddingBottom = chartField.find('input[name*=chart_field_chart_padding_bottom_]');
             var chartPaddingBottomVal = chartPaddingBottom.val();
 
-            var axisXSelect = chartField.find('[name*=chart_field_axis_x_]');
-            var axisXValue = axisXSelect.val();
+            var axisXSelect = chartField.find('[name*=choose_x_axis_column]');
+            var axisXValue = axisXSelect.val().toString();
 
-            var axisYSelect = chartField.find('[name*=chart_field_axis_y_]');
-            var axisYValue = axisYSelect.val();
+            var axisYSelect = chartField.find('[name*=choose_y_axis_column]');
+            var axisYValue = axisYSelect.val().toString();
 
             var chartTitle = chartField.find('textarea[name*=chart_field_title_]');
             var chartTitleVal = chartTitle.val();
@@ -657,7 +655,7 @@ ckan.module('chart', function() {
             var dynamicReferenceLabel = chartField.find('input[name*=chart_field_dynamic_reference_label_]');
             var dynamicReferenceLabelVal = dynamicReferenceLabel.val();
 
-            var measureLabelVal = $('#choose_y_axis_column option:selected').text();
+            var measureLabelVal = $('#choose_y_axis_column option:selected').text().toLowerCase();
 
             // If the changed values from the dropdowns are not from x_axis or y_axis
             // then just update the chart without fetching new data. This leads

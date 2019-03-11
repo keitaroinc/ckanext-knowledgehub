@@ -5,26 +5,8 @@
   <li class="active"><a href="#"><i class="fa fa-pencil-square-o"></i> {{ _('Add chart view') }}</a></li>
 {% endblock %}
 
-
 {% block form %}
-
-  {% set active_charts = chart %}
-  {% set main_filters = [] %}
-  {% set y_axis_values = ['Year'] %}
-  {% set chart_resource = 'a7ea3493-e94d-4535-8c58-99dc3f657747' %}
-  {% set columns = h.get_resource_columns(chart_resource, y_axis_values) %}
-  {% set measure_label = 'eventID' %}
-  {% set sql_string = 'SELECT * FROM "a7ea3493-e94d-4535-8c58-99dc3f657747"' %}
-  {% if chart and chart.filter_name %}
-      {% set class = '' %}
-  {% else %}
-  {% set class = 'hidden' %}
-  {% endif %}
-
-  {% for item in y_axis_values %}
-      {% do main_filters.append(item) %}
-  {% endfor %}
-  {% set chart_filters = h.get_resource_columns(chart_resource, main_filters) %}
+  {% set sql_string = 'SELECT * FROM "%s"' % chart_resource %}
 
   <div id="chart_field_{{ n }}" class="item chart_field visualization-fields-section">
     {% set chart_types = h.get_chart_types() %}
@@ -42,20 +24,31 @@
           <div id="accordion_{{ chart_id }}_general" class="accordion-body collapse in">
             <div class="accordion-inner">
 
-
               {# Type #}
               {% if chart %}
                 {% set selected_chart_type = chart.graph %}
               {% else %}
-                {% set selected_chart_type = chart_types[0].value %}
+                {% set selected_chart_type = chart_type %}
               {% endif %}
               {{ form.select('chart_field_graph_' ~ n, label=_('Type'), options=chart_types, selected=selected_chart_type) }}
 
-              {# Dimension #}
+              {# Measure, Y value #}
               <div class="control-group control-select">
-                <label class="control-label" for="chart_field_axis_x_{{ n }}">{{ _('X axis dimension') }}</label>
+                <label class="control-label" for="choose_y_axis_column">{{ _('Y axis dimension') }}</label>
                 <div class="controls ">
-                  <select id="chart_field_axis_x_{{ n }}" name="chart_field_axis_x_{{ n }}">
+                  <select id="choose_y_axis_column" name="choose_y_axis_column">
+                    {% for y_value in y_axis_values %}
+                    <option value="{{y_value}}" {% if chart %}{{ 'selected' if column == chart.x_axis }}{% endif %}>{{y_value}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              {# Dimension, X value #}
+              <div class="control-group control-select">
+                <label class="control-label" for="choose_x_axis_column">{{ _('X axis dimension') }}</label>
+                <div class="controls ">
+                  <select id="choose_x_axis_column" name="choose_x_axis_column">
                     {% for column in columns %}
                     <option value="{{column}}"{% if chart %}{{ 'selected' if column == chart.x_axis }}{% endif %}>{{column}}</option>
                     {% endfor %}
@@ -279,50 +272,6 @@
           </div>
         </div>
 
-        {# Static Reference #}
-        <div class="accordion-group">
-          <div class="accordion-heading">
-            <a href="#accordion_{{ chart_id }}_static_reference" class="accordion-toggle" data-toggle="collapse" data-parent="#accordion_{{ chart_id }}">
-              {{ _('Static Reference') }}
-            </a>
-          </div>
-          <div id="accordion_{{ chart_id }}_static_reference" class="accordion-body collapse">
-            <div class="accordion-inner">
-
-              {# Static Reference Columns #}
-              <div class="control-group ">
-                <label class="control-label" for="chart_field_static_reference_columns_{{ n }}">{{ _('Static Reference Columns') }}</label>
-                <div class="controls ">
-                  <select id="chart_field_static_reference_columns_{{ n }}" name="chart_field_static_reference_columns_{{ n }}" multiple style="width:100%">
-                    {% for measure in y_axis_values %}
-                      <optgroup label="{{ measure }}">
-                        {% for column in chart_filters %}
-                          {% set value = [measure, column]|join('|') %}
-                          <option value="{{ value }}" {% if chart %}{{ 'selected' if value in chart.static_reference_columns }}{% endif %}>
-                            {{column}} ({{measure}})
-                          </option>
-                        {% endfor %}
-                      </optgroup>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-
-              {# Static Reference Label #}
-              {% if chart %}
-                {% set static_reference_label = chart.static_reference_label %}
-              {% endif %}
-              <div class="control-group ">
-                <label class="control-label" for="chart_field_static_reference_label_{{ n }}">{{ _('Static Reference Label') }}</label>
-                <div class="controls ">
-                    <input id="chart_field_static_reference_label_{{ n }}" type="text" name="chart_field_static_reference_label_{{ n }}" value="{{ static_reference_label }}" placeholder="{{ _('Static Reference') }}">
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
         {# Dynamic Reference #}
         <div class="accordion-group">
           <div class="accordion-heading">
@@ -376,7 +325,6 @@
 
 
       {# Controls #}
-      <input type="hidden" id="chart_field_axis_y_{{ n }}" name="chart_field_axis_y_{{ n }}" value="year"/>
       <ul class="inline text-right chart-actions">
         <li><a class="btn update-chart-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
       </ul>
@@ -476,10 +424,10 @@
     {% endif %}
     {% snippet 'ajax_snippets/visualization_item.html',
             type='chart',
-            colors=colors,
+            colors=color_schemes[0].value,
             x_axis=x_axis,
             y_axis=y_axis,
-            chart_type='bar',
+            chart_type=chart_type,
             sql_string=sql_string,
             title= title,
             show_legend = show_legend,

@@ -165,6 +165,30 @@ def get_resource_columns(res_id, escape_columns=[]):
     return fields
 
 
+def get_resource_numeric_columns(res_id):
+    '''
+
+    Get the names of the numeric columns for the resource stored in Datastore
+
+        - res_id: (string) ID of the CKAN resource
+
+    '''
+    data = {
+        'resource_id': res_id,
+        'limit': 0
+    }
+
+    try:
+        result = toolkit.get_action('datastore_search')({}, data)
+    except Exception:
+        return []
+
+    fields = [field['id'] for field in result.get('fields', [])
+              if field['type'] == 'numeric' and _isnt_id(field)]
+
+    return fields
+
+
 def get_chart_types():
     '''
     Get all available types of chart following c3 specification
