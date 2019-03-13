@@ -41,18 +41,65 @@ ckan.module('data-transformation', function($) {
     }
   }
 
-  function initialize() {
-    var self = this,
-      resource_id = self.options.resourceId,
-      fields = self.options.fields;
-    self.el.find("#add-filter-button").click(function() {
-      addFilter(self, resource_id, fields);
-    });
+  function _getFilters() {
 
+    var filter_items = $('#data-transformation-module').find('.filter_item');
+    var filters = [];
+    var name = '';
+    var value = '';
+
+    $.each(filter_items, function(idx, elem) {
+
+      name = $(elem).find('[id*=data_filter_name_]').select2('val');
+      value = $(elem).find('[id*=data_filter_value_]').select2('val');
+      filters.push({
+        'name': name,
+        'value': value
+      });
+    });
+    return filters;
+  }
+
+  function _generateWhereClause(filters) {
+    var where_clause = '';
+
+    if (filters.length > 1) {
+
+      filters.forEach(function(filter, index) {
+
+        var name = filter['name'];
+        var value = filter['value'];
+
+        if (index === 0) {
+
+          where_clause = 'WHERE ("' + name + '" = \'' + value + '\')';
+
+        } else {
+          where_clause += ' AND ("' + name + '" = \'' + value + '\')';
+        }
+      });
+
+    } else if (filters.length == 1) {
+
+      var filter = filters[0];
+      var name = filter['name'];
+      var value = filter['value'];
+      where_clause = 'WHERE ("' + name + '" = \'' + value + '\')';
+
+    }
+    return where_clause;
+  }
+
+  function generateSql(resource_id, filters) {
+
+    var where_clause = _generateWhereClause(filters)
+    var sql = 'SELECT * FROM "' + resource_id + '" ' + where_clause + '';
+    $('#sql-string').val(sql);
+    return sql;
   }
 
   function addFilter(self, resource_id, fields) {
-    var filter_items = $('.filter_item');
+    var filter_items = $('#data-transformation-module').find('.filter_item');
     var total_items = filter_items.length + 1;
 
     api.getTemplate('filter_item.html', {
@@ -69,13 +116,14 @@ ckan.module('data-transformation', function($) {
         var removeMediaItemBtn = $('.remove-filter-item-btn');
         removeMediaItemBtn.on('click', function(e) {
           $(e.target).closest('.filter_item').remove();
-          //                            _handleFilterItemsOrder();
+          var filters = _getFilters();
+          var sql = generateSql(resource_id, filters);
+          console.log(sql);
         });
 
         handleRenderedFilters(self, total_items, resource_id, fields);
 
       });
-
   }
 
   function applyDropdown(self, inputField, filterName, resourceId) {
@@ -177,8 +225,6 @@ ckan.module('data-transformation', function($) {
       width: 'resolve'
     })
 
-
-
     filter_name_select.change(function(event) {
       var elem = $(this);
       var filter_name = elem.val();
@@ -191,6 +237,25 @@ ckan.module('data-transformation', function($) {
 
       applyDropdown(self, filter_value_select, filter_name, resource_id)
 
+    });
+
+    filter_value_select.change(function(event) {
+
+      var elem = $(this);
+      filter_value_select_id = elem.attr('id');
+
+      var filters = _getFilters();
+      var sql = generateSql(resource_id, filters);
+      console.log(sql);
+    });
+  }
+
+  function initialize() {
+    var self = this,
+      resource_id = self.options.resourceId,
+      fields = self.options.fields;
+    self.el.find("#add-filter-button").click(function() {
+      addFilter(self, resource_id, fields);
     });
 
   }

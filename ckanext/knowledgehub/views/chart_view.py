@@ -9,6 +9,7 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, config, g, request
+from ckan.lib.navl import dictization_functions
 
 from ckanext.knowledgehub import helpers as kwh_helpers
 
@@ -110,6 +111,29 @@ class CreateView(MethodView):
              error_summary=None):
 
         context = self._prepare()
+
+        try:
+            data = logic.clean_dict(
+                dictization_functions.unflatten(
+                    logic.tuplize_dict(logic.parse_params(request.form))))
+        except dictization_functions.DataError:
+            base.abort(400, _(u'Integrity Error'))
+
+        filters = []
+        for k, v in data.items():
+            if k.startswith('data_filter_name_'):
+                filter = {}
+                filter_id = k.split('_')[-1]
+                filter['order'] = int(filter_id)
+                filter['name'] = \
+                    data['data_filter_name_{}'.format(filter_id)]
+                filter['value'] = \
+                    data['data_filter_value_{}'.format(filter_id)]
+                filters.append(filter)
+
+        print filters
+        print data['sql_string']
+
         log.info('Create chart view')
         return self.get(id, resource_id)
 
