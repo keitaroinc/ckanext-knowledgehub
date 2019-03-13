@@ -90,6 +90,7 @@ class CreateView(MethodView):
             if 'filters' in data['config']:
                 filters = data['config']['filters']
                 filters.sort(key=itemgetter('order'))
+                print filters
 
         vars = {
             'data': data,

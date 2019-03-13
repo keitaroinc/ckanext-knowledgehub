@@ -43,26 +43,26 @@ ckan.module('data-transformation', function($) {
 
   function _handleFilterItemsOrder() {
 
-        var filter_items = $('.filter_item');
+    var filter_items = $('.filter_item');
 
-        $.each(filter_items, function(i, item) {
-            item = $(item);
+    $.each(filter_items, function(i, item) {
+      item = $(item);
 
-            var order = i + 1;
-            var selectFilterName = item.find('[id*=data_filter_name_]');
-            var selectFilterValue = item.find('[id*=data_filter_value_]');
+      var order = i + 1;
+      var selectFilterName = item.find('[id*=data_filter_name_]');
+      var selectFilterValue = item.find('[id*=data_filter_value_]');
 
 
-            item.attr('id', 'filter_item_' + order);
+      item.attr('id', 'filter_item_' + order);
 
-            selectFilterName.attr('id', 'data_filter_name_' + order);
-            selectFilterName.attr('name', 'data_filter_name_' + order);
+      selectFilterName.attr('id', 'data_filter_name_' + order);
+      selectFilterName.attr('name', 'data_filter_name_' + order);
 
-            selectFilterValue.attr('id', 'data_filter_value_' + order);
-            selectFilterValue.attr('name', 'data_filter_value_' + order);
+      selectFilterValue.attr('id', 'data_filter_value_' + order);
+      selectFilterValue.attr('name', 'data_filter_value_' + order);
 
-        });
-    };
+    });
+  }
 
   function _getFilters() {
 
@@ -121,15 +121,15 @@ ckan.module('data-transformation', function($) {
     return sql;
   }
 
-  function addFilter(self, resource_id, fields, filter, filter_order) {
+  function addFilter(self, resource_id, fields, filter) {
 
     var total_items = 0;
 
-    if (filter_order) {
-      total_items = filter_order;
+    if (filter) {
+      total_items = filter['order'];
     } else {
       var filter_items = $('#data-transformation-module').find('.filter_item');
-     total_items = filter_items.length + 1;
+      total_items = filter_items.length + 1;
     }
 
     api.getTemplate('filter_item.html', {
@@ -305,7 +305,7 @@ ckan.module('data-transformation', function($) {
     });
     // Generate and render existing filters
     filters.forEach(function(filter, idx) {
-      addFilter(self, resource_id, fields, filter, filter['order']);
+      addFilter(self, resource_id, fields, filter);
     });
   }
 
