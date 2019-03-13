@@ -1,21 +1,14 @@
 <div id="filter_item_{{ n }}" class="filter_item">
-    <ul class="inline text-right pull-right filter-actions">
-      
-      <li class="list-unstyled">
+    <div class="text-right filter-actions">
         <a class="btn remove-filter-item-btn">
-          <span class="fa fa-trash-o" aria-hidden="true"></span> {{ _('Remove') }}
-        </a>
-      </li>
-    </ul>
-
+          <span class="fa fa-trash-o" aria-hidden="true"></span> {{ _('Remove') }}</a>
+    </div>
     <div class="control-group control-select">
       <label class="control-label" for="data_filter_name_{{ n }}">{{ _('Filter') }}</label>
       <div class="controls ">
           <input id="data_filter_name_{{ n }}" name="data_filter_name_{{ n }}" value="{% if selected_filter %}{{ selected_filter.name }}{% endif %}"required=required/>
-
       </div>
     </div>
-
     <div class="control-group control-select data_filter_value_{{ n }} {{ class }}">
       <label class="control-label" for="data_filter_value_{{ n }}">{{ _('Filter Value') }}</label>
       <div class="controls ">
