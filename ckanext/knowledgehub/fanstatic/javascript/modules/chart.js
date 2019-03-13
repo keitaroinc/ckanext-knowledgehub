@@ -7,7 +7,6 @@ Options:
     - colors (Pattern of colors)
     - x_axis (Column name of x axis)
     - y_axis (Column name of y axis)
-    - sql_string (SQL string the contains filters)
     - chart_type (What type of chart needs to be rendered)
     - title (Chart title)
     - show_legend ( Display or hide charts legend)
@@ -24,7 +23,6 @@ Options:
     - y_label (Aditional label added in y axis)
     - filter_name (The name of the chart filter)
     - filter_value (The value of the chart filter)
-    - category_name (The value of the chart category)
     - data_sort (Sort data, asc or desc)
 
 */
@@ -42,7 +40,7 @@ ckan.module('chart', function() {
             var api_ver = 3;
             var base_url = ckan.sandbox().client.endpoint;
             var url = base_url + '/api/' + api_ver + '/action/' + action;
-            return $.post(url, JSON.stringify(data), 'json');
+            return $.post(url, data, 'json');
         }
     };
 
@@ -68,28 +66,20 @@ ckan.module('chart', function() {
         },
         // Enhance the SQL query with grouping and only select 2 columns.
         create_sql: function() {
-            var parsedSqlString = this.options.sql_string.split('*');
+            var sqlString = $('#sql-string').val();
+            var parsedSqlString = sqlString.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
             // We need to encode some characters, eg, '+' sign:
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
-            var chart_filter_name = (this.options.filter_name === true) ? '' : this.options.filter_name;
-            var chart_filter_value = (this.options.filter_value === true) ? '' : this.options.filter_value;
             var y_axis = (this.options.y_axis === true) ? '' : this.options.y_axis;
             var static_reference_columns = (this.options.static_reference_columns === true) ? [] : this.options.static_reference_columns;
             var static_reference_column = this.getStaticReferenceColumn(static_reference_columns, y_axis);
-            var category = (this.options.category_name === true) ? '' : this.options.category_name;
-
-            // If additional chart filter is set extend the current sql with the new filter
-            if (chart_filter_name && chart_filter_value) {
-                var filterSql = ' AND ("' + this.options.filter_name + '"' + " = '" + this.options.filter_value + "')"
-                sqlStringExceptSelect = sqlStringExceptSelect + filterSql;
-            }
 
             var sql;
             if (static_reference_column) {
-              sql = 'SELECT AVG("' + static_reference_column + '") as static_reference_column, "' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+                sql = 'SELECT AVG("' + static_reference_column + '") as static_reference_column, "' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
             } else {
-              sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+                sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
             }
 
             return sql
@@ -99,8 +89,6 @@ ckan.module('chart', function() {
             var category = (this.options.category_name === true) ? '' : this.options.category_name;
             var x_axis = (this.options.x_axis === true) ? '' : this.options.x_axis;
             var y_axis = (this.options.y_axis === true) ? '' : this.options.y_axis;
-            var resource_id = sql.split('FROM')[1].split('WHERE')[0].split('"')[1];
-            var chart_type = this.options.chart_type;
 
             var chart_filter_name = (this.options.filter_name === true) ? '' : this.options.filter_name;
             var chart_filter_value = (this.options.filter_value === true) ? '' : this.options.filter_value;
@@ -109,11 +97,10 @@ ckan.module('chart', function() {
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
             var dynamic_reference_factor = (this.options.dynamic_reference_factor === true) ? '' : this.options.dynamic_reference_factor;
 
+            console.log(static_reference_columns)
+
             var viz_form = $('#visualizations-form');
             var f = viz_form.data('mainFilters');
-            var previous_filters = (this.options.query_filters === true) ? f : this.options.query_filters;
-
-            var chart_filter = {};
 
             if (chart_filter_name && chart_filter_value) {
                 chart_filter = {
@@ -123,14 +110,7 @@ ckan.module('chart', function() {
             }
 
             api.post('get_chart_data', {
-                    category: category,
-                    sql_string: sql,
-                    resource_id: resource_id,
-                    x_axis: x_axis,
-                    y_axis: y_axis,
-                    chart_type: chart_type,
-                    previous_filters: JSON.stringify(previous_filters),
-                    chart_filter: JSON.stringify(chart_filter)
+                    sql_string: sql
                 })
                 .done(function(data) {
                     if (data.success) {
@@ -143,24 +123,15 @@ ckan.module('chart', function() {
                         this.static_reference_value = null;
                         this.dynamic_reference_value = null;
 
-                        // Get max/avg/min
-                        if (category) {
-                          this.y_axis_max = this.fetched_data.y_axis_max;
-                          this.y_axis_avg = this.fetched_data.y_axis_avg;
-                          this.y_axis_min = this.fetched_data.y_axis_min;
-                          delete this.fetched_data.y_axis_max;
-                          delete this.fetched_data.y_axis_avg;
-                          delete this.fetched_data.y_axis_min;
-                        } else {
-                          var values = [];
-                          for (var row of this.fetched_data) {
-                            // Values from server are strings..
-                              values.push(+row[y_axis.toString().toLowerCase()]);
-                          }
-                          this.y_axis_max = Math.max.apply(null, values);
-                          this.y_axis_avg = values.reduce(function (a, b) {return a+b;}, 0) / values.length;
-                          this.y_axis_min = Math.min.apply(null, values);
+                        var values = [];
+                        for (var row of this.fetched_data) {
+                        // Values from server are strings..
+                            values.push(+row[y_axis.toString().toLowerCase()]);
                         }
+                        this.y_axis_max = Math.max.apply(null, values);
+                        this.y_axis_avg = values.reduce(function (a, b) {return a+b;}, 0) / values.length;
+                        this.y_axis_min = Math.min.apply(null, values);
+
 
                         // Static reference
                         if (static_reference_column) {
@@ -207,10 +178,6 @@ ckan.module('chart', function() {
             var tooltip_name = this.options.tooltip_name;
             var data_format = this.options.data_format;
             var y_tick_format = this.options.y_tick_format;
-            var chart_padding_left = (this.options.chart_padding_left === true) ? null : this.options.chart_padding_left;
-            var chart_padding_bottom = (this.options.chart_padding_bottom === true) ? null : this.options.chart_padding_bottom;
-            var padding_top = (this.options.padding_top === true) ? null : this.options.padding_top;
-            var padding_bottom = (this.options.padding_bottom === true) ? null : this.options.padding_bottom;
             var tick_count = (this.options.tick_count === true) ? '' : this.options.tick_count;
             var show_labels = this.options.show_labels;
             var y_label = (this.options.y_label === true) ? null : this.options.y_label;
@@ -568,16 +535,16 @@ ckan.module('chart', function() {
         updateChart: function() {
             var chartField = $('.chart_field');
 
-            var chartTypeSelect = chartField.find('[name*=chart_field_graph_]');
+            var chartTypeSelect = chartField.find('[name*=chart_field_type]');
             var chartTypeValue = chartTypeSelect.val();
 
-            var colorSelect = chartField.find('[name*=chart_field_color_]');
+            var colorSelect = chartField.find('[name*=chart_field_color]');
             var colorValue = colorSelect.val();
 
-            var chartPaddingLeft = chartField.find('input[name*=chart_field_chart_padding_left_]');
+            var chartPaddingLeft = chartField.find('input[name*=chart_field_chart_padding_left]');
             var chartPaddingLeftVal = chartPaddingLeft.val();
 
-            var chartPaddingBottom = chartField.find('input[name*=chart_field_chart_padding_bottom_]');
+            var chartPaddingBottom = chartField.find('input[name*=chart_field_chart_padding_bottom]');
             var chartPaddingBottomVal = chartPaddingBottom.val();
 
             var axisXSelect = chartField.find('[name*=choose_x_axis_column]');
@@ -586,34 +553,34 @@ ckan.module('chart', function() {
             var axisYSelect = chartField.find('[name*=choose_y_axis_column]');
             var axisYValue = axisYSelect.val().toString();
 
-            var chartTitle = chartField.find('textarea[name*=chart_field_title_]');
+            var chartTitle = chartField.find('textarea[name*=chart_field_title]');
             var chartTitleVal = chartTitle.val();
 
-            var legend = chartField.find('input[name*=chart_field_legend_]');
+            var legend = chartField.find('input[name*=chart_field_legend]');
             var legendVal = legend.is(':checked');
 
             var xTextRotate = chartField.find('[name*=chart_field_x_text_rotate_]');
             var xTextRotateVal = xTextRotate.val();
 
-            var xTextMultiline = chartField.find('[name*=chart_field_x_text_multiline_]');
+            var xTextMultiline = chartField.find('[name*=chart_field_x_text_multiline]');
             var xTextMultilineVal = xTextMultiline.is(':checked');
 
-            var tooltipName = chartField.find('input[name*=chart_field_tooltip_name_]');
+            var tooltipName = chartField.find('input[name*=chart_field_tooltip_name]');
             var tooltipNameVal = tooltipName.val();
 
-            var dataFormat = chartField.find('[name*=chart_field_data_format_]');
+            var dataFormat = chartField.find('[name*=chart_field_data_format]');
             var dataFormatVal = dataFormat.val();
 
-            var yTickFormat = chartField.find('[name*=chart_field_y_ticks_format_]');
+            var yTickFormat = chartField.find('[name*=chart_field_y_ticks_format]');
             var yTickFormatVal = yTickFormat.val();
 
-            var paddingTop = chartField.find('input[name*=chart_field_padding_top_]');
+            var paddingTop = chartField.find('input[name*=chart_field_padding_top]');
             var paddingTopVal = paddingTop.val();
 
-            var paddingBottom = chartField.find('input[name*=chart_field_padding_bottom_]');
+            var paddingBottom = chartField.find('input[name*=chart_field_padding_bottom]');
             var paddingBottomVal = paddingBottom.val();
 
-            var tickCount = chartField.find('input[name*=chart_field_tick_count_]');
+            var tickCount = chartField.find('input[name*=chart_field_tick_count]');
             var tickCountVal = tickCount.val();
 
             var filterName = chartField.find('[name*=chart_field_filter_name_]');
@@ -625,16 +592,16 @@ ckan.module('chart', function() {
             var categoryName = chartField.find('[name*=chart_field_category_name_]');
             var categoryNameVal = categoryName.val();
 
-            var sortOpt = chartField.find('select[name*=chart_field_sort_]');
+            var sortOpt = chartField.find('select[name*=chart_field_sort]');
             var sortVal = sortOpt.val();
 
-            var dataLabels = chartField.find('input[name*=chart_field_labels_]');
+            var dataLabels = chartField.find('input[name*=chart_field_labels]');
             var dataLabelsVal = dataLabels.is(':checked');
 
-            var yLabbel = chartField.find('input[name*=chart_field_y_label_]');
+            var yLabbel = chartField.find('input[name*=chart_field_y_label]');
             var yLabbelVal = yLabbel.val();
 
-            var yLabelHide = chartField.find('input[name*=chart_field_y_label_hide_]');
+            var yLabelHide = chartField.find('input[name*=chart_field_y_label_hide]');
             var yLabelHideVal = yLabelHide.is(':checked');
 
             var yFromZero = chartField.find('input[name*=chart_field_y_from_zero_]');
@@ -646,57 +613,16 @@ ckan.module('chart', function() {
             var staticReferenceLabel = chartField.find('input[name*=chart_field_static_reference_label_]');
             var staticReferenceLabelVal = staticReferenceLabel.val();
 
-            var dynamicReferenceType = chartField.find('select[name*=chart_field_dynamic_reference_type_]');
+            var dynamicReferenceType = chartField.find('select[name*=chart_field_dynamic_reference_type]');
             var dynamicReferenceTypeVal = dynamicReferenceType.val();
 
-            var dynamicReferenceFactor = chartField.find('input[name*=chart_field_dynamic_reference_factor_]');
+            var dynamicReferenceFactor = chartField.find('input[name*=chart_field_dynamic_reference_factor]');
             var dynamicReferenceFactorVal = dynamicReferenceFactor.val();
 
-            var dynamicReferenceLabel = chartField.find('input[name*=chart_field_dynamic_reference_label_]');
+            var dynamicReferenceLabel = chartField.find('input[name*=chart_field_dynamic_reference_label]');
             var dynamicReferenceLabelVal = dynamicReferenceLabel.val();
 
             var measureLabelVal = $('#choose_y_axis_column option:selected').text().toLowerCase();
-
-            // If the changed values from the dropdowns are not from x_axis or y_axis
-            // then just update the chart without fetching new data. This leads
-            // to a better UX.
-            if (this.fetched_data && (this.options.x_axis === axisXValue &&
-                    this.options.y_axis === axisYValue) && (this.options.filter_name === filterNameVal &&
-                    this.options.filter_value === filterValueVal) &&
-                    this.options.category_name === categoryNameVal &&
-                    this.options.chart_type === chartTypeValue &&
-                    this.options.static_reference_columns === staticReferenceColumnsVal &&
-                    this.options.dynamic_reference_type === dynamicReferenceTypeVal &&
-                    this.options.dynamic_reference_factor === dynamicReferenceFactorVal) {
-                this.options.colors = colorValue;
-                this.options.chart_type = chartTypeValue;
-                this.options.title = chartTitleVal;
-                this.options.show_legend = legendVal;
-                this.options.x_text_rotate = xTextRotateVal;
-                this.options.x_text_multiline = xTextMultilineVal;
-                this.options.tooltip_name = tooltipNameVal;
-                this.options.data_format = dataFormatVal;
-                this.options.y_tick_format = yTickFormatVal;
-                this.options.chart_padding_left = chartPaddingLeftVal;
-                this.options.chart_padding_bottom = chartPaddingBottomVal;
-                this.options.padding_top = paddingTopVal;
-                this.options.padding_bottom = paddingBottomVal;
-                this.options.show_labels = dataLabelsVal;
-                this.options.y_label = yLabbelVal;
-                this.options.y_label_hide = yLabelHideVal;
-                this.options.y_from_zero = yFromZeroVal;
-                this.options.tick_count = tickCountVal;
-                this.options.data_sort = sortVal;
-                this.options.static_reference_columns = staticReferenceColumnsVal;
-                this.options.static_reference_label = staticReferenceLabelVal;
-                this.options.dynamic_reference_type = dynamicReferenceTypeVal;
-                this.options.dynamic_reference_factor = dynamicReferenceFactorVal;
-                this.options.dynamic_reference_label = dynamicReferenceLabelVal;
-                this.options.measure_label = measureLabelVal;
-                this.createChart(this.fetched_data);
-
-                return;
-            }
 
             this.options.colors = colorValue;
             this.options.chart_type = chartTypeValue;

@@ -118,7 +118,6 @@ ckan.module('data-transformation', function($) {
           $(e.target).closest('.filter_item').remove();
           var filters = _getFilters();
           var sql = generateSql(resource_id, filters);
-          console.log(sql);
         });
 
         handleRenderedFilters(self, total_items, resource_id, fields);
@@ -246,7 +245,6 @@ ckan.module('data-transformation', function($) {
 
       var filters = _getFilters();
       var sql = generateSql(resource_id, filters);
-      console.log(sql);
     });
   }
 

@@ -96,6 +96,8 @@ class CreateView(MethodView):
             'y_axis_values': y_axis_values,
             'columns': columns,
             'measure_label': y_axis_values[0],
+            'default_sql_string':
+                'SELECT * FROM "{table}"'.format(table=resource_id),
             'errors': errors,
             'error_summary': error_summary,
             'pkg': package,

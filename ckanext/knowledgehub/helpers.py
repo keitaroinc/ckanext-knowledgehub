@@ -359,7 +359,6 @@ def dump_json(value):
 
 @functools32.lru_cache(maxsize=128)
 def get_resource_data(sql_string):
-
     response = toolkit.get_action('datastore_search_sql')(
         {}, {'sql': sql_string}
     )
