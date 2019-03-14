@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 
 import ckan.logic as logic
 from ckan.plugins import toolkit
@@ -9,6 +10,7 @@ from ckan import lib
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub import helpers as kh_helpers
 
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -275,3 +277,18 @@ def resource_view_list(context, data_dict):
         in q.order_by(model.ResourceView.order).all()
     ]
     return model_dictize.resource_view_list_dictize(resource_views, context)
+
+
+@toolkit.side_effect_free
+def get_chart_data(context, data_dict):
+    '''
+    Return the resource data from DataStore.
+
+    :param sql_string: the SQL query that will be executed to get the data.
+    :type sql_string: string
+
+    :rtype: list of dictionaries.
+    '''
+    sql_string = data_dict.get('sql_string')
+
+    return kh_helpers.get_resource_data(sql_string)

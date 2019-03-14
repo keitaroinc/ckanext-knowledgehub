@@ -8,11 +8,16 @@
 <link href="https://fonts.googleapis.com/css?family=Lato:400,700,900" rel="stylesheet"/>
 
 {% endblock %} {% block styles %}
-{{ super() }} 
+{{ super() }}
 {% resource  'knowledgehub/css/main.css' %}
+{% resource 'knowledgehub/vendor/c3/c3.css' %}
 {% endblock %}
 
 {% block scripts %}
-  {{ super() }} 
+  {{ super() }}
   {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+  {% resource 'knowledgehub/javascript/modules/chart.js' %}
+  {% resource 'knowledgehub/vendor/d3/d3.js' %}
+  {% resource 'knowledgehub/vendor/c3/c3.js' %}
+  {% resource 'knowledgehub/vendor/nunjucks.js' %}
 {% endblock -%}
