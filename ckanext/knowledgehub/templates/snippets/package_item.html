@@ -19,7 +19,9 @@ Example:
 {% set notes = h.markdown_extract(package.notes, extract_length=truncate) %}
 {% set themes = h.get_theme_options() %}
 {% set tags = h.get_facet_items_dict('tags', limit=5) %}
-<!-- {% set research_question = h.get_facet_items_dict('research_question') %} -->
+{% set theme = package.get('theme', None) %}
+{% set sub_theme = package.get('sub_theme', None) %}
+{% set research_question = package.get('research_question', None) %}
 
 {% block package_item %}
   <li class="{{ item_class or "dataset-item" }}">
@@ -62,55 +64,35 @@ Example:
         {% endblock %}
         {% block dataset_tags %}
         {% for tag in tags %}
-            <a class="tag" href="{% url_for controller='package', action='search', tags=tag.name %}">{{ h.truncate(tag.display_name, 22) }}</a>   
+            <a class="tag" href="{% url_for controller='package', action='search', tags=tag.name %}">{{ h.truncate(tag.display_name, 22) }}</a>
         {% endfor %}
         {% endblock %}
         {% block package_title %}
-            <div><b>Dataset Theme: </b> {{ package['theme'] }}</div>
-            <div><b>Dataset Sub-Theme: </b> {{ package['sub_theme'] }}</div>
-            <div><b>Dataset Research Question: </b> <div id ="pkg_rq">{{ package['research_question'] }}</div></div>
-            <p id="demo"></p>            
-            <!-- all the questions in new lines  -->
-            <script>
-               var rq = document.getElementById("pkg_rq").innerHTML;
-              //  var pkg = package['research_question'];
-              var p = RQParse(rq);
+            {% if theme %}
+              <div><b>Dataset Theme: </b> {{ theme }}</div>
+            {% endif %}
 
-              function RQParse(a)
-              {
-                 var parenthesis = false;
-                 var rq_only ="";
-                 var all = new Array();
-                 var rq_counter = 0;
-                 for(i = 0; i < a.length; ++i)
-                 {
-                   if(a[i] == '{') {
-                     parenthesis = true;
-                     continue;
-                   }
-                   else if(a[i] == '}') {
-                      parenthesis = false;
-                      all[rq_counter] = rq_only;
-                      rq_counter++;
-                      rq_only = "";
-                      continue;
+            {% if sub_theme %}
+            <div><b>Dataset Sub-Theme: </b> {{ sub_theme }}</div>
+            {% endif %}
 
-                   }
-                   else if(a[i] === '"')
-                      continue;
-                   else if( a[i] == ",") {
-                    rq_only+="<br />";
-                    continue;
-                   }
-                  
-                  rq_only+=a[i];
-                 }
-                 return all;
-              }
-             
-              document.getElementById("pkg_rq").innerHTML = p;
-            </script>
+            {% if research_question %}
+              <div><b>Dataset Research Question: </b>
+                {% if research_question.startswith('{') %}
+                  {% for rq in h.pg_array_to_py_list(research_question) %}
+                    <div id ="pkg_rq">
+                      {{ rq }}
+                    </div>
+                  {% endfor %}
+                  {% else %}
+                  <div id ="pkg_rq">
+                    {{ research_question }}
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
 
+            <p id="demo"></p>
         {% endblock %}
 
       </div>
