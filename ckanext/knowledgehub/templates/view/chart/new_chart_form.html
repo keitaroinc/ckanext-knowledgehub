@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block form %}
-  {% snippet 'snippets/data_transformation.html', res=res, default_sql_string=default_sql_string %}
+  {% snippet 'snippets/data_transformation.html', res=res, filters=filters %}
 
   <div id="chart_field_{{ n }}" class="item chart_field visualization-fields-section">
     {% set chart_types = h.get_chart_types() %}

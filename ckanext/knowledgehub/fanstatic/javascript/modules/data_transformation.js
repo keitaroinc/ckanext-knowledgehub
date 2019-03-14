@@ -41,6 +41,29 @@ ckan.module('data-transformation', function($) {
     }
   }
 
+  function _handleFilterItemsOrder() {
+
+    var filter_items = $('.filter_item');
+
+    $.each(filter_items, function(i, item) {
+      item = $(item);
+
+      var order = i + 1;
+      var selectFilterName = item.find('[id*=data_filter_name_]');
+      var selectFilterValue = item.find('[id*=data_filter_value_]');
+
+
+      item.attr('id', 'filter_item_' + order);
+
+      selectFilterName.attr('id', 'data_filter_name_' + order);
+      selectFilterName.attr('name', 'data_filter_name_' + order);
+
+      selectFilterValue.attr('id', 'data_filter_value_' + order);
+      selectFilterValue.attr('name', 'data_filter_value_' + order);
+
+    });
+  }
+
   function _getFilters() {
 
     var filter_items = $('#data-transformation-module').find('.filter_item');
@@ -98,9 +121,16 @@ ckan.module('data-transformation', function($) {
     return sql;
   }
 
-  function addFilter(self, resource_id, fields) {
-    var filter_items = $('#data-transformation-module').find('.filter_item');
-    var total_items = filter_items.length + 1;
+  function addFilter(self, resource_id, fields, filter) {
+
+    var total_items = 0;
+
+    if (filter) {
+      total_items = filter['order'];
+    } else {
+      var filter_items = $('#data-transformation-module').find('.filter_item');
+      total_items = filter_items.length + 1;
+    }
 
     api.getTemplate('filter_item.html', {
         fields: fields.toString(),
@@ -116,11 +146,12 @@ ckan.module('data-transformation', function($) {
         var removeMediaItemBtn = $('.remove-filter-item-btn');
         removeMediaItemBtn.on('click', function(e) {
           $(e.target).closest('.filter_item').remove();
+          _handleFilterItemsOrder();
           var filters = _getFilters();
           var sql = generateSql(resource_id, filters);
         });
 
-        handleRenderedFilters(self, total_items, resource_id, fields);
+        handleRenderedFilter(self, total_items, resource_id, fields, filter);
 
       });
   }
@@ -192,7 +223,7 @@ ckan.module('data-transformation', function($) {
     });
   }
 
-  function handleRenderedFilters(self, item_id, resource_id, fields) {
+  function handleRenderedFilter(self, item_id, resource_id, fields, filter) {
 
     var filter_name_select;
     var filter_value_select;
@@ -211,7 +242,7 @@ ckan.module('data-transformation', function($) {
     }
 
 
-    var data = $.map(fields, function(d) {
+    var filter_name_select_data = $.map(fields, function(d) {
       return {
         id: d,
         text: d
@@ -219,10 +250,24 @@ ckan.module('data-transformation', function($) {
     });
 
     filter_name_select.select2({
-      data: data,
+      data: filter_name_select_data,
       placeholder: self._('Select a field'),
       width: 'resolve'
     })
+
+    if (filter) {
+
+      var filter_name_select_id = filter_name_select.attr('id');
+      filter_value_select_id = filter_name_select_id.replace('name', 'value');
+
+      filter_name_select.select2('val', filter['name']);
+
+      applyDropdown(self, filter_value_select, filter['name'], resource_id);
+      filter_value_select.select2('val', filter['value']);
+
+      $('.' + filter_value_select_id).removeClass('hidden');
+
+    }
 
     filter_name_select.change(function(event) {
       var elem = $(this);
@@ -231,10 +276,11 @@ ckan.module('data-transformation', function($) {
 
 
       filter_value_select_id = filter_name_select_id.replace('name', 'value');
-      $('.' + filter_value_select_id).removeClass('hidden');
       $('#' + filter_value_select_id).select2('val', '');
 
-      applyDropdown(self, filter_value_select, filter_name, resource_id)
+      applyDropdown(self, filter_value_select, filter_name, resource_id);
+
+      $('.' + filter_value_select_id).removeClass('hidden');
 
     });
 
@@ -251,11 +297,16 @@ ckan.module('data-transformation', function($) {
   function initialize() {
     var self = this,
       resource_id = self.options.resourceId,
-      fields = self.options.fields;
+      fields = self.options.fields,
+      filters = self.options.filters;
+
     self.el.find("#add-filter-button").click(function() {
       addFilter(self, resource_id, fields);
     });
-
+    // Generate and render existing filters
+    filters.forEach(function(filter, idx) {
+      addFilter(self, resource_id, fields, filter);
+    });
   }
 
   return {

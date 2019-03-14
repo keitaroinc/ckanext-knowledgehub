@@ -1,4 +1,6 @@
 import logging
+import json
+from operator import itemgetter
 
 from flask import Blueprint
 from flask.views import MethodView
@@ -70,6 +72,7 @@ class CreateView(MethodView):
             error_summary=None):
 
         context = self._prepare()
+        data = data or {}
 
         try:
             package = get_action('package_show')(context, {'id': id})
@@ -84,6 +87,13 @@ class CreateView(MethodView):
 
         errors = {}
         error_summary = {}
+        filters = []
+
+        if 'config' in data:
+            if 'filters' in data['config']:
+                filters = data['config']['filters']
+                filters.sort(key=itemgetter('order'))
+                print filters
 
         y_axis_values = kwh_helpers.get_resource_numeric_columns(resource_id)
         columns = kwh_helpers.get_resource_columns(resource_id, y_axis_values)
@@ -98,6 +108,8 @@ class CreateView(MethodView):
             'measure_label': y_axis_values[0],
             'default_sql_string':
                 'SELECT * FROM "{table}"'.format(table=resource_id),
+            'data': data,
+            'filters': filters,
             'errors': errors,
             'error_summary': error_summary,
             'pkg': package,
@@ -121,6 +133,8 @@ class CreateView(MethodView):
         except dictization_functions.DataError:
             base.abort(400, _(u'Integrity Error'))
 
+        config = {}
+
         filters = []
         for k, v in data.items():
             if k.startswith('data_filter_name_'):
@@ -128,16 +142,16 @@ class CreateView(MethodView):
                 filter_id = k.split('_')[-1]
                 filter['order'] = int(filter_id)
                 filter['name'] = \
-                    data['data_filter_name_{}'.format(filter_id)]
+                    data.pop('data_filter_name_{}'.format(filter_id))
                 filter['value'] = \
-                    data['data_filter_value_{}'.format(filter_id)]
+                    data.pop('data_filter_value_{}'.format(filter_id))
                 filters.append(filter)
 
-        print filters
-        print data['sql_string']
+        config['filters'] = filters
+        data['config'] = config
 
         log.info('Create chart view')
-        return self.get(id, resource_id)
+        return self.get(id, resource_id, data)
 
 
 chart_view.add_url_rule(u'/new_chart',
