@@ -24,6 +24,17 @@
           <div id="accordion_{{ chart_id }}_general" class="accordion-body collapse in">
             <div class="accordion-inner">
 
+              {# Title #}
+              {% if chart %}
+                {% set chart_title = chart.title %}
+              {% endif %}
+              <div class="control-group title">
+                <label class="control-label" for="chart_field_title">{{ _('Title') }}</label>
+                <div class="controls ">
+                  <input id="chart_field_title" type="text" name="chart_field_title" value="{{ chart_title }}" placeholder="{{ _('Chart title') }}" required="required">
+                </div>
+              </div>
+
               {# Type #}
               {% if chart %}
                 {% set selected_chart_type = chart.type %}
@@ -92,17 +103,6 @@
                     </optgroup>
 
                   </select>
-                </div>
-              </div>
-
-              {# Title #}
-              {% if chart %}
-                {% set chart_title = chart.title %}
-              {% endif %}
-              <div class="control-group title">
-                <label class="control-label" for="chart_field_title">{{ _('Title') }}</label>
-                <div class="controls ">
-                  <textarea id="chart_field_title" name="chart_field_title" placeholder="{{ _('Chart title') }}" rows="3" required="required">{{ chart_title }}</textarea>
                 </div>
               </div>
             </div>
