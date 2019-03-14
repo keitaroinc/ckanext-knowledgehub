@@ -1,0 +1,134 @@
+{#
+Displays a single of dataset.
+
+package        - A package to display.
+item_class     - The class name to use on the list item.
+hide_resources - If true hides the resources (default: false).
+banner         - If true displays a popular banner (default: false).
+truncate       - The length to trucate the description to (default: 180)
+truncate_title - The length to truncate the title to (default: 80).
+
+Example:
+
+  {% snippet 'snippets/package_item.html', package=c.datasets[0] %}
+
+#}
+{% set truncate = truncate or 180 %}
+{% set truncate_title = truncate_title or 80 %}
+{% set title = package.title or package.name %}
+{% set notes = h.markdown_extract(package.notes, extract_length=truncate) %}
+{% set themes = h.get_theme_options() %}
+{% set tags = h.get_facet_items_dict('tags', limit=5) %}
+<!-- {% set research_question = h.get_facet_items_dict('research_question') %} -->
+
+{% block package_item %}
+  <li class="{{ item_class or "dataset-item" }}">
+    {% block content %}
+      <div class="dataset-content">
+        {% block heading %}
+          <h3 class="dataset-heading">
+            {% block heading_private %}
+              {% if package.private %}
+                <span class="dataset-private label label-inverse">
+                  <i class="fa fa-lock"></i>
+                  {{ _('Private') }}
+                </span>
+              {% endif %}
+            {% endblock %}
+            {% block heading_title %}
+              {{ h.link_to(h.truncate(title, truncate_title), h.url_for(package.type + '_read', controller='package', action='read', id=package.name)) }}
+            {% endblock %}
+            {% block heading_meta %}
+              {% if package.get('state', '').startswith('draft') %}
+                <span class="label label-info">{{ _('Draft') }}</span>
+              {% elif package.get('state', '').startswith('deleted') %}
+                <span class="label label-danger">{{ _('Deleted') }}</span>
+              {% endif %}
+              {{ h.popular('recent views', package.tracking_summary.recent, min=10) if package.tracking_summary }}
+            {% endblock %}
+          </h3>
+        {% endblock %}
+        {% block banner %}
+          {% if banner %}
+            <span class="banner">{{ _('Popular') }}</span>
+          {% endif %}
+        {% endblock %}
+        {% block notes %}
+          {% if notes %}
+            <div>{{ notes|urlize }}</div>
+          {% else %}
+            <p class="empty">{{ _("This dataset has no description") }}</p>
+          {% endif %}
+        {% endblock %}
+        {% block dataset_tags %}
+        {% for tag in tags %}
+            <a class="tag" href="{% url_for controller='package', action='search', tags=tag.name %}">{{ h.truncate(tag.display_name, 22) }}</a>   
+        {% endfor %}
+        {% endblock %}
+        {% block package_title %}
+            <div><b>Dataset Theme: </b> {{ package['theme'] }}</div>
+            <div><b>Dataset Sub-Theme: </b> {{ package['sub_theme'] }}</div>
+            <div><b>Dataset Research Question: </b> <div id ="pkg_rq">{{ package['research_question'] }}</div></div>
+            <p id="demo"></p>            
+            <!-- all the questions in new lines  -->
+            <script>
+               var rq = document.getElementById("pkg_rq").innerHTML;
+              //  var pkg = package['research_question'];
+              var p = RQParse(rq);
+
+              function RQParse(a)
+              {
+                 var parenthesis = false;
+                 var rq_only ="";
+                 var all = new Array();
+                 var rq_counter = 0;
+                 for(i = 0; i < a.length; ++i)
+                 {
+                   if(a[i] == '{') {
+                     parenthesis = true;
+                     continue;
+                   }
+                   else if(a[i] == '}') {
+                      parenthesis = false;
+                      all[rq_counter] = rq_only;
+                      rq_counter++;
+                      rq_only = "";
+                      continue;
+
+                   }
+                   else if(a[i] === '"')
+                      continue;
+                   else if( a[i] == ",") {
+                    rq_only+="<br />";
+                    continue;
+                   }
+                  
+                  rq_only+=a[i];
+                 }
+                 return all;
+              }
+             
+              document.getElementById("pkg_rq").innerHTML = p;
+            </script>
+
+        {% endblock %}
+
+      </div>
+      {% block resources %}
+        {% if package.resources and not hide_resources %}
+          {% block resources_outer %}
+            <ul class="dataset-resources list-unstyled">
+              {% block resources_inner %}
+                {% for resource in h.dict_list_reduce(package.resources, 'format') %}
+                <li>
+                  <a href="{{ h.url_for(controller='package', action='read', id=package.name) }}" class="label label-default" data-format="{{ resource.lower() }}">{{ resource }}</a>
+                </li>
+                {% endfor %}
+              {% endblock %}
+            </ul>
+          {% endblock %}
+        {% endif %}
+      {% endblock %}
+    {% endblock %}
+  </li>
+{% endblock %}
