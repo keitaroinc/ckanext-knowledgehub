@@ -312,8 +312,8 @@ def get_chart_sort():
 
 def get_tick_text_rotation():
     '''
-       Get available options for rotating chart x axis
-       :return:
+    Get available options for rotating chart x axis
+    :return:
     '''
     options = [{'text': _('Horizontal'), 'value': '0'},
                {'text': _('Diagonal'), 'value': '30'},
@@ -325,7 +325,7 @@ def get_tick_text_rotation():
 
 def get_charts_data_formats(num=None):
     '''
-        Get available formats for charts tooltip and axis ticks
+    Get available formats for charts tooltip and axis ticks
     :return:
     '''
     options = [{'text': _('Default'), 'value': ''},
@@ -359,6 +359,12 @@ def dump_json(value):
 
 @functools32.lru_cache(maxsize=128)
 def get_resource_data(sql_string):
+    '''
+    Get the records for the vizialization in a format:
+        [{u'2009':u'1.6',u'os': u'Android'}, {u'2009':u'10.5',u'os': u'iOS'}]
+
+    - sql_string: the SQL query that will be used for datastore_search_sql
+    '''
     response = toolkit.get_action('datastore_search_sql')(
         {}, {'sql': sql_string}
     )

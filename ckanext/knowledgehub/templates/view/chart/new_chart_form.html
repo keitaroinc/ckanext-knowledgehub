@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block form %}
-  {% snippet 'snippets/data_transformation.html', res=res, filters=filters %}
+  {% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
 
   <div id="chart_field_{{ n }}" class="item chart_field visualization-fields-section">
     {% set chart_types = h.get_chart_types() %}
@@ -195,9 +195,9 @@
                 {% set y_from_zero = chart.y_from_zero %}
               {% endif %}
               <div class="control-group ">
-                <label class="control-label" for="chart_field_y_from_zero_{{ n }}">{{ _('Start from zero') }}</label>
+                <label class="control-label" for="chart_field_y_from_zero">{{ _('Start from zero') }}</label>
                 <div class="controls ">
-                    <input id="chart_field_y_from_zero_{{ n }}" type="checkbox" name="chart_field_y_from_zero_{{ n }}" value="{{ y_from_zero }}" {% if y_from_zero=='true' %}checked{% endif %}>
+                    <input id="chart_field_y_from_zero" type="checkbox" name="chart_field_y_from_zero" value="{{ y_from_zero }}" {% if y_from_zero=='true' %}checked{% endif %}>
                 </div>
               </div>
 
@@ -265,51 +265,6 @@
                 <label class="control-label" for="chart_field_legend">{{ _('Show legend') }}</label>
                 <div class="controls ">
                     <input id="chart_field_legend" type="checkbox" name="chart_field_legend" value="{{ show_legend }}"{% if show_legend=='false' %}{% else %}checked{% endif %}>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        {# Static Reference #}
-        <div class="accordion-group">
-          <div class="accordion-heading">
-            <a href="#accordion_{{ chart_id }}_static_reference" class="accordion-toggle" data-toggle="collapse"
-              data-parent="#accordion_{{ chart_id }}">
-              {{ _('Static Reference') }}
-            </a>
-          </div>
-          <div id="accordion_{{ chart_id }}_static_reference" class="accordion-body collapse">
-            <div class="accordion-inner">
-
-              {# Static Reference Columns #}
-              <div class="control-group ">
-                <label class="control-label"
-                  for="chart_field_static_reference_columns_{{ n }}">{{ _('Static Reference Columns') }}</label>
-                <div class="controls ">
-                  <select id="chart_field_static_reference_columns_{{ n }}" name="chart_field_static_reference_columns_{{ n }}"
-                    style="width:100%">
-                    {% for measure in y_axis_values %}
-                      <option value="{{ measure }}"
-                        {% if chart %}{{ 'selected' if measure in chart.static_reference_columns }}{% endif %}>
-                        {{measure}}
-                      </option>
-                    {% endfor %}
-                  </select>
-                </div>
-
-              {# Static Reference Label #}
-              {% if chart %}
-              {% set static_reference_label = chart.static_reference_label %}
-              {% endif %}
-              <div class="control-group ">
-                <label class="control-label"
-                  for="chart_field_static_reference_label_{{ n }}">{{ _('Static Reference Label') }}</label>
-                <div class="controls ">
-                  <input id="chart_field_static_reference_label_{{ n }}" type="text"
-                    name="chart_field_static_reference_label_{{ n }}" value="{{ static_reference_label }}"
-                    placeholder="{{ _('Static Reference') }}">
                 </div>
               </div>
 
@@ -454,13 +409,7 @@
     {% set y_label = chart.y_label %}
     {% set y_label_hide = chart.y_label_hide %}
     {% set y_from_zero = chart.y_from_zero %}
-    {% set filter_name = chart.filter_name %}
-    {% set filter_slug = chart.filter_slug %}
-    {% set filter_value = chart.filter_value %}
-    {% set category_name = chart.category_name %}
     {% set data_sort = chart.sort %}
-    {% set static_reference_columns = chart.static_reference_columns %}
-    {% set static_reference_label = chart.static_reference_label %}
     {% set dynamic_reference_type = chart.dynamic_reference_type %}
     {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
     {% set dynamic_reference_label = chart.dynamic_reference_label %}
@@ -488,15 +437,8 @@
             y_label = y_label,
             y_label_hide = y_label_hide,
             y_from_zero = y_from_zero,
-            filter_name=filter_name,
-            filter_slug=filter_slug,
-            filter_value=filter_value,
-            category_name=category_name,
             data_sort = data_sort,
             measure_label=measure_label,
-            info_query_filters=info_query_filters,
-            static_reference_columns=static_reference_columns,
-            static_reference_label=static_reference_label,
             dynamic_reference_type=dynamic_reference_type,
             dynamic_reference_factor=dynamic_reference_factor,
             dynamic_reference_label=dynamic_reference_label
