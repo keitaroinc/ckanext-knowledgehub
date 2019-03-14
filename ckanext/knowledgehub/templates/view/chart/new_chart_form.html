@@ -8,7 +8,7 @@
 {% block form %}
   {% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
 
-  <div id="chart_field_{{ n }}" class="item chart_field visualization-fields-section">
+  <div id="chart_field" class="item chart_field visualization-fields-section">
     {% set chart_types = h.get_chart_types() %}
     <div class="item-wrapper">
       {% set chart_id = h.get_uuid() %}
@@ -26,17 +26,18 @@
 
               {# Type #}
               {% if chart %}
-                {% set selected_chart_type = chart.graph %}
+                {% set selected_chart_type = chart.type %}
               {% else %}
-                {% set selected_chart_type = chart_type %}
+                {% set selected_chart_type = chart_types[0].value %}
               {% endif %}
-              {{ form.select('chart_field_type' ~ n, label=_('Type'), options=chart_types, selected=selected_chart_type) }}
+              {{ form.select('chart_field_type', label=_('Type'), options=chart_types, selected=selected_chart_type) }}
 
               {# Measure, Y value #}
+              {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
               <div class="control-group control-select">
-                <label class="control-label" for="choose_y_axis_column">{{ _('Y axis dimension') }}</label>
+                <label class="control-label" for="chart_field_y_axis_column">{{ _('Y axis dimension') }}</label>
                 <div class="controls ">
-                  <select id="choose_y_axis_column" name="choose_y_axis_column">
+                  <select id="chart_field_y_axis_column" name="chart_field_y_axis_column">
                     {% for y_value in y_axis_values %}
                     <option value="{{y_value}}" {% if chart %}{{ 'selected' if column == chart.x_axis }}{% endif %}>{{y_value}}</option>
                     {% endfor %}
@@ -45,11 +46,12 @@
               </div>
 
               {# Dimension, X value #}
+              {% set x_axis_values = h.get_resource_columns(res['id'], y_axis_values) %}
               <div class="control-group control-select">
-                <label class="control-label" for="choose_x_axis_column">{{ _('X axis dimension') }}</label>
+                <label class="control-label" for="chart_field_x_axis_column">{{ _('X axis dimension') }}</label>
                 <div class="controls ">
-                  <select id="choose_x_axis_column" name="choose_x_axis_column">
-                    {% for column in columns %}
+                  <select id="chart_field_x_axis_column" name="chart_field_x_axis_column">
+                    {% for column in x_axis_values %}
                     <option value="{{column}}"{% if chart %}{{ 'selected' if column == chart.x_axis }}{% endif %}>{{column}}</option>
                     {% endfor %}
                   </select>
@@ -100,7 +102,7 @@
               <div class="control-group title">
                 <label class="control-label" for="chart_field_title">{{ _('Title') }}</label>
                 <div class="controls ">
-                  <textarea id="chart_field_title" name="chart_field_title_{{ n }}" placeholder="{{ _('Chart title') }}" rows="3">{{ chart_title }}</textarea>
+                  <textarea id="chart_field_title" name="chart_field_title" placeholder="{{ _('Chart title') }}" rows="3" required="required">{{ chart_title }}</textarea>
                 </div>
               </div>
             </div>
@@ -392,7 +394,7 @@
     {% set colors = chart.color %}
     {% set x_axis = chart.x_axis %}
     {% set y_axis = chart.y_axis %}
-    {% set chart_type = chart.graph %}
+    {% set chart_type = chart.chart_type %}
     {% set title = chart.title %}
     {% set show_legend = chart.show_legend %}
     {% set x_text_rotate = chart.x_text_rotate %}
@@ -414,9 +416,9 @@
     {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
     {% set dynamic_reference_label = chart.dynamic_reference_label %}
     {% endif %}
-    {% snippet 'ajax_snippets/visualization_item.html',
+    {% snippet 'ajax_snippets/chart_module.html',
             type='chart',
-            colors=color_schemes[0].value,
+            colors=colors,
             x_axis=x_axis,
             y_axis=y_axis,
             chart_type=chart_type,

@@ -62,3 +62,13 @@ def research_question_schema():
                       unicode],
         'title': [not_empty, unicode],
     }
+
+
+def resource_view_schema():
+    return {
+        'resource_id': [not_empty],
+        'title': [not_empty, unicode],
+        'description': [ignore_missing, unicode],
+        'view_type': [not_empty, unicode],
+        'config': [not_empty],
+    }
