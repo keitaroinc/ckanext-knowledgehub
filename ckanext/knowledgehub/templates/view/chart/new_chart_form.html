@@ -50,7 +50,7 @@
                 <div class="controls ">
                   <select id="chart_field_y_axis_column" name="chart_field_y_axis_column">
                     {% for y_value in y_axis_values %}
-                    <option value="{{y_value}}" {% if chart %}{{ 'selected' if column == chart.x_axis }}{% endif %}>{{y_value}}</option>
+                    <option value="{{y_value}}" {% if chart %}{{ 'selected' if y_value == chart.y_axis }}{% endif %}>{{y_value}}</option>
                     {% endfor %}
                   </select>
                 </div>
