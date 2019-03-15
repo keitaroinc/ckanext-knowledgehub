@@ -91,21 +91,12 @@ class CreateView(MethodView):
         except (NotFound, NotAuthorized):
             abort(404, _('Resource not found'))
 
-        errors = {}
-        error_summary = {}
-        filters = []
-
-        if 'config' in data:
-            if 'filters' in data['config']:
-                filters = data['config']['filters']
-                filters.sort(key=itemgetter('order'))
-
         vars = {
-            'chart': data['config'] if 'config' in data else {},
+            'chart': {},
             'default_sql_string':
                 'SELECT * FROM "{table}"'.format(table=resource_id),
             'data': data,
-            'filters': filters,
+            'filters': [],
             'errors': errors,
             'error_summary': error_summary,
             'pkg': package,
@@ -130,7 +121,6 @@ class CreateView(MethodView):
             base.abort(400, _(u'Integrity Error'))
 
         config = {}
-
         filters = []
         for k, v in data.items():
 
@@ -189,29 +179,28 @@ class CreateView(MethodView):
             config['sql_string'] = \
                 data['sql_string']
 
-        config['filters'] = filters
+        config['filters'] = json.dumps(filters)
         data['config'] = config
 
         view_dict = {}
         view_dict['resource_id'] = resource_id
-        view_dict['title'] = 'in progress'
-        view_dict['description'] = 'in progress'
+        view_dict['title'] = config['title']
         view_dict['view_type'] = 'chart'
         view_dict.update(config)
-        print view_dict
 
-        # try:
-        #     data = get_action('resource_view_create')(context, view_dict)
-        #     print data
-        # except logic.NotAuthorized:
-        #     base.abort(403, _(u'Unauthorized to edit resource'))
-        # except logic.ValidationError as e:
-        #     errors = e.error_dict
-        #     error_summary = e.error_summary
-        #     return self.get(id, resource_id, data, errors, error_summary)
+        try:
+            resource_view = \
+                get_action('resource_view_create')(context, view_dict)
+        except logic.NotAuthorized:
+            base.abort(403, _(u'Unauthorized to edit resource'))
+        except logic.ValidationError as e:
+            errors = e.error_dict
+            error_summary = e.error_summary
+            return self.get(id, resource_id, data, errors, error_summary)
 
-        log.info('Create chart view')
-        return self.get(id, resource_id, data)
+        return h.redirect_to(controller='package',
+                             action='resource_views',
+                             id=id, resource_id=resource_id)
 
 
 chart_view.add_url_rule(u'/new_chart',

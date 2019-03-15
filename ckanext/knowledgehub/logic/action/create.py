@@ -4,6 +4,7 @@ import os
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
+from sqlalchemy import func
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
 from ckan import logic
@@ -12,6 +13,8 @@ from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
 from ckan.logic.action.create import resource_create as ckan_rsc_create
+import ckan.lib.dictization.model_dictize as model_dictize
+import ckan.lib.dictization.model_save as model_save
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
@@ -26,6 +29,7 @@ log = logging.getLogger(__name__)
 _df = lib.navl.dictization_functions
 _table_dictize = lib.dictization.table_dictize
 check_access = toolkit.check_access
+_get_or_bust = logic.get_or_bust
 NotFound = logic.NotFound
 ValidationError = toolkit.ValidationError
 NotAuthorized = toolkit.NotAuthorized
@@ -222,3 +226,52 @@ def resource_create(context, data_dict):
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
     ckan_rsc_create(context, data_dict)
+
+
+# Overwrite of the original 'resource_view_create'
+# action in order to allow saving
+# different types of resource views
+def resource_view_create(context, data_dict):
+    '''Creates a new resource view.
+
+    :param resource_id: id of the resource
+    :type resource_id: string
+    :param title: the title of the view
+    :type title: string
+    :param description: a description of the view (optional)
+    :type description: string
+    :param view_type: type of view
+    :type view_type: string
+    :param config: options necessary to recreate a view state (optional)
+    :type config: JSON string
+
+    :returns: the newly created resource view
+    :rtype: dictionary
+
+    '''
+    model = context['model']
+
+    resource_id = _get_or_bust(data_dict, 'resource_id')
+
+    schema = knowledgehub_schema.resource_view_schema()
+
+    data, errors = _df.validate(data_dict, schema, context)
+    if errors:
+        model.Session.rollback()
+        raise ValidationError(errors)
+
+    check_access('resource_view_create', context, data_dict)
+
+    max_order = model.Session.query(
+        func.max(model.ResourceView.order)
+        ).filter_by(resource_id=resource_id).first()
+
+    order = 0
+    if max_order[0] is not None:
+        order = max_order[0] + 1
+    data['order'] = order
+
+    resource_view = model_save.resource_view_dict_save(data, context)
+    if not context.get('defer_commit'):
+        model.repo.commit()
+    return model_dictize.resource_view_dictize(resource_view, context)
