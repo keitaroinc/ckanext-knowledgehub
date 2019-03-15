@@ -13,7 +13,6 @@ import ckan.model as model
 from ckan.common import _, config, g, request
 from ckan.lib.navl import dictization_functions
 
-from ckanext.knowledgehub import helpers as kwh_helpers
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
@@ -74,6 +73,13 @@ class CreateView(MethodView):
         context = self._prepare()
         data = data or {}
 
+        # update resource should tell us early if the user has privilages.
+        try:
+            check_access('resource_update', context, {'id': resource_id})
+        except NotAuthorized as e:
+            abort(403, _('User %r not authorized to edit %s') % (g.user, id))
+
+        # get resource and package data
         try:
             package = get_action('package_show')(context, {'id': id})
         except (NotFound, NotAuthorized):
@@ -93,19 +99,9 @@ class CreateView(MethodView):
             if 'filters' in data['config']:
                 filters = data['config']['filters']
                 filters.sort(key=itemgetter('order'))
-                print filters
-
-        y_axis_values = kwh_helpers.get_resource_numeric_columns(resource_id)
-        columns = kwh_helpers.get_resource_columns(resource_id, y_axis_values)
 
         vars = {
-            'chart_resource': resource_id,
-            'chart_type': 'bar',
-            'x_axis': columns[0],
-            'y_axis': y_axis_values[0],
-            'y_axis_values': y_axis_values,
-            'columns': columns,
-            'measure_label': y_axis_values[0],
+            'chart': data['config'] if 'config' in data else {},
             'default_sql_string':
                 'SELECT * FROM "{table}"'.format(table=resource_id),
             'data': data,
@@ -137,6 +133,7 @@ class CreateView(MethodView):
 
         filters = []
         for k, v in data.items():
+
             if k.startswith('data_filter_name_'):
                 filter = {}
                 filter_id = k.split('_')[-1]
@@ -147,8 +144,71 @@ class CreateView(MethodView):
                     data.pop('data_filter_value_{}'.format(filter_id))
                 filters.append(filter)
 
+            config['type'] = \
+                data['chart_field_type']
+            config['title'] = \
+                data['chart_field_title']
+            config['x_axis'] = \
+                data['chart_field_x_axis_column']
+            config['y_axis'] = \
+                data['chart_field_y_axis_column']
+            config['color'] = \
+                data['chart_field_color']
+            config['y_label'] = \
+                data['chart_field_y_label']
+            config['x_text_rotate'] = \
+                data['chart_field_x_text_rotate']
+            config['x_text_multiline'] = \
+                data['chart_field_x_text_multiline']
+            config['dynamic_reference_type'] = \
+                data['chart_field_dynamic_reference_type']
+            config['dynamic_reference_label'] = \
+                data['chart_field_dynamic_reference_label']
+            config['dynamic_reference_factor'] = \
+                data['chart_field_dynamic_reference_factor']
+            config['sort'] = \
+                data['chart_field_sort']
+            config['chart_padding_left'] = \
+                data['chart_field_chart_padding_left']
+            config['chart_padding_bottom'] = \
+                data['chart_field_chart_padding_bottom']
+            config['tick_count'] = \
+                data['chart_field_tick_count']
+            config['show_legend'] = \
+                data['chart_field_legend']
+            config['padding_top'] = \
+                data['chart_field_padding_top']
+            config['data_format'] = \
+                data['chart_field_data_format']
+            config['tooltip_name'] = \
+                data['chart_field_tooltip_name']
+            config['show_labels'] = \
+                data['chart_field_labels']
+            config['y_tick_format'] = \
+                data['chart_field_y_ticks_format']
+            config['sql_string'] = \
+                data['sql_string']
+
         config['filters'] = filters
         data['config'] = config
+
+        view_dict = {}
+        view_dict['resource_id'] = resource_id
+        view_dict['title'] = 'in progress'
+        view_dict['description'] = 'in progress'
+        view_dict['view_type'] = 'chart'
+        view_dict.update(config)
+        print view_dict
+
+        # try:
+        #     data = get_action('resource_view_create')(context, view_dict)
+        #     print data
+        # except logic.NotAuthorized:
+        #     base.abort(403, _(u'Unauthorized to edit resource'))
+        # except logic.ValidationError as e:
+        #     errors = e.error_dict
+        #     error_summary = e.error_summary
+        #     return self.get(id, resource_id, data, errors, error_summary)
 
         log.info('Create chart view')
         return self.get(id, resource_id, data)

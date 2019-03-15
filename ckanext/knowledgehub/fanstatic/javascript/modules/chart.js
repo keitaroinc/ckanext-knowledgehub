@@ -473,11 +473,11 @@ ckan.module('chart', function() {
             var chartPaddingBottom = chartField.find('input[name*=chart_field_chart_padding_bottom]');
             var chartPaddingBottomVal = chartPaddingBottom.val();
 
-            var axisXSelect = chartField.find('[name*=choose_x_axis_column]');
-            var axisXValue = axisXSelect.val().toString();
+            var axisXSelect = chartField.find('[name*=chart_field_x_axis_column]');
+            var axisXValue = axisXSelect.val();
 
-            var axisYSelect = chartField.find('[name*=choose_y_axis_column]');
-            var axisYValue = axisYSelect.val().toString();
+            var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
+            var axisYValue = axisYSelect.val();
 
             var chartTitle = chartField.find('textarea[name*=chart_field_title]');
             var chartTitleVal = chartTitle.val();
@@ -533,7 +533,7 @@ ckan.module('chart', function() {
             var dynamicReferenceLabel = chartField.find('input[name*=chart_field_dynamic_reference_label]');
             var dynamicReferenceLabelVal = dynamicReferenceLabel.val();
 
-            var measureLabelVal = $('#choose_y_axis_column option:selected').text().toLowerCase();
+            var measureLabelVal = $('#chart_field_y_axis_column option:selected').text().toLowerCase();
 
             this.options.colors = colorValue;
             this.options.chart_type = chartTypeValue;
