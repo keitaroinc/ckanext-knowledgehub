@@ -92,7 +92,6 @@ class CreateView(MethodView):
             abort(404, _('Resource not found'))
 
         vars = {
-            'chart': {},
             'default_sql_string':
                 'SELECT * FROM "{table}"'.format(table=resource_id),
             'data': data,
