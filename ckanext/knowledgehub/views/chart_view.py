@@ -95,7 +95,6 @@ class CreateView(MethodView):
             'default_sql_string':
                 'SELECT * FROM "{table}"'.format(table=resource_id),
             'data': data,
-            'filters': [],
             'errors': errors,
             'error_summary': error_summary,
             'pkg': package,
