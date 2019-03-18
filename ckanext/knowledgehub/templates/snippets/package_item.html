@@ -69,15 +69,15 @@ Example:
         {% endblock %}
         {% block package_title %}
             {% if theme %}
-              <div><b>Dataset Theme: </b> {{ theme }}</div>
+              <div><b>Theme: </b> {{ theme }}</div>
             {% endif %}
-
+ 
             {% if sub_theme %}
-            <div><b>Dataset Sub-Theme: </b> {{ sub_theme }}</div>
+            <div><b>Sub-Theme: </b> {{ sub_theme }}</div>
             {% endif %}
 
             {% if research_question %}
-              <div><b>Dataset Research Question: </b>
+              <div><b>Research Questions: </b>
                 {% if research_question.startswith('{') %}
                   {% for rq in h.pg_array_to_py_list(research_question) %}
                     <div id ="pkg_rq">

@@ -203,20 +203,32 @@ header.module-content.page-header {
       width: 100%;
     }
     .dataset-content {
-      padding: 0 @grid-gutter-width / 2 @grid-gutter-width / 2
-        @grid-gutter-width / 2 + 5;
+      padding: 0 @grid-gutter-width / 2 0 @grid-gutter-width / 2 + 5;
+      a.tag {
+        margin:  @grid-gutter-width - 20 0 @grid-gutter-width - 20 0;
+      }
       .dataset-heading {
         padding-top: @grid-gutter-width - 10;
         a {
-          font-size: @font-size-base + 10;
+          font-size: @font-size-base + 7;
           text-decoration: none;
           color: initial;
           &:hover {
             color: @brand-primary;
           }
         }
+        
       }
     }
+  }
+}
+a.tag{
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: @brand-primary;
+    color: @white;
+    text-decoration: none;
   }
 }
 
@@ -296,7 +308,7 @@ header.module-content.page-header {
         @grid-gutter-width / 2 + 5;
       .component-heading {
         a {
-          font-size: @font-size-base + 10;
+          font-size: @font-size-base + 7;
           text-decoration: none;
           color: initial;
           &:hover {
