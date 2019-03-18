@@ -479,7 +479,7 @@ ckan.module('chart', function() {
             var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
             var axisYValue = axisYSelect.val();
 
-            var chartTitle = chartField.find('textarea[name*=chart_field_title]');
+            var chartTitle = chartField.find('input[name*=chart_field_title]');
             var chartTitleVal = chartTitle.val();
 
             var legend = chartField.find('input[name*=chart_field_legend]');
