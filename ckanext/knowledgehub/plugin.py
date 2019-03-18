@@ -168,3 +168,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def before_index(self, data_dict):
         return data_dict
 
+    #IRoutes
+    def before_map(self, map):
+        map.redirect('/', '/dataset',
+                    _redirect_code='301 Moved Permanently')
+    return map
