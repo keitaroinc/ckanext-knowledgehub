@@ -17,6 +17,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.IRoutes, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -168,3 +169,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def before_index(self, data_dict):
         return data_dict
 
+    #IRoutes
+    def before_map(self, map):
+        map.redirect('/', '/dataset',
+                    _redirect_code='301 Moved Permanently')
+        return map
