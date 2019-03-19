@@ -289,6 +289,72 @@ def get_chart_data(context, data_dict):
 
     :rtype: list of dictionaries.
     '''
+    category = data_dict.get('category')
     sql_string = data_dict.get('sql_string')
+    x_axis = data_dict.get('x_axis')
+    y_axis = data_dict.get('y_axis')
+    chart_type = data_dict.get('chart_type')
+    previous_filters = []
+    chart_filter = []
+    resource_id = data_dict.get('resource_id').strip()
+    sql_without_group = sql_string.split('GROUP BY')[0]
+    sql_group = sql_string.split('GROUP BY')[1]
+    categories_data = {}
 
-    return kh_helpers.get_resource_data(sql_string)
+    if chart_filter:
+        previous_filters.append(chart_filter)
+
+    if category:
+        x = []
+        x.append('x')
+        values = []
+        static_reference_values = []
+
+        category_values = \
+            sorted(kh_helpers.get_filter_values(resource_id,
+                                                category,
+                                                previous_filters))
+        x_axis_values = \
+            sorted(kh_helpers.get_filter_values(resource_id,
+                                                x_axis,
+                                                previous_filters))
+
+        for x_value in x_axis_values:
+            categories_data[x_value] = []
+            categories_data[x_value].append(x_value)
+
+        for value in category_values:
+            category_value_sql = sql_without_group + u'WHERE ("' + \
+                                 category + u'" = ' + u"'" + value + \
+                                 u"'" + u') ' + u'GROUP BY' + sql_group
+            records = kh_helpers.get_resource_data(category_value_sql)
+            x.append(value)
+
+            for record in records:
+                value = record[y_axis.lower()]
+                categories_data[record[x_axis.lower()]].append(value)
+                try:
+                    value = float(value)
+                    values.append(value)
+                except Exception:
+                    pass
+                if 'static_reference_column' in record:
+                    try:
+                        sr_value = float(record['static_reference_column'])
+                        static_reference_values.append(sr_value)
+                    except Exception:
+                        pass
+
+        if values:
+            categories_data['y_axis_max'] = max(values)
+            categories_data['y_axis_avg'] = sum(values)/len(values)
+            categories_data['y_axis_min'] = min(values)
+
+        if static_reference_values:
+            categories_data['static_reference_value'] = (
+                sum(static_reference_values) / len(static_reference_values))
+
+        categories_data['x'] = x
+        return categories_data
+    else:
+        return kh_helpers.get_resource_data(sql_string)

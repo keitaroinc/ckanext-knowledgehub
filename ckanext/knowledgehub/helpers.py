@@ -373,3 +373,74 @@ def get_resource_data(sql_string):
         records_to_lower.append({k.lower(): v for k, v in record.items()})
 
     return records_to_lower
+
+
+def get_filter_values(resource_id, filter_name, previous_filters=[]):
+    '''Returns resource field values with no duplicates.'''
+
+    resource = toolkit.get_action('resource_show')({}, {'id': resource_id})
+
+    if not resource.get('datastore_active'):
+        return []
+
+    data = {
+        'resource_id': resource['id'],
+        'limit': 0
+    }
+    result = toolkit.get_action('datastore_search')({}, data)
+
+    print(result)
+
+    where_clause = _create_where_clause(previous_filters)
+
+    fields = [field['id'] for field in result.get('fields', [])]
+    values = []
+
+    if filter_name in fields:
+
+        sql_string = u'''SELECT DISTINCT "{column}"
+         FROM "{resource}" {where}'''.format(
+            column=filter_name,
+            resource=resource_id,
+            where=where_clause
+        )
+
+        result = toolkit.get_action('datastore_search_sql')(
+            {}, {'sql': sql_string}
+        )
+        values = [field[filter_name] for field in result.get('records', [])]
+
+    return sorted(values)
+
+
+def _create_where_clause(filters):
+
+    where_clause = u''
+
+    if any(filters):
+        if len(filters) > 1:
+            # Loop through filters and create SQL query
+            for idx, _ in enumerate(filters):
+                op = u'='
+                name = _['name']
+                value = _['value']
+
+                if idx == 0:
+                    where_clause = u'WHERE ("{0}" {1} \'{2}\')'.format(
+                        name, op, value)
+                else:
+                    where_clause += u' AND ("{0}" {1} \'{2}\')'.format(
+                        name, op, value)
+
+        else:
+            _ = filters[0]
+            op = u'='
+            name = _['name']
+            value = _['value']
+            where_clause = \
+                u'WHERE ("{0}" {1} \'{2}\')'.format(
+                    name,
+                    op,
+                    value
+                )
+    return where_clause

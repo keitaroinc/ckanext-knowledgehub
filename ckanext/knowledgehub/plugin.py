@@ -68,7 +68,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_charts_data_formats': h.get_charts_data_formats,
             'dump_json': h.dump_json,
             'get_resource_data': h.get_resource_data,
-            'get_resource_numeric_columns': h.get_resource_numeric_columns
+            'get_resource_numeric_columns': h.get_resource_numeric_columns,
+            'get_filter_values': h.get_filter_values
         }
 
     # IDatasetForm
