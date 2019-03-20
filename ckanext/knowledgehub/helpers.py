@@ -389,8 +389,6 @@ def get_filter_values(resource_id, filter_name, previous_filters=[]):
     }
     result = toolkit.get_action('datastore_search')({}, data)
 
-    print(result)
-
     where_clause = _create_where_clause(previous_filters)
 
     fields = [field['id'] for field in result.get('fields', [])]
