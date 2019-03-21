@@ -82,6 +82,7 @@ ckan.module('chart', function() {
             var chart_type = this.options.chart_type;
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
             var dynamic_reference_factor = (this.options.dynamic_reference_factor === true) ? '' : this.options.dynamic_reference_factor;
+            var filters = this.options.filters ? this.options.filters : [];
 
             if (x_axis && y_axis) {
                 if (x_axis === y_axis) {
@@ -93,7 +94,8 @@ ckan.module('chart', function() {
                         x_axis: x_axis,
                         y_axis: y_axis,
                         resource_id: resource_id,
-                        chart_type: chart_type
+                        chart_type: chart_type,
+                        filters: JSON.stringify(filters)
                     })
                     .done(function(data) {
                         if (data.success) {
@@ -565,6 +567,8 @@ ckan.module('chart', function() {
 
             var measureLabelVal = $('#chart_field_y_axis_column option:selected').text().toLowerCase();
 
+            var filters = this.getFilters();
+
             this.options.colors = colorValue;
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
@@ -591,6 +595,7 @@ ckan.module('chart', function() {
             this.options.dynamic_reference_factor = dynamicReferenceFactorVal;
             this.options.dynamic_reference_label = dynamicReferenceLabelVal;
             this.options.measure_label = measureLabelVal;
+            this.options.filters = filters;
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
@@ -604,6 +609,23 @@ ckan.module('chart', function() {
         teardown: function() {
             // We must always unsubscribe on teardown to prevent memory leaks.
             this.sandbox.unsubscribe('querytool:updateCharts', this.updateChart.bind(this));
+        },
+
+        getFilters: function() {
+            var filter_items = $('#data-transformation-module').find('.filter_item');
+            var filters = [];
+            var name = '';
+            var value = '';
+
+            $.each(filter_items, function (idx, elem) {
+                name = $(elem).find('[id*=data_filter_name_]').select2('val');
+                value = $(elem).find('[id*=data_filter_value_]').select2('val');
+                filters.push({
+                    'name': name,
+                    'value': value
+                });
+            });
+            return filters;
         },
 
         sortData: function(data_sort, records, y_axis, x_axis) {

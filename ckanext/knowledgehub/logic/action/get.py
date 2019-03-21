@@ -305,6 +305,7 @@ def get_chart_data(context, data_dict):
     y_axis = data_dict.get('y_axis')
     chart_type = data_dict.get('chart_type')
     resource_id = data_dict.get('resource_id').strip()
+    filters = json.loads(data_dict.get('filters'))
     sql_without_group = sql_string.split('GROUP BY')[0]
     sql_group = sql_string.split('GROUP BY')[1]
     has_where_clause = len(sql_string.split('WHERE')) > 1
@@ -319,12 +320,12 @@ def get_chart_data(context, data_dict):
         category_values = \
             sorted(kh_helpers.get_filter_values(resource_id,
                                                 category,
-                                                []))
+                                                filters))
 
         x_axis_values = \
             sorted(kh_helpers.get_filter_values(resource_id,
                                                 x_axis,
-                                                []))
+                                                filters))
 
         for x_value in x_axis_values:
             categories_data[x_value] = []
