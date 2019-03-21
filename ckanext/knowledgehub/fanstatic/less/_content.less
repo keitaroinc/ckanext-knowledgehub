@@ -208,7 +208,7 @@ header.module-content.page-header {
       .dataset-heading {
         padding-top: @grid-gutter-width - 10;
         a {
-          font-size: @font-size-base + 10;
+          font-size: @font-size-base + 7;
           text-decoration: none;
           color: initial;
           &:hover {
@@ -229,6 +229,38 @@ header.module-content.page-header {
     font-size: @font-size-h4;
     color: @brand-primary;
   }
+}
+.home-content {
+  background-color: @brand-bg-lightest;
+}
+.research-questions-section,
+.visualizations-section {
+  height: 250px;
+  background: lighten(@brand-primary, 30%);
+}
+.search-box-wrapper {
+  background-color: @brand-accent;
+}
+#dataset-search-form {
+  margin: @grid-gutter-width * 2 0 0 0;
+  padding: 0;
+  border-bottom: none;
+  .btn-default.btn-lg {
+    padding: 23px;
+    border: none;
+  }
+  #field-order-by{
+    border: none;
+  }
+  #field-giant-search {
+    padding: @grid-gutter-width + 5;
+    border: none;
+    .shadow;
+  }
+}
+.group-list {
+  padding: @grid-gutter-width * 2 @grid-gutter-width @grid-gutter-width
+    @grid-gutter-width;
 }
 
 /* .resources-page */
@@ -267,7 +299,13 @@ header.module-content.page-header {
 }
 
 /* new_chart_form */
-
+.accordion {
+  display: flex;
+  flex-wrap: wrap;
+  @media (max-width: @screen-md) {
+    display: block;
+  }
+}
 .accordion-heading {
   .subtitle;
   font-size: @font-size-h5;
@@ -282,7 +320,20 @@ header.module-content.page-header {
     width: 100%;
   }
 }
-
+.accordion-group {
+  width: 20%;
+  padding: 0 @grid-gutter-width / 2 0 0;
+  @media (max-width: @screen-md) {
+    width: 100%;
+    padding: 0;
+  }
+  &.last {
+    padding: 0;
+  }
+}
+.control-group input[type="checkbox"] {
+  width: 5%;
+}
 .chart-actions {
   margin-bottom: @grid-gutter-width;
 }
@@ -317,7 +368,7 @@ header.module-content.page-header {
         @grid-gutter-width / 2 + 5;
       .component-heading {
         a {
-          font-size: @font-size-base + 10;
+          font-size: @font-size-base + 7;
           text-decoration: none;
           color: initial;
           &:hover {
