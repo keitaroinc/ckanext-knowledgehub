@@ -286,9 +286,79 @@ def get_chart_data(context, data_dict):
 
     :param sql_string: the SQL query that will be executed to get the data.
     :type sql_string: string
+    :param category: the selected category
+    :type category: string
+    :param x_axis: the X axis dimension
+    :type x_axis: string
+    :param y_axis: the Y axis dimension
+    :type y_axis: string
+    :param chart_type: the type of the chart
+    :type chart_type: string
+    :param resource_id: the ID of the resource
+    :type resource_id: string
 
     :rtype: list of dictionaries.
     '''
+    category = data_dict.get('category')
     sql_string = data_dict.get('sql_string')
+    x_axis = data_dict.get('x_axis')
+    y_axis = data_dict.get('y_axis')
+    chart_type = data_dict.get('chart_type')
+    resource_id = data_dict.get('resource_id').strip()
+    filters = json.loads(data_dict.get('filters'))
+    sql_without_group = sql_string.split('GROUP BY')[0]
+    sql_group = sql_string.split('GROUP BY')[1]
+    has_where_clause = len(sql_string.split('WHERE')) > 1
+    categories_data = {}
 
-    return kh_helpers.get_resource_data(sql_string)
+    if category:
+        x = []
+        x.append('x')
+        values = []
+        static_reference_values = []
+
+        category_values = \
+            sorted(kh_helpers.get_filter_values(resource_id,
+                                                category,
+                                                filters))
+
+        x_axis_values = \
+            sorted(kh_helpers.get_filter_values(resource_id,
+                                                x_axis,
+                                                filters))
+
+        for x_value in x_axis_values:
+            categories_data[x_value] = []
+            categories_data[x_value].append(x_value)
+
+        for value in category_values:
+            if (has_where_clause):
+                category_value_sql = sql_without_group + u'AND ("' + \
+                                    category + u'" = ' + u"'" + value + \
+                                    u"'" + u') ' + u'GROUP BY' + sql_group
+            else:
+                category_value_sql = sql_without_group + u'WHERE ("' + \
+                                    category + u'" = ' + u"'" + value + \
+                                    u"'" + u') ' + u'GROUP BY' + sql_group
+
+            records = kh_helpers.get_resource_data(category_value_sql)
+            x.append(value)
+
+            for record in records:
+                value = record[y_axis.lower()]
+                categories_data[record[x_axis.lower()]].append(value)
+                try:
+                    value = float(value)
+                    values.append(value)
+                except Exception:
+                    pass
+
+        if values:
+            categories_data['y_axis_max'] = max(values)
+            categories_data['y_axis_avg'] = sum(values)/len(values)
+            categories_data['y_axis_min'] = min(values)
+
+        categories_data['x'] = x
+        return categories_data
+    else:
+        return kh_helpers.get_resource_data(sql_string)

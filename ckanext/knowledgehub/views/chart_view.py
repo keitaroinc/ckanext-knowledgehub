@@ -140,6 +140,8 @@ class CreateView(MethodView):
                 data['chart_field_x_axis_column']
             config['y_axis'] = \
                 data['chart_field_y_axis_column']
+            config['category_name'] = \
+                data['chart_field_category_name']
             config['color'] = \
                 data['chart_field_color']
             config['y_label'] = \

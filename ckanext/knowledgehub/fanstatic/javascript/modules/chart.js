@@ -75,50 +75,79 @@ ckan.module('chart', function() {
         },
         // Get the data from Datastore.
         get_resource_datа: function(sql) {
+            var category = (this.options.category_name === true) ? '' : this.options.category_name;
+            var x_axis = (this.options.x_axis === true) ? '' : this.options.x_axis;
             var y_axis = (this.options.y_axis === true) ? '' : this.options.y_axis;
+            var resource_id = sql.split('FROM')[1].split('WHERE')[0].split('"')[1];
+            var chart_type = this.options.chart_type;
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
             var dynamic_reference_factor = (this.options.dynamic_reference_factor === true) ? '' : this.options.dynamic_reference_factor;
+            var filters = this.options.filters ? this.options.filters : [];
 
-            api.post('get_chart_data', {
-                    sql_string: sql
-                })
-                .done(function(data) {
-                    if (data.success) {
-                        this.fetched_data = data.result;
+            if (x_axis && y_axis) {
+                if (x_axis === y_axis) {
+                    this.el.text(this._('X axis dimension cannot be same as Y axis dimension, please choose different one!'));
+                } else {
+                    api.post('get_chart_data', {
+                        sql_string: sql,
+                        category: category,
+                        x_axis: x_axis,
+                        y_axis: y_axis,
+                        resource_id: resource_id,
+                        chart_type: chart_type,
+                        filters: JSON.stringify(filters)
+                    })
+                    .done(function(data) {
+                        if (data.success) {
+                            this.fetched_data = data.result;
 
-                        // Reset all metrics
-                        this.y_axis_max = null;
-                        this.y_axis_avg = null;
-                        this.y_axis_min = null;
-                        this.dynamic_reference_value = null;
+                            // Reset all metrics
+                            this.y_axis_max = null;
+                            this.y_axis_avg = null;
+                            this.y_axis_min = null;
+                            this.dynamic_reference_value = null;
 
-                        var values = [];
-                        for (var row of this.fetched_data) {
-                        // Values from server are strings..
-                            values.push(+row[y_axis.toString().toLowerCase()]);
-                        }
-                        this.y_axis_max = Math.max.apply(null, values);
-                        this.y_axis_avg = values.reduce(function (a, b) {return a+b;}, 0) / values.length;
-                        this.y_axis_min = Math.min.apply(null, values);
-
-                        // Dynamic reference
-                        if (dynamic_reference_type) {
-                            if (dynamic_reference_type === 'Maximum') {
-                                this.dynamic_reference_value = this.y_axis_max;
-                            } else if (dynamic_reference_type === 'Average') {
-                                this.dynamic_reference_value = this.y_axis_avg;
-                            } else if (dynamic_reference_type === 'Minimum') {
-                                this.dynamic_reference_value = this.y_axis_min;
+                            // Get max/avg/min
+                            if (category) {
+                                this.y_axis_max = this.fetched_data.y_axis_max;
+                                this.y_axis_avg = this.fetched_data.y_axis_avg;
+                                this.y_axis_min = this.fetched_data.y_axis_min;
+                                delete this.fetched_data.y_axis_max;
+                                delete this.fetched_data.y_axis_avg;
+                                delete this.fetched_data.y_axis_min;
+                            } else {
+                                var values = [];
+                                for (var row of this.fetched_data) {
+                                    // Values from server are strings..
+                                    values.push(+row[y_axis.toLowerCase()]);
+                                }
+                                this.y_axis_max = Math.max.apply(null, values);
+                                this.y_axis_avg = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
+                                this.y_axis_min = Math.min.apply(null, values);
                             }
-                            if (dynamic_reference_factor !== '') {
-                                this.dynamic_reference_value = this.dynamic_reference_value * dynamic_reference_factor;
+
+                            // Dynamic reference
+                            if (dynamic_reference_type) {
+                                if (dynamic_reference_type === 'Maximum') {
+                                    this.dynamic_reference_value = this.y_axis_max;
+                                } else if (dynamic_reference_type === 'Average') {
+                                    this.dynamic_reference_value = this.y_axis_avg;
+                                } else if (dynamic_reference_type === 'Minimum') {
+                                    this.dynamic_reference_value = this.y_axis_min;
+                                }
+                                if (dynamic_reference_factor !== '') {
+                                    this.dynamic_reference_value = this.dynamic_reference_value * dynamic_reference_factor;
+                                }
                             }
+                            this.createChart(this.fetched_data);
+                        } else {
+                            this.el.text(this._('Chart could not be created!'));
                         }
-                        this.createChart(this.fetched_data);
-                    } else {
-                       this.el.text(this._('Chart could not be created.'));
-                    }
-                }.bind(this));
+                    }.bind(this));
+                }
+            } else {
+                this.el.text(this._('Please choose X and Y axis dimensions!'));
+            }
         },
         createChart: function(data) {
             var x_axis = this.options.x_axis.toString().toLowerCase();
@@ -479,6 +508,9 @@ ckan.module('chart', function() {
             var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
             var axisYValue = axisYSelect.val();
 
+            var categoryName = chartField.find('[name*=chart_field_category_name]');
+            var categoryNameVal = categoryName.val();
+
             var chartTitle = chartField.find('input[name*=chart_field_title]');
             var chartTitleVal = chartTitle.val();
 
@@ -535,6 +567,8 @@ ckan.module('chart', function() {
 
             var measureLabelVal = $('#chart_field_y_axis_column option:selected').text().toLowerCase();
 
+            var filters = this.getFilters();
+
             this.options.colors = colorValue;
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
@@ -555,11 +589,13 @@ ckan.module('chart', function() {
             this.options.y_label = yLabbelVal;
             this.options.y_label_hide = yLabelHideVal;
             this.options.y_from_zero = yFromZeroVal;
+            this.options.category_name = categoryNameVal;
             this.options.data_sort = sortVal;
             this.options.dynamic_reference_type = dynamicReferenceTypeVal;
             this.options.dynamic_reference_factor = dynamicReferenceFactorVal;
             this.options.dynamic_reference_label = dynamicReferenceLabelVal;
             this.options.measure_label = measureLabelVal;
+            this.options.filters = filters;
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
@@ -573,6 +609,23 @@ ckan.module('chart', function() {
         teardown: function() {
             // We must always unsubscribe on teardown to prevent memory leaks.
             this.sandbox.unsubscribe('querytool:updateCharts', this.updateChart.bind(this));
+        },
+
+        getFilters: function() {
+            var filter_items = $('#data-transformation-module').find('.filter_item');
+            var filters = [];
+            var name = '';
+            var value = '';
+
+            $.each(filter_items, function (idx, elem) {
+                name = $(elem).find('[id*=data_filter_name_]').select2('val');
+                value = $(elem).find('[id*=data_filter_value_]').select2('val');
+                filters.push({
+                    'name': name,
+                    'value': value
+                });
+            });
+            return filters;
         },
 
         sortData: function(data_sort, records, y_axis, x_axis) {

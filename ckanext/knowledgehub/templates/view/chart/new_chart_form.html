@@ -59,13 +59,28 @@
               </div>
 
               {# Dimension, X value #}
-              {% set x_axis_values = h.get_resource_columns(res['id'], y_axis_values) %}
+              {% set x_axis_values = h.get_resource_columns(res['id'], []) %}
               <div class="control-group control-select">
                 <label class="control-label" for="chart_field_x_axis_column">{{ _('X axis dimension') }}</label>
                 <div class="controls">
                   <select id="chart_field_x_axis_column" name="chart_field_x_axis_column">
                     {% for column in x_axis_values %}
                     <option value="{{column}}"{% if chart %}{{ 'selected' if column == chart.x_axis }}{% endif %}>{{column}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              {# Category #}
+              <div class="control-group control-select">
+                <label class="control-label" for="chart_field_category_name">{{ _('Category') }}</label>
+                <div class="controls ">
+                  <select id="chart_field_category_name" name="chart_field_category_name">
+                    <option value="">&mdash; {{ _('Select column') }} &mdash;</option>
+                    {% for category in x_axis_values %}
+                      <option value="{{ category }}" {% if chart %}{{ 'selected' if category == chart.category_name }}{% endif %}>
+                        {{ category }}
+                      </option>
                     {% endfor %}
                   </select>
                 </div>
