@@ -18,8 +18,6 @@
 
     function populateSubThemes() {
         var theme = $('#theme').val();
-        var sub_theme = $('#sub_theme').val();
-        console.log(sub_theme)
         api.get('sub_theme_list', {
             'theme': theme
         })
@@ -33,7 +31,6 @@
 
     $(document).ready(function () {
         $('#theme').change(function () {
-            console.log('OK')
             populateSubThemes();
         })
     });
