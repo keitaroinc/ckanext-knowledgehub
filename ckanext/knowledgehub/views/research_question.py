@@ -131,7 +131,8 @@ class CreateView(MethodView):
 
     def get(self, data=None, errors=None, error_summary=None):
         context = self._prepare()
-        theme_selected = request.params.get('theme', None)
+        data_dict = data or {}
+        theme_selected = data_dict.get('theme', None)
 
         theme_options = []
         theme_list = get_action(u'theme_list')(context, {})
@@ -153,7 +154,9 @@ class CreateView(MethodView):
         theme_options.insert(0, {'text': 'Select theme', 'value': ''})
 
         form_vars = {
-            u'data': data or {},
+            u'data': data_dict,
+            u'theme': data_dict.get('theme'),
+            u'sub_theme': data_dict.get('sub_theme'),
             u'theme_options': theme_options,
             u'sub_theme_options': sub_theme_options,
             u'errors': errors or {},

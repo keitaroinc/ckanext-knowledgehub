@@ -1,24 +1,21 @@
 {% import "macros/form.html" as form %}
+{% resource 'knowledgehub/javascript/list_subthemes_for_theme.js' %}
 
  <form id="research-question-form" action="" method="post">
    {{ form.errors(error_summary) }}
 
    {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
-  {% set sel = request.args.get('theme') or data.theme %}
-
-   {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=sel, is_required=True) }}
-   {% if sub_theme_options %}
-   {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, selected=data.sub_theme, is_required=True) }}
-   {% endif %}
-   {{ form.input('title', label=_('Question'), id='field-title', placeholder=_('Your research question'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs, is_required=true) }}
-
    {%- set prefix = h.url_for('/research-question/') -%}
    {%- set domain = h.url_for('/research-question/', qualified=true) -%}
    {% set domain = domain|replace("http://", "")|replace("https://", "") %}
-   {% set attrs = {'data-module': 'slug-preview-slug', 'class': 'form-control input-sm', 'data-module-prefix': domain, 'data-module-placeholder': '<' + 'research-question' + '>'} %}
+   {% set attrs_url = {'data-module': 'slug-preview-slug', 'class': 'form-control input-sm', 'data-module-prefix': domain, 'data-module-placeholder': '<' + 'research-question' + '>'} %}
 
-   {{ form.prepend('name', label=_('URL'), prepend=prefix, id='field-url', placeholder=_('my-research-question'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
+   {{ data }}
 
+   {{ form.input('title', label=_('Question'), id='field-title', placeholder=_('Your research question'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs, is_required=true) }}
+   {{ form.prepend('name', label=_('URL'), prepend=prefix, id='field-url', placeholder=_('my-research-question'), value=data.name, error=errors.name, attrs=attrs_url, is_required=true) }}
+   {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=theme, is_required=True) }}
+   {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, selected=sub_theme, is_required=True) }}
 
    {{ form.required_message() }}
 
@@ -29,39 +26,4 @@
     </div>
 </form>
 
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<script type="text/javascript">
-$(document).ready(function(){
-  $('#theme option')[0].disabled = true;
 
-  $("#theme").change(function(){
-       var val = $(this).val();
-       console.log(val);
-       var pag = window.location.pathname;
-       var url = window.location.search;
-           url = url.replace("?", "").split("&");
-           console.log(url);
-       var n = 0;
-       for (var count = 0; count < url.length; count++) {
-           if (!url[count].indexOf("theme")) {
-               n = count;
-               break;
-           }
-       }
-
-       if (n !=0) {
-          url.splice(n,1);
-       }
-
-       var len = url.length;
-       var newUrl = url.join("&");
-
-       if (len > 0) {
-          newUrl = pag + "?" + newUrl + "&theme=" + val;
-       } else {
-          newUrl = pag + newUrl + "?theme=" + val;
-       }
-       window.location.href = newUrl;
-    });
-});
-</script>
