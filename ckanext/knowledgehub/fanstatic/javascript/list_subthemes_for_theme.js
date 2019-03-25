@@ -25,11 +25,9 @@
         $('#sub_theme').empty();
         for(i = 0; i < data.result.data.length; ++i)
         {
-            console.log(data.result.data[i]);
-            
             $('#sub_theme').append(new Option(data.result.data[i].title, data.result.data[i].id));
         }
-       
+
         });
     };
     // </script>
