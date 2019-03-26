@@ -1,23 +1,22 @@
 {% import "macros/form.html" as form %}
 {% resource 'knowledgehub/javascript/list_subthemes_for_theme.js' %}
 
-<form id="research-question-form" action="" method="post">
+<form id="research-question-form" action="" method="post" enctype="multipart/form-data" novalidate>
   {{ form.errors(error_summary) }}
 
   {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
   {% set sel = request.args.get('theme') or data.theme %}
-  {{ form.input('title', label=_('Question'), id='field-title', placeholder=_('Your research question'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs, is_required=true) }}
-
-  {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=sel, is_required=True) }}
-  {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, selected=data.sub_theme, is_required=True) }}
-
   {%- set prefix = h.url_for('/research-question/') -%}
   {%- set domain = h.url_for('/research-question/', qualified=true) -%}
   {% set domain = domain|replace("http://", "")|replace("https://", "") %}
-  {% set attrs = {'data-module': 'slug-preview-slug', 'class': 'form-control input-sm', 'data-module-prefix': domain, 'data-module-placeholder': '<' + 'research-question' + '>'} %}
+  {% set attrs_url = {'data-module': 'slug-preview-slug', 'class': 'form-control input-sm', 'data-module-prefix': domain, 'data-module-placeholder': '<' + 'research-question' + '>'} %}
 
+  {{ form.input('title', label=_('Question'), id='field-title', placeholder=_('Your research question'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs, is_required=true) }}
+  {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=sel, is_required=True) }}
+  {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, selected=data.sub_theme, is_required=True) }}
   {{ form.prepend('name', label=_('URL'), prepend=prefix, id='field-url', placeholder=_('my-research-question'), value=data.name, error=errors.name, attrs=attrs, is_required=true) }}
 
+  {% snippet 'research_question/snippets/image_upload.html', data=data, errors=errors %}
 
   {{ form.required_message() }}
 

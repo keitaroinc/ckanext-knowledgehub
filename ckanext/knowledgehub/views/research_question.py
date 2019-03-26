@@ -1,10 +1,14 @@
 import logging
+import os
 
-from flask import Blueprint
+from flask import Blueprint, request
 from flask.views import MethodView
+
+from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
 import ckan.lib.base as base
 import ckan.lib.helpers as h
+import ckan.lib.uploader as uploader
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import g, _, request, config
@@ -24,6 +28,129 @@ render = toolkit.render
 
 new_research_question_form = u'research_question/new_research_question_form.html'
 edit_sub_theme_form = u'research_question/edit_research_question_form.html'
+
+ALLOWED_IMAGE_EXTENSIONS = [
+	"ase",
+	"art",
+	"bmp",
+	"blp",
+	"cd5",
+	"cit",
+	"cpt",
+	"cr2",
+	"cut",
+	"dds",
+	"dib",
+	"djvu",
+	"egt",
+	"exif",
+	"gif",
+	"gpl",
+	"grf",
+	"icns",
+	"ico",
+	"iff",
+	"jng",
+	"jpeg",
+	"jpg",
+	"jfif",
+	"jp2",
+	"jps",
+	"lbm",
+	"max",
+	"miff",
+	"mng",
+	"msp",
+	"nitf",
+	"ota",
+	"pbm",
+	"pc1",
+	"pc2",
+	"pc3",
+	"pcf",
+	"pcx",
+	"pdn",
+	"pgm",
+	"PI1",
+	"PI2",
+	"PI3",
+	"pict",
+	"pct",
+	"pnm",
+	"pns",
+	"ppm",
+	"psb",
+	"psd",
+	"pdd",
+	"psp",
+	"px",
+	"pxm",
+	"pxr",
+	"qfx",
+	"raw",
+	"rle",
+	"sct",
+	"sgi",
+	"rgb",
+	"int",
+	"bw",
+	"tga",
+	"tiff",
+	"tif",
+	"vtf",
+	"xbm",
+	"xcf",
+	"xpm",
+	"3dv",
+	"amf",
+	"ai",
+	"awg",
+	"cgm",
+	"cdr",
+	"cmx",
+	"dxf",
+	"e2d",
+	"egt",
+	"eps",
+	"fs",
+	"gbr",
+	"odg",
+	"svg",
+	"stl",
+	"vrml",
+	"x3d",
+	"sxd",
+	"v2d",
+	"vnd",
+	"wmf",
+	"emf",
+	"art",
+	"xar",
+	"png",
+	"webp",
+	"jxr",
+	"hdp",
+	"wdp",
+	"cur",
+	"ecw",
+	"iff",
+	"lbm",
+	"liff",
+	"nrrd",
+	"pam",
+	"pcx",
+	"pgf",
+	"sgi",
+	"rgb",
+	"rgba",
+	"bw",
+	"int",
+	"inta",
+	"sid",
+	"ras",
+	"sun",
+	"tga"
+]
 
 
 research_question = Blueprint(
@@ -90,7 +217,16 @@ def read(name):
     except (NotFound, NotAuthorized):
         abort(404, _(u'Research question not found'))
 
-    return render(u'research_question/read.html', extra_vars={'rq': rq})
+    image_url = h.url_for_static('/base/images/placeholder-rq.png')
+    if rq.get('image_url'):
+        image_url = h.url_for_static('uploads/research_questions/%s' % rq.get('image_url'))
+
+    extra_vars = {
+        'rq': rq,
+        'image_url': image_url
+    }
+
+    return render(u'research_question/read.html', extra_vars=extra_vars)
 
 
 def delete(id):
@@ -177,6 +313,30 @@ class CreateView(MethodView):
                 dictization_functions.unflatten(logic.tuplize_dict(logic.parse_params(request.form))))
         except dictization_functions.DataError:
             abort(400, _(u'Integrity Error'))
+
+        if 'upload' in request.files:
+            if h.uploads_enabled():
+                image_upload = request.files.get('upload')
+                image_url = data_dict.get('image_url')
+                image_ext = os.path.splitext(image_url)[1]
+                if image_ext not in ALLOWED_IMAGE_EXTENSIONS:
+                    errors = {
+                        'url': ['Image extension not allowed!'],
+                    }
+                    error_summary = {
+                        'url': 'Image extension not allowed!',
+                    }
+                    return self.get(data_dict, errors, error_summary)
+
+                data_dict['upload'] = image_upload
+                if isinstance(image_upload, FlaskFileStorage):
+                    upload = uploader.get_uploader('research_questions', image_url)
+                    upload.update_data_dict(data_dict,
+                                            'url',
+                                            'upload',
+                                            'False')
+                    upload.upload()
+                    data_dict['image_url'] = upload.filename
 
         try:
             research_question = logic.get_action(
@@ -277,6 +437,30 @@ class EditView(MethodView):
 
         data_dict['id'] = research_question.get('id')
         data_dict.pop('save', '')
+
+        if 'upload' in request.files:
+            if h.uploads_enabled():
+                image_upload = request.files.get('upload')
+                image_url = data_dict.get('image_url')
+                image_ext = os.path.splitext(image_url)[1]
+                if image_ext not in ALLOWED_IMAGE_EXTENSIONS:
+                    errors = {
+                        'url': ['Image extension not allowed!'],
+                    }
+                    error_summary = {
+                        'url': 'Image extension not allowed!',
+                    }
+                    return self.get(data_dict, errors, error_summary)
+
+                data_dict['upload'] = image_upload
+                if isinstance(image_upload, FlaskFileStorage):
+                    upload = uploader.get_uploader('research_questions', image_url)
+                    upload.update_data_dict(data_dict,
+                                            'url',
+                                            'upload',
+                                            'False')
+                    upload.upload()
+                    data_dict['image_url'] = upload.filename
 
         try:
             research_question = get_action(

@@ -159,6 +159,7 @@ def research_question_update(context, data_dict):
     data['modified_by'] = model.User.by_name(user.decode('utf8')).id
 
     filter = {'id': id}
+    data.pop('__extras', None)
     rq = ResearchQuestion.update(filter, data)
     return rq.as_dict()
 

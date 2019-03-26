@@ -10,13 +10,12 @@ Example:
 #}
 
 {% set truncate_desc = truncate_desc or 120 %}
-
 {% if rq %}
   <section class="module module-narrow">
     <div class="module context-info">
       <div class="module-content">
+          <img src="{{ image_url }}" alt="{{ rq.get('title') }}" class="img-responsive media-image">
           <h1 class="heading">{{ rq.get('content', '') }}</h1>
-
           {% if rq.get('description', None) %}
             <p>{{ h.markdown_extract(rq.description, extract_length=truncate_desc) }}</p>
           {% else %}

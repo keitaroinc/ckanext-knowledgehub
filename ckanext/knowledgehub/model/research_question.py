@@ -31,6 +31,8 @@ research_question = Table(
     Column('sub_theme',
            types.UnicodeText,
            ForeignKey('sub_themes.id')),
+    Column('image_url',
+           types.UnicodeText),
     Column('title',
            types.UnicodeText),
     Column('author',
