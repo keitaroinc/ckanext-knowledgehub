@@ -442,3 +442,13 @@ def _create_where_clause(filters):
                     value
                 )
     return where_clause
+
+
+def get_rq(limit, order_by):
+    context = _get_context()
+    rq_list = toolkit.get_action('research_question_list')(context, {
+        'pageSize': limit,
+        'order_by': order_by
+    })
+
+    return rq_list
