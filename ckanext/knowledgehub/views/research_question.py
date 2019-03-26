@@ -318,7 +318,7 @@ class CreateView(MethodView):
             if h.uploads_enabled():
                 image_upload = request.files.get('upload')
                 image_url = data_dict.get('image_url')
-                image_ext = os.path.splitext(image_url)[1]
+                image_ext = os.path.splitext(image_url)[1][1:]
                 if image_ext not in ALLOWED_IMAGE_EXTENSIONS:
                     errors = {
                         'url': ['Image extension not allowed!'],
@@ -442,7 +442,7 @@ class EditView(MethodView):
             if h.uploads_enabled():
                 image_upload = request.files.get('upload')
                 image_url = data_dict.get('image_url')
-                image_ext = os.path.splitext(image_url)[1]
+                image_ext = os.path.splitext(image_url)[1][1:]
                 if image_ext not in ALLOWED_IMAGE_EXTENSIONS:
                     errors = {
                         'url': ['Image extension not allowed!'],
