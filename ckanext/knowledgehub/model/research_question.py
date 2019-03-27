@@ -31,6 +31,8 @@ research_question = Table(
     Column('sub_theme',
            types.UnicodeText,
            ForeignKey('sub_themes.id')),
+    Column('image_url',
+           types.UnicodeText),
     Column('title',
            types.UnicodeText),
     Column('author',
@@ -77,9 +79,7 @@ class ResearchQuestion(DomainObject):
                 cls.title.ilike(r"%{}%".format(q)))
 
         if order_by:
-            column = order_by.split(' ')[0]
-            order = order_by.split(' ')[1]
-            query = query.order_by("%s %s" % (column, order))
+            query = query.order_by(order_by)
 
         if limit:
             query = query.limit(limit)

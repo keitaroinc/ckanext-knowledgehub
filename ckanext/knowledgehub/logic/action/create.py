@@ -150,6 +150,7 @@ def research_question_create(context, data_dict):
     url_slug = data.get('name')
 
     title = data.get('title')
+    image_url = data.get('image_url')
     state = data.get('state', 'active')
     # FIXME if theme or subtheme id not exists, return notfound
     research_question = ResearchQuestion(
@@ -157,6 +158,7 @@ def research_question_create(context, data_dict):
         theme=theme,
         sub_theme=sub_theme,
         title=title,
+        image_url=image_url,
         author=user_id,
         state=state
     )

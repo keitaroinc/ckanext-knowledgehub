@@ -7,48 +7,19 @@
 {% endblock %}
 
 {% block content %}
+{% set rqs = h.get_rq(6, 'created_at  desc').get('data', []) %}
 <div class="container-fluid rq-section">
     <div class="row">
-        <div class="col-lg-2 rq-box rq-item">
-            <img class="rq-image" src="#">
-            <a>
-                <h3 class="rq-heading">How many children are enjoying
-                    quality education in Lebanon?
-            </a><br><small>Research Question</small></h3>
-        </div>
-        <div class="col-lg-2 rq-box rq-item">
-            <img class="rq-image" src="#">
-            <a>
-                <h3 class="rq-heading">Progressively procrastinate intermandated mindshare rather than cooperative results. Interactively initiate ?
-            </a><br><small>Research Question</small></h3>
-        </div>
-        <div class="col-lg-2 rq-box rq-item">
-            <img class="rq-image" src="#">
-            <a>
-                <h3 class="rq-heading">How many children are enjoying
-                    quality education in Lebanon?
-            </a><br><small>Research Question</small></h3>
-        </div>
-        <div class="col-lg-2 rq-box rq-item">
-            <img class="rq-image" src="#">
-            <a>
-                <h3 class="rq-heading">Progressively procrastinate intermandated initiate ?
-            </a><br><small>Research Question</small></h3>
-        </div>
-        <div class="col-lg-2 rq-box rq-item">
-            <img class="rq-image" src="#">
-            <a>
-                <h3 class="rq-heading">How many children are enjoying
-                    quality education in Lebanon?
-            </a><br><small>Research Question</small></h3>
-        </div>
-        <div class="col-lg-2 rq-box rq-item">
-            <img class="rq-image" src="#">
-            <a>
-                <h4 class="rq-heading">Progressively procrastinate intermandated mindshare initiate ?
-            </a><br><small>Research Question</small></h4>
-        </div>
-
+        {% for rq in rqs %}
+            {% set image_url = h.url_for_static('uploads/research_questions/%s' % rq.get('image_url')) if rq.get('image_url') else h.url_for_static('/base/images/placeholder-rq.png') %}
+            <div class="col-lg-2 rq-box rq-item">
+                <img class="rq-image img-responsive" src="{{ image_url }}">
+                <h3 class="rq-heading">
+                    <a href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
+                    <br><small>Research Question</small>
+                </h3>
+            </div>
+        {% endfor %}
     </div>
 </div>
 <section class="module home-content">

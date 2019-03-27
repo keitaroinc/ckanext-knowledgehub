@@ -1,0 +1,12 @@
+{#
+Creates image upload page
+data - Data about the image
+Example usage:
+{% snippet 'research_question/snippets/image_upload.html', data=data, errorrs=errors %}
+#}
+{% import 'macros/form.html' as form %}
+
+{% set is_upload = (data.url_type == 'upload') %}
+{{ form.image_upload(data, errors, field_url='image_url', field_upload='upload', field_clear='clear_upload',
+    is_upload_enabled=h.uploads_enabled(), is_url=data.image_url and not is_upload, is_upload=is_upload,
+    upload_label=_('Data'), url_label=_('URL'), placeholder=_('http://example.com/external-data.csv'), field_name='image_url') }}

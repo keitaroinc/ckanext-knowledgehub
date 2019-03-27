@@ -61,6 +61,7 @@ def research_question_schema():
                       validators.check_sub_theme_parent,
                       unicode],
         'title': [not_empty, unicode],
+        'image_url': [ignore_missing, unicode]
     }
 
 
