@@ -217,13 +217,9 @@ def read(name):
     except (NotFound, NotAuthorized):
         abort(404, _(u'Research question not found'))
 
-    image_url = h.url_for_static('/base/images/placeholder-rq.png')
-    if rq.get('image_url'):
-        image_url = h.url_for_static('uploads/research_questions/%s' % rq.get('image_url'))
-
     extra_vars = {
         'rq': rq,
-        'image_url': image_url
+        'image_url': rq.get('image_url')
     }
 
     return render(u'research_question/read.html', extra_vars=extra_vars)
@@ -330,13 +326,21 @@ class CreateView(MethodView):
 
                 data_dict['upload'] = image_upload
                 if isinstance(image_upload, FlaskFileStorage):
-                    upload = uploader.get_uploader('research_questions', image_url)
-                    upload.update_data_dict(data_dict,
-                                            'url',
-                                            'upload',
-                                            'False')
-                    upload.upload()
-                    data_dict['image_url'] = upload.filename
+                    try:
+                        upload = uploader.get_uploader('research_questions', image_url)
+                        upload.update_data_dict(data_dict,
+                                                'url',
+                                                'upload',
+                                                'False')
+                        upload.upload()
+                        data_dict['image_url'] = h.url_for_static('uploads/research_questions/%s' % upload.filename)
+                    except ValidationError as e:
+                        errors = e.error_dict
+                        error_summary = e.error_summary
+                        return self.get(data_dict, errors, error_summary)
+
+        if not data_dict.get('image_url'):
+            data_dict['image_url'] = h.url_for_static('/base/images/placeholder-rq.png')
 
         try:
             research_question = logic.get_action(
@@ -454,13 +458,21 @@ class EditView(MethodView):
 
                 data_dict['upload'] = image_upload
                 if isinstance(image_upload, FlaskFileStorage):
-                    upload = uploader.get_uploader('research_questions', image_url)
-                    upload.update_data_dict(data_dict,
-                                            'url',
-                                            'upload',
-                                            'False')
-                    upload.upload()
-                    data_dict['image_url'] = upload.filename
+                    try:
+                        upload = uploader.get_uploader('research_questions', image_url)
+                        upload.update_data_dict(data_dict,
+                                                'url',
+                                                'upload',
+                                                'False')
+                        upload.upload()
+                        data_dict['image_url'] = h.url_for_static('uploads/research_questions/%s' % upload.filename)
+                    except ValidationError as e:
+                        errors = e.error_dict
+                        error_summary = e.error_summary
+                        return self.get(data_dict, errors, error_summary)
+
+        if not data_dict.get('image_url'):
+            data_dict['image_url'] = h.url_for_static('/base/images/placeholder-rq.png')
 
         try:
             research_question = get_action(
