@@ -20,7 +20,7 @@
         var theme = $('#theme').val();
         api.get('sub_theme_list', {
             'theme': theme
-        })
+        }, true)
         .done(function (data) {
             $('#sub_theme').empty();
             for (var i = 0; i < data.result.data.length; ++i) {
