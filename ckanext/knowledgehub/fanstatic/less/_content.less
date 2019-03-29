@@ -110,6 +110,7 @@
 }
 
 .navbar-default {
+  
   .shadow;
   z-index: 1;
   .navbar-nav li {
@@ -270,12 +271,17 @@ header.module-content.page-header {
   padding: @grid-gutter-width * 2 @grid-gutter-width @grid-gutter-width
     @grid-gutter-width;
 }
+.rq-section{
+  background-color: #fff
+}
 
 .rq-box {
+  flex: 1;
+  min-width: 16.6666%;
   height: 250px;
   .flex;
-  .align-items-center;
-  .justify-content-center;
+  .align-items-end;
+  .justify-content-start;
   text-align: center;
   background-color: @brand-primary;
   .rq-heading {
@@ -301,6 +307,8 @@ header.module-content.page-header {
   small {
     color: @white;
     opacity: 0.7;
+    font-size: 14px;
+    font-weight: 600
   }
 }
 
