@@ -285,6 +285,10 @@ class CreateView(MethodView):
 
         theme_options.insert(0, {'text': 'Select theme', 'value': ''})
 
+        image = data_dict.get('image_url', '')
+        if not (image.startswith('http') or image.startswith('https')):
+            data_dict['image_url'] = image.split('/')[-1]
+
         form_vars = {
             u'data': data_dict,
             u'theme': data_dict.get('theme'),
@@ -407,6 +411,16 @@ class EditView(MethodView):
         for sub_theme in sub_theme_list.get(u'data', []):
             opt = {u'text': sub_theme[u'title'], u'value': sub_theme[u'id']}
             sub_theme_options.append(opt)
+
+        if research_question:
+            image = research_question.get('image_url', '')
+            if not (image.startswith('http') or image.startswith('https')):
+                research_question['image_url'] = image.split('/')[-1]
+
+        if data:
+            image = data.get('image_url', '')
+            if not (image.startswith('http') or image.startswith('https')):
+                data['image_url'] = image.split('/')[-1]
 
         form_vars = {
             u'id': research_question.get('id', ''),
