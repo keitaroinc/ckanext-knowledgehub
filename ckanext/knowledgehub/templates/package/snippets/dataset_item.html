@@ -1,0 +1,63 @@
+<ul class="dataset-list list-unstyled">
+    {% for item in packages %}
+    <li class="dataset-item">
+
+        <div class="dataset-content">
+            <div style="overflow: hidden">
+                <h3 class="dataset-heading">
+                    {% if item.private %}
+                    <span class="dataset-private label label-inverse" style="font-weight: 700;"><i class="fa fa-lock"> Private</i></span>
+                    {% endif %}
+                    <a href=/dataset/{{ item.get('name') }}>{{item.title}} </a> </h3> <div>
+                        {{item.notes}}
+
+                        {% if item.tags %}
+                        <div class="row flex flex-wrap dataset-tag-wrapper">
+                            {% for tag in item.tags%}
+                            <div class="dataset-tag mr-2">{{tag.name}}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <div class="data-content border-bottom">
+                                {% if item.theme %}
+                                <h5 style="text-overflow: ellipsis;">Theme: <span
+                                        class="text-muted">{{item.theme}}</span></h5>
+                                {% endif %}
+                                {% if item.sub_theme %}
+                                <h5>Sub-theme: <span class="text-muted">{{item.sub_theme}}</span></h5>
+                                {%endif%}
+                                {%if item.research_question%}
+                                {% set questions = h.pg_array_to_py_list(item.research_question) %}
+                                {% for question in questions %}
+                                <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
+                                    </span><span class="text-muted">{{question}}</span></h5>
+                                {%endfor%}
+                                {%endif%}
+
+                            </div>
+                        </div>
+            </div>
+            <div>
+                    {% if item.resources %}
+                <ul style="padding-left: 0;">
+                    {% for resource in item.resources %}
+                    <li style="list-style: none">
+                        <h5>{{resource.name}} <a class="label label-default" data-format={{resource.format.lower()}} href={{resource.url}}>{{resource.format}}</a></h5>
+                    </li>
+                    {% endfor %}
+                </ul>
+                    {% endif %}
+            </div>
+
+
+        </div>
+        <div class="dataset-comment-section flex align-items-center">
+            <h5><i class="fa fa-thumbs-up"></i> 12 USEFUL</h5>
+            <h5><i class="fa fa-handshake-o"></i> 23 TRUSTED</h5>
+            <h5><i class="fa fa fa-comments"></i> 22 COMMENTS</h5>
+        </div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
