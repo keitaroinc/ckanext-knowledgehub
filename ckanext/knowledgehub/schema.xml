@@ -120,6 +120,11 @@ schema. In this case the version should be set to the next CKAN version number.
     <field name="res_url" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="res_type" type="string" indexed="true" stored="true" multiValued="true"/>
 
+    <!--extra resource fields -->
+    <field name="res_extras_theme" type="string" indexed="true" stored="true" multiValued="false"/>
+    <field name="res_extras_sub_theme" type="string" indexed="true" stored="true" multiValued="false"/>
+    <field name="res_extras_research_question" type="text" indexed="true" stored="true" multiValued="true"/>
+
     <!-- catchall field, containing all other searchable text fields (implemented
          via copyField further on in this schema  -->
     <field name="text" type="text" indexed="true" stored="false" multiValued="true"/>
@@ -149,11 +154,6 @@ schema. In this case the version should be set to the next CKAN version number.
 
     <field name="data_dict" type="string" indexed="false" stored="true" />
     <field name="validated_data_dict" type="string" indexed="false" stored="true" />
-
-        <!--extra dataset fields -->
-    <field name="theme" type="string" indexed="true" stored="true" multiValued="false"/>
-    <field name="sub_theme" type="string" indexed="true" stored="true" multiValued="false"/>
-    <field name="research_question" type="text" indexed="true" stored="true" multiValued="true"/>
 
     <field name="_version_" type="string" indexed="true" stored="true"/>
 
@@ -189,8 +189,5 @@ schema. In this case the version should be set to the next CKAN version number.
 <copyField source="res_description" dest="text"/>
 <copyField source="maintainer" dest="text"/>
 <copyField source="author" dest="text"/>
-<copyField source="theme" dest="text"/>
-<copyField source="sub_theme" dest="text"/>
-<copyField source="research_question" dest="text"/>
 
 </schema>

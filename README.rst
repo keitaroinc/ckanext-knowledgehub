@@ -60,6 +60,11 @@ To install ckanext-knowledgehub:
 Config Settings
 ---------------
 
+These are required configuration settings used by the extension::
+
+    # Set extra resource fields that should be indexed by SOLR
+    ckan.extra_resource_fields = theme sub_theme research_question
+
 These are the optional configuration settings used by the extension::
 
     # The number of themes shown per page

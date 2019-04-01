@@ -99,15 +99,6 @@
 	{{ form.input('frequency_of_update', id='field-freq-of-update', label=_('Frequency Of Update'), placeholder=_('e.g. Other'), value=data.frequency_of_update, error=errors.freq_of_update, classes=['control-full'], is_required=False) }}
     {% endblock %}
 
-<!--
-    {% block basic_fields_more_description %}
-      {{ form.markdown('more_description', id='field-description', label=_('Description'), placeholder=_('Some useful notes about the data'), value=data.more_description, error=errors.more_description) }}
-    {% endblock %}
--->
-
-    {% block basic_fields_sub_themes %}
-	{{ form.input('sub_themes', id='field-sub-themes', label=_('Sub Themes'), placeholder=_('e.g. Cost of living'), value=data.sub_themes, error=errors.sub_themes, classes=['control-full'], is_required=False) }}
-    {% endblock %}
 
     {% block basic_fields_analytical_value %}
 	{{ form.input('analytical_value', id='field-analytical-value', label=_('Analytical Value'), placeholder=_('e.g. Risk'), value=data.analytical_value, error=errors.analytical_value, classes=['control-full'], is_required=False) }}
@@ -116,6 +107,53 @@
     {% block basic_fields_indicator_type %}
 	{{ form.input('indicator_type', id='field-ind-type', label=_('Indicator Type'), placeholder=_('e.g. Quantitative'), value=data.indicator_type, error=errors.ind_type, classes=['control-full'], is_required=False) }}
     {% endblock %}
+
+    {# Theme start #}
+    {% set theme_options = h.get_theme_options() %}
+          {% if data.theme %}
+            {% set existing_theme = data.theme %}
+          {% endif %}
+        <div class="form-group control-medium control-select">
+          <label for="field-theme" class="control-label">{{ _('Theme') }}</label>
+          <div class="controls">
+            <select id="field-theme" name="theme" class="form-control">
+            {% for option in theme_options %}
+              <option value="{{ option.value }}" {% if existing_theme == option.value %} selected="selected" {% endif %}>{{ option.text }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+    {# Theme end #}
+
+
+    {# Sub-theme start #}
+    {% set sub_theme_options = h.get_sub_theme_options() %}
+        {% if data.sub_theme %}
+          {% set existing_sub_theme = data.sub_theme %}
+      {% endif %}
+        <div class="form-group control-medium control-select">
+          <label for="field-sub_theme" class="control-label">{{ _('Sub-theme') }}</label>
+          <div class="controls">
+            <select id="field-sub_theme" name="sub_theme" class="form-control">
+            {% for option in sub_theme_options %}
+              <option value="{{ option.value }}" {% if existing_sub_theme == option.value %} selected="selected" {% endif %}>{{ option.text }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+    {# Sub-theme end #}
+
+    {# Research question start #}
+    {% set rq_options = h.get_rq_options() %}
+
+    {% if data.research_question %}
+      {% set selected = h.pg_array_to_py_list(data.research_question) %}
+    {% endif %}
+
+    {{ form.selectmulti('research_question', label=_('Research question'), options=rq_options, selected=selected, id='field-research_question', error=errors.research_question, attrs={"multiple": "multiple", "data-module": "autocomplete"}, classes=['control-medium']) }}
+
+    {# Research question end #}
+
     {% snippet 'package/snippets/resource_schema.html', data=data, errors=errors, licenses=licenses, entity_type=entity_type, object_type=object_type %}
     {% snippet 'package/snippets/validation_options.html', data=data, errors=errors, licenses=licenses, entity_type=entity_type, object_type=object_type %}
 
