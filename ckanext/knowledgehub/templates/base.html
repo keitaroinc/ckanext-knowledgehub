@@ -11,6 +11,7 @@
 {{ super() }}
 {% resource  'knowledgehub/css/main.css' %}
 {% resource 'knowledgehub/vendor/c3/c3.css' %}
+{% resource 'knowledgehub/vendor/datatables/dataTables.css' %}
 {% endblock %}
 
 {% block scripts %}
@@ -21,5 +22,10 @@
   {% resource 'knowledgehub/vendor/d3/d3.js' %}
   {% resource 'knowledgehub/vendor/c3/c3.js' %}
   {% resource 'knowledgehub/vendor/datatables/dataTables.js' %}
+  {% resource 'knowledgehub/vendor/datatables/buttons.html5.js' %}
+  {% resource 'knowledgehub/vendor/datatables/dataTables.buttons.js' %}
+  {% resource 'knowledgehub/vendor/datatables/jszip.js' %}
+  {% resource 'knowledgehub/vendor/datatables/pdfmake.js' %}
+  {% resource 'knowledgehub/vendor/datatables/vfs_fonts.js' %}
   {% resource 'knowledgehub/vendor/nunjucks.js' %}
 {% endblock -%}

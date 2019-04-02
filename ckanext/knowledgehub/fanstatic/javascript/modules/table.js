@@ -257,7 +257,6 @@ ckan.module('querytool-table', function () {
 
             // Render
             return this.render_template(template, data);
-
         },
 
         // table for the two-way columns feature
@@ -329,7 +328,6 @@ ckan.module('querytool-table', function () {
 
             // Render
             return this.render_template(template, data);
-
         },
 
         // render template unsing nunjucks
@@ -375,12 +373,10 @@ ckan.module('querytool-table', function () {
         updateTable: function () {
             var yVal = $('[name=table_field_y_axis_column]').val();
             var xVal = this.el.parent().parent().find('[id*=table_main_value]').val();
-            var measureLabelVal = $('#choose_y_axis_column option:selected').text();
-            this.options.category_name = this.el.parent().parent().find('[id*=table_category_name_]').val();
-            this.options.data_format = this.el.parent().parent().find('[id*=table_data_format_]').val();
-            this.options.filter_name = this.el.parent().parent().find('[id*=table_field_filter_name_]').val();
-            this.options.filter_value = this.el.parent().parent().find('[id*=table_field_filter_value_]').val();
-            this.options.table_title = this.el.parent().parent().find('[id*=table_field_title_]').val();
+            var measureLabelVal = $('#table_field_y_axis_column option:selected').text();
+            this.options.category_name = this.el.parent().parent().find('[id*=table_category_name]').val();
+            this.options.data_format = this.el.parent().parent().find('[id*=table_data_format]').val();
+            this.options.table_title = this.el.parent().parent().find('[id*=table_field_title]').val();
             this.options.measure_label = measureLabelVal;
             this.createTable(yVal, xVal, true);
         },
