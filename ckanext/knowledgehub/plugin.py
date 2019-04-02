@@ -98,14 +98,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'sub_themes': defaults,
             'analytical_value': defaults,
             'indicator_type': defaults,
-            'theme': [toolkit.get_validator('ignore_missing'),
-                      toolkit.get_converter('convert_to_extras'),
-                      toolkit.get_converter('convert_to_list_if_string')],
-            'sub_theme': [toolkit.get_validator('ignore_missing'),
-                          toolkit.get_converter('convert_to_extras'),
-                          toolkit.get_converter('convert_to_list_if_string')],
-            'research_question': [toolkit.get_validator('ignore_missing'),
-                                  toolkit.get_converter('convert_to_extras')]
+            'theme': defaults,
+            'sub_theme': defaults,
+            'research_question': defaults
         })
 
         return schema
@@ -142,12 +137,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'frequency_of_update': defaults,
             'analytical_value': defaults,
             'indicator_type': defaults,
-            'theme': [toolkit.get_converter('convert_from_extras'),
-                      toolkit.get_validator('ignore_missing')],
-            'sub_theme': [toolkit.get_converter('convert_from_extras'),
-                          toolkit.get_validator('ignore_missing')],
-            'research_question': [toolkit.get_converter('convert_from_extras'),
-                                  toolkit.get_validator('ignore_missing')]
+            'theme': defaults,
+            'sub_theme': defaults,
+            'research_question': defaults
         })
         return schema
 

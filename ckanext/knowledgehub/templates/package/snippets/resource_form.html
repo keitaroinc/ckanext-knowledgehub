@@ -8,7 +8,7 @@
 
 
 <form id="resource-edit" class="dataset-form dataset-resource-form" method="post" action="{{ action }}" data-module="basic-form resource-form" enctype="multipart/form-data" novalidate>
-
+{{data}}
   {% block stages %}
     {# An empty stages variable will not show the stages #}
     {% if stage %}
@@ -80,7 +80,7 @@
     {% endblock %}
 
     {% block basic_fields_indicator_old_name %}
-	{{ form.input('indicator_old_name', id='field-ind-old-name', label=_('Indicator Old Name'), placeholder=_('e.g. '), value=data.indicator_old_name, error=errors.ind_old_name, classes=['control-full'], is_required=False) }}
+	{{ form.input('indicator_old_name', id='field-ind-old-name', label=_('Indicator Old Name'), placeholder=_('e.g. '), value=data.indicator_old_name, error=errors.indicator_old_name, classes=['control-full'], is_required=False) }}
     {% endblock %}
 
     {% block basic_fields_unit_focal_point %}
@@ -88,7 +88,7 @@
     {% endblock %}
 
     {% block basic_fields_sector %}
-	{{ form.input('sector', id='field-sector', label=_('Sector'), placeholder=_('e.g. Food security; Nutrition; Health'), value=data.sector, error=errors.sector_error, classes=['control-full'], is_required=False) }}
+	{{ form.input('sector', id='field-sector', label=_('Sector'), placeholder=_('e.g. Food security; Nutrition; Health'), value=data.sector, error=errors.sector, classes=['control-full'], is_required=False) }}
     {% endblock %}
 
     {% block basic_fields_data_sources %}
@@ -96,7 +96,7 @@
     {% endblock %}
 
     {% block basic_fields_frequency_of_update %}
-	{{ form.input('frequency_of_update', id='field-freq-of-update', label=_('Frequency Of Update'), placeholder=_('e.g. Other'), value=data.frequency_of_update, error=errors.freq_of_update, classes=['control-full'], is_required=False) }}
+	{{ form.input('frequency_of_update', id='field-freq-of-update', label=_('Frequency Of Update'), placeholder=_('e.g. Other'), value=data.frequency_of_update, error=errors.frequency_of_update, classes=['control-full'], is_required=False) }}
     {% endblock %}
 
 
@@ -105,7 +105,7 @@
     {% endblock %}
 
     {% block basic_fields_indicator_type %}
-	{{ form.input('indicator_type', id='field-ind-type', label=_('Indicator Type'), placeholder=_('e.g. Quantitative'), value=data.indicator_type, error=errors.ind_type, classes=['control-full'], is_required=False) }}
+	{{ form.input('indicator_type', id='field-ind-type', label=_('Indicator Type'), placeholder=_('e.g. Quantitative'), value=data.indicator_type, error=errors.indicator_type, classes=['control-full'], is_required=False) }}
     {% endblock %}
 
     {# Theme start #}
@@ -117,8 +117,8 @@
           <label for="field-theme" class="control-label">{{ _('Theme') }}</label>
           <div class="controls">
             <select id="field-theme" name="theme" class="form-control">
-            {% for option in theme_options %}
-              <option value="{{ option.value }}" {% if existing_theme == option.value %} selected="selected" {% endif %}>{{ option.text }}</option>
+            {% for theme_option in theme_options %}
+              <option value="{{ theme_option.value }}" {% if existing_theme == theme_option.value %} selected="selected" {% endif %}>{{ theme_option.text }}</option>
               {% endfor %}
             </select>
           </div>
@@ -135,8 +135,8 @@
           <label for="field-sub_theme" class="control-label">{{ _('Sub-theme') }}</label>
           <div class="controls">
             <select id="field-sub_theme" name="sub_theme" class="form-control">
-            {% for option in sub_theme_options %}
-              <option value="{{ option.value }}" {% if existing_sub_theme == option.value %} selected="selected" {% endif %}>{{ option.text }}</option>
+            {% for sub_theme_option in sub_theme_options %}
+              <option value="{{ sub_theme_option.value }}" {% if existing_sub_theme == sub_theme_option.value %} selected="selected" {% endif %}>{{ sub_theme_option.text }}</option>
               {% endfor %}
             </select>
           </div>
@@ -147,10 +147,10 @@
     {% set rq_options = h.get_rq_options() %}
 
     {% if data.research_question %}
-      {% set selected = h.pg_array_to_py_list(data.research_question) %}
+      {% set selected_rq = h.pg_array_to_py_list(data.research_question) %}
     {% endif %}
 
-    {{ form.selectmulti('research_question', label=_('Research question'), options=rq_options, selected=selected, id='field-research_question', error=errors.research_question, attrs={"multiple": "multiple", "data-module": "autocomplete"}, classes=['control-medium']) }}
+    {{ form.selectmulti('research_question', label=_('Research question'), options=rq_options, selected=selected_rq, id='field-research_question', error=errors.research_question, attrs={"multiple": "multiple", "data-module": "autocomplete"}, classes=['control-medium']) }}
 
     {# Research question end #}
 
