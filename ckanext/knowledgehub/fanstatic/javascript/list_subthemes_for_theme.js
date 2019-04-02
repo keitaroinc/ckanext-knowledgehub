@@ -23,8 +23,9 @@
         }, true)
         .done(function (data) {
             $('#sub_theme').empty();
-            for (var i = 0; i < data.result.data.length; ++i) {
-                $('#sub_theme').append(new Option(data.result.data[i].title, data.result.data[i].id));
+            if(theme !="")
+                for (var i = 0; i < data.result.data.length; ++i) {
+                    $('#sub_theme').append(new Option(data.result.data[i].title, data.result.data[i].id));
             }
         });
     }
