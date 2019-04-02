@@ -77,18 +77,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def _modify_package_schema(self, schema):
         defaults = [toolkit.get_validator('ignore_missing')]
 
-        schema.update({
-            'theme': [toolkit.get_validator('ignore_missing'),
-                      toolkit.get_converter('convert_to_extras'),
-                      toolkit.get_converter('convert_to_list_if_string')],
-            'sub_theme': [toolkit.get_validator('ignore_missing'),
-                          toolkit.get_converter('convert_to_extras'),
-                          toolkit.get_converter('convert_to_list_if_string')],
-            'research_question': [toolkit.get_validator('ignore_missing'),
-                                  toolkit.get_converter('convert_to_extras'),
-                                  ]
-        })
-
         schema['resources'].update({
             'db_type': defaults,
             'db_name': defaults,
@@ -97,22 +85,22 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'username': defaults,
             'password': defaults,
             'sql': defaults,
-	        #'some_name':defaults,
-	        #'worker_title': defaults,
             'unit_supported': defaults,
             'im_product_name': defaults,
             'indicator_label': defaults,
-	        'indicator_code':defaults,
-	        'indicator_old_name': defaults,
+            'indicator_code': defaults,
+            'indicator_old_name': defaults,
             'unit_focal_point': defaults,
             'sector': defaults,
             'data_sources': defaults,
             'list_subtheme_for_theme': defaults,
-	        'frequency_of_update':defaults,
-	        #'ind_description': defaults,
-	        'sub_themes': defaults,
+            'frequency_of_update': defaults,
+            'sub_themes': defaults,
             'analytical_value': defaults,
             'indicator_type': defaults,
+            'theme': defaults,
+            'sub_theme': defaults,
+            'research_question': defaults
         })
 
         return schema
@@ -128,14 +116,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def show_package_schema(self):
         schema = super(KnowledgehubPlugin, self).show_package_schema()
         defaults = [toolkit.get_validator('ignore_missing')]
-        schema.update({
-            'theme': [toolkit.get_converter('convert_from_extras'),
-                      toolkit.get_validator('ignore_missing')],
-            'sub_theme': [toolkit.get_converter('convert_from_extras'),
-                          toolkit.get_validator('ignore_missing')],
-            'research_question': [toolkit.get_converter('convert_from_extras'),
-                                  toolkit.get_validator('ignore_missing')]
-        })
+
         schema['resources'].update({
             'db_type': defaults,
             'db_name': defaults,
@@ -144,22 +125,21 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'username': defaults,
             'password': defaults,
             'sql': defaults,
-	        #'some_name':defaults,
-	        #'worker_title': defaults,
             'unit_supported': defaults,
             'im_product_name': defaults,
             'indicator_label': defaults,
-	        'indicator_code':defaults,
-	        'indicator_old_name': defaults,
+            'indicator_code': defaults,
+            'indicator_old_name': defaults,
             'unit_focal_point': defaults,
             'sector': defaults,
             'data_sources': defaults,
             'list_subtheme_for_theme': defaults,
-	        'frequency_of_update':defaults,
-	        #'ind_description': defaults,
-	        'sub_themes': defaults,
+            'frequency_of_update': defaults,
             'analytical_value': defaults,
             'indicator_type': defaults,
+            'theme': defaults,
+            'sub_theme': defaults,
+            'research_question': defaults
         })
         return schema
 
@@ -173,8 +153,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def before_index(self, data_dict):
         return data_dict
 
-    #IRoutes
+    # IRoutes
     def before_map(self, map):
         map.redirect('/', '/dataset',
-                    _redirect_code='301 Moved Permanently')
+                     _redirect_code='301 Moved Permanently')
         return map
