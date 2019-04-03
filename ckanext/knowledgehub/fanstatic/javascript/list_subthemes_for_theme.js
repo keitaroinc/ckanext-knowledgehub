@@ -23,13 +23,27 @@
         }, true)
         .done(function (data) {
             $('#sub_theme').empty();
-            for (var i = 0; i < data.result.data.length; ++i) {
-                $('#sub_theme').append(new Option(data.result.data[i].title, data.result.data[i].id));
+            if(data.result.data.length != 0)
+            {
+                $('#sub_theme').append(new Option("Select sub-theme"), '');
+                if(theme !="")
+                    for (var i = 0; i < data.result.data.length; ++i) {
+                        $('#sub_theme').append(new Option(data.result.data[i].title, data.result.data[i].id));
+                    }
+                else
+                {
+                    $('#sub_theme').empty();
+                    $('#sub_theme').append(new Option("Please select a theme first!"));  
+                } 
+            }
+            else {
+                $('#sub_theme').append(new Option("This theme does not have any sub-themes"));
             }
         });
     }
 
     $(document).ready(function () {
+        $("#sub_theme").append(new Option("Please select a theme first!"));
         $('#theme').change(function () {
             populateSubThemes();
         })
