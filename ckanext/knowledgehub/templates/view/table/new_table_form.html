@@ -41,7 +41,7 @@
         <div class="controls">
           <select id="table_main_value" name="table_main_value">
             {% for column in columns %}
-            <option value="{{column}}" {% if chart %}{{ 'selected' if column == table.main_value }}{% endif %}>{{column}}</option>
+            <option value="{{column}}" {% if table %}{{ 'selected' if column == table.main_value }}{% endif %}>{{column}}</option>
             {% endfor %}
           </select>
         </div>
@@ -58,6 +58,18 @@
           {% endfor %}
           </select>
         </div>
+      </div>
+    </div>
+
+    {% set data_formats = h.get_data_formats() %}
+    <div class="control-group control-select">
+      <label class="control-label" for="table_data_format">{{ _('Data format') }}</label>
+      <div class="controls ">
+        <select id="table_data_format" name="table_data_format">
+          {% for format in data_formats %}
+          <option value="{{ format.value }}" {% if table %}{{ 'selected' if format.value == table.data_format }}{% endif %} >{{ format.text }}</option>
+          {% endfor %}
+        </select>
       </div>
     </div>
 
@@ -78,9 +90,8 @@
         table_title = table_title
       %}
     </div>
-    <ul class="inline text-right chart-actions">
+    <ul class="inline text-right table-actions">
       <li><a class="btn update-table-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
     </ul>
   </div>
-
 {% endblock %}

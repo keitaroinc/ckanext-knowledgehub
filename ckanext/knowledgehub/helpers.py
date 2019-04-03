@@ -323,7 +323,7 @@ def get_tick_text_rotation():
     return options
 
 
-def get_charts_data_formats(num=None):
+def get_data_formats(num=None):
     '''
     Get available formats for charts tooltip and axis ticks
     :return:
@@ -452,17 +452,3 @@ def get_rq(limit, order_by):
     })
 
     return rq_list
-
-
-# Overwrite of the original 'resource_view_icon'
-# in order to support new resource view types
-def resource_view_icon(view):
-    '''
-    Returns the icon for a particular view type.
-    '''
-    if view.get('view_type') == 'chart':
-        return 'bar-chart'
-    elif view.get('view_type') == 'table':
-        return 'table'
-    else:
-        return 'exclamation'

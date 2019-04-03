@@ -10,6 +10,30 @@ ckan.module('querytool-table', function () {
 
     // Languages for datables
     var LANGUAGES = {
+        'en': {
+            "sProcessing": "Processing...",
+            "sLengthMenu": "Show _MENU_ records",
+            "sZeroRecords": "No results found",
+            "sEmptyTable": "No data available in this table",
+            "sInfo": "Showing records from _START_ to _END_ of a total of _TOTAL_ records",
+            "sInfoEmpty": "Showing records from 0 to 0 of a total of 0 records",
+            "sInfoFiltered": "(filtering a total of _MAX_ records)",
+            "sInfoPostFix": "",
+            "sSearch": "Search for:",
+            "sUrl": "",
+            "sInfoThousands": ",",
+            "sLoadingRecords": "Loading...",
+            "oPaginate": {
+                "sFirst": "First",
+                "sLast": "Latest",
+                "sNext": "Following",
+                "sPrevious": "Previous"
+            },
+            "oAria": {
+                "sSortAscending": ": Activate to order the column ascending",
+                "sSortDescending": ": Activate to order the column in descending order"
+            }
+        },
         'es': {
             "sProcessing": "Procesando...",
             "sLengthMenu": "Mostrar _MENU_ registros",
@@ -162,18 +186,16 @@ ckan.module('querytool-table', function () {
             // Prepare settings
             var id = this.options.table_id;
             var locale = $('html').attr('lang');
-            var resource_id = this.options.resource_id;
             var y_axis = (yVal) ? yVal : this.options.y_axis;
             var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
             var main_value = this.options.main_value;
-            if (main_value === true) main_value = $('[name*=table_main_value_]').val();
+            if (main_value === true) main_value = $('[name*=table_main_value]').val();
             if (fromUpdate) main_value = xVal;
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
 
             // Get data and create table
             var sql_string = this.create_sql_string(main_value, y_axis, category_name);
-            console.log(sql_string)
             api.get('get_resource_data', { sql_string: sql_string }, function (response) {
                 var rows = response.result;
 
@@ -183,13 +205,13 @@ ckan.module('querytool-table', function () {
                     : module.render_data_table_with_category(rows, category_name, main_value, y_axis, measure_label)
 
                 // Enable jquery.datatable
-                var table = $('#table-item-' + id);
+                var table = $('#table-item');
                 if ($.fn.DataTable.isDataTable(table)) table.DataTable().destroy();
                 table.html(html);
                 table.DataTable({
                     "language": LANGUAGES[locale],
                     //download table data options
-                    dom: '<"dt-header' + id + '">' + 'r<lf>tip<"dtf-butons"B>',
+                    dom: '<"dt-header">' + 'r<lf>tip<"dtf-butons"B>',
                     buttons: [
                         { 'extend': 'csv', 'className': 'btn btn-default' },
                         { 'extend': 'excel', 'className': 'btn btn-default' },
@@ -224,13 +246,13 @@ ckan.module('querytool-table', function () {
 
         // default tables
         render_data_table: function (rows, main_value, y_axis, measure_label) {
-            main_value = main_value.toLowerCase();
-            y_axis = y_axis.toLowerCase();
+            main_value = main_value;
+            y_axis = y_axis;
 
             // Prepare data
             var data = {
-                main_value: main_value,
-                measure_label: measure_label,
+                main_value: main_value.toLowerCase(),
+                measure_label: measure_label.toLowerCase(),
                 y_axis: y_axis,
                 rows: rows,
             }
@@ -240,7 +262,7 @@ ckan.module('querytool-table', function () {
           <table>
             <thead>
               <tr>
-                <th>{main_value|capitalize}</th>
+                <th>{main_value}</th>
                 <th>{measure_label|capitalize}</th>
               </tr>
             </thead>
