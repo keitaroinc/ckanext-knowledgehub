@@ -85,9 +85,6 @@ ckan.module('chart', function() {
 
             var f = this.getFilters();
             var filters = (this.options.filters === true) ? f : this.options.filters;
-            console.log(filters);
-            console.log(category);
-            console.log(sql);
 
             if (x_axis && y_axis) {
                 if (x_axis === y_axis) {
