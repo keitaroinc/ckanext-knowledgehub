@@ -20,7 +20,7 @@ Example:
 <li class="component-item">
   <div class="component-content">
     <h3 class="component-heading">
-      {{ h.nav_link(h.truncate(title, truncate_title), named_route='sub_theme.read', name=sub_theme['name']) }}
+      {{ h.nav_link(title | truncate(28), named_route='sub_theme.read', name=sub_theme['name']) }}
     </h3>
     {% if description %}
       <p>{{ description }}</p>

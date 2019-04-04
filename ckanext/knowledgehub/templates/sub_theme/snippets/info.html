@@ -15,7 +15,7 @@ Example:
   <section class="module module-narrow">
     <div class="module context-info">
       <div class="module-content">
-          <h1 class="heading">{{ sub_theme.get('title', '') }}</h1>
+          <h1 class="heading">{{ sub_theme.get('title', '') | truncate(30) }}</h1>
 
           {% if sub_theme.get('description', None) %}
             <p>{{ h.markdown_extract(sub_theme['description'], extract_length=truncate_desc) }}</p>

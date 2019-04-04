@@ -10,7 +10,7 @@
         {% block heading %}
           <h3 class="component-heading">
             {% block heading_title %}
-		      {{ h.link_to(h.truncate(title, truncate_title), h.url_for('theme.read', name=theme.name)) }}
+		      {{ h.link_to(title | truncate(28), h.url_for('theme.read', name=theme.name)) }}
             {% endblock %}
           </h3>
         {% endblock %}
