@@ -22,6 +22,7 @@ Options:
     - show_labels (Display or hide charts labels)
     - y_label (Aditional label added in y axis)
     - data_sort (Sort data, asc or desc)
+    - category_name (The value of the chart category)
 
 */
 'use strict';
