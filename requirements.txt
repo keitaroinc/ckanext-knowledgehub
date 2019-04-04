@@ -1,2 +1,3 @@
 pyodbc==4.0.25
 pymssql==2.1.4
+functools32==3.2.3.post2
