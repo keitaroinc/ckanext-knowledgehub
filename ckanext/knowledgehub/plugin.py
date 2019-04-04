@@ -9,13 +9,11 @@ from ckanext.knowledgehub.helpers import _register_blueprints
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
-    plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IDatasetForm)
-    plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IRoutes, inherit=True)
 
     # IConfigurer
@@ -23,10 +21,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'knowledgehub')
-
-    # IConfigurable
-    def configure(self, config):
-        return config
 
     # IBlueprint
     def get_blueprint(self):
@@ -148,10 +142,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
 
     def package_types(self):
         return []
-
-    # IPackageController
-    def before_index(self, data_dict):
-        return data_dict
 
     # IRoutes
     def before_map(self, map):
