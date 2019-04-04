@@ -70,7 +70,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_resource_data': h.get_resource_data,
             'get_resource_numeric_columns': h.get_resource_numeric_columns,
             'get_filter_values': h.get_filter_values,
-            'get_rq': h.get_rq
+            'get_rq': h.get_rq,
+            'resource_view_icon': h.resource_view_icon
         }
 
     # IDatasetForm
