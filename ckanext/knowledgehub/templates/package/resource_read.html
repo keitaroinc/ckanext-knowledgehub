@@ -30,6 +30,7 @@
             {% set y_label_hide = resource_view.__extras.y_label_hide %}
             {% set y_from_zero = resource_view.__extras.y_from_zero %}
             {% set data_sort = resource_view.__extras.sort %}
+            {% set filters = resource_view.__extras.filters %}
             {% set category_name = resource_view.__extras.category_name %}
             {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
             {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
@@ -60,6 +61,7 @@
                 y_label_hide = y_label_hide,
                 y_from_zero = y_from_zero,
                 data_sort = data_sort,
+                filters = filters,
                 category_name=category_name,
                 measure_label=measure_label,
                 dynamic_reference_type=dynamic_reference_type,
