@@ -83,8 +83,9 @@ ckan.module('chart', function() {
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
             var dynamic_reference_factor = (this.options.dynamic_reference_factor === true) ? '' : this.options.dynamic_reference_factor;
 
-            var f = this.getFilters();
-            var filters = (this.options.filters === true) ? f : this.options.filters;
+            var form_filters = this.getFilters();
+            var options_filters = this.options.filters;
+            var filters = form_filters.length ? form_filters : options_filters;
 
             if (x_axis && y_axis) {
                 if (x_axis === y_axis) {
