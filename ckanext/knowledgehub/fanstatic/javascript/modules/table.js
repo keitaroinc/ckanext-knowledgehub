@@ -183,6 +183,8 @@ ckan.module('querytool-table', function () {
         createTable: function (yVal, xVal, fromUpdate) {
             var module = this;
 
+            console
+
             // Prepare settings
             var id = this.options.table_id;
             var locale = $('html').attr('lang');
@@ -193,6 +195,10 @@ ckan.module('querytool-table', function () {
             if (fromUpdate) main_value = xVal;
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
+            console.log(title)
+            var filename_export = (title === '') ? this.options.resource_name : title;
+
+            filename_export = filename_export.split('.').slice(0, 1).join('.');
 
             // Get data and create table
             var sql_string = this.create_sql_string(main_value, y_axis, category_name);
@@ -213,9 +219,16 @@ ckan.module('querytool-table', function () {
                     //download table data options
                     dom: '<"dt-header">' + 'r<lf>tip<"dtf-butons"B>',
                     buttons: [
-                        { 'extend': 'csv', 'className': 'btn btn-default' },
-                        { 'extend': 'excel', 'className': 'btn btn-default' },
-                        { 'extend': 'pdf', 'className': 'btn btn-default' },
+                        {
+                            'extend': 'csv',
+                            'className': 'btn btn-default',
+                            'title': filename_export
+                        },
+                        {
+                            'extend': 'excel',
+                            'className': 'btn btn-default',
+                            'title': filename_export
+                        },
                     ],
                     "processing": true,
                 });
@@ -246,13 +259,22 @@ ckan.module('querytool-table', function () {
 
         // default tables
         render_data_table: function (rows, main_value, y_axis, measure_label) {
-            main_value = main_value;
-            y_axis = y_axis;
+            main_value = main_value.toLowerCase();
+            y_axis = y_axis.toLowerCase();
+
+            console.log(main_value)
+            console.log(y_axis)
+
+            if (main_value === y_axis) {
+                this.el.text(this._('X axis dimension cannot be same as Y axis dimension, please choose different one!'));
+            } else if (!main_value && !y_axis) {
+                this.el.text(this._('Please choose X and Y axis dimensions!'));
+            }
 
             // Prepare data
             var data = {
-                main_value: main_value.toLowerCase(),
-                measure_label: measure_label.toLowerCase(),
+                main_value: main_value,
+                measure_label: measure_label,
                 y_axis: y_axis,
                 rows: rows,
             }
@@ -262,7 +284,7 @@ ckan.module('querytool-table', function () {
           <table>
             <thead>
               <tr>
-                <th>{main_value}</th>
+                <th>{main_value|capitalize}</th>
                 <th>{measure_label|capitalize}</th>
               </tr>
             </thead>
@@ -277,7 +299,7 @@ ckan.module('querytool-table', function () {
           </table>
           `;
 
-            // Render
+            //Render
             return this.render_template(template, data);
         },
 
@@ -359,6 +381,7 @@ ckan.module('querytool-table', function () {
                 env.addFilter('process_table_value', this.process_table_value.bind(this))
                 return env.renderString(template, data);
             } catch (error) {
+                this.el.text(this._('Table could not be created!'));
                 return '';
             }
         },
