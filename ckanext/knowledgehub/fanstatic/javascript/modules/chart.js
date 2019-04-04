@@ -80,10 +80,14 @@ ckan.module('chart', function() {
             var x_axis = (this.options.x_axis === true) ? '' : this.options.x_axis;
             var y_axis = (this.options.y_axis === true) ? '' : this.options.y_axis;
             var resource_id = sql.split('FROM')[1].split('WHERE')[0].split('"')[1];
-            var chart_type = this.options.chart_type;
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
             var dynamic_reference_factor = (this.options.dynamic_reference_factor === true) ? '' : this.options.dynamic_reference_factor;
-            var filters = this.options.filters ? this.options.filters : [];
+
+            var f = this.getFilters();
+            var filters = (this.options.filters === true) ? f : this.options.filters;
+            console.log(filters);
+            console.log(category);
+            console.log(sql);
 
             if (x_axis && y_axis) {
                 if (x_axis === y_axis) {
@@ -95,7 +99,6 @@ ckan.module('chart', function() {
                         x_axis: x_axis,
                         y_axis: y_axis,
                         resource_id: resource_id,
-                        chart_type: chart_type,
                         filters: JSON.stringify(filters)
                     })
                     .done(function(data) {
@@ -568,8 +571,6 @@ ckan.module('chart', function() {
 
             var measureLabelVal = $('#chart_field_y_axis_column option:selected').text().toLowerCase();
 
-            var filters = this.getFilters();
-
             this.options.colors = colorValue;
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
@@ -596,7 +597,6 @@ ckan.module('chart', function() {
             this.options.dynamic_reference_factor = dynamicReferenceFactorVal;
             this.options.dynamic_reference_label = dynamicReferenceLabelVal;
             this.options.measure_label = measureLabelVal;
-            this.options.filters = filters;
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
