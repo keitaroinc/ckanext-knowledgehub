@@ -429,6 +429,7 @@
     {% set y_label_hide = chart.y_label_hide %}
     {% set y_from_zero = chart.y_from_zero %}
     {% set data_sort = chart.sort %}
+    {% set category_name = chart.category_name %}
     {% set dynamic_reference_type = chart.dynamic_reference_type %}
     {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
     {% set dynamic_reference_label = chart.dynamic_reference_label %}
@@ -457,10 +458,10 @@
             y_label_hide = y_label_hide,
             y_from_zero = y_from_zero,
             data_sort = data_sort,
+            category_name=category_name,
             measure_label=measure_label,
             dynamic_reference_type=dynamic_reference_type,
             dynamic_reference_factor=dynamic_reference_factor,
-            dynamic_reference_label=dynamic_reference_label
-        %}
+            dynamic_reference_label=dynamic_reference_label %}
   </div>
 {% endblock %}

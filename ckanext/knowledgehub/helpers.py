@@ -452,3 +452,17 @@ def get_rq(limit, order_by):
     })
 
     return rq_list
+
+
+# Overwrite of the original 'resource_view_icon'
+# in order to support new resource view types
+def resource_view_icon(view):
+    '''
+    Returns the icon for a particular view type.
+    '''
+    if view.get('view_type') == 'chart':
+        return 'bar-chart'
+    elif view.get('view_type') == 'table':
+        return 'table'
+    else:
+        return 'exclamation'

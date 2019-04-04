@@ -1,9 +1,100 @@
 {% ckan_extends %}
 
+{% block resource_view_content %}
+<div class="resource-view">
+  {% set views_created = res.has_views %}
+  {% if views_created %}
+      {% for resource_view in resource_views %}
+        {% if resource_view == current_resource_view %}
+          {% if current_resource_view.view_type == 'chart' %}
 
-{% block resource_view %}
-{# TODO: Here should be implemented Knowledge Hub custom visualizations list and preview #}
-<p>Knowledge Hub Custom Views</p>
-{{resource_views}}
+            {% if resource_view and resource_view.__extras %}
+            {% set colors = resource_view.__extras.color %}
+            {% set x_axis = resource_view.__extras.x_axis %}
+            {% set y_axis = resource_view.__extras.y_axis %}
+            {% set chart_type = resource_view.__extras.type %}
+            {% set title = resource_view.__extras.title %}
+            {% set show_legend = resource_view.__extras.show_legend %}
+            {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
+            {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
+            {% set tooltip_name = resource_view.__extras.tooltip_name %}
+            {% set data_format = resource_view.__extras.data_format %}
+            {% set y_tick_format = resource_view.__extras.y_tick_format %}
+            {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
+            {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
+            {% set padding_bottom = resource_view.__extras.padding_bottom %}
+            {% set padding_top = resource_view.__extras.padding_top %}
+            {% set tick_count = resource_view.__extras.tick_count %}
+            {% set show_labels = resource_view.__extras.show_labels %}
+            {% set y_label = resource_view.__extras.y_label %}
+            {% set y_label_hide = resource_view.__extras.y_label_hide %}
+            {% set y_from_zero = resource_view.__extras.y_from_zero %}
+            {% set data_sort = resource_view.__extras.sort %}
+            {% set category_name = resource_view.__extras.category_name %}
+            {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
+            {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
+            {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
+            {% set sql_string = resource_view.__extras.sql_string %}
+            {% endif %}
+            {% snippet 'ajax_snippets/chart_module.html',
+                type='chart',
+                colors=colors,
+                x_axis=x_axis,
+                y_axis=y_axis,
+                chart_type=chart_type,
+                sql_string=sql_string,
+                title= title,
+                show_legend = show_legend,
+                x_text_rotate= 0,
+                x_text_multiline= x_text_multiline,
+                tooltip_name = tooltip_name,
+                data_format = data_format,
+                y_tick_format = y_tick_format,
+                chart_padding_left = chart_padding_left,
+                chart_padding_bottom = chart_padding_bottom,
+                padding_bottom = padding_bottom,
+                padding_top = padding_top,
+                tick_count = tick_count,
+                show_labels = show_labels,
+                y_label = y_label,
+                y_label_hide = y_label_hide,
+                y_from_zero = y_from_zero,
+                data_sort = data_sort,
+                category_name=category_name,
+                measure_label=measure_label,
+                dynamic_reference_type=dynamic_reference_type,
+                dynamic_reference_factor=dynamic_reference_factor,
+                dynamic_reference_label=dynamic_reference_label %}
+          {% endif %}
+
+          {% if current_resource_view.view_type == 'table'  %}
+            {# Here goes the table module #}
+          {% endif %}
+
+        {% endif %}
+      {% endfor %}
+  {% else %}
+    {# Views not created #}
+    <div class="data-viewer-info">
+      <p>{{ _("There are no views created for this resource yet.") }}</p>
+      {% if h.check_access('resource_view_create', {'resource_id': c.resource.id}) %}
+        <p class="text-muted">
+          <i class="fa fa-info-circle"></i>
+          {{ _("Not seeing the views you were expecting?")}}
+          <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
+            {{ _('Click here for more information.') }}</a>
+        </p>
+        <div id="data-view-info" class="collapse">
+          <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
+          <ul>
+            <li>{{ _("No view has been created that is suitable for this resource")}}</li>
+            <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
+            <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
 {% endblock %}
 

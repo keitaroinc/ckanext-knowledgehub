@@ -332,6 +332,11 @@ def get_chart_data(context, data_dict):
             categories_data[x_value].append(x_value)
 
         for value in category_values:
+            # check if there is no
+            # value skip querying data
+            if not value:
+                continue
+
             if (has_where_clause):
                 category_value_sql = sql_without_group + u'AND ("' + \
                                     category + u'" = ' + u"'" + value + \
