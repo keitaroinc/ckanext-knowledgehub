@@ -6,7 +6,7 @@ Options:
 
 */
 "use strict";
-ckan.module('querytool-table', function () {
+ckan.module('table', function () {
 
     // Languages for datables
     var LANGUAGES = {
@@ -177,65 +177,69 @@ ckan.module('querytool-table', function () {
                 updateBtn.click(this.updateTable.bind(this));
             }
 
-            this.sandbox.subscribe('querytool:updateTables', this.updateTable.bind(this));
+            this.sandbox.subscribe('knowledgehub:updateTables', this.updateTable.bind(this));
         },
 
         createTable: function (yVal, xVal, fromUpdate) {
             var module = this;
-
-            console
-
             // Prepare settings
             var id = this.options.table_id;
             var locale = $('html').attr('lang');
             var y_axis = (yVal) ? yVal : this.options.y_axis;
-            var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
-            var main_value = this.options.main_value;
-            if (main_value === true) main_value = $('[name*=table_main_value]').val();
+            var main_value = (xVal) ? xVal : this.options.main_value;
             if (fromUpdate) main_value = xVal;
+            var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
-            console.log(title)
             var filename_export = (title === '') ? this.options.resource_name : title;
 
             filename_export = filename_export.split('.').slice(0, 1).join('.');
 
+            this.el.text('');
+            if (main_value === true || y_axis === true) {
+                this.el.text(this._('Please choose X and Y axis dimensions and press Update!'));
+                return;
+            }
+
             // Get data and create table
             var sql_string = this.create_sql_string(main_value, y_axis, category_name);
             api.get('get_resource_data', { sql_string: sql_string }, function (response) {
-                var rows = response.result;
+                if (response.success) {
+                    var rows = response.result;
 
-                // Render table HTML
-                var html = !category_name
+                    // Render table HTML
+                    var html = !category_name
                     ? module.render_data_table(rows, main_value, y_axis, measure_label)
                     : module.render_data_table_with_category(rows, category_name, main_value, y_axis, measure_label)
 
-                // Enable jquery.datatable
-                var table = $('#table-item');
-                if ($.fn.DataTable.isDataTable(table)) table.DataTable().destroy();
-                table.html(html);
-                table.DataTable({
-                    "language": LANGUAGES[locale],
-                    //download table data options
-                    dom: '<"dt-header">' + 'r<lf>tip<"dtf-butons"B>',
-                    buttons: [
-                        {
-                            'extend': 'csv',
-                            'className': 'btn btn-default',
-                            'title': filename_export
-                        },
-                        {
-                            'extend': 'excel',
-                            'className': 'btn btn-default',
-                            'title': filename_export
-                        },
-                    ],
-                    "processing": true,
-                });
+                    var table = $('#table-item');
+                    // Enable jquery.datatable
+                    if ($.fn.DataTable.isDataTable(table)) table.DataTable().destroy();
+                    table.html(html);
+                    table.DataTable({
+                        "language": LANGUAGES[locale],
+                        //download table data options
+                        dom: '<"dt-header">r<lf>tip<"dtf-butons"B>',
+                        buttons: [
+                            {
+                                'extend': 'csv',
+                                'className': 'btn btn-default',
+                                'title': filename_export
+                            },
+                            {
+                                'extend': 'excel',
+                                'className': 'btn btn-default',
+                                'title': filename_export
+                            },
+                        ],
+                        "processing": true,
+                    });
 
-                // Set title value
-                table.find("div.dt-header" + id).html(title);
-
+                    // Set title value
+                    table.find("div.dt-header" + id).html(title);
+                } else {
+                    this.el.text(this._('Table could not be created!'));
+                }
             });
         },
 
@@ -261,15 +265,6 @@ ckan.module('querytool-table', function () {
         render_data_table: function (rows, main_value, y_axis, measure_label) {
             main_value = main_value.toLowerCase();
             y_axis = y_axis.toLowerCase();
-
-            console.log(main_value)
-            console.log(y_axis)
-
-            if (main_value === y_axis) {
-                this.el.text(this._('X axis dimension cannot be same as Y axis dimension, please choose different one!'));
-            } else if (!main_value && !y_axis) {
-                this.el.text(this._('Please choose X and Y axis dimensions!'));
-            }
 
             // Prepare data
             var data = {
@@ -428,7 +423,7 @@ ckan.module('querytool-table', function () {
 
         teardown: function () {
             // We must always unsubscribe on teardown to prevent memory leaks.
-            this.sandbox.unsubscribe('querytool:updateTables', this.updateTable.bind(this));
+            this.sandbox.unsubscribe('knowledgehub:updateTables', this.updateTable.bind(this));
         }
     }
 });
