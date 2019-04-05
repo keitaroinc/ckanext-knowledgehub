@@ -229,7 +229,7 @@ def resource_update(context, data_dict):
 
 
 # Overwrite of the original 'resource_view_update'
-# action in order to allow saving
+# action in order to allow updating
 # different types of resource views
 def resource_view_update(context, data_dict):
     '''Update a resource view.
