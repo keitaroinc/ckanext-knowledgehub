@@ -204,7 +204,7 @@ class EditView(MethodView):
             if to_delete:
                 view_dict['id'] = view_id
                 get_action('resource_view_delete')(context, view_dict)
-            elif view_id:
+            else:
                 view_dict['id'] = view_id
                 resource_view = \
                     get_action('resource_view_update')(context, view_dict)
