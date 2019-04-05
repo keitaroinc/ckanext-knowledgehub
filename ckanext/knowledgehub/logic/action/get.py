@@ -214,16 +214,29 @@ def research_question_list(context, data_dict):
     :rtype: dictionary
     '''
     q = data_dict.get('q', '')
+    theme = data_dict.get('theme', None)
+    sub_theme = data_dict.get('sub_theme', None)
+
     page_size = int(data_dict.get('pageSize', 10000))
     page = int(data_dict.get('page', 1))
     offset = (page - 1) * page_size
     order_by = data_dict.get('order_by', 'name asc')
+
+    kwargs = {}
+
+    if theme:
+        kwargs['theme'] = theme
+    if sub_theme:
+        kwargs['sub_theme'] = sub_theme
+
+    kwargs['q'] = q
+    kwargs['limit'] = page_size
+    kwargs['offset'] = offset
+    kwargs['order_by'] = order_by
+
     rq_list = []
 
-    rq_db_list = ResearchQuestion.get(q=q,
-                                      limit=page_size,
-                                      offset=offset,
-                                      order_by=order_by).all()
+    rq_db_list = ResearchQuestion.get(**kwargs).all()
 
     for entry in rq_db_list:
         rq_list.append(_table_dictize(entry, context))

@@ -42,10 +42,32 @@
         });
     }
 
+    function populateRQ() {
+        var theme = $('#theme').val();
+        var sub_theme = $('#sub_theme').val();
+        api.get('research_question_list', {
+            'theme': theme,
+            'sub_theme': sub_theme
+        }, true)
+        .done(function (data) {
+            var rq = document.getElementById("field-research_question");
+            if(rq) {
+                $('#research_question').empty();
+                rq.options.length = 0;
+                for (var i = 0; i < data.result.data.length; ++i) {
+                    rq.options[rq.options.length] = new Option(data.result.data[i].title);
+                }
+            }
+        });
+    }
+
     $(document).ready(function () {
         $("#sub_theme").append(new Option("Please select a theme first!"));
         $('#theme').change(function () {
             populateSubThemes();
+        })
+        $('#sub_theme').change(function () {
+            populateRQ();
         })
     });
 })(ckan.i18n.ngettext, $);

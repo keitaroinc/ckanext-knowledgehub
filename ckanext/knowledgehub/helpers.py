@@ -88,7 +88,7 @@ def get_theme_options():
     theme_options = []
     theme_list = toolkit.get_action('theme_list')(context, {})
     for theme in theme_list.get(u'data', []):
-        opt = {u'text': theme[u'title'], u'value': theme[u'title']}
+        opt = {u'text': theme[u'title'], u'value': theme[u'id']}
         theme_options.append(opt)
     theme_options.insert(0, {'text': 'Select theme', 'value': ''})
     return theme_options
