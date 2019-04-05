@@ -1,0 +1,17 @@
+{% if c.action == 'resource_read' %}
+  {% ckan_extends %}
+{% else %}
+  {% if view.view_type == 'chart' %}
+    {% set url = h.url_for('chart_view.edit_chart', id=pkg.name, resource_id=view.resource_id, view_id=view.id) %}
+  {% endif %}
+  {% if view.view_type == 'table' %}
+    {% set url = '#' %}
+  {% endif %}
+
+  <li class="{% if is_selected %} active{% endif %}" data-id="{{ view.id }}">
+    <a href="{{ url }}" data-id="{{ view.id }}">
+      <i class="fa icon fa-{{ h.resource_view_icon(view) }}"></i>
+      {{ view.title }}
+    </a>
+  </li>
+{% endif %}
