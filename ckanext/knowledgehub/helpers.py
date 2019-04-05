@@ -323,7 +323,7 @@ def get_tick_text_rotation():
     return options
 
 
-def get_charts_data_formats(num=None):
+def get_data_formats(num=None):
     '''
     Get available formats for charts tooltip and axis ticks
     :return:

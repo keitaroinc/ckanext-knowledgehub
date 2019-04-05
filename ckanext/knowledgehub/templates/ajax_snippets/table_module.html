@@ -1,0 +1,14 @@
+{% set id = h.get_uuid() %}
+<div data-module="table"
+     data-module-sql_string="{{ sql_string }}"
+     data-module-resource_id="{{ resource_id }}"
+     data-module-resource_name="{{ resource_name }}"
+     data-module-y_axis="{{ y_axis }}"
+     data-module-measure_label="{{ measure_label }}"
+     data-module-main_value="{{ main_value }}"
+     data-module-category_name="{{ category_name }}"
+     data-module-data_format="{{ data_format }}"
+     data-module-table_title="{{ table_title }}"
+     >
+</div>
+<table id="table-item" class="hover table-bordered"></table>

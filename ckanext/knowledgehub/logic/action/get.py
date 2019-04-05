@@ -366,3 +366,15 @@ def get_chart_data(context, data_dict):
         return categories_data
     else:
         return kh_helpers.get_resource_data(sql_string)
+
+
+@toolkit.side_effect_free
+def get_resource_data(context, data_dict):
+    '''
+    Return the resource data from DataStore.
+
+    :param sql_string: the SQL query that will be executed to get the data.
+    :type sql_string: string
+    '''
+    sql_string = data_dict.get('sql_string')
+    return kh_helpers.get_resource_data(sql_string)

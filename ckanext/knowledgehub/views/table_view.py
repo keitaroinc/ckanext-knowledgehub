@@ -82,6 +82,8 @@ class CreateView(MethodView):
         error_summary = {}
 
         vars = {
+            'default_sql_string':
+                'SELECT * FROM "{table}"'.format(table=resource_id),
             'data': data,
             'errors': errors,
             'error_summary': error_summary,

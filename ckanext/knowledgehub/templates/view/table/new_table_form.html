@@ -4,6 +4,95 @@
   <li class="active"><a href="#"><i class="fa fa-pencil-square-o"></i> {{ _('Add table view') }}</a></li>
 {% endblock %}
 
-{% block form %}Table form fields go here{% endblock %}
+{% block form %}
+  {% snippet 'snippets/data_transformation.html', res=res, filters=[], default_sql_string=default_sql_string %}
 
- {% block preview %}Table preview go here{% endblock %}
+  <div id="table_item" class="item table_item visualization-fields-section">
+    <div class="item-wrapper">
+
+      {% if table %}
+        {% set table_title = table.title %}
+      {% endif %}
+      <div class="control-group ">
+        <label class="control-label" for="table_field_title">{{ _('Title') }}</label>
+        <div class="controls ">
+          <input id="table_field_title" name="table_field_title" value="{{ table_title }}" placeholder="{{ _('Table title') }}" type="text">
+        </div>
+      </div>
+
+      {# Measure, Y values #}
+      {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
+      <div class="control-group control-select">
+        <label class="control-label" for="table_field_y_axis_column">{{ _('Y axis dimension') }}</label>
+        <div class="controls">
+          <select id="table_field_y_axis_column" name="table_field_y_axis_column">
+            {% for y_value in y_axis_values %}
+            <option value="{{y_value}}" {% if table %}{{ 'selected' if y_value == table.y_axis }}{% endif %}>{{y_value}}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {# Dimension, X values #}
+      {% set columns = h.get_resource_columns(res['id'], []) %}
+      <div class="control-group control-select">
+        <label class="control-label" for="table_main_value">{{ _('X axis dimension') }}</label>
+        <div class="controls">
+          <select id="table_main_value" name="table_main_value">
+            {% for column in columns %}
+            <option value="{{column}}" {% if table %}{{ 'selected' if column == table.main_value }}{% endif %}>{{column}}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {# Category values #}
+      <div class="control-group control-select">
+        <label class="control-label" for="table_category_name">{{ _('Category') }}</label>
+        <div class="controls ">
+          <select id="table_category_name" name="table_category_name">
+          <option value="">&mdash; {{ _('Select column') }} &mdash;</option>
+          {% for category in columns %}
+          <option value="{{category}}"{% if table %}{{ 'selected' if category == table.category_name }}{% endif %}>{{category}}</option>
+          {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    {% set data_formats = h.get_data_formats() %}
+    <div class="control-group control-select">
+      <label class="control-label" for="table_data_format">{{ _('Data format') }}</label>
+      <div class="controls ">
+        <select id="table_data_format" name="table_data_format">
+          {% for format in data_formats %}
+          <option value="{{ format.value }}" {% if table %}{{ 'selected' if format.value == table.data_format }}{% endif %} >{{ format.text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {% if table %}
+      {% set main_value = table.main_value %}
+      {% set category_name = table.category_name %}
+      {% set data_format = table.data_format %}
+      {% set table_title = table.title %}
+    {% endif %}
+    <div class="preview-wrapper">
+      {% snippet 'ajax_snippets/table_module.html',
+        sql_string = default_sql_string,
+        resource_id = res['id'],
+        resource_name = res['name'],
+        y_axis = y_axis,
+        main_value = main_value,
+        category_name = category_name,
+        data_format = data_format,
+        table_title = table_title
+      %}
+    </div>
+    <ul class="inline text-right table-actions">
+      <li><a class="btn update-table-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
+    </ul>
+  </div>
+{% endblock %}

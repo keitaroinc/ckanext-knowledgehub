@@ -148,7 +148,7 @@ ckan.module('chart', function() {
                     }.bind(this));
                 }
             } else {
-                this.el.text(this._('Please choose X and Y axis dimensions!'));
+                this.el.text(this._('Please choose X and Y axis dimensions and press Update!'));
             }
         },
         createChart: function(data) {
