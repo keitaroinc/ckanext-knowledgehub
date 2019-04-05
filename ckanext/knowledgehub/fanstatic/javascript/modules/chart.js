@@ -66,6 +66,8 @@ ckan.module('chart', function() {
         // Enhance the SQL query with grouping and only select 2 columns.
         create_sql: function() {
             var sqlString = $('#sql-string').val() ? $('#sql-string').val() : this.options.sql_string;
+//            Here intentionally for accuracy check while in development
+            console.log(sqlString);
             var parsedSqlString = sqlString.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
             // We need to encode some characters, eg, '+' sign:
@@ -86,6 +88,10 @@ ckan.module('chart', function() {
             var form_filters = this.getFilters();
             var options_filters = this.options.filters;
             var filters = form_filters.length ? form_filters : options_filters;
+            //            Here intentionally for accuracy check while in development
+            console.log(sql);
+            console.log(category);
+            console.log(filters);
 
             if (x_axis && y_axis) {
                 if (x_axis === y_axis) {

@@ -1,0 +1,52 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Edit chart view') }} - {{ h.resource_display_name(res) }}{% endblock %}
+
+{% block breadcrumb_content %}
+    {% set dataset = h.dataset_display_name(pkg) %}
+    {% if pkg.organization %}
+      {% set organization = h.get_translated(pkg.organization, 'title') or pkg.organization.name %}
+      {% set group_type = pkg.organization.type %}
+      <li>{% link_for _('Organizations'), controller='organization', action='index', named_route=group_type + '_index' %}</li>
+      <li>{% link_for organization|truncate(30), controller='organization', action='read', id=pkg.organization.name, named_route=group_type + '_read' %}</li>
+    {% else %}
+      <li>{% link_for _('Datasets'), controller='package', action='search' %}</li>
+    {% endif %}
+    <li>{% link_for dataset|truncate(30), controller='package', action='read', id=pkg.name %}</li>
+    <li>{% link_for h.resource_display_name(res)|truncate(30), controller='package', action='resource_read', id=pkg.name, resource_id=res.id %}</li>
+    {% set edit_url = h.url_for(controller='package', action='resource_edit', id=pkg.name, resource_id=res.id) %}
+    <li><a href="{{ edit_url }}">{{ _('Edit') }}</a></li>
+    <li class="active"><a href="#">{{ _('Edit chart view') }}</a></li>
+{% endblock %}
+
+{% block content_action %}
+  {% link_for _('All views'), controller='package', action='resource_views', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='arrow-left' %}
+  {% if res %}
+    {% set url = h.url_for(controller='package', action='resource_read', id=pkg.name, resource_id=res.id) ~ '?view_id=' ~ data.id %}
+    <a href="{{ url }}" class="btn btn-default"><i class="fa fa-eye"></i> {{ _('View view') }}</a>
+  {% endif %}
+{% endblock %}
+
+{% block content_primary_nav %}
+  <li class="active"><a href="#"><i class="fa fa-pencil-square-o"></i> {{ _('Edit chart view') }}</a></li>
+{% endblock %}
+
+{% block primary_content_inner %}
+  <h1 class="hide-heading">{% block form_title %}{{ _('Add view') }}{% endblock %}</h1>
+  <form class="dataset-form dataset-resource-form" method="post" data-module="basic-form resource-form">
+     {% block form %}
+        {% snippet 'view/chart/chart_form.html', res=res, data=data, default_sql_string=default_sql_string %}
+     {% endblock %}
+    <div class="form-actions">
+      <button class="btn btn-danger pull-left" name="delete" value="Delete"> {{ _('Delete') }} </button>
+      <button class="btn btn-primary" name="save" value="Save" type="submit">{{ _('Update') }}</button>
+    </div>
+  </form>
+  {% block preview %}
+  {% endblock %}
+{% endblock %}
+
+
+{% block secondary_content %}
+  {% snippet 'view/snippets/view_help.html' %}
+{% endblock %}

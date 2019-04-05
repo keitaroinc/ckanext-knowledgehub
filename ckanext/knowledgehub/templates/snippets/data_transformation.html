@@ -4,7 +4,7 @@
   data-module="data-transformation"
   data-module-resource-id="{{ res['id'] }}"
   data-module-fields="{{ h.dump_json(h.resource_view_get_fields(res)) }}"
-  data-module-filters="{{ h.dump_json(filters) }}">
+  data-module-filters="{{ filters }}">
   <button class="btn btn-primary" id="add-filter-button" name="add-filter" type="button">{{ _('Add Filter') }}</button>
   <input id="sql-string" name="sql_string" value="{% if sql_string %} {{ sql_string }} {% else %} {{ default_sql_string }} {% endif %}" type="hidden"/>
   <hr>

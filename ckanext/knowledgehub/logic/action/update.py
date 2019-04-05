@@ -11,6 +11,8 @@ from ckan.plugins import toolkit
 from ckan import model
 from ckan import lib
 from ckan.logic.action.update import resource_update as ckan_rsc_update
+import ckan.lib.dictization.model_dictize as model_dictize
+import ckan.lib.dictization.model_save as model_save
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
@@ -24,6 +26,7 @@ log = logging.getLogger(__name__)
 
 _df = lib.navl.dictization_functions
 _table_dictize = lib.dictization.table_dictize
+_get_or_bust = logic.get_or_bust
 
 check_access = toolkit.check_access
 NotFound = logic.NotFound
@@ -223,3 +226,46 @@ def resource_update(context, data_dict):
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
     ckan_rsc_update(context, data_dict)
+
+
+# Overwrite of the original 'resource_view_update'
+# action in order to allow updating
+# different types of resource views
+def resource_view_update(context, data_dict):
+    '''Update a resource view.
+
+    To update a resource_view you must be authorized to update the resource
+    that the resource_view belongs to.
+
+    For further parameters see ``resource_view_create()``.
+
+    :param id: the id of the resource_view to update
+    :type id: string
+
+    :returns: the updated resource_view
+    :rtype: string
+
+    '''
+    model = context['model']
+    id = _get_or_bust(data_dict, "id")
+
+    resource_view = model.ResourceView.get(id)
+    if not resource_view:
+        raise NotFound
+
+    schema = knowledgehub_schema.resource_view_schema()
+
+    data, errors = _df.validate(data_dict, schema, context)
+    if errors:
+        model.Session.rollback()
+        raise ValidationError(errors)
+
+    context['resource_view'] = resource_view
+    context['resource'] = model.Resource.get(resource_view.resource_id)
+
+    check_access('resource_view_update', context, data_dict)
+
+    resource_view = model_save.resource_view_dict_save(data, context)
+    if not context.get('defer_commit'):
+        model.repo.commit()
+    return model_dictize.resource_view_dictize(resource_view, context)
