@@ -189,6 +189,7 @@ header.module-content.page-header {
   flex-wrap: wrap;
 
   .dataset-item {
+    font-family: @font-family-sans-serif;
     ul {
       padding-left: @grid-gutter-width - 10;
       padding: 0 0 @grid-gutter-width - 10 @grid-gutter-width - 10;
@@ -204,8 +205,14 @@ header.module-content.page-header {
       width: 100%;
     }
     .dataset-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      height:100%;
       padding: 0 @grid-gutter-width / 2 @grid-gutter-width / 2
         @grid-gutter-width / 2 + 5;
+       
       .dataset-heading {
         padding-top: @grid-gutter-width - 10;
         a {
@@ -219,6 +226,43 @@ header.module-content.page-header {
       }
     }
   }
+}
+.dataset-text-wrap{
+  text-overflow: ellipsis;
+  white-space: nowrap; 
+  overflow: hidden;
+  
+}
+.border-bottom{
+  > *:last-child{
+    padding-bottom: 15px;
+    border-bottom: 1px solid @pagination-border;
+  }
+  
+}
+.dataset-tag-wrapper{
+  margin: 10px 0 15px 0;
+  border-bottom: 1px solid @pagination-border;
+  > *{
+    margin-right: 10px;
+    margin-bottom: 15px;
+  }
+}
+.dataset-comment-section{
+  > *:not(:last-child){
+    margin-right: 15px;
+  }
+}
+.dataset-tag{
+  border: 1px solid @brand-primary;
+  color: @brand-primary;
+  font-weight: 600;
+  .flex;
+  .align-items-center;
+  .justify-content-center;
+  padding: 0 @padding-base-horizontal;
+  border-radius: 10px;
+
 }
 
 .search-form {
