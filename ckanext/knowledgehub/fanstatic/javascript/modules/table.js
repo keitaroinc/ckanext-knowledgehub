@@ -1,8 +1,18 @@
 /*
 
-This modules handles displaying a table item
+This modules handles displaying a visualization item
 
 Options:
+    sql_string (The SQL query with predifined filters if any)
+    resource_id (The ID of the resource)
+    resource_name (The name of the indicator)
+    y_axis (Measure of the table)
+    measure_label (Measure lable of the table)
+    main_value (The dimension)
+    category_name (The value of the table category)
+    data_type (Can be quantitative or qualitative)
+    data_format (Format of the data in the table)
+    table_title (Table title)
 
 */
 "use strict";
@@ -183,13 +193,13 @@ ckan.module('table', function () {
         createTable: function (yVal, xVal, fromUpdate) {
             var module = this;
             // Prepare settings
-            var id = this.options.table_id;
             var locale = $('html').attr('lang');
             var y_axis = (yVal) ? yVal : this.options.y_axis;
             var main_value = (xVal) ? xVal : this.options.main_value;
             if (fromUpdate) main_value = xVal;
             var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
+            var data_type = (this.options.data_type === true) ? 'quantitative' : this.options.data_type;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
             var filename_export = (title === '') ? this.options.resource_name : title;
 
@@ -202,15 +212,20 @@ ckan.module('table', function () {
             }
 
             // Get data and create table
-            var sql_string = this.create_sql_string(main_value, y_axis, category_name);
+            var sql_string = this.create_sql_string(main_value, y_axis, category_name, data_type);
             api.get('get_resource_data', { sql_string: sql_string }, function (response) {
                 if (response.success) {
                     var rows = response.result;
 
                     // Render table HTML
-                    var html = !category_name
-                    ? module.render_data_table(rows, main_value, y_axis, measure_label)
-                    : module.render_data_table_with_category(rows, category_name, main_value, y_axis, measure_label)
+                    var html = '';
+                    if (data_type === 'qualitative') {
+                        html = module.render_qualitative_data_table(rows, main_value);
+                    } else if (category_name) {
+                        html = module.render_data_table_with_category(rows, category_name, main_value, y_axis, measure_label);
+                    } else {
+                        html = module.render_data_table(rows, main_value, y_axis, measure_label);
+                    }
 
                     var table = $('#table-item');
                     // Enable jquery.datatable
@@ -236,14 +251,14 @@ ckan.module('table', function () {
                     });
 
                     // Set title value
-                    table.find("div.dt-header" + id).html(title);
+                    $("div.dt-header").html(title);
                 } else {
                     this.el.text(this._('Table could not be created!'));
                 }
             });
         },
 
-        create_sql_string: function (main_value, y_axis, category_name) {
+        create_sql_string: function (main_value, y_axis, category_name, data_type) {
 
             // Get settings
             var sqlString = $('#sql-string').val();
@@ -253,10 +268,13 @@ ckan.module('table', function () {
             // If category is set
             // we need the first column as a pivot column
             // see comments inside this.render_data_table_with_category
-            if (!category_name) {
-                return 'SELECT ' + '"' + main_value + '", SUM("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
-            } else {
+            // if data type is qualitative then only one column is needed
+            if (data_type === 'qualitative') {
+                return 'SELECT DISTINCT' + '"' + main_value + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
+            } else if (category_name) {
                 return 'SELECT ' + '"' + category_name + '", "' + main_value + '", SUM("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + category_name + '", "' + main_value + '"';
+            } else {
+                return 'SELECT ' + '"' + main_value + '", SUM("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
             }
 
         },
@@ -328,8 +346,8 @@ ckan.module('table', function () {
 
                 // Sub headers
                 y_axis_groups[row[category_name]] = true;
-
             };
+
             var data = {
                 main_value: main_value,
                 measure_label: measure_label,
@@ -366,6 +384,38 @@ ckan.module('table', function () {
           `;
 
             // Render
+            return this.render_template(template, data);
+        },
+
+        // table for qualitative data with one column
+        render_qualitative_data_table: function (rows, main_value) {
+            main_value = main_value.toLowerCase();
+
+            // Prepare data
+            var data = {
+                main_value: main_value,
+                rows: rows,
+            }
+
+            // Prepare template
+            var template = `
+          <table>
+            <thead>
+              <tr>
+                <th>{main_value|capitalize}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows %}
+                <tr>
+                  <td>{row[main_value]}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          `;
+
+            //Render
             return this.render_template(template, data);
         },
 

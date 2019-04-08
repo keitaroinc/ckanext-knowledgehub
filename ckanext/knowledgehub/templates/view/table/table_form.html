@@ -23,7 +23,7 @@
       {# Measure, Y values #}
       {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
       <div class="control-group control-select">
-        <label class="control-label" for="table_field_y_axis_column">{{ _('Y axis dimension') }}</label>
+        <label class="control-label" for="table_field_y_axis_column">{{ _('Measure') }}</label>
         <div class="controls">
           <select id="table_field_y_axis_column" name="table_field_y_axis_column">
             {% for y_value in y_axis_values %}
@@ -37,7 +37,7 @@
       {# Dimension, X values #}
       {% set columns = h.get_resource_columns(res['id'], []) %}
       <div class="control-group control-select">
-        <label class="control-label" for="table_main_value">{{ _('X axis dimension') }}</label>
+        <label class="control-label" for="table_main_value">{{ _('Dimension') }}</label>
         <div class="controls">
           <select id="table_main_value" name="table_main_value">
             {% for column in columns %}
@@ -87,6 +87,7 @@
         y_axis = y_axis,
         main_value = main_value,
         category_name = category_name,
+        data_type = data_type,
         data_format = data_format,
         table_title = table_title
       %}
