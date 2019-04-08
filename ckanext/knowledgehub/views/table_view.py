@@ -93,7 +93,7 @@ class CreateView(MethodView):
         }
 
         return base.render(
-            u'view/table/new_table_form.html',
+            u'view/table/table_form.html',
             extra_vars=vars
         )
 
