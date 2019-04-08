@@ -1,14 +1,17 @@
-{% extends "view/new_view_base.html" %}
+{% if data %}
+  {% set table = data.__extras or {} %}
+  {% set filters = data.__extras.filters or [] %}
+  {% set default_sql_string = data.__extras.sql_string or [] %}
+{% else %}
+  {% set table = {} %}
+  {% set filters = [] %}
+{% endif %}
 
-{% block content_primary_nav %}
-  <li class="active"><a href="#"><i class="fa fa-pencil-square-o"></i> {{ _('Add table view') }}</a></li>
-{% endblock %}
+{% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
 
-{% block form %}
-  {% snippet 'snippets/data_transformation.html', res=res, filters=[], default_sql_string=default_sql_string %}
 
-  <div id="table_item" class="item table_item visualization-fields-section">
-    <div class="item-wrapper">
+<div id="table_item" class="item table_item visualization-fields-section">
+  <div class="item-wrapper">
 
       {% if table %}
         {% set table_title = table.title %}
@@ -72,28 +75,28 @@
         </select>
       </div>
     </div>
+    <input id="resource_name" type="text" name="resource_name" value="{{ res['name'] }}" class="hidden">
 
-    {% if table %}
-      {% set main_value = table.main_value %}
-      {% set category_name = table.category_name %}
-      {% set data_format = table.data_format %}
-      {% set table_title = table.title %}
-    {% endif %}
-    <div class="preview-wrapper">
-      {% snippet 'ajax_snippets/table_module.html',
-        sql_string = default_sql_string,
-        resource_id = res['id'],
-        resource_name = res['name'],
-        y_axis = y_axis,
-        main_value = main_value,
-        category_name = category_name,
-        data_type = data_type,
-        data_format = data_format,
-        table_title = table_title
-      %}
-    </div>
-    <ul class="inline text-right table-actions">
-      <li><a class="btn update-table-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
-    </ul>
+  {% if table %}
+    {% set main_value = table.main_value %}
+    {% set category_name = table.category_name %}
+    {% set data_format = table.data_format %}
+    {% set table_title = table.title %}
+    {% set data_type = table.data_type %}
+  {% endif %}
+  <div class="preview-wrapper">
+    {% snippet 'ajax_snippets/table_module.html',
+      sql_string = sql_string,
+      resource_id = res['id'],
+      resource_name = res['name'],
+      y_axis = y_axis,
+      main_value = main_value,
+      category_name = category_name,
+      data_format = data_format,
+      data_type = data_type,
+      table_title = table_title %}
   </div>
-{% endblock %}
+  <ul class="inline text-right table-actions">
+    <li><a class="btn update-table-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
+  </ul>
+</div>
