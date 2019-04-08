@@ -3,7 +3,7 @@
 .toolbar {
   .breadcrumb {
     font-size: @font-size-base;
-    margin: @grid-gutter-width 0 @grid-gutter-width / 1.5 0;
+    margin: @grid-gutter-width 0 @grid-gutter-width / 1.6 0;
 
     a {
       @media (max-width: @screen-sm-max) {
@@ -189,6 +189,9 @@ header.module-content.page-header {
   flex-wrap: wrap;
 
   .dataset-item {
+    display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     font-family: @font-family-sans-serif;
     ul {
       padding-left: @grid-gutter-width - 10;
@@ -200,16 +203,15 @@ header.module-content.page-header {
     margin-right: 2%;
     margin-bottom: 1%;
     border: 1px solid @gray-line;
+    padding-bottom: 10px;
     .shadow;
     @media (max-width: @screen-sm-max) {
       width: 100%;
     }
     .dataset-content {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      
 
-      height:100%;
+      //height:100%;
       padding: 0 @grid-gutter-width / 2 @grid-gutter-width / 2
         @grid-gutter-width / 2 + 5;
        
@@ -249,6 +251,8 @@ header.module-content.page-header {
   }
 }
 .dataset-comment-section{
+  padding: 0 @grid-gutter-width / 2 @grid-gutter-width / 2
+        @grid-gutter-width / 2 + 5;
   > *:not(:last-child){
     margin-right: 15px;
   }

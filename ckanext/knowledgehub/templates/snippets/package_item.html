@@ -1,0 +1,68 @@
+{% ckan_extends %}
+
+{% block notes %}
+{{ super() }}
+
+{% if package.tags %}
+<div class="row flex flex-wrap dataset-tag-wrapper">
+    {% for tag in package.tags%}
+    <div class="dataset-tag mr-2">{{tag.name}}</div>
+    {% endfor %}
+</div>
+<div>
+    <div class="data-content border-bottom">
+        <h5 style="text-overflow: ellipsis;">Theme: <span class="text-muted">Displacement
+                Trends</span></h5>
+        <!-- {% if package.theme %}
+        <h5 style="text-overflow: ellipsis;">Theme: <span
+                class="text-muted">{{package.theme}}</span></h5>
+        {% endif %} -->
+        <h5>Sub-theme: <span class="text-muted">Refugees</span></h5>
+        <!-- {% if package.sub_theme %}
+        <h5>Sub-theme: <span class="text-muted">{{package.sub_theme}}</span></h5>
+        {%endif%} -->
+        <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
+            </span><span class="text-muted">Are there any persons in the RST pipeline that are
+                not likely to return?</span></h5>
+        <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
+            </span><span class="text-muted">Do the returning families have family members/relatives
+                in Syria?</span></h5>
+        <!-- {%if package.research_question%}
+        {% set questions = h.pg_array_to_py_list(package.research_question) %}
+        {% for question in questions %}
+        <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
+            </span><span class="text-muted">{{question}}</span></h5>
+        {%endfor%}
+        {%endif%} -->
+
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+
+{% block resources %}
+<div>
+    {% if package.resources %}
+    <ul class="dataset-resources list-unstyled">
+        {% for resource in package.resources %}
+        <li>
+            <h5>
+                {% if resource.name %}
+                {{resource.name}} 
+                {% endif %}
+                <a class="label label-default" data-format={{resource.format.lower()}}
+                    href={{resource.url}}>{{resource.format}}</a></h5>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <div class="dataset-comment-section flex align-items-center">
+        <h5><i class="fa fa-thumbs-up"></i> 12 USEFUL</h5>
+        <h5><i class="fa fa-handshake-o"></i> 23 TRUSTED</h5>
+        <h5><i class="fa fa fa-comments"></i> 22 COMMENTS</h5>
+    </div>
+</div>
+
+
+{% endblock %}
