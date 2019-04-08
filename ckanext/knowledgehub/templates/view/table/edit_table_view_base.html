@@ -1,6 +1,6 @@
 {% extends "page.html" %}
 
-{% block subtitle %}{{ _('Edit chart view') }} - {{ h.resource_display_name(res) }}{% endblock %}
+{% block subtitle %}{{ _('Edit table view') }} - {{ h.resource_display_name(res) }}{% endblock %}
 
 {% block breadcrumb_content %}
     {% set dataset = h.dataset_display_name(pkg) %}
@@ -16,7 +16,7 @@
     <li>{% link_for h.resource_display_name(res)|truncate(30), controller='package', action='resource_read', id=pkg.name, resource_id=res.id %}</li>
     {% set edit_url = h.url_for(controller='package', action='resource_edit', id=pkg.name, resource_id=res.id) %}
     <li><a href="{{ edit_url }}">{{ _('Edit') }}</a></li>
-    <li class="active"><a href="#">{{ _('Edit chart view') }}</a></li>
+    <li class="active"><a href="#">{{ _('Edit table view') }}</a></li>
 {% endblock %}
 
 {% block content_action %}
@@ -28,7 +28,7 @@
 {% endblock %}
 
 {% block content_primary_nav %}
-  <li class="active"><a href="#"><i class="fa fa-pencil-square-o"></i> {{ _('Edit chart view') }}</a></li>
+  <li class="active"><a href="#"><i class="fa fa-pencil-square-o"></i> {{ _('Edit table view') }}</a></li>
 {% endblock %}
 
 {% block primary_content_inner %}
