@@ -1,3 +1,5 @@
+{% ckan_extends %}
+{% block package_list %}
 <ul class="dataset-list list-unstyled">
     {% for item in packages %}
     <li class="dataset-item">
@@ -71,3 +73,5 @@
     </li>
     {% endfor %}
 </ul>
+{% endblock %}
+
