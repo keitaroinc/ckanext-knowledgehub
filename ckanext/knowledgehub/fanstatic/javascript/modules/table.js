@@ -207,6 +207,8 @@ ckan.module('table', function () {
                 if (response.success) {
                     var rows = response.result;
 
+                    console.log(response.result);
+
                     // Render table HTML
                     var html = !category_name
                     ? module.render_data_table(rows, main_value, y_axis, measure_label)
@@ -236,7 +238,7 @@ ckan.module('table', function () {
                     });
 
                     // Set title value
-                    table.find("div.dt-header" + id).html(title);
+                    $("div.dt-header").html(title);
                 } else {
                     this.el.text(this._('Table could not be created!'));
                 }
@@ -328,8 +330,8 @@ ckan.module('table', function () {
 
                 // Sub headers
                 y_axis_groups[row[category_name]] = true;
-
             };
+
             var data = {
                 main_value: main_value,
                 measure_label: measure_label,
