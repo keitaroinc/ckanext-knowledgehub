@@ -1,4 +1,6 @@
 import logging
+import json
+from operator import itemgetter
 
 from flask import Blueprint
 from flask.views import MethodView
@@ -8,6 +10,7 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, config, g, request
+from ckan.lib.navl import dictization_functions
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
@@ -30,6 +33,51 @@ table_view = Blueprint(
     __name__,
     url_prefix=u'/dataset/<id>/resource/<resource_id>'
 )
+
+
+def _process_post_data(data, resource_id):
+
+    config = {}
+    filters = []
+    for k, v in data.items():
+
+        # TODO handle items order
+        if k.startswith('data_filter_name_'):
+            filter = {}
+            filter_id = k.split('_')[-1]
+            filter['order'] = int(filter_id)
+            filter['name'] = \
+                data.pop('data_filter_name_{}'.format(filter_id))
+            filter['value'] = \
+                data.pop('data_filter_value_{}'.format(filter_id))
+            filters.append(filter)
+
+        config['main_value'] = \
+            data['table_main_value']
+        config['title'] = \
+            data['table_field_title']
+        config['data_format'] = \
+            data['table_data_format']
+        config['y_axis'] = \
+            data['table_field_y_axis_column']
+        config['category_name'] = \
+            data['table_category_name']
+        config['sql_string'] = \
+            data['sql_string']
+        config['resource_name'] = \
+            data['resource_name']
+
+    if len(filters) > 0:
+        filters.sort(key=itemgetter('order'))
+    config['filters'] = json.dumps(filters)
+
+    view_dict = {}
+    view_dict['resource_id'] = resource_id
+    view_dict['title'] = config['title']
+    view_dict['view_type'] = 'table'
+    view_dict.update(config)
+
+    return view_dict
 
 
 @table_view.before_request
@@ -93,7 +141,7 @@ class CreateView(MethodView):
         }
 
         return base.render(
-            u'view/table/table_form.html',
+            u'view/table/new_table_view_base.html',
             extra_vars=vars
         )
 
@@ -101,8 +149,29 @@ class CreateView(MethodView):
              error_summary=None):
 
         context = self._prepare()
-        log.info('Create table view')
-        return self.get(id, resource_id)
+
+        try:
+            data = logic.clean_dict(
+                dictization_functions.unflatten(
+                    logic.tuplize_dict(logic.parse_params(request.form))))
+        except dictization_functions.DataError:
+            base.abort(400, _(u'Integrity Error'))
+
+        view_dict = _process_post_data(data, resource_id)
+
+        try:
+            resource_view = \
+                get_action('resource_view_create')(context, view_dict)
+        except logic.NotAuthorized:
+            base.abort(403, _(u'Unauthorized to edit resource'))
+        except logic.ValidationError as e:
+            errors = e.error_dict
+            error_summary = e.error_summary
+            return self.get(id, resource_id, view_dict, errors, error_summary)
+
+        return h.redirect_to(controller='package',
+                             action='resource_views',
+                             id=id, resource_id=resource_id)
 
 
 table_view.add_url_rule(u'/new_table',

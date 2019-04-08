@@ -174,7 +174,6 @@ ckan.module('table', function () {
     return {
         initialize: function () {
 
-
             this.createTable();
 
             var tableField = this.el.closest('.table_item');
@@ -214,6 +213,8 @@ ckan.module('table', function () {
             // Get data and create table
             var sql_string = this.create_sql_string(main_value, y_axis, category_name, data_type);
             api.get('get_resource_data', { sql_string: sql_string }, function (response) {
+//                TODO remove log
+                console.log(sql_string);
                 if (response.success) {
                     var rows = response.result;
 
@@ -261,7 +262,7 @@ ckan.module('table', function () {
         create_sql_string: function (main_value, y_axis, category_name, data_type) {
 
             // Get settings
-            var sqlString = $('#sql-string').val();
+            var sqlString = $('#sql-string').val() ? $('#sql-string').val() : this.options.sql_string;
             var parsedSqlString = sqlString.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
 

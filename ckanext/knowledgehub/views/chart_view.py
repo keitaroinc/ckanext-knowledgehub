@@ -7,7 +7,6 @@ from flask.views import MethodView
 
 import ckan.lib.base as base
 import ckan.lib.helpers as h
-import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, config, g, request
@@ -42,7 +41,7 @@ def _process_post_data(data, resource_id):
     config = {}
     filters = []
     for k, v in data.items():
-
+        # TODO handle items order
         if k.startswith('data_filter_name_'):
             filter = {}
             filter_id = k.split('_')[-1]

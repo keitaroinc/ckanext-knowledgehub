@@ -70,7 +70,28 @@
           {% endif %}
 
           {% if current_resource_view.view_type == 'table'  %}
-            {# Here goes the table module #}
+
+              {% if resource_view and resource_view.__extras %}
+                {% set main_value = resource_view.__extras.main_value %}
+                {% set y_axis = resource_view.__extras.y_axis %}
+                {% set sql_string = resource_view.__extras.sql_string %}
+                {% set category_name = resource_view.__extras.category_name %}
+                {% set data_format = resource_view.__extras.data_format %}
+                {% set data_type = resource_view.__extras.data_type %}
+                {% set table_title = resource_view.__extras.title %}
+                {% set resource_name = resource_view.__extras.resource_name %}
+                {% set resource_id = resource_view.resource_id %}
+              {% endif %}
+                {% snippet 'ajax_snippets/table_module.html',
+                  sql_string = sql_string,
+                  resource_id = resource_id,
+                  resource_name = resource_name,
+                  y_axis = y_axis,
+                  main_value = main_value,
+                  category_name = category_name,
+                  data_format = data_format,
+                  data_type = data_type,
+                  table_title = table_title %}
           {% endif %}
 
         {% endif %}
