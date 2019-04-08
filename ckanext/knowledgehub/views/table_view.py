@@ -88,7 +88,8 @@ class CreateView(MethodView):
             'errors': errors,
             'error_summary': error_summary,
             'pkg': package,
-            'res': resource
+            'res': resource,
+            'data_type': 'quantitative'
         }
 
         return base.render(
