@@ -86,7 +86,7 @@
                     </div>
                     {% block package_search_results_list %}
                 
-                    {{ h.snippet('package/snippets/dataset_item.html', packages=c.page.items) }}
+                    {{ h.snippet('snippets/package_list.html', packages=c.page.items) }}
                     {% endblock %}
                 </div>
             </div>
