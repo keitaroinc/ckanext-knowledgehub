@@ -13,8 +13,8 @@
 <div id="table_item" class="item table_item visualization-fields-section">
   <div class="item-wrapper">
 
-      {% if table %}
-        {% set table_title = table.title %}
+      {% if data %}
+        {% set table_title = data.title %}
       {% endif %}
       <div class="control-group ">
         <label class="control-label" for="table_field_title">{{ _('Title') }}</label>
@@ -79,6 +79,7 @@
 
   {% if table %}
     {% set main_value = table.main_value %}
+    {% set y_axis = table.y_axis %}
     {% set category_name = table.category_name %}
     {% set data_format = table.data_format %}
     {% set table_title = table.title %}

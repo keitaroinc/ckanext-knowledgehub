@@ -41,7 +41,6 @@ def _process_post_data(data, resource_id):
     config = {}
     filters = []
     for k, v in data.items():
-        # TODO handle items order
         if k.startswith('data_filter_name_'):
             filter = {}
             filter_id = k.split('_')[-1]

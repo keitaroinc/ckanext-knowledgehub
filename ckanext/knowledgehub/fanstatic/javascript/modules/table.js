@@ -213,8 +213,7 @@ ckan.module('table', function () {
             // Get data and create table
             var sql_string = this.create_sql_string(main_value, y_axis, category_name, data_type);
             api.get('get_resource_data', { sql_string: sql_string }, function (response) {
-//                TODO remove log
-                console.log(sql_string);
+
                 if (response.success) {
                     var rows = response.result;
 
