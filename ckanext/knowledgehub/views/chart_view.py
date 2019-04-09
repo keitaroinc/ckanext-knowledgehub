@@ -174,6 +174,7 @@ class EditView(MethodView):
             'pkg': package,
             'res': resource,
             'data': data,
+            'data_type': 'quantitative',
             'errors': errors,
             'error_summary': error_summary
         }
@@ -265,6 +266,7 @@ class CreateView(MethodView):
             'default_sql_string':
                 'SELECT * FROM "{table}"'.format(table=resource_id),
             'data': data,
+            'data_type': 'qualitative',
             'errors': errors,
             'error_summary': error_summary,
             'pkg': package,

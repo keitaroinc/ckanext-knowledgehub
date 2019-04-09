@@ -35,7 +35,7 @@
   <h1 class="hide-heading">{% block form_title %}{{ _('Add view') }}{% endblock %}</h1>
   <form class="dataset-form dataset-resource-form" method="post" data-module="basic-form resource-form">
      {% block form %}
-        {% snippet 'view/chart/chart_form.html', res=res, data=data, default_sql_string=default_sql_string %}
+        {% snippet 'view/chart/chart_form.html', res=res, data=data, default_sql_string=default_sql_string, data_type=data_type %}
      {% endblock %}
     <div class="form-actions">
       <button class="btn btn-danger pull-left" name="delete" value="Delete"> {{ _('Delete') }} </button>
