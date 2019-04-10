@@ -1,5 +1,7 @@
 {% import 'macros/form.html' as form %}
 
+{% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+
 {% if data %}
   {% set chart = data.__extras or {} %}
   {% set filters = data.__extras.filters or [] %}
