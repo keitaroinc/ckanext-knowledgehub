@@ -3,9 +3,11 @@
 {% else %}
   {% if view.view_type == 'chart' %}
     {% set url = h.url_for('chart_view.edit_chart', id=pkg.name, resource_id=view.resource_id, view_id=view.id) %}
-  {% endif %}
-  {% if view.view_type == 'table' %}
+  {% elif view.view_type == 'table' %}
     {% set url = h.url_for('table_view.edit_table', id=pkg.name, resource_id=view.resource_id, view_id=view.id) %}
+  {% else %}
+    {% set url = h.url_for(controller='package', action='edit_view', id=pkg.name,
+                         resource_id=view.resource_id, view_id=view.id) %}
   {% endif %}
   <li class="{% if is_selected %} active{% endif %}" data-id="{{ view.id }}">
     <a href="{{ url }}" data-id="{{ view.id }}">
