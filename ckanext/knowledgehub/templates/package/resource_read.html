@@ -6,6 +6,7 @@
   {% if views_created %}
       {% for resource_view in resource_views %}
         {% if resource_view == current_resource_view %}
+
           {% if current_resource_view.view_type == 'chart' %}
 
             {% if resource_view and resource_view.__extras %}
@@ -67,9 +68,8 @@
                 dynamic_reference_type=dynamic_reference_type,
                 dynamic_reference_factor=dynamic_reference_factor,
                 dynamic_reference_label=dynamic_reference_label %}
-          {% endif %}
 
-          {% if current_resource_view.view_type == 'table'  %}
+          {% elif current_resource_view.view_type == 'table'  %}
 
               {% if resource_view and resource_view.__extras %}
                 {% set main_value = resource_view.__extras.main_value %}
@@ -92,8 +92,15 @@
                   data_format = data_format,
                   data_type = data_type,
                   table_title = table_title %}
-          {% endif %}
 
+          {% else %}
+
+              {% snippet 'package/snippets/resource_view.html',
+                 resource_view=resource_view,
+                 resource=c.resource,
+                 package=c.package %}
+
+          {% endif %}
         {% endif %}
       {% endfor %}
   {% else %}

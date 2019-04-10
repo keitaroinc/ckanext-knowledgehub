@@ -51,6 +51,7 @@ ckan.module('chart', function() {
 
             var chartField = $('.chart_field');
 
+
             // The Update chart button is only in the admin area. In the public
             // updating of viz items will be applied with a reload of the page.
             if (chartField.length > 0) {
@@ -66,13 +67,18 @@ ckan.module('chart', function() {
         // Enhance the SQL query with grouping and only select 2 columns.
         create_sql: function() {
             var sqlString = $('#sql-string').val() ? $('#sql-string').val() : this.options.sql_string;
-//            Here intentionally for accuracy check while in development
-            console.log(sqlString);
+
             var parsedSqlString = sqlString.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
             // We need to encode some characters, eg, '+' sign:
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
-            var sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+
+            var sql = ''
+            if (this.options.data_type === 'qualitative') {
+                sql = 'SELECT DISTINCT' + '"' + this.options.x_axis + '", COUNT("' + this.options.x_axis + '") as "' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            } else {
+                sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            }
 
             return sql
         },
@@ -88,10 +94,6 @@ ckan.module('chart', function() {
             var form_filters = this.getFilters();
             var options_filters = this.options.filters;
             var filters = form_filters.length ? form_filters : options_filters;
-            //            Here intentionally for accuracy check while in development
-            console.log(sql);
-            console.log(category);
-            console.log(filters);
 
             if (x_axis && y_axis) {
                 if (x_axis === y_axis) {
@@ -173,10 +175,13 @@ ckan.module('chart', function() {
             var y_label_hide = this.options.y_label_hide;
             var y_from_zero = this.options.y_from_zero;
             var data_sort = this.options.data_sort;
-            var measure_label = this.options.measure_label.toString().toLowerCase();
             var additionalCategory = (this.options.category_name === true) ? '' : this.options.category_name;
             var dynamic_reference_label = (this.options.dynamic_reference_label === true) ? '' : this.options.dynamic_reference_label;
             var values;
+            var measure_label = ''
+            if (this.options.data_type !== 'qualitative') {
+                measure_label =  this.options.measure_label.toString().toLowerCase();
+            }
 
             // Base options
             var options = {
@@ -510,11 +515,19 @@ ckan.module('chart', function() {
             var chartPaddingBottom = chartField.find('input[name*=chart_field_chart_padding_bottom]');
             var chartPaddingBottomVal = chartPaddingBottom.val();
 
+            var qualitativeData = chartField.find('[name*=chart_data_type]');
+            this.options.data_type = qualitativeData.is(':checked') ? 'qualitative' : 'quantitative';
+
             var axisXSelect = chartField.find('[name*=chart_field_x_axis_column]');
             var axisXValue = axisXSelect.val();
 
-            var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
-            var axisYValue = axisYSelect.val();
+            var axisYValue = '';
+            if (this.options.data_type === 'qualitative') {
+                axisYValue = 'count';
+            } else {
+                var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
+                axisYValue = axisYSelect.val();
+            }
 
             var categoryName = chartField.find('[name*=chart_field_category_name]');
             var categoryNameVal = categoryName.val();
@@ -573,7 +586,10 @@ ckan.module('chart', function() {
             var dynamicReferenceLabel = chartField.find('input[name*=chart_field_dynamic_reference_label]');
             var dynamicReferenceLabelVal = dynamicReferenceLabel.val();
 
-            var measureLabelVal = $('#chart_field_y_axis_column option:selected').text().toLowerCase();
+            var measureLabelVal = '';
+            if (this.options.data_type !== 'qualitative') {
+                measureLabelVal = $('#chart_field_y_axis_column option:selected').text().toLowerCase();
+            }
 
             this.options.colors = colorValue;
             this.options.chart_type = chartTypeValue;

@@ -7,7 +7,6 @@ Options:
     resource_id (The ID of the resource)
     resource_name (The name of the indicator)
     y_axis (Measure of the table)
-    measure_label (Measure lable of the table)
     main_value (The dimension)
     category_name (The value of the table category)
     data_type (Can be quantitative or qualitative)
@@ -193,10 +192,10 @@ ckan.module('table', function () {
             var module = this;
             // Prepare settings
             var locale = $('html').attr('lang');
+
             var y_axis = (yVal) ? yVal : this.options.y_axis;
             var main_value = (xVal) ? xVal : this.options.main_value;
             if (fromUpdate) main_value = xVal;
-            var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
             var data_type = (this.options.data_type === true) ? 'quantitative' : this.options.data_type;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
@@ -213,8 +212,7 @@ ckan.module('table', function () {
             // Get data and create table
             var sql_string = this.create_sql_string(main_value, y_axis, category_name, data_type);
             api.get('get_resource_data', { sql_string: sql_string }, function (response) {
-//                TODO remove log
-                console.log(sql_string);
+
                 if (response.success) {
                     var rows = response.result;
 
@@ -223,9 +221,9 @@ ckan.module('table', function () {
                     if (data_type === 'qualitative') {
                         html = module.render_qualitative_data_table(rows, main_value);
                     } else if (category_name) {
-                        html = module.render_data_table_with_category(rows, category_name, main_value, y_axis, measure_label);
+                        html = module.render_data_table_with_category(rows, category_name, main_value, y_axis);
                     } else {
-                        html = module.render_data_table(rows, main_value, y_axis, measure_label);
+                        html = module.render_data_table(rows, main_value, y_axis);
                     }
 
                     var table = $('#table-item');
@@ -281,14 +279,14 @@ ckan.module('table', function () {
         },
 
         // default tables
-        render_data_table: function (rows, main_value, y_axis, measure_label) {
+        render_data_table: function (rows, main_value, y_axis) {
             main_value = main_value.toLowerCase();
             y_axis = y_axis.toLowerCase();
 
             // Prepare data
             var data = {
                 main_value: main_value,
-                measure_label: measure_label,
+                measure_label: y_axis,
                 y_axis: y_axis,
                 rows: rows,
             }
@@ -299,7 +297,7 @@ ckan.module('table', function () {
             <thead>
               <tr>
                 <th>{main_value|capitalize}</th>
-                <th>{measure_label|capitalize}</th>
+                <th>{y_axis|capitalize}</th>
               </tr>
             </thead>
             <tbody>
@@ -318,7 +316,7 @@ ckan.module('table', function () {
         },
 
         // table for the two-way columns feature
-        render_data_table_with_category: function (rows, category_name, main_value, y_axis, measure_label) {
+        render_data_table_with_category: function (rows, category_name, main_value, y_axis) {
             category_name = category_name.toLowerCase();
             main_value = main_value.toLowerCase();
             y_axis = y_axis.toLowerCase();
@@ -351,7 +349,7 @@ ckan.module('table', function () {
 
             var data = {
                 main_value: main_value,
-                measure_label: measure_label,
+                measure_label: y_axis,
                 y_axis: y_axis,
                 y_axis_groups: Object.keys(y_axis_groups).sort(),
                 rows: Object.values(rows_mapping),
@@ -363,7 +361,7 @@ ckan.module('table', function () {
             <thead>
               <tr>
                 <th rowspan="2">{main_value|capitalize}</th>
-                <th colspan="{y_axis_groups.length}">{measure_label|capitalize}</th>
+                <th colspan="{y_axis_groups.length}">{y_axis|capitalize}</th>
               </tr>
               <tr>
                 {% for y_axis_group in y_axis_groups %}
@@ -464,11 +462,12 @@ ckan.module('table', function () {
         updateTable: function () {
             var yVal = $('[name=table_field_y_axis_column]').val();
             var xVal = this.el.parent().parent().find('[id*=table_main_value]').val();
-            var measureLabelVal = $('#table_field_y_axis_column option:selected').text();
+            var qualitativeData = this.el.parent().parent().find('[id*=table_data_type]');
+            this.options.data_type = qualitativeData.is(':checked') ? 'qualitative' : 'quantitative';
             this.options.category_name = this.el.parent().parent().find('[id*=table_category_name]').val();
             this.options.data_format = this.el.parent().parent().find('[id*=table_data_format]').val();
             this.options.table_title = this.el.parent().parent().find('[id*=table_field_title]').val();
-            this.options.measure_label = measureLabelVal;
+
             this.createTable(yVal, xVal, true);
         },
 

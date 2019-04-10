@@ -1,3 +1,5 @@
+{% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+
 {% if data %}
   {% set table = data.__extras or {} %}
   {% set filters = data.__extras.filters or [] %}
@@ -13,13 +15,13 @@
 <div id="table_item" class="item table_item visualization-fields-section">
   <div class="item-wrapper">
 
-      {% if table %}
-        {% set table_title = table.title %}
+      {% if data %}
+        {% set table_title = data.title %}
       {% endif %}
       <div class="control-group ">
         <label class="control-label" for="table_field_title">{{ _('Title') }}</label>
         <div class="controls ">
-          <input id="table_field_title" name="table_field_title" value="{{ table_title }}" placeholder="{{ _('Table title') }}" type="text">
+          <input id="table_field_title" name="table_field_title" value="{{ table_title }}" placeholder="{{ _('Table title') }}" type="text" required>
         </div>
       </div>
 
@@ -75,10 +77,22 @@
         </select>
       </div>
     </div>
+
+    {% if table %}
+      {% set data_type = table.data_type %}
+    {% endif %}
+    <div class="control-group ">
+      <label class="control-label" for="table_data_type">{{ _('Qualitative data') }}</label>
+      <div class="controls">
+        <input id="table_data_type" type="checkbox" name="table_data_type" value="{{ data_type }}" {% if data_type=='qualitative' %}checked{% endif %}>
+      </div>
+    </div>
+
     <input id="resource_name" type="text" name="resource_name" value="{{ res['name'] }}" class="hidden">
 
   {% if table %}
     {% set main_value = table.main_value %}
+    {% set y_axis = table.y_axis %}
     {% set category_name = table.category_name %}
     {% set data_format = table.data_format %}
     {% set table_title = table.title %}
