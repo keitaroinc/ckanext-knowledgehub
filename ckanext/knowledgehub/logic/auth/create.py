@@ -22,3 +22,11 @@ def sub_theme_create(context, data_dict):
 @toolkit.auth_disallow_anonymous_access
 def research_question_create(context, data_dict):
     return {'success': True}
+
+
+def dashboard_create(context, data_dict):
+    '''
+        Authorization check for creating dashboard
+    '''
+    # sysadmins only
+    return {'success': False}

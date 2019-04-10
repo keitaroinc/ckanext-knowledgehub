@@ -5,6 +5,8 @@ import ckan.lib.dictization
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub.model import Dashboard
+import ckanext.knowledgehub.helpers as extension_helpers
 
 _table_dictize = ckan.lib.dictization.table_dictize
 
@@ -74,3 +76,29 @@ def check_sub_theme_parent(key, data, errors, context):
 
     if sub_theme not in children_list:
         errors[key].append(p.toolkit._('Sub-theme must belong to theme.'))
+
+
+def dashboard_name_validator(key, data, errors, context):
+    session = context['session']
+    dashboard_name = context.get('dashboard')
+
+    if dashboard_name and dashboard_name == data[key]:
+        return
+
+    query = session.query(Dashboard.name).filter_by(name=data[key])
+
+    result = query.first()
+
+    if result:
+        errors[key].append(
+            p.toolkit._('This dashboard name already exists. '
+                        'Choose another one.'))
+
+
+def dashboard_type_validator(key, data, errors, context):
+    clean_data = df.unflatten(data)
+    dashboard_type = clean_data.get('type')
+
+    if dashboard_type != 'internal' and dashboard_type != 'external':
+        errors[key].append(
+            p.toolkit._('The dashboard type can be either `internal` or `external`'))

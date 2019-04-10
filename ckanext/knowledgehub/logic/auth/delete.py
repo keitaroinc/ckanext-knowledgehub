@@ -25,3 +25,11 @@ def research_question_delete(context, data_dict):
         return {'success': True}
     else:
         return {'success': False}
+
+
+def dashboard_delete(context, data_dict):
+    '''
+        Authorization check for deleting a dashboard
+    '''
+    # sysadmins only
+    return {'success': False}

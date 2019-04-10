@@ -20,6 +20,7 @@ from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 
@@ -266,7 +267,7 @@ def resource_view_create(context, data_dict):
 
     max_order = model.Session.query(
         func.max(model.ResourceView.order)
-        ).filter_by(resource_id=resource_id).first()
+    ).filter_by(resource_id=resource_id).first()
 
     order = 0
     if max_order[0] is not None:
@@ -277,3 +278,46 @@ def resource_view_create(context, data_dict):
     if not context.get('defer_commit'):
         model.repo.commit()
     return model_dictize.resource_view_dictize(resource_view, context)
+
+
+def dashboard_create(context, data_dict):
+    '''
+    Create new dashboard
+
+        :param name
+        :param title
+        :param description
+        :param type
+        :param indicators
+    '''
+    check_access('dashboard_create', context)
+
+    session = context['session']
+
+    data, errors = _df.validate(data_dict, knowledgehub_schema.dashboard_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    dashboard = Dashboard()
+
+    items = ['name', 'title', 'description', 'type', 'indicators']
+
+    for item in items:
+        setattr(dashboard, item, data.get(item))
+
+    dashboard.created_at = datetime.datetime.utcnow()
+    dashboard.modified_at = datetime.datetime.utcnow()
+
+    source = data.get('source')
+
+    if source is not None:
+        dashboard.source = source
+
+    dashboard.save()
+
+    session.add(dashboard)
+    session.commit()
+
+    return _table_dictize(dashboard, context)

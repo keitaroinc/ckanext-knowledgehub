@@ -7,6 +7,7 @@ name_validator = toolkit.get_validator('name_validator')
 isodate = toolkit.get_validator('isodate')
 ignore_empty = toolkit.get_validator('ignore_empty')
 email_validator = toolkit.get_validator('email_validator')
+convert_to_json_if_string = toolkit.get_converter('convert_to_json_if_string')
 
 
 def theme_schema():
@@ -71,4 +72,20 @@ def resource_view_schema():
         'title': [not_empty, unicode],
         'description': [ignore_missing, unicode],
         'view_type': [not_empty, unicode]
+    }
+
+
+def dashboard_schema():
+    return {
+        'name': [not_empty,
+                 name_validator,
+                 validators.dashboard_name_validator,
+                 unicode],
+        'title': [not_empty, unicode],
+        'description': [not_empty, unicode],
+        'type': [not_empty, validators.dashboard_type_validator, unicode],
+        'created_at': [ignore_missing, isodate],
+        'modified_at': [ignore_missing, isodate],
+        'source': [ignore_missing, unicode],
+        'indicators': [not_empty, convert_to_json_if_string, unicode],
     }
