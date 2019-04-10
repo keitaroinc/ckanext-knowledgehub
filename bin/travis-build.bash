@@ -10,9 +10,7 @@ sudo apt-get install solr-jetty
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/ckan/ckan
 cd ckan
-export latest_ckan_release_branch=`git branch --all | grep remotes/origin/release-v | sort -r | sed 's/remotes\/origin\///g' | head -n 1`
-echo "CKAN branch: $latest_ckan_release_branch"
-git checkout $latest_ckan_release_branch
+git checkout "ckan-2.8.2"
 python setup.py develop
 # Travis has an issue with older version of psycopg2 (2.4.5)
 sed -i 's/psycopg2==2.4.5/psycopg2==2.7.3.2/' requirements.txt
