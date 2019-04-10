@@ -10,10 +10,10 @@ sudo apt-get install solr-jetty
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/ckan/ckan
 cd ckan
-export latest_ckan_release_branch=`git branch --all | grep remotes/origin/release-v | sort -r | sed 's/remotes\/origin\///g' | head -n 1`
-echo "CKAN branch: $latest_ckan_release_branch"
-git checkout $latest_ckan_release_branch
+git checkout "ckan-2.8.2"
 python setup.py develop
+# Travis has an issue with older version of psycopg2 (2.4.5)
+sed -i 's/psycopg2==2.4.5/psycopg2==2.7.3.2/' requirements.txt
 pip install -r requirements.txt --allow-all-external
 pip install -r dev-requirements.txt --allow-all-external
 cd -
@@ -34,7 +34,11 @@ cd -
 
 echo "Installing ckanext-knowledgehub and its requirements..."
 python setup.py develop
+pip install -r requirements.txt
 pip install -r dev-requirements.txt
+
+echo "Setup database tables for ckanext-knowledgehub"
+knowledgehub -c ckan/test-core.ini db init
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
