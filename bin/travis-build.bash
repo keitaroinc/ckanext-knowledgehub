@@ -38,7 +38,7 @@ pip install -r requirements.txt
 pip install -r dev-requirements.txt
 
 echo "Setup database tables for ckanext-knowledgehub"
-knowledgehub -c ../ckan/test-core.ini db init
+knowledgehub -c ckan/test-core.ini db init
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
