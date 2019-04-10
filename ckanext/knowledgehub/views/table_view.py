@@ -68,8 +68,8 @@ def _process_post_data(data, resource_id):
 
     config['filters'] = json.dumps(filters)
 
-    if 'table_data_type' in data:
-        config['data_type'] = 'qualitative'
+    config['data_type'] = 'qualitative' \
+        if 'table_data_type' in data else 'quantitative'
 
     view_dict = {}
     view_dict['resource_id'] = resource_id

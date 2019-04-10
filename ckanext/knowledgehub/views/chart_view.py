@@ -100,6 +100,9 @@ def _process_post_data(data, resource_id):
 
     config['filters'] = json.dumps(filters)
 
+    config['data_type'] = 'qualitative' \
+        if 'chart_data_type' in data else 'quantitative'
+
     view_dict = {}
     view_dict['resource_id'] = resource_id
     view_dict['title'] = config['title']
@@ -173,7 +176,6 @@ class EditView(MethodView):
             'pkg': package,
             'res': resource,
             'data': data,
-            'data_type': 'quantitative',
             'errors': errors,
             'error_summary': error_summary
         }
@@ -265,7 +267,6 @@ class CreateView(MethodView):
             'default_sql_string':
                 'SELECT * FROM "{table}"'.format(table=resource_id),
             'data': data,
-            'data_type': 'quantitative',
             'errors': errors,
             'error_summary': error_summary,
             'pkg': package,

@@ -175,10 +175,13 @@ ckan.module('chart', function() {
             var y_label_hide = this.options.y_label_hide;
             var y_from_zero = this.options.y_from_zero;
             var data_sort = this.options.data_sort;
-            var measure_label = this.options.measure_label.toString().toLowerCase();
             var additionalCategory = (this.options.category_name === true) ? '' : this.options.category_name;
             var dynamic_reference_label = (this.options.dynamic_reference_label === true) ? '' : this.options.dynamic_reference_label;
             var values;
+            var measure_label = ''
+            if (this.options.data_type !== 'qualitative') {
+                measure_label =  this.options.measure_label.toString().toLowerCase();
+            }
 
             // Base options
             var options = {
@@ -511,6 +514,9 @@ ckan.module('chart', function() {
 
             var chartPaddingBottom = chartField.find('input[name*=chart_field_chart_padding_bottom]');
             var chartPaddingBottomVal = chartPaddingBottom.val();
+
+            var qualitativeData = chartField.find('[name*=chart_data_type]');
+            this.options.data_type = qualitativeData.is(':checked') ? 'qualitative' : 'quantitative';
 
             var axisXSelect = chartField.find('[name*=chart_field_x_axis_column]');
             var axisXValue = axisXSelect.val();

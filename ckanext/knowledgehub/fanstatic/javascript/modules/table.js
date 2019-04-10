@@ -463,12 +463,7 @@ ckan.module('table', function () {
             var yVal = $('[name=table_field_y_axis_column]').val();
             var xVal = this.el.parent().parent().find('[id*=table_main_value]').val();
             var qualitativeData = this.el.parent().parent().find('[id*=table_data_type]');
-            if (qualitativeData.is(':checked')) {
-                this.options.data_type = 'qualitative';
-            } else {
-                this.options.data_type = 'quantitative';
-            }
-
+            this.options.data_type = qualitativeData.is(':checked') ? 'qualitative' : 'quantitative';
             this.options.category_name = this.el.parent().parent().find('[id*=table_category_name]').val();
             this.options.data_format = this.el.parent().parent().find('[id*=table_data_format]').val();
             this.options.table_title = this.el.parent().parent().find('[id*=table_field_title]').val();
