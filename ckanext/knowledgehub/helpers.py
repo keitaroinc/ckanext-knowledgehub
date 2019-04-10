@@ -99,7 +99,7 @@ def get_sub_theme_options():
     sub_theme_options = []
     sub_theme_list = toolkit.get_action('sub_theme_list')(context, {})
     for sub_theme in sub_theme_list.get(u'data', []):
-        opt = {u'text': sub_theme[u'title'], u'value': sub_theme[u'title']}
+        opt = {u'text': sub_theme[u'title'], u'value': sub_theme[u'id']}
         sub_theme_options.append(opt)
     sub_theme_options.insert(0, {'text': 'Select sub-theme', 'value': ''})
     return sub_theme_options

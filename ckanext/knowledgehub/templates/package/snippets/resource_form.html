@@ -109,17 +109,52 @@
     {% endblock %}
 
 
+    {# Theme start #}
+    {% set theme_options = h.get_theme_options() %}
+          {% if data.theme %}
+            {% set existing_theme = data.theme %}
+          {% endif %}
+        <div class="form-group control-medium control-select">
+          <label for="field-theme" class="control-label">{{ _('Theme') }}</label>
+          <div class="controls">
+            <select id="field-theme" name="theme" class="form-control">
+            {% for theme_option in theme_options %}
+              <option value="{{ theme_option.value }}" {% if existing_theme == theme_option.value %} selected="selected" {% endif %}>{{ theme_option.text }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+    {# Theme end #}
 
-    {{ form.select('theme', label=_('Theme'), options=theme_options, error=errors.theme, selected=theme, is_required=True) }}
-    {{ form.select('sub_theme', label=_('Sub-Theme'), options=sub_theme_options, error=errors.theme, selected=sub_theme, is_required=True) }}
-    
+    {# Sub-theme start #}
+    {% set sub_theme_options = h.get_sub_theme_options() %}
+        {% if data.sub_theme %}
+          {% set existing_sub_theme = data.sub_theme %}
+      {% endif %}
+        <div class="form-group control-medium control-select">
+          <label for="field-sub_theme" class="control-label">{{ _('Sub-theme') }}</label>
+          <div class="controls">
+            <select id="field-sub_theme" name="sub_theme" class="form-control" data-toggle="dropdown">
+            {% for sub_theme_option in sub_theme_options %}
+              <option value="{{ sub_theme_option.value }}" {% if existing_sub_theme == sub_theme_option.value %} selected="selected" {% endif %}>{{ sub_theme_option.text }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+    {# Sub-theme end #}
 
 
     {# Research question start #}
+    {% set rq_options = h.get_rq_options() %}
+
+    {% if data.research_question %}
+      {% set selected_rq = h.pg_array_to_py_list(data.research_question) %}
+    {% endif %}
 
     {{ form.selectmulti('research_question', label=_('Research question'), options=rq_options, selected=selected_rq, id='field-research_question', error=errors.research_question, attrs={"multiple": "multiple", "data-module": "autocomplete"}, classes=['control-medium']) }}
 
     {# Research question end #}
+
 
     {% snippet 'package/snippets/resource_schema.html', data=data, errors=errors, licenses=licenses, entity_type=entity_type, object_type=object_type %}
     {% snippet 'package/snippets/validation_options.html', data=data, errors=errors, licenses=licenses, entity_type=entity_type, object_type=object_type %}
