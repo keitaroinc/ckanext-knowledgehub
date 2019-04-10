@@ -25,3 +25,11 @@ def research_question_update(context, data_dict):
         return {'success': True}
     else:
         return {'success': False}
+
+
+def dashboard_update(context, data_dict):
+    '''
+        Authorization check for updating dashboard
+    '''
+    # sysadmins only
+    return {'success': False}

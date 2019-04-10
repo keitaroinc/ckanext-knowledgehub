@@ -18,6 +18,7 @@ from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 
@@ -269,3 +270,47 @@ def resource_view_update(context, data_dict):
     if not context.get('defer_commit'):
         model.repo.commit()
     return model_dictize.resource_view_dictize(resource_view, context)
+
+
+def dashboard_update(context, data_dict):
+    '''
+    Updates existing dashboard
+
+        :param id
+        :param name
+        :param description
+        :param title
+        :param indicators
+    '''
+    check_access('dashboard_update', context)
+
+    name_or_id = data_dict.get("id") or data_dict.get("name")
+
+    if name_or_id is None:
+        raise ValidationError({'id': _('Missing value')})
+
+    dashboard = Dashboard.get(name_or_id)
+
+    if not dashboard:
+        log.debug('Could not find dashboard %s', name_or_id)
+        raise NotFound(_('Dashboard was not found.'))
+
+    session = context['session']
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.dashboard_schema(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    items = ['name', 'title', 'description', 'indicators']
+
+    for item in items:
+        setattr(dashboard, item, data.get(item))
+
+    dashboard.modified_at = datetime.datetime.utcnow()
+    dashboard.save()
+
+    session.add(dashboard)
+    session.commit()
+
+    return _table_dictize(dashboard, context)

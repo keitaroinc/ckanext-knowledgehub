@@ -10,6 +10,7 @@ from ckan import lib
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub import helpers as kh_helpers
 
 from ckanext.knowledgehub.backend.factory import get_backend
@@ -338,12 +339,12 @@ def get_chart_data(context, data_dict):
 
             if (has_where_clause):
                 category_value_sql = sql_without_group + u'AND ("' + \
-                                    category + u'" = ' + u"'" + value + \
-                                    u"'" + u') ' + u'GROUP BY' + sql_group
+                    category + u'" = ' + u"'" + value + \
+                    u"'" + u') ' + u'GROUP BY' + sql_group
             else:
                 category_value_sql = sql_without_group + u'WHERE ("' + \
-                                    category + u'" = ' + u"'" + value + \
-                                    u"'" + u') ' + u'GROUP BY' + sql_group
+                    category + u'" = ' + u"'" + value + \
+                    u"'" + u') ' + u'GROUP BY' + sql_group
 
             records = kh_helpers.get_resource_data(category_value_sql)
             x.append(value)
@@ -378,3 +379,77 @@ def get_resource_data(context, data_dict):
     '''
     sql_string = data_dict.get('sql_string')
     return kh_helpers.get_resource_data(sql_string)
+
+
+@toolkit.side_effect_free
+def dashboard_show(context, data_dict):
+    '''
+        Returns existing dashboard
+
+    :param id: id of the dashboard that you
+    want to search against.
+    :type id: string
+
+    :param name: name of the dashboard
+    that you want to search against. (Optional)
+    :type name: string
+
+    :returns: single dashboard dict
+    :rtype: dictionary
+    '''
+    name_or_id = data_dict.get("id") or data_dict.get("name")
+
+    if name_or_id is None:
+        raise ValidationError({'id': _('Missing value')})
+
+    dashboard = Dashboard.get(name_or_id)
+
+    if not dashboard:
+        log.debug(u'Could not find dashboard %s',
+                  name_or_id)
+        raise NotFound(_(u'Dashboard was not found.'))
+
+    return _table_dictize(dashboard, context)
+
+
+@toolkit.side_effect_free
+def dashboard_list(context, data_dict):
+    ''' List dashboards
+
+    :param page: current page in pagination (optional, default to 1)
+    :type page: integer
+    :param sort: sorting of the search results.  Optional.  Default:
+        "name asc" string of field name and sort-order. The allowed fields are
+        'name', and 'title'
+    :type sort: string
+    :param limit: Limit the search criteria (defaults to 10000).
+    :type limit: integer
+    :param offset: Offset for the search criteria (defaults to 0).
+    :type offset: integer
+
+    :returns: a dictionary including total items,
+     page number, items per page and data(dashboards)
+    :rtype: dictionary
+    '''
+
+    page = int(data_dict.get(u'page', 1))
+    limit = int(data_dict.get(u'limit', 10000))
+    offset = int(data_dict.get(u'offset', 0))
+    sort = data_dict.get(u'sort', u'name asc')
+    q = data_dict.get(u'q', u'')
+
+    dashboards = []
+
+    t_db_list = Dashboard.search(q=q,
+                                 limit=limit,
+                                 offset=offset,
+                                 order_by=sort)\
+        .all()
+
+    for dashboard in t_db_list:
+        dashboards.append(_table_dictize(dashboard, context))
+
+    total = len(Dashboard.search().all())
+
+    return {u'total': total, u'page': page,
+            u'items_per_page': limit, u'data': dashboards}
