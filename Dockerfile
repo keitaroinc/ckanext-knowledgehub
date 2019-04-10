@@ -43,8 +43,6 @@ ENV CKAN__PLUGINS envvars \
                   validation \
                   knowledgehub \
                   stats \
-                  text_view \
-                  image_view \
                   datastore \
                   datapusher
 
@@ -54,7 +52,7 @@ VOLUME /var/lib/ckan/default
 # Load envvars plugin on ini file
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.plugins = ${CKAN__PLUGINS}"
 # Remove recline view
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.default_views = image_view text_view"
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.default_views = "
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
