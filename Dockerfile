@@ -40,6 +40,7 @@ RUN pip install cython && \
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
+                  recline_view \
                   validation \
                   knowledgehub \
                   stats \
@@ -52,7 +53,7 @@ VOLUME /var/lib/ckan/default
 # Load envvars plugin on ini file
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.plugins = ${CKAN__PLUGINS}"
 # Remove recline view
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.default_views = "
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.default_views = recline_view"
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
