@@ -87,18 +87,17 @@
               </div>
             </div>
 
-            <!-- {# Size #}
-            {% set sizes = h.get_visualization_size() %}
-            <div class="control-group control-select">
-              <label class="control-label" for="chart_field_size_{{ n }}">{{ _('Size') }}</label>
-              <div class="controls ">
-                <select id="chart_field_size_{{ n }}" name="chart_field_size_{{ n }}">
-                  {% for size in sizes %}
-                  <option value="{{ size.value }}" {% if chart %}{{ 'selected' if size.value == chart.size }}{% endif %} >{{ size.text }}</option>
-                  {% endfor %}
-                </select>
+            {# Data type #}
+            {% if chart %}
+              {% set data_type = chart.data_type %}
+            {% endif %}
+            <div class="control-group ">
+              <label class="control-label" for="chart_data_type">{{ _('Qualitative data') }}</label>
+              <div class="controls">
+                <input id="chart_data_type" type="checkbox" name="chart_data_type" value="{{ data_type }}"
+                  {% if data_type=='qualitative' %}checked{% endif %}>
               </div>
-            </div> -->
+            </div>
 
             {# Color #}
             {% set color_schemes = h.get_color_scheme() %}
@@ -435,6 +434,7 @@
   {% set dynamic_reference_type = chart.dynamic_reference_type %}
   {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
   {% set dynamic_reference_label = chart.dynamic_reference_label %}
+  {% set data_type = chart.data_type %}
   {% endif %}
   {% snippet 'ajax_snippets/chart_module.html',
           type='chart',
