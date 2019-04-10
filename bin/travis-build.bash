@@ -14,6 +14,8 @@ export latest_ckan_release_branch=`git branch --all | grep remotes/origin/releas
 echo "CKAN branch: $latest_ckan_release_branch"
 git checkout $latest_ckan_release_branch
 python setup.py develop
+# Travis has an issue with older version of psycopg2 (2.4.5)
+sed -i 's/psycopg2==2.4.5/psycopg2==2.7.3.2/' requirements.txt
 pip install -r requirements.txt --allow-all-external
 pip install -r dev-requirements.txt --allow-all-external
 cd -
