@@ -57,7 +57,7 @@ search  </div>
         <li><a href="{% url_for 'theme.index' %}">{{ _('Themes') }}</a></li>
         <li><a href="{% url_for 'sub_theme.search' %}">{{ _('Sub-Themes') }}</a></li>
         <li><a href="{% url_for 'research_question.search' %}">{{ _('Research Questions') }}</a></li>
-        <li><a href="#">Dashboards</a></li>
+        <li><a href="{% url_for 'dashboards.index' %}">Dashboards</a></li>
       </ul>
     </div>
   </div>

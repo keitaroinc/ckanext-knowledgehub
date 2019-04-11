@@ -75,6 +75,10 @@ These are the optional configuration settings used by the extension::
     # (optional, default: 10).
     ckanext.knowledgehub.sub_themes_per_page = 20
 
+    # The number of dashboards shown per page
+    # (optional, default: 10).
+    ckanext.knowledgehub.dashboards_per_page = 20
+
 ------------------------
 Development Installation
 ------------------------

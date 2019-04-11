@@ -9,3 +9,8 @@ def research_question_show(context, data_dict):
 @toolkit.auth_allow_anonymous_access
 def research_question_list(context, data_dict):
     return {'success': True}
+
+
+@toolkit.auth_allow_anonymous_access
+def dashboard_list(context, data_dict):
+    return {'success': True}
