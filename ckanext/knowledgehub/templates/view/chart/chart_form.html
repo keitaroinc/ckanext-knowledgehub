@@ -35,7 +35,7 @@
             {% endif %}
             <div class="control-group title">
               <label class="control-label" for="chart_field_title">{{ _('Title') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                 <input id="chart_field_title" type="text" name="chart_field_title" value="{{ chart_title }}" placeholder="{{ _('Chart title') }}" required="required">
               </div>
             </div>
@@ -52,7 +52,7 @@
             {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_y_axis_column">{{ _('Y axis dimension') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                 <select id="chart_field_y_axis_column" name="chart_field_y_axis_column">
                   {% for y_value in y_axis_values %}
                   <option value="{{y_value}}" {% if chart %}{{ 'selected' if y_value == chart.y_axis }}{% endif %}>{{y_value}}</option>
@@ -65,7 +65,7 @@
             {% set x_axis_values = h.get_resource_columns(res['id'], []) %}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_x_axis_column">{{ _('X axis dimension') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                 <select id="chart_field_x_axis_column" name="chart_field_x_axis_column">
                   {% for column in x_axis_values %}
                   <option value="{{column}}"{% if chart %}{{ 'selected' if column == chart.x_axis }}{% endif %}>{{column}}</option>
@@ -77,7 +77,7 @@
             {# Category #}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_category_name">{{ _('Category') }}</label>
-              <div class="controls ">
+              <div class="controls chart-controls">
                 <select id="chart_field_category_name" name="chart_field_category_name">
                   <option value="">&mdash; {{ _('Select column') }} &mdash;</option>
                   {% for category in x_axis_values %}
@@ -93,9 +93,9 @@
             {% if chart %}
               {% set data_type = chart.data_type %}
             {% endif %}
-            <div class="control-group ">
+            <div class="control-group control-checkbox">
               <label class="control-label" for="chart_data_type">{{ _('Qualitative data') }}</label>
-              <div class="controls">
+              <div class="controls ">
                 <input id="chart_data_type" type="checkbox" name="chart_data_type" value="{{ data_type }}"
                   {% if data_type=='qualitative' %}checked{% endif %}>
               </div>
@@ -105,7 +105,7 @@
             {% set color_schemes = h.get_color_scheme() %}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_color">{{ _('Color') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                 <select id="chart_field_color" name="chart_field_color">
 
                   <optgroup label="Single Color">
@@ -142,7 +142,7 @@
             {% set sort_options = h.get_chart_sort() %}
             <div id="chart_field_sort_div" class="control-group control-select {% if chart and chart.category_name %}hidden{% endif %}">
               <label class="control-label" for="chart_field_sort">{{ _('X axis sorting') }}</label>
-              <div class="controls ">
+              <div class="controls chart-controls">
                 <select id="chart_field_sort" name="chart_field_sort">
                   {% for sort in sort_options %}
                   <option value="{{ sort.value }}" {% if chart %}{{ 'selected' if sort.value == chart.sort }}{% endif %} >{{ sort.text }}</option>
@@ -155,7 +155,7 @@
             {% set text_rotation = h.get_tick_text_rotation() %}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_x_text_rotate">{{ _('Label orientation') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                 <select id="chart_field_x_text_rotate" name="chart_field_x_text_rotate">
                   {% for rotate in text_rotation %}
                   <option value="{{ rotate.value }}" {% if chart %}{{ 'selected' if rotate.value == chart.x_text_rotate }}{% endif %}>{{ rotate.text }}</option>
@@ -168,7 +168,7 @@
             {% if chart %}
             {% set x_text_multiline = chart.x_text_multiline %}
             {% endif %}
-            <div class="control-group">
+            <div class="control-group control-checkbox">
               <label class="control-label" for="chart_field_x_text_multiline">{{ _('Force label in multiple lines') }}</label>
               <div class="controls">
                 <input id="chart_field_x_text_multiline" type="checkbox" name="chart_field_x_text_multiline" value="{{ x_text_multiline }}"{% if x_text_multiline=='false' %}{% else %}checked{% endif %}>
@@ -195,7 +195,7 @@
             {% endif %}
             <div class="control-group ">
               <label class="control-label" for="chart_field_y_label">{{ _('Y axis title') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                   <input id="chart_field_y_label" type="text" name="chart_field_y_label" value="{{ y_label }}" placeholder="{{ _('Measure by default') }}">
               </div>
             </div>
@@ -204,7 +204,7 @@
             {% if chart %}
               {% set y_label_hide = chart.y_label_hide %}
             {% endif %}
-            <div class="control-group ">
+            <div class="control-group control-checkbox">
               <label class="control-label" for="chart_field_y_label_hide">{{ _('Hide title') }}</label>
               <div class="controls">
                   <input id="chart_field_y_label_hide" type="checkbox" name="chart_field_y_label_hide" value="{{ y_label_hide }}" {% if y_label_hide=='true' %}checked{% endif %}>
@@ -215,7 +215,7 @@
             {% if chart %}
               {% set y_from_zero = chart.y_from_zero %}
             {% endif %}
-            <div class="control-group ">
+            <div class="control-group control-checkbox">
               <label class="control-label" for="chart_field_y_from_zero">{{ _('Start from zero') }}</label>
               <div class="controls">
                   <input id="chart_field_y_from_zero" type="checkbox" name="chart_field_y_from_zero" value="{{ y_from_zero }}" {% if y_from_zero=='true' %}checked{% endif %}>
@@ -230,7 +230,7 @@
             {% endif %}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_y_ticks_format">{{ _('Y axis label format') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                   <select id="chart_field_y_ticks_format" name="chart_field_y_ticks_format">
                   {% for tick in ticks_formats %}
                   <option value="{{ tick.value }}" {% if chart %}{{ 'selected' if tick.value == chart.y_tick_format }}{% endif %} >{{ tick.text }}</option>
@@ -258,7 +258,7 @@
             {% set data_formats = h.get_data_formats() %}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_data_format">{{ _('Data format') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                 <select id="chart_field_data_format" name="chart_field_data_format">
                   {% for format in data_formats %}
                   <option value="{{ format.value }}" {% if chart %}{{ 'selected' if format.value == chart.data_format }}{% endif %} >{{ format.text }}</option>
@@ -271,7 +271,7 @@
             {% if chart %}
               {% set show_labels = chart.show_labels %}
             {% endif %}
-            <div class="control-group ">
+            <div class="control-group control-checkbox">
               <label class="control-label" for="chart_field_labels">{{ _('Show data labels') }}</label>
               <div class="controls">
                   <input id="chart_field_labels" type="checkbox" name="chart_field_labels" value="{{ show_labels }}"{% if show_labels=='false' %}{% else %}checked{% endif %}>
@@ -282,7 +282,7 @@
             {% if chart %}
               {% set show_legend = chart.show_legend %}
             {% endif %}
-            <div class="control-group ">
+            <div class="control-group control-checkbox">
               <label class="control-label" for="chart_field_legend">{{ _('Show legend') }}</label>
               <div class="controls">
                   <input id="chart_field_legend" type="checkbox" name="chart_field_legend" value="{{ show_legend }}"{% if show_legend=='false' %}{% else %}checked{% endif %}>
@@ -306,7 +306,7 @@
             {# Dynamic Reference Type #}
             <div class="control-group ">
               <label class="control-label" for="chart_field_dynamic_reference_type">{{ _('Dynamic Reference Type') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                 <select id="chart_field_dynamic_reference_type" name="chart_field_dynamic_reference_type">
                   <option value="">&mdash; {{ _('Select type') }} &mdash;</option>
                   {% for type in ['Maximum', 'Average', 'Minimum'] %}
@@ -322,7 +322,7 @@
             {% endif %}
             <div class="control-group">
               <label class="control-label" for="chart_field_dynamic_reference_factor">{{ _('Dynamic Reference Factor') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                   <input id="chart_field_dynamic_reference_factor" type="number" min="0" step="0.1" name="chart_field_dynamic_reference_factor" value="{{ dynamic_reference_factor }}" default="1" placeholder="1">
               </div>
             </div>
@@ -333,7 +333,7 @@
             {% endif %}
             <div class="control-group">
               <label class="control-label" for="chart_field_dynamic_reference_label">{{ _('Dynamic Reference Label') }}</label>
-              <div class="controls">
+              <div class="controls chart-controls">
                   <input id="chart_field_dynamic_reference_label" type="text" name="chart_field_dynamic_reference_label" value="{{ dynamic_reference_label }}" placeholder="{{ _('Dynamic Reference') }}">
               </div>
             </div>
@@ -355,7 +355,7 @@
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_tooltip_name">{{ _('Tooltip name') }}</label>
-      <div class="controls">
+      <div class="controls chart-controls">
           <input id="chart_field_tooltip_name" type="text" name="chart_field_tooltip_name" value="{{ tooltip_name }}" placeholder="{{ _('Tooltip name') }}">
       </div>
     </div>
@@ -364,7 +364,7 @@
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_padding_top">{{ _('Padding top') }}</label>
-      <div class="controls">
+      <div class="controls chart-controls">
           <input id="chart_field_padding_top" type="number" min="0" name="chart_field_padding_top" value="{{ ptop }}" placeholder="{{ _('Default') }}">
       </div>
     </div>
@@ -373,7 +373,7 @@
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_padding_bottom">{{ _('Padding bottom') }}</label>
-      <div class="controls">
+      <div class="controls chart-controls">
           <input id="chart_field_padding_bottom" type="number" min="0" name="chart_field_padding_bottom" value="{{ pbtm }}" placeholder="{{ _('Default') }}">
       </div>
     </div>
@@ -382,7 +382,7 @@
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_tick_count">{{ _('Y axis tick count') }}</label>
-      <div class="controls">
+      <div class="controls chart-controls">
           <input id="chart_field_tick_count" type="number" min="0" name="chart_field_tick_count" value="{{ tick_count }}" placeholder="{{ _('Default') }}">
       </div>
     </div>
@@ -391,7 +391,7 @@
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_chart_padding_left">{{ _('Chart Padding left') }}</label>
-      <div class="controls">
+      <div class="controls chart-controls">
         <input id="chart_field_chart_padding_left" type="number" min="0" max="120" name="chart_field_chart_padding_left" value="{{ chart_padding_left }}" placeholder="{{ _('Default') }}">
       </div>
     </div>
@@ -400,7 +400,7 @@
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_chart_padding_bottom">{{ _('Chart Padding bottom') }}</label>
-      <div class="controls">
+      <div class="controls chart-controls">
         <input id="chart_field_chart_padding_bottom" type="number" min="0" name="chart_field_chart_padding_bottom" value="{{ chart_padding_bottom }}" placeholder="{{ _('Default') }}">
       </div>
     </div>
