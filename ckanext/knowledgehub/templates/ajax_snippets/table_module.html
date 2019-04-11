@@ -1,14 +1,3 @@
-{% resource 'knowledgehub/vendor/datatables/dataTables.css' %}
-{% resource 'knowledgehub/vendor/d3/d3.js' %}
-{% resource 'knowledgehub/vendor/nunjucks.js' %}
-{% resource 'knowledgehub/vendor/datatables/dataTables.js' %}
-{% resource 'knowledgehub/vendor/datatables/buttons.html5.js' %}
-{% resource 'knowledgehub/vendor/datatables/dataTables.buttons.js' %}
-{% resource 'knowledgehub/vendor/datatables/jszip.js' %}
-{% resource 'knowledgehub/vendor/datatables/vfs_fonts.js' %}
-{% resource 'knowledgehub/javascript/modules/table.js' %}
-
-{% set id = h.get_uuid() %}
 <div data-module="table"
      data-module-sql_string="{{ sql_string }}"
      data-module-resource_id="{{ resource_id }}"

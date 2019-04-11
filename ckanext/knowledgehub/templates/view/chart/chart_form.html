@@ -1,6 +1,6 @@
-{% import 'macros/form.html' as form %}
-
+{% resource 'knowledgehub/chart' %}
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+{% import 'macros/form.html' as form %}
 
 {% if data %}
   {% set chart = data.__extras or {} %}
