@@ -105,15 +105,6 @@ def get_sub_theme_options():
     return sub_theme_options
 
 
-def pg_array_to_py_list(rq_list):
-
-    if rq_list.startswith('{'):
-        ids = rq_list.replace('{', '').replace('}', '').split(',')
-    else:
-        ids = [rq_list]
-    return ids
-
-
 def resource_view_get_fields(resource):
 
     if not resource.get('datastore_active'):

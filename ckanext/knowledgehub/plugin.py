@@ -47,7 +47,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_rq_options': h.get_rq_options,
             'get_theme_options': h.get_theme_options,
             'get_sub_theme_options': h.get_sub_theme_options,
-            'pg_array_to_py_list': h.pg_array_to_py_list,
             'resource_view_get_fields': h.resource_view_get_fields,
             'get_resource_columns': h.get_resource_columns,
             'get_chart_types': h.get_chart_types,
