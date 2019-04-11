@@ -30,15 +30,10 @@ theme = Blueprint(
 )
 
 
-@theme.before_request
-def before_request():
-    try:
-        context = dict(model=model, user=g.user,
-                       auth_user_obj=g.userobj)
-        check_access(u'sysadmin', context)
-    except NotAuthorized:
-        base.abort(403, _(u'Need to be system '
-                          u'administrator to administer'))
+def _get_context():
+    return dict(model=model, user=g.user,
+                auth_user_obj=g.userobj,
+                session=model.Session)
 
 
 def index():
@@ -46,12 +41,7 @@ def index():
 
     extra_vars = {}
 
-    context = {
-        u'model': model,
-        u'session': model.Session,
-        u'user': g.user,
-        u'auth_user_obj': g.userobj
-    }
+    context = _get_context()
 
     # TODO add appropriate check
     # try:
@@ -102,15 +92,16 @@ def index():
 def read(name):
     u''' Theme read item view function '''
 
+    # TODO add appropriate check
+    # try:
+    #     check_access(u'theme_list', context)
+    # except NotAuthorized:
+    #     base.abort(403, _(u'Not authorized to see this page'))
+
     extra_vars = {}
 
     data_dict = {u'name': name}
-    context = {
-        u'model': model,
-        u'session': model.Session,
-        u'user': g.user,
-        u'auth_user_obj': g.userobj
-    }
+    context = _get_context()
 
     try:
         theme_dict = get_action(u'theme_show')(context,
@@ -126,14 +117,14 @@ def read(name):
 
 def delete(id):
     u''' Theme delete view function '''
+    context = _get_context()
+    try:
+        check_access(u'theme_delete', context)
+    except NotAuthorized:
+        return base.abort(403, _(u'Unauthorized'
+                                 u' to create a theme'))
 
     data_dict = {u'id': id}
-    context = {
-        u'model': model,
-        u'session': model.Session,
-        u'user': g.user,
-        u'auth_user_obj': g.userobj
-    }
 
     try:
         if request.method == u'POST':
@@ -157,12 +148,9 @@ class CreateView(MethodView):
 
     def _prepare(self):
 
-        context = {
-            u'model': model,
-            u'session': model.Session,
-            u'user': g.user,
-            u'auth_user_obj': g.userobj
-        }
+        context = dict(model=model, user=g.user,
+                       auth_user_obj=g.userobj,
+                       session=model.Session)
         try:
             check_access(u'theme_create', context)
         except NotAuthorized:
@@ -211,13 +199,8 @@ class EditView(MethodView):
     def _prepare(self, name):
 
         data_dict = {u'name': name}
+        context = _get_context()
 
-        context = {
-            u'model': model,
-            u'session': model.Session,
-            u'user': g.user,
-            u'auth_user_obj': g.userobj
-        }
         try:
             theme = get_action(u'theme_show')(
                 context, data_dict)
