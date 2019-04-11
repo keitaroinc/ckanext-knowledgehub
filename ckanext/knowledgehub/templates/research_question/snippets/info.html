@@ -14,8 +14,8 @@ Example:
   <section class="module module-narrow">
     <div class="module context-info">
       <div class="module-content">
-          <img src="{{ image_url }}" alt="{{ rq.get('title') }}" class="img-responsive media-image">
-          <h1 class="heading">{{ rq.get('content', '') }}</h1>
+          <img src="{{ image_url }}" alt="{{ rq.get('title') | truncate(30)}}" class="img-responsive media-image">
+          <h1 class="heading">{{ rq.get('content', '') | truncate(30)}}</h1>
           {% if rq.get('description', None) %}
             <p>{{ h.markdown_extract(rq.description, extract_length=truncate_desc) }}</p>
           {% else %}
