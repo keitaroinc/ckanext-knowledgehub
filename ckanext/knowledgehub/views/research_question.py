@@ -453,6 +453,8 @@ class EditView(MethodView):
         except dictization_functions.DataError:
             abort(400, _(u'Integrity Error'))
 
+        print(data_dict)
+
         data_dict['id'] = research_question.get('id')
         data_dict.pop('save', '')
 
@@ -484,9 +486,12 @@ class EditView(MethodView):
                         errors = e.error_dict
                         error_summary = e.error_summary
                         return self.get(data_dict, errors, error_summary)
-
-        if not data_dict.get('image_url'):
-            data_dict['image_url'] = h.url_for_static('/base/images/placeholder-rq.png')
+        else:
+            image_url = data_dict.get('image_url')
+            if not image_url or image_url == 'placeholder-rq.png':
+                data_dict['image_url'] = h.url_for_static('/base/images/placeholder-rq.png')
+            elif not (image_url.startswith('http') or image_url.startswith('https')):
+                data_dict['image_url'] = h.url_for_static('uploads/research_questions/%s' % image_url)
 
         try:
             research_question = get_action(
