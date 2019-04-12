@@ -343,11 +343,7 @@
       </div>
     </div>
 
-    {# Controls #}
-    <ul class="inline text-right chart-actions">
-      <li class="list-unstyled"><a class="btn  btn-default update-chart-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
-    </ul>
-    <span class="grippy"></span>
+   
 
     {# Legacy #}
     {% if chart %}
@@ -469,4 +465,10 @@
           dynamic_reference_factor=dynamic_reference_factor,
           dynamic_reference_label=dynamic_reference_label,
           data_type = data_type %}
+          {# Controls #}
+          <ul class="inline text-right view-actions">
+            <li class="list-unstyled"><a class="btn  btn-default update-view-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
+          </ul>
+          <span class="grippy"></span>
+         
 </div>
