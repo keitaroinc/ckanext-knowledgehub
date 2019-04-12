@@ -453,8 +453,6 @@ class EditView(MethodView):
         except dictization_functions.DataError:
             abort(400, _(u'Integrity Error'))
 
-        print(data_dict)
-
         data_dict['id'] = research_question.get('id')
         data_dict.pop('save', '')
 
