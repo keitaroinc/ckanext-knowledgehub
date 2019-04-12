@@ -16,20 +16,19 @@
 /* .account-masthead */
 .control-checkbox{
   display: flex;
-  justify-content: space-between;
   align-items: center;
   flex-wrap: nowrap;
   > label{
-    flex: 1 1 50% !important;
+   margin-right: 15px; 
   }
   > div{
-    flex: 0 0 15px !important;
+    flex: 0 0 15px;
     > input{
       width: 15px;
     }
   }
 }
-.chart-controls{
+.input-controls{
   margin-bottom: 0;
   > *{
     padding: 6px 12px;
@@ -477,10 +476,10 @@ header.module-content.page-header {
 }
 .data-transformation-module{
   padding-top: 40px;
-  & > hr {
+  > hr {
     display: none;
   }
-  & > button, input{
+  > button, input{
     position: absolute;
     top: 0;
     left: 0;
@@ -489,7 +488,7 @@ header.module-content.page-header {
   position:relative;
   display: flex;
   flex-wrap: wrap;
-  & > *{
+  > *{
     flex: 1 0 30%;
     margin: 0 5px;
   }
