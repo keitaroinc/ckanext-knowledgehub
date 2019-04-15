@@ -1,0 +1,30 @@
+{% ckan_extends %}
+{{ super() }}
+{% block package_description %}
+    {% if pkg.private %}
+      <span class="dataset-private label label-inverse pull-right">
+        <i class="fa fa-lock"></i>
+        {{ _('Private') }}
+      </span>
+    {% endif %}
+    <h1 class="text-wrap">
+      {% block page_heading %}
+        {{ h.dataset_display_name(pkg) }}
+        {% if pkg.state.startswith('draft') %}
+          [{{ _('Draft') }}]
+        {% endif %}
+        {% if pkg.state == 'deleted' %}
+          [{{ _('Deleted') }}]
+        {% endif %}
+      {% endblock %}
+    </h1>
+    {% block package_notes %}
+      {% if pkg.notes %}
+        <div class="notes embedded-content text-wrap">
+          {{ h.render_markdown(h.get_translated(pkg, 'notes')) }}
+        </div>
+      {% endif %}
+    {% endblock %}
+    {# FIXME why is this here? seems wrong #}
+    <span class="insert-comment-thread"></span>
+  {% endblock %}

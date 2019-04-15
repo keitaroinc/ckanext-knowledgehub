@@ -13,8 +13,8 @@
         {% for rq in rqs %}
         <div class="col-lg-2 rq-box rq-item"
             style="flex: 1;background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
-            <h3 class="rq-heading">
-                <a href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') | truncate(25) }}</a>
+            <h3 class="rq-heading text-wrap">
+                <a href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
                 <small>Research Question</small>
             </h3>
         
