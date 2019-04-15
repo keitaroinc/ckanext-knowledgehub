@@ -1,0 +1,25 @@
+{#
+Displays a sidebard module with information for given dashboard
+
+dashboard    - The dashboard dict that owns the info.
+
+Example:
+
+  {% snippet "dashboard/snippets/info.html"%}
+
+#}
+{% block dashboard_info %}
+  {% if dashboard %}
+    <section class="module module-narrow">
+      <div class="module context-info">
+        <div class="module-content">
+          {% block dashboard_info_inner %}
+            {% block heading %}
+              <h1 class="heading">{{ dashboard.title }}</h1>
+            {% endblock %}
+          {% endblock %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}
