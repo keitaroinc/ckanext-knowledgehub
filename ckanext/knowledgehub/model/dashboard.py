@@ -30,7 +30,7 @@ dashboard_table = Table(
     Column('description', types.UnicodeText, nullable=False),
     Column('type', types.UnicodeText, nullable=False),
     Column('source', types.UnicodeText),
-    Column('indicators', types.UnicodeText, nullable=False),
+    Column('indicators', types.UnicodeText),
     Column('created_at', types.DateTime,
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,

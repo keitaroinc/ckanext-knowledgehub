@@ -87,5 +87,5 @@ def dashboard_schema():
         'created_at': [ignore_missing, isodate],
         'modified_at': [ignore_missing, isodate],
         'source': [ignore_missing, unicode],
-        'indicators': [not_empty, convert_to_json_if_string, unicode],
+        'indicators': [ignore_missing, convert_to_json_if_string, unicode],
     }
