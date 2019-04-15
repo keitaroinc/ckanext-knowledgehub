@@ -1,7 +1,33 @@
 {% ckan_extends %}
-
+{% block heading %}
+<h3 class="dataset-heading text-ellipsis">
+    {% block heading_private %}
+    {% if package.private %}
+    <span class="dataset-private label label-inverse text-ellipsis">
+        <i class="fa fa-lock"></i>
+        {{ _('Private') }}
+    </span>
+    {% endif %}
+    {% endblock %}
+    {% block heading_title %}
+    {{ h.link_to(h.truncate(title, truncate_title), h.url_for(package.type + '_read', controller='package', action='read', id=package.name)) }}
+    {% endblock %}
+    {% block heading_meta %}
+    {% if package.get('state', '').startswith('draft') %}
+    <span class="label label-info">{{ _('Draft') }}</span>
+    {% elif package.get('state', '').startswith('deleted') %}
+    <span class="label label-danger">{{ _('Deleted') }}</span>
+    {% endif %}
+    {{ h.popular('recent views', package.tracking_summary.recent, min=10) if package.tracking_summary }}
+    {% endblock %}
+</h3>
+{% endblock %}
 {% block notes %}
-{{ super() }}
+{% if notes %}
+<div class="text-wrap">{{ notes|urlize }}</div>
+{% else %}
+<p class="empty">{{ _("This dataset has no description") }}</p>
+{% endif %}
 
 {% if package.tags %}
 <div class="row flex flex-wrap dataset-tag-wrapper">
@@ -11,7 +37,7 @@
 </div>
 <div>
     <div class="data-content border-bottom">
-        <h5 style="text-overflow: ellipsis;">Theme: <span class="text-muted">Displacement
+        <h5 class="text-ellipsis">Theme: <span class="text-muted">Displacement
                 Trends</span></h5>
         <!-- {% if package.theme %}
         <h5 style="text-overflow: ellipsis;">Theme: <span
@@ -38,31 +64,4 @@
     </div>
 </div>
 {% endif %}
-{% endblock %}
-
-
-{% block resources %}
-<div>
-    {% if package.resources %}
-    <ul class="dataset-resources list-unstyled">
-        {% for resource in package.resources %}
-        <li>
-            <h5>
-                {% if resource.name %}
-                {{resource.name}} 
-                {% endif %}
-                <a class="label label-default" data-format={{resource.format.lower()}}
-                    href={{resource.url}}>{{resource.format}}</a></h5>
-        </li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    <div class="dataset-comment-section flex align-items-center">
-        <h5><i class="fa fa-thumbs-up"></i> 12 USEFUL</h5>
-        <h5><i class="fa fa-handshake-o"></i> 23 TRUSTED</h5>
-        <h5><i class="fa fa fa-comments"></i> 22 COMMENTS</h5>
-    </div>
-</div>
-
-
 {% endblock %}

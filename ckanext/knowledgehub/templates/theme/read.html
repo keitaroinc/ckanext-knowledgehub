@@ -15,7 +15,7 @@
 
 {% block primary_content_inner %}
 
-    <h1>
+    <h1 class="text-wrap">
       {% block page_heading %}
         {{ h.dataset_display_name(theme) }}
       {% endblock %}
@@ -23,7 +23,7 @@
 
     {% block theme_description %}
       {% if theme.description %}
-        <div class="notes embedded-content">
+        <div class="notes embedded-content text-wrap">
           {{ h.render_markdown(h.get_translated(theme, 'description')) }}
         </div>
       {% endif %}
