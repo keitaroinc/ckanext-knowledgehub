@@ -295,6 +295,7 @@ def dashboard_create(context, data_dict):
         :param title
         :param description
         :param type
+        :param source
         :param indicators
     '''
     check_access('dashboard_create', context)
@@ -310,7 +311,7 @@ def dashboard_create(context, data_dict):
 
     dashboard = Dashboard()
 
-    items = ['name', 'title', 'description', 'type', 'indicators']
+    items = ['name', 'title', 'description', 'type']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
@@ -319,9 +320,13 @@ def dashboard_create(context, data_dict):
     dashboard.modified_at = datetime.datetime.utcnow()
 
     source = data.get('source')
+    indicators = data.get('indicators')
 
     if source is not None:
         dashboard.source = source
+
+    if indicators is not None:
+        dashboard.indicators = indicators
 
     dashboard.save()
 
