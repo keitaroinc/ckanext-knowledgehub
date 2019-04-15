@@ -86,7 +86,7 @@ def index():
     return base.render(u'dashboard/index.html',
                        extra_vars=extra_vars)
 
-
+  
 def read(name):
     u''' Dashboard read item view function '''
 
@@ -110,7 +110,7 @@ def read(name):
 
     return base.render(u'dashboard/read.html', extra_vars=extra_vars)
 
-
+  
 class CreateView(MethodView):
     u''' Create new Dashboard view '''
 

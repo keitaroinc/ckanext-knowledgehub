@@ -2,8 +2,8 @@
    these badges work. The necessary Travis and Coverage config files have been
    generated for you.
 
-.. image:: https://travis-ci.org/keitaroinc/ckanext-knowledgehub.svg?branch=master
-    :target: https://travis-ci.org/keitaroinc/ckanext-knowledgehub
+.. image:: https://travis-ci.com/keitaroinc/ckanext-knowledgehub.svg?branch=master
+    :target: https://travis-ci.com/keitaroinc/ckanext-knowledgehub
 
 =============
 ckanext-knowledgehub

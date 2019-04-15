@@ -21,7 +21,7 @@
       {% endif %}
       <div class="control-group ">
         <label class="control-label" for="table_field_title">{{ _('Title') }}</label>
-        <div class="controls ">
+        <div class="controls input-controls">
           <input id="table_field_title" name="table_field_title" value="{{ table_title }}" placeholder="{{ _('Table title') }}" type="text" required>
         </div>
       </div>
@@ -30,7 +30,7 @@
       {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
       <div class="control-group control-select">
         <label class="control-label" for="table_field_y_axis_column">{{ _('Measure') }}</label>
-        <div class="controls">
+        <div class="controls input-controls">
           <select id="table_field_y_axis_column" name="table_field_y_axis_column">
             {% for y_value in y_axis_values %}
             <option value="{{y_value}}" {% if table %}{{ 'selected' if y_value == table.y_axis }}{% endif %}>{{y_value}}
@@ -44,7 +44,7 @@
       {% set columns = h.get_resource_columns(res['id'], []) %}
       <div class="control-group control-select">
         <label class="control-label" for="table_main_value">{{ _('Dimension') }}</label>
-        <div class="controls">
+        <div class="controls input-controls">
           <select id="table_main_value" name="table_main_value">
             {% for column in columns %}
             <option value="{{column}}" {% if table %}{{ 'selected' if column == table.main_value }}{% endif %}>{{column}}</option>
@@ -56,7 +56,7 @@
       {# Category values #}
       <div class="control-group control-select">
         <label class="control-label" for="table_category_name">{{ _('Category') }}</label>
-        <div class="controls ">
+        <div class="controls input-controls">
           <select id="table_category_name" name="table_category_name">
           <option value="">&mdash; {{ _('Select column') }} &mdash;</option>
           {% for category in columns %}
@@ -70,7 +70,7 @@
     {% set data_formats = h.get_data_formats() %}
     <div class="control-group control-select">
       <label class="control-label" for="table_data_format">{{ _('Data format') }}</label>
-      <div class="controls ">
+      <div class="controls input-controls">
         <select id="table_data_format" name="table_data_format">
           {% for format in data_formats %}
           <option value="{{ format.value }}" {% if table %}{{ 'selected' if format.value == table.data_format }}{% endif %} >{{ format.text }}</option>
@@ -82,7 +82,7 @@
     {% if table %}
       {% set data_type = table.data_type %}
     {% endif %}
-    <div class="control-group ">
+    <div class="control-group control-checkbox justify-content-start ">
       <label class="control-label" for="table_data_type">{{ _('Qualitative data') }}</label>
       <div class="controls">
         <input id="table_data_type" type="checkbox" name="table_data_type" value="{{ data_type }}" {% if data_type=='qualitative' %}checked{% endif %}>
@@ -112,6 +112,6 @@
       table_title = table_title %}
   </div>
   <ul class="inline text-right table-actions">
-    <li><a class="btn update-table-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
+    <li><a class="btn  btn-default update-chart-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
   </ul>
 </div>
