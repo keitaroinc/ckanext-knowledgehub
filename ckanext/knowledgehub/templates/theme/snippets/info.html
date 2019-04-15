@@ -15,7 +15,7 @@ Example:
         <div class="module-content">
           {% block theme_info_inner %}
             {% block heading %}
-              <h1 class="heading">{{ theme.title }}</h1>
+            <h1 class="heading text-wrap">{{ theme.title | truncate(30)}}</h1>
             {% endblock %}
           {% endblock %}
         </div>

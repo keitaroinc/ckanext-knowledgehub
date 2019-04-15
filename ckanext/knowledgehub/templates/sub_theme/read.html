@@ -16,11 +16,11 @@
 {% block primary_content_inner %}
   {{ super() }}
 
-  <h1>
+  <h1 class="text-wrap">
     {{ sub_theme.get('title', '') }}
   </h1>
   {% if sub_theme.get('description', None) %}
-    <div class="notes embedded-content">
+    <div class="notes embedded-content text-wrap">
       {{ h.markdown_extract(sub_theme.get('description', ''), extract_length=truncate_desc) }}
     </div>
   {% else %}

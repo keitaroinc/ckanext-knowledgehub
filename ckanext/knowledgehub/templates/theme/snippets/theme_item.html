@@ -1,5 +1,5 @@
 {% set truncate = truncate or 180 %}
-{% set truncate_title = truncate_title or 80 %}
+{% set truncate_title = truncate_title or 50 %}
 {% set title = theme.title or theme.name %}
 {% set notes = h.markdown_extract(theme.description, extract_length=truncate) %}
 
@@ -8,7 +8,7 @@
     {% block content %}
       <div class="component-content">
         {% block heading %}
-          <h3 class="component-heading">
+          <h3 class="component-heading text-ellipsis">
             {% block heading_title %}
 		      {{ h.link_to(h.truncate(title, truncate_title), h.url_for('theme.read', name=theme.name)) }}
             {% endblock %}
@@ -17,7 +17,7 @@
 
         {% block notes %}
           {% if notes %}
-            <div>{{ notes|urlize }}</div>
+          <div class="text-wrap">{{ notes|urlize }}</div>
           {% else %}
             <p class="empty">{{ _("This theme has no description") }}</p>
           {% endif %}
