@@ -1,0 +1,37 @@
+<section class="additional-info">
+  <h3>{{ _('Additional Info') }}</h3>
+  <table class="table table-striped table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th scope="col">{{ _('Field') }}</th>
+        <th scope="col">{{ _('Value') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% block dashboard_additional_info %}
+        {% if dashboard.source %}
+          <tr>
+            <th scope="row" class="dashboard-label">{{ _("Source") }}</th>
+            <td class="dashboard-details">{{ dashboard.source }}</td>
+          </tr>
+        {% endif %}
+        {% if dashboard.modified_at %}
+          <tr>
+            <th scope="row" class="dashboard-label">{{ _("Last Updated") }}</th>
+            <td class="dashboard-details">
+                {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=dashboard.modified_at %}
+            </td>
+          </tr>
+        {% endif %}
+        {% if dashboard.created_at %}
+          <tr>
+            <th scope="row" class="dashboard-label">{{ _("Created") }}</th>
+            <td class="dashboard-details">
+                {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=dashboard.created_at %}
+            </td>
+          </tr>
+        {% endif %}
+      {% endblock %}
+    </tbody>
+  </table>
+</section>
