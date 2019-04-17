@@ -24,7 +24,7 @@
     {% set attrs = {'data-module': 'knowledgehub-dashboard-type-select', 'class': 'form-control'} %}
     {{ form.select('type', label=_('Type'), options=dashboard_options, error=errors.type, selected=data.type, is_required=true, attrs=attrs) }}
 
-    {% set hiddenClass = 'hidden' if data and not data.type == 'external' else '' %}
+    {% set hiddenClass = 'hidden' if not data or data.type != 'external' else '' %}
     {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', hiddenClass], is_required=true) }}
   {% endblock %}
 

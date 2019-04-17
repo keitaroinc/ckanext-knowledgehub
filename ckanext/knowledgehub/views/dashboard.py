@@ -111,6 +111,30 @@ def read(name):
     return base.render(u'dashboard/read.html', extra_vars=extra_vars)
 
 
+def view(name):
+    u''' Dashboard view function '''
+
+    context = _get_context()
+
+    try:
+        check_access(u'dashboard_show', context)
+    except NotAuthorized:
+        base.abort(403, _(u'Not authorized to see this page'))
+
+    extra_vars = {}
+
+    data_dict = {u'name': name}
+
+    try:
+        dashboard_dict = get_action(u'dashboard_show')(context, data_dict)
+    except NotFound:
+        base.abort(404, _(u'Dashboard not found'))
+
+    extra_vars['dashboard'] = dashboard_dict
+
+    return base.render(u'dashboard/view.html', extra_vars=extra_vars)
+
+
 class CreateView(MethodView):
     u''' Create new Dashboard view '''
 
@@ -225,5 +249,6 @@ class EditView(MethodView):
 dashboard.add_url_rule(u'/', view_func=index, strict_slashes=False)
 dashboard.add_url_rule(u'/new', view_func=CreateView.as_view(str(u'new')))
 dashboard.add_url_rule(u'/<name>', methods=[u'GET'], view_func=read)
+dashboard.add_url_rule(u'/<name>/view', methods=[u'GET'], view_func=view)
 dashboard.add_url_rule(u'/edit/<name>',
                        view_func=EditView.as_view(str(u'edit')))
