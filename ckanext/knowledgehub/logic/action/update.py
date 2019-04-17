@@ -311,14 +311,14 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description', 'indicators']
+    items = ['name', 'title', 'description', 'indicators', 'source', 'type']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
 
-    source = data.get('source')
-    if source:
-        dashboard.source = source
+    dashboard_type = data.get('type')
+    if dashboard_type != 'external':
+        dashboard.source = ''
 
     dashboard.modified_at = datetime.datetime.utcnow()
     dashboard.save()
