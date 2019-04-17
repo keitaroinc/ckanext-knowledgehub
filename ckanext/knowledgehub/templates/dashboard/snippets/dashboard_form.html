@@ -22,9 +22,10 @@
     {{ form.markdown('description', label=_('Description'), id='field-description', placeholder=_('A little information about this Dashboard...'), value=data.description, error=errors.description, is_required=true) }}
 
     {% set attrs = {'data-module': 'knowledgehub-dashboard-type-select', 'class': 'form-control'} %}
-    {{ form.select('type', label=_('Type'), options=dashboard_options, error=errors.type, selected='', is_required=true, attrs=attrs) }}
+    {{ form.select('type', label=_('Type'), options=dashboard_options, error=errors.type, selected=data.type, is_required=true, attrs=attrs) }}
 
-    {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', 'hidden']) }}
+    {% set hiddenClass = 'hidden' if not data.source else '' %}
+    {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', hiddenClass]) }}
   {% endblock %}
 
   {{ form.required_message() }}

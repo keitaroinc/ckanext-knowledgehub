@@ -302,6 +302,8 @@ def dashboard_update(context, data_dict):
         log.debug('Could not find dashboard %s', name_or_id)
         raise NotFound(_('Dashboard was not found.'))
 
+    # we need the old dashboard name in the context for name validation
+    context['dashboard'] = dashboard.name
     session = context['session']
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.dashboard_schema(),
@@ -313,6 +315,10 @@ def dashboard_update(context, data_dict):
 
     for item in items:
         setattr(dashboard, item, data.get(item))
+
+    source = data.get('source')
+    if source:
+        dashboard.source = source
 
     dashboard.modified_at = datetime.datetime.utcnow()
     dashboard.save()

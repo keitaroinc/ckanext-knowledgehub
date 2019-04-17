@@ -86,7 +86,7 @@ def index():
     return base.render(u'dashboard/index.html',
                        extra_vars=extra_vars)
 
-  
+
 def read(name):
     u''' Dashboard read item view function '''
 
@@ -110,7 +110,7 @@ def read(name):
 
     return base.render(u'dashboard/read.html', extra_vars=extra_vars)
 
-  
+
 class CreateView(MethodView):
     u''' Create new Dashboard view '''
 
@@ -158,6 +158,72 @@ class CreateView(MethodView):
                              name=dashboard['name'])
 
 
+class EditView(MethodView):
+    u''' Edit Dashboard view '''
+
+    def _prepare(self, name):
+
+        data_dict = {u'name': name}
+        context = _get_context()
+
+        try:
+            check_access(u'dashboard_update', context)
+        except NotAuthorized:
+            return base.abort(403, _(u'Unauthorized'
+                                     u' to update dashboard'))
+        except NotFound:
+            base.abort(404, _(u'Dashboard not found'))
+        return context
+
+    def get(self, name, data=None, errors=None,
+            error_summary=None):
+
+        context = self._prepare(name)
+        data_dict = {u'name': name}
+
+        try:
+            old_data = get_action(u'dashboard_show')(
+                context, data_dict)
+            data = data or old_data
+        except NotFound:
+            base.abort(404, _(u'Dashboard not found'))
+
+        dashboard = data
+        errors = errors or {}
+
+        return base.render(
+            u'dashboard/edit_form_page.html',
+            extra_vars={'data': data, 'errors': errors,
+                        'error_summary': error_summary,
+                        'dashboard': dashboard}
+        )
+
+    def post(self, name):
+
+        context = self._prepare(name)
+
+        try:
+            data_dict = clean_dict(
+                dict_fns.unflatten(tuplize_dict(
+                    parse_params(request.form)
+                ))
+            )
+            dashboard = get_action(u'dashboard_update')(
+                context, data_dict)
+            h.flash_notice(_(u'Dashboard has been updated.'))
+        except dict_fns.DataError:
+            base.abort(400, _(u'Integrity Error'))
+        except ValidationError as e:
+            errors = e.error_dict
+            error_summary = e.error_summary
+            return self.get(name, data_dict,
+                            errors, error_summary)
+
+        return h.redirect_to(u'dashboards.read', name=dashboard['name'])
+
+
 dashboard.add_url_rule(u'/', view_func=index, strict_slashes=False)
 dashboard.add_url_rule(u'/new', view_func=CreateView.as_view(str(u'new')))
 dashboard.add_url_rule(u'/<name>', methods=[u'GET'], view_func=read)
+dashboard.add_url_rule(u'/edit/<name>',
+                       view_func=EditView.as_view(str(u'edit')))

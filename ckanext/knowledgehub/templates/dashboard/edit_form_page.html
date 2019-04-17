@@ -1,0 +1,23 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Edit') }} {{ dashboard.title }} {{ g.template_title_delimiter }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Dashboards'), named_route='dashboards.index') }}</li>
+  <li>{{ h.nav_link( dashboard.title|truncate(35), named_route='dashboards.read', name=dashboard.name) }}</li>
+  <li class="active">{{ h.nav_link(_('Edit'), named_route='dashboards.edit', name=dashboard.name) }}</li>
+{% endblock %}
+
+{% block page_header %}
+{% endblock %}
+
+{% block primary_content_inner %}
+  <h1 class="{% block page_heading_class %}page-heading{% endblock %}">
+    {% block page_heading %}{{ _('Edit Dashboard') }}{% endblock %}
+  </h1>
+  {% snippet 'dashboard/edit_dashboard_form.html', data=dashboard, errors=errors, error_summary=error_summary %}
+{% endblock %}
+
+{% block secondary_content %}
+  {% snippet "dashboard/snippets/info.html", dashboard=dashboard %}
+{% endblock %}
