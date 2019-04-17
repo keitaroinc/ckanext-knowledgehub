@@ -86,6 +86,6 @@ def dashboard_schema():
         'type': [not_empty, validators.dashboard_type_validator, unicode],
         'created_at': [ignore_missing, isodate],
         'modified_at': [ignore_missing, isodate],
-        'source': [ignore_missing, unicode],
+        'source': [ignore_missing, validators.dashboard_source_validator, unicode],
         'indicators': [ignore_missing, convert_to_json_if_string, unicode],
     }

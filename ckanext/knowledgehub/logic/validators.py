@@ -102,3 +102,13 @@ def dashboard_type_validator(key, data, errors, context):
     if dashboard_type != 'internal' and dashboard_type != 'external':
         errors[key].append(
             p.toolkit._('The dashboard type can be either `internal` or `external`'))
+
+
+def dashboard_source_validator(key, data, errors, context):
+    clean_data = df.unflatten(data)
+    dashboard_type = clean_data.get('type')
+    dashboard_source = clean_data.get('source')
+
+    if dashboard_type == 'external' and (dashboard_source is None or dashboard_source == ''):
+        errors[key].append(
+            p.toolkit._('Missing value'))
