@@ -1,15 +1,15 @@
 {% extends "page.html" %}
 
 {% block breadcrumb_content %}
-  <li>{{ h.nav_link(_('Dashboards'), named_route='dashboard.index') }}</li>
-  <li class="active">{{ h.nav_link(dashboard.title|truncate(30), named_route='dashboard.read', name=dashboard.name) }}</li>
+  <li>{{ h.nav_link(_('Dashboards'), named_route='dashboars.index') }}</li>
+  <li class="active">{{ h.nav_link(dashboard.title|truncate(30), named_route='dashboards.read', name=dashboard.name) }}</li>
 {% endblock %}
 
 {% block subtitle %}{{ h.dataset_display_name(dashboard) }} {{ g.template_title_delimiter }} {{ super() }}{% endblock %}
 
 {% block content_action %}
   {% if h.check_access('dashboard_update') %}
-    {% link_for _('Manage'), named_route='dashboard.edit', name=dashboard.name, class_='btn btn-default', icon='wrench' %}
+    {% link_for _('Manage'), named_route='dashboards.edit', name=dashboard.name, class_='btn btn-default', icon='wrench' %}
   {% endif %}
 {% endblock %}
 
