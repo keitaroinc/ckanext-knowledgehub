@@ -9,8 +9,13 @@
     </thead>
     <tbody>
       {% block dashboard_additional_info %}
+        <tr>
+          <th scope="row" class="dashboard-label">{{ _("Created by") }}</th>
+          <td class="dashboard-details">
+              <a href="{{ h.url_for('user.read', id=dashboard.creator_name) }}">{{ dashboard.creator_fullname }}</a>
+          </td>
+        </tr>
         {% if dashboard.source %}
-          <tr>
             <th scope="row" class="dashboard-label">{{ _("Source") }}</th>
             <td class="dashboard-details">{{ dashboard.source }}</td>
           </tr>

@@ -106,6 +106,10 @@ def read(name):
     except NotFound:
         base.abort(404, _(u'Dashboard not found'))
 
+    creator = model.User.get(dashboard_dict.get('created_by'))
+    dashboard_dict['creator_fullname'] = creator.fullname or creator.name
+    dashboard_dict['creator_name'] = creator.name
+
     extra_vars['dashboard'] = dashboard_dict
 
     return base.render(u'dashboard/read.html', extra_vars=extra_vars)

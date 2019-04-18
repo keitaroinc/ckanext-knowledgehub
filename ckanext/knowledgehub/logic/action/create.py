@@ -328,6 +328,9 @@ def dashboard_create(context, data_dict):
     if indicators is not None:
         dashboard.indicators = indicators
 
+    user = context.get('user')
+    dashboard.created_by = model.User.by_name(user.decode('utf8')).id
+
     dashboard.save()
 
     session.add(dashboard)
