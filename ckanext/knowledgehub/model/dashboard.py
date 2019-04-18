@@ -35,6 +35,7 @@ dashboard_table = Table(
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,
            default=datetime.datetime.utcnow),
+    Column('created_by', types.UnicodeText, nullable=False),
 )
 
 
