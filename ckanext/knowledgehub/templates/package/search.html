@@ -1,3 +1,5 @@
+{% resource 'knowledgehub/table' %}
+{% resource 'knowledgehub/chart' %}
 {% extends "page.html" %}
 {% import 'macros/form.html' as form %}
 
@@ -106,34 +108,99 @@
             <h4>VISUALIZATIONS</h4>
             <hr>
             <div class="row">
-                <div class="col-lg-3">
-                    <h4>Visualization Name</h4>
-                    <p>Functional processes for long-term high-impact
-                        technology. Globally orchestrate professional e-commerce with just in time deliverables.
-                        Monotonectally strategize.</p>
-                    <img class="visualization-image" src="#">
+                <div class="resource-view">
+                    {% set vis = h.get_last_visuals() %}
+                    <div>
+                        {% for resource_view in vis %}
+
+                            {% if resource_view.view_type == 'table' %}
+                            {% if resource_view.__extras %}
+                            {% set main_value = resource_view.__extras.main_value %}
+                            {% set y_axis = resource_view.__extras.y_axis %}
+                            {% set sql_string = resource_view.__extras.sql_string %}
+                            {% set category_name = resource_view.__extras.category_name %}
+                            {% set data_format = resource_view.__extras.data_format %}
+                            {% set data_type = resource_view.__extras.data_type %}
+                            {% set table_title = resource_view.__extras.title %}
+                            {% set resource_name = resource_view.__extras.resource_name %}
+                            {% set resource_id = resource_view.resource_id %}
+                            {% endif %} 
+                            {% snippet 'ajax_snippets/table_module.html',
+                            sql_string = sql_string,
+                            resource_id = resource_id,
+                            resource_name = resource_name,
+                            y_axis = y_axis,
+                            main_value = main_value,
+                            category_name = category_name,
+                            data_format = data_format,
+                            data_type = data_type,
+                            table_title = table_title %} 
+
+
+                            {% elif resource_view.view_type == 'chart' %}
+                            {% if resource_view.__extras %}
+                            {% set colors = resource_view.__extras.color %}
+                            {% set x_axis = resource_view.__extras.x_axis %}
+                            {% set y_axis = resource_view.__extras.y_axis %}
+                            {% set chart_type = resource_view.__extras.type %}
+                            {% set title = resource_view.__extras.title %}
+                            {% set show_legend = resource_view.__extras.show_legend %}
+                            {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
+                            {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
+                            {% set tooltip_name = resource_view.__extras.tooltip_name %}
+                            {% set data_format = resource_view.__extras.data_format %}
+                            {% set y_tick_format = resource_view.__extras.y_tick_format %}
+                            {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
+                            {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
+                            {% set padding_bottom = resource_view.__extras.padding_bottom %}
+                            {% set padding_top = resource_view.__extras.padding_top %}
+                            {% set tick_count = resource_view.__extras.tick_count %}
+                            {% set show_labels = resource_view.__extras.show_labels %}
+                            {% set y_label = resource_view.__extras.y_label %}
+                            {% set y_label_hide = resource_view.__extras.y_label_hide %}
+                            {% set y_from_zero = resource_view.__extras.y_from_zero %}
+                            {% set data_sort = resource_view.__extras.sort %}
+                            {% set filters = resource_view.__extras.filters %}
+                            {% set category_name = resource_view.__extras.category_name %}
+                            {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
+                            {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
+                            {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
+                            {% set sql_string = resource_view.__extras.sql_string %}
+                            {% endif %}
+                            {% snippet 'ajax_snippets/chart_module.html',
+                                type='chart',
+                                colors=colors,
+                                x_axis=x_axis,
+                                y_axis=y_axis,
+                                chart_type=chart_type,
+                                sql_string=sql_string,
+                                title= title,
+                                show_legend = show_legend,
+                                x_text_rotate= 0,
+                                x_text_multiline= x_text_multiline,
+                                tooltip_name = tooltip_name,
+                                data_format = data_format,
+                                y_tick_format = y_tick_format,
+                                chart_padding_left = chart_padding_left,
+                                chart_padding_bottom = chart_padding_bottom,
+                                padding_bottom = padding_bottom,
+                                padding_top = padding_top,
+                                tick_count = tick_count,
+                                show_labels = show_labels,
+                                y_label = y_label,
+                                y_label_hide = y_label_hide,
+                                y_from_zero = y_from_zero,
+                                data_sort = data_sort,
+                                filters = filters,
+                                category_name=category_name,
+                                measure_label=measure_label,
+                                dynamic_reference_type=dynamic_reference_type,
+                                dynamic_reference_factor=dynamic_reference_factor,
+                                dynamic_reference_label=dynamic_reference_label %}
+                                {% endif %}
+                                {% endfor %}
+                    </div>                         
                 </div>
-                <div class="col-lg-3">
-                        <h4>Visualization Name</h4>
-                        <p>Short description proactively streamline cross functional processes for long-term high-impact
-                            technology. Globally orchestrate professional e-commerce with just in time deliverables.
-                            Monotonectally strategize.</p>
-                        <img class="visualization-image" src="#">
-                    </div>
-                    <div class="col-lg-3">
-                            <h4>Visualization Name</h4>
-                            <p>High-impact
-                            technology. Globally orchestrate professional e-commerce with just in time deliverables.
-                                Monotonectally strategize.</p>
-                            <img class="visualization-image" src="#">
-                        </div>
-                        <div class="col-lg-3">
-                                <h4>Visualization Name</h4>
-                                <p>Streamline cross functional processes for long-term high-impact
-                                    technology. Globally orchestrate professional e-commerce with just in time deliverables.
-                                    Monotonectally strategize.</p>
-                                <img class="visualization-image" src="#">
-                            </div>
             </div>
         </div>
     </div>
