@@ -139,6 +139,32 @@ def view(name):
     return base.render(u'dashboard/view.html', extra_vars=extra_vars)
 
 
+def delete(id):
+    u''' Dashboard delete function '''
+    context = _get_context()
+    try:
+        check_access(u'dashboard_delete', context)
+    except NotAuthorized:
+        return base.abort(403, _(u'Unauthorized'
+                                 u' to delete a theme'))
+
+    data_dict = {u'id': id}
+
+    try:
+        if request.method == u'POST':
+            get_action(u'dashboard_delete')(
+                context, data_dict)
+            h.flash_notice(_(u'Dashboard has been deleted.'))
+    except NotFound:
+        base.abort(404, _(u'Dashboard not found'))
+    except ValidationError as e:
+        h.flash_error(e.error_dict['message'])
+        return h.redirect_to(u'dashboards.edit',
+                             name=id)
+
+    return h.redirect_to(u'dashboards.index')
+
+
 class CreateView(MethodView):
     u''' Create new Dashboard view '''
 
@@ -256,3 +282,4 @@ dashboard.add_url_rule(u'/<name>', methods=[u'GET'], view_func=read)
 dashboard.add_url_rule(u'/<name>/view', methods=[u'GET'], view_func=view)
 dashboard.add_url_rule(u'/edit/<name>',
                        view_func=EditView.as_view(str(u'edit')))
+dashboard.add_url_rule(u'/delete/<id>', methods=[u'POST'], view_func=delete)

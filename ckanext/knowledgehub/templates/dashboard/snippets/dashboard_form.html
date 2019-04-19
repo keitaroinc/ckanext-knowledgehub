@@ -32,8 +32,8 @@
 
   <div class="form-actions">
     {% block delete_button %}
-      {% if h.check_access('dashboard_create')  %}
-        <a class="btn btn-danger pull-left" href="{% url_for 'dashboard.delete', id=data.id %}" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this Dashboard?') }}">{% block delete_button_text %}{{ _('Delete') }}{% endblock %}</a>
+      {% if h.check_access('dashboard_delete')  %}
+        <a class="btn btn-danger pull-left" href="{% url_for 'dashboards.delete', id=data.id %}" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this Dashboard?') }}">{% block delete_button_text %}{{ _('Delete') }}{% endblock %}</a>
       {% endif %}
     {% endblock %}
     <button class="btn btn-primary" name="save" type="submit">{% block save_text %}{{ _('Save Dashboard') }}{% endblock %}</button>
