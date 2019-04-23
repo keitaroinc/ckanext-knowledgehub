@@ -1,35 +1,35 @@
-import ckan.authz as authz
-import ckan.logic as logic
-
 
 def theme_update(context, data_dict):
     '''
-        Authorization check for updating theme
+        Authorization check for updating
+        a theme
     '''
     # sysadmins only
     return {'success': False}
 
 
 def sub_theme_update(context, data_dict):
-    user = context.get('user')
-    if not authz.is_sysadmin(user):
-        raise logic.NotAuthorized
-
-    return {'success': True}
+    '''
+        Authorization check for updating
+        a sub theme
+    '''
+    # sysadmins only
+    return {'success': False}
 
 
 def research_question_update(context, data_dict):
-    user = context.get('user')
-    author = data_dict.get('author')
-    if user == author or authz.is_sysadmin(user):
-        return {'success': True}
-    else:
-        return {'success': False}
+    '''
+        Authorization check for updating
+        a research question
+    '''
+    # sysadmins only
+    return {'success': False}
 
 
 def dashboard_update(context, data_dict):
     '''
-        Authorization check for updating dashboard
+        Authorization check for updating
+        a dashboard
     '''
     # sysadmins only
     return {'success': False}
