@@ -90,9 +90,6 @@ ckan.module('chart', function() {
             var resource_id = sql.split('FROM')[1].split('WHERE')[0].split('"')[1];
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
             var dynamic_reference_factor = (this.options.dynamic_reference_factor === true) ? '' : this.options.dynamic_reference_factor;
-
-            console.log(y_axis)
-
             var form_filters = this.getFilters();
             var options_filters = this.options.filters;
             var filters = form_filters.length ? form_filters : options_filters;
