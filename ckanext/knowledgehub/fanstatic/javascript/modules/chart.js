@@ -91,6 +91,8 @@ ckan.module('chart', function() {
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
             var dynamic_reference_factor = (this.options.dynamic_reference_factor === true) ? '' : this.options.dynamic_reference_factor;
 
+            console.log(y_axis)
+
             var form_filters = this.getFilters();
             var options_filters = this.options.filters;
             var filters = form_filters.length ? form_filters : options_filters;
@@ -129,7 +131,7 @@ ckan.module('chart', function() {
                                 var values = [];
                                 for (var row of this.fetched_data) {
                                     // Values from server are strings..
-                                    values.push(+row[y_axis.toLowerCase()]);
+                                    values.push(+row[y_axis.toString().toLowerCase()]);
                                 }
                                 this.y_axis_max = Math.max.apply(null, values);
                                 this.y_axis_avg = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
