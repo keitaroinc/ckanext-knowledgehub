@@ -245,6 +245,10 @@ ckan.module('table', function () {
                                 'className': 'btn btn-default',
                                 'title': filename_export
                             },
+                            {   'extend': 'pdf',
+                                'className': 'btn btn-default',
+                                'title': filename_export
+                            },
                         ],
                         "processing": true,
                     });
@@ -280,14 +284,15 @@ ckan.module('table', function () {
 
         // default tables
         render_data_table: function (rows, main_value, y_axis) {
-            main_value = main_value.toLowerCase();
-            y_axis = y_axis.toLowerCase();
+            main_value = typeof main_value === 'string' ? main_value.toLowerCase(): main_value;
+            y_axis = typeof y_axis === 'string' ? y_axis.toLowerCase() : y_axis;
 
             // Prepare data
             var data = {
                 main_value: main_value,
-                measure_label: y_axis,
                 y_axis: y_axis,
+                dimension_label: this.capitalize(main_value),
+                measure_label: this.capitalize(y_axis),
                 rows: rows,
             }
 
@@ -296,8 +301,8 @@ ckan.module('table', function () {
           <table>
             <thead>
               <tr>
-                <th>{main_value|capitalize}</th>
-                <th>{y_axis|capitalize}</th>
+                <th>{dimension_label}</th>
+                <th>{measure_label}</th>
               </tr>
             </thead>
             <tbody>
@@ -317,9 +322,9 @@ ckan.module('table', function () {
 
         // table for the two-way columns feature
         render_data_table_with_category: function (rows, category_name, main_value, y_axis) {
-            category_name = category_name.toLowerCase();
-            main_value = main_value.toLowerCase();
-            y_axis = y_axis.toLowerCase();
+            category_name = typeof category_name === 'string' ? category_name.toLowerCase() : category_name;
+            main_value = typeof main_value === 'string' ? main_value.toLowerCase() : main_value;
+            y_axis = typeof y_axis === 'string' ? y_axis.toLowerCase() : y_axis;
 
             // Prepare data
             // Pivot table when category is set
@@ -349,8 +354,9 @@ ckan.module('table', function () {
 
             var data = {
                 main_value: main_value,
-                measure_label: y_axis,
+                measure_label: this.capitalize(y_axis),
                 y_axis: y_axis,
+                dimension_label: this.capitalize(main_value),
                 y_axis_groups: Object.keys(y_axis_groups).sort(),
                 rows: Object.values(rows_mapping),
             };
@@ -360,8 +366,8 @@ ckan.module('table', function () {
           <table>
             <thead>
               <tr>
-                <th rowspan="2">{main_value|capitalize}</th>
-                <th colspan="{y_axis_groups.length}">{y_axis|capitalize}</th>
+                <th rowspan="2">{dimension_label}</th>
+                <th colspan="{y_axis_groups.length}">{measure_label}</th>
               </tr>
               <tr>
                 {% for y_axis_group in y_axis_groups %}
@@ -469,6 +475,11 @@ ckan.module('table', function () {
             this.options.table_title = this.el.parent().parent().find('[id*=table_field_title]').val();
 
             this.createTable(yVal, xVal, true);
+        },
+
+        capitalize: function(s) {
+            if (typeof s !== 'string') return s
+            return s.charAt(0).toUpperCase() + s.slice(1)
         },
 
         teardown: function () {
