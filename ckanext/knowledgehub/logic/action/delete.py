@@ -86,7 +86,7 @@ def research_question_delete(context, data_dict):
     :param id: Research question database id.
     :type id: string
     '''
-    check_access('research_question_delete', context, data_dict)
+    check_access('research_question_delete', context)
 
     id = data_dict.get('id')
     if not id:
