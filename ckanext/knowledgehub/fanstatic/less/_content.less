@@ -19,7 +19,7 @@
   align-items: center;
   flex-wrap: nowrap;
   > label{
-   margin-right: 15px; 
+   margin-right: 15px;
   }
   > div{
     flex: 0 0 15px;
@@ -37,7 +37,7 @@
   > select{
     background-color: inherit;
   }
-  
+
 }
 .account-masthead {
   background: @brand-primary;
@@ -134,7 +134,7 @@
 }
 
 .navbar-default {
-  
+
   .shadow;
   z-index: 1;
   .navbar-nav li {
@@ -233,12 +233,12 @@ header.module-content.page-header {
       width: 100%;
     }
     .dataset-content {
-      
+
 
       //height:100%;
       padding: 0 @grid-gutter-width / 2 @grid-gutter-width / 2
         @grid-gutter-width / 2 + 5;
-       
+
       .dataset-heading {
         padding-top: @grid-gutter-width - 10;
         a {
@@ -255,16 +255,16 @@ header.module-content.page-header {
 }
 .dataset-text-wrap{
   text-overflow: ellipsis;
-  white-space: nowrap; 
+  white-space: nowrap;
   overflow: hidden;
-  
+
 }
 .border-bottom{
   > *:last-child{
     padding-bottom: 15px;
     border-bottom: 1px solid @pagination-border;
   }
-  
+
 }
 .dataset-tag-wrapper{
   margin: 10px 0 15px 0;
@@ -443,7 +443,7 @@ header.module-content.page-header {
   > a{
     text-decoration: none;
   }
-  
+
 }
 .accordion-inner {
   padding: @grid-gutter-width / 2 0 @grid-gutter-width 0;
@@ -484,7 +484,7 @@ header.module-content.page-header {
     top: 0;
     left: 0;
   }
-  
+
   position:relative;
   display: flex;
   flex-wrap: wrap;
@@ -529,6 +529,7 @@ header.module-content.page-header {
     .component-content {
       padding: 0 @grid-gutter-width / 2 @grid-gutter-width / 2
         @grid-gutter-width / 2 + 5;
+      position: relative;
       .component-heading {
         a {
           font-size: @font-size-base + 7;
@@ -545,4 +546,10 @@ header.module-content.page-header {
 
 .select2-container {
   width: 100% !important;
+}
+
+.dashboard-manage-icon {
+    position: absolute;
+    top: 5px;
+    right: 20px;
 }
