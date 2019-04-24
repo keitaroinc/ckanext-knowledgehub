@@ -69,13 +69,14 @@ def check_sub_theme_parent(key, data, errors, context):
     theme = clean_data.get('theme')
     sub_theme = clean_data.get('sub_theme')
 
-    children_list = []
-    db_list = session.query(SubThemes.id).filter_by(theme=theme).all()
+    if sub_theme:
+        children_list = []
+        db_list = session.query(SubThemes.id).filter_by(theme=theme).all()
 
-    children_list = [e[0] for e in db_list]
+        children_list = [e[0] for e in db_list]
 
-    if sub_theme not in children_list:
-        errors[key].append(p.toolkit._('Sub-theme must belong to theme.'))
+        if sub_theme not in children_list:
+            errors[key].append(p.toolkit._('Sub-theme must belong to theme.'))
 
 
 def dashboard_name_validator(key, data, errors, context):
@@ -101,7 +102,8 @@ def dashboard_type_validator(key, data, errors, context):
 
     if dashboard_type != 'internal' and dashboard_type != 'external':
         errors[key].append(
-            p.toolkit._('The dashboard type can be either `internal` or `external`'))
+            p.toolkit._(
+                'The dashboard type can be either `internal` or `external`'))
 
 
 def dashboard_source_validator(key, data, errors, context):
@@ -109,6 +111,7 @@ def dashboard_source_validator(key, data, errors, context):
     dashboard_type = clean_data.get('type')
     dashboard_source = clean_data.get('source')
 
-    if dashboard_type == 'external' and (dashboard_source is None or dashboard_source == ''):
+    if dashboard_type == 'external' and\
+            (dashboard_source is None or dashboard_source == ''):
         errors[key].append(
             p.toolkit._('Missing value'))

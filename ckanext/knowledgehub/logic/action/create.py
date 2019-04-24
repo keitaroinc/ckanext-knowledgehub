@@ -148,20 +148,22 @@ def research_question_create(context, data_dict):
 
     theme = data.get('theme')
     sub_theme = data.get('sub_theme')
-    url_slug = data.get('name')
+    name = data.get('name')
 
     title = data.get('title')
     image_url = data.get('image_url')
     state = data.get('state', 'active')
+    modified_at = datetime.datetime.utcnow()
     # FIXME if theme or subtheme id not exists, return notfound
     research_question = ResearchQuestion(
-        name=url_slug,
+        name=name,
         theme=theme,
         sub_theme=sub_theme,
         title=title,
         image_url=image_url,
         author=user_id,
-        state=state
+        state=state,
+        modified_at=modified_at
     )
     research_question.save()
 
