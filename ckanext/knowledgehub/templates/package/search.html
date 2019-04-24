@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-{% set rqs = h.get_rq(6, 'created_at  desc').get('data', []) %}
+{% set rqs = h.get_rq(6, 'modified_at  desc').get('data', []) %}
 <div class="container-fluid rq-section">
     <div class="row flex">
         {% for rq in rqs %}
@@ -22,10 +22,6 @@
         
         </div>
         {% endfor %}
-       
-    
-    
-       
     </div>
 </div>
 <section class="module home-content">
