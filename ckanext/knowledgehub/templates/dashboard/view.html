@@ -1,12 +1,11 @@
-{% if dashboard.type == 'internal' %}
-    <div>Displaying internal dashboard has not been implemented yet.</div>
-{% elif dashboard.type == 'external' %}
-    <style>
-        body {
-            margin: 0;
-        }
-    </style>
-    <iframe src="{{ dashboard.source }}" frameborder="0" style="border: 0; width: 100%; height: 100%"></iframe>
-{% else %}
-    {{ 'Dashboard type not supported.' }}
-{% endif %}
+{% extends 'page.html' %}
+
+{% block content %}
+    {% if dashboard.type == 'internal' %}
+        <div style="width: 100%; height: 100px; background:white;">Displaying internal dashboard has not been implemented yet.</div>
+    {% elif dashboard.type == 'external' %}
+        <iframe src="{{ dashboard.source }}" frameborder="0" class="dashboard-view-iframe"></iframe>
+    {% else %}
+        {{ 'Dashboard type not supported.' }}
+    {% endif %}
+{% endblock %}
