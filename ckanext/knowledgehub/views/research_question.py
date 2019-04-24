@@ -34,7 +34,7 @@ edit_sub_theme_form = \
 ALLOWED_IMAGE_EXTENSIONS = [
     "ase", "art", "bmp", "blp", "cd5", "cit", "cpt", "cr2", "cut",
     "dds", "dib", "djvu", "egt", "exif", "gif", "gpl", "grf", "icns",
-    "ico", "iff", "jng", "jpeg", "jpg", "jfif", "jp2", "jps", "lbm",
+    "ico", "iff", "jng", "jpeg", "jpg", "JPG", "jfif", "jp2", "jps", "lbm",
     "max", "miff", "mng", "msp", "nitf", "ota", "pbm", "pc1", "pc2",
     "pc3", "pcf", "pcx", "pdn", "pgm", "PI1", "PI2", "PI3", "pict",
     "pct", "pnm", "pns", "ppm", "psb", "psd", "pdd", "psp", "px",
@@ -161,8 +161,8 @@ class CreateView(MethodView):
     def get(self, data=None, errors=None, error_summary=None):
 
         context = self._prepare()
-        data_dict = data or {}
-        theme_selected = data_dict.get('theme', None)
+        data = data or {}
+        theme_selected = data.get('theme', None)
 
         theme_options = []
         theme_list = get_action(u'theme_list')(context, {})
@@ -182,15 +182,16 @@ class CreateView(MethodView):
                 sub_theme_options.append(opt)
 
         theme_options.insert(0, {'text': 'Select theme', 'value': ''})
+        sub_theme_options.insert(0, {'text': 'Select sub-theme', 'value': ''})
 
-        image = data_dict.get('image_url', '')
+        image = data.get('image_url', '')
         if not (image.startswith('http') or image.startswith('https')):
-            data_dict['image_url'] = image.split('/')[-1]
+            data['image_url'] = image.split('/')[-1]
 
         form_vars = {
-            u'data': data_dict,
-            u'theme': data_dict.get('theme'),
-            u'sub_theme': data_dict.get('sub_theme'),
+            u'data': data,
+            u'theme': data.get('theme'),
+            u'sub_theme': data.get('sub_theme'),
             u'theme_options': theme_options,
             u'sub_theme_options': sub_theme_options,
             u'errors': errors or {},
@@ -303,40 +304,43 @@ class EditView(MethodView):
 
         theme_options = []
         theme_list = get_action(u'theme_list')(context, {})
-        for theme in theme_list.get(u'data', []):
-            opt = {u'text': theme[u'title'], u'value': theme[u'id']}
+        for theme_item in theme_list.get(u'data', []):
+            opt = {u'text': theme_item[u'title'], u'value': theme_item[u'id']}
             theme_options.append(opt)
 
         sub_theme_options = []
 
         if new_theme_selected:
             theme = new_theme_selected
-        else:
+        elif research_question['theme']:
             theme = research_question['theme']
+        else:
+            theme = None
 
-        sub_theme_list = get_action(u'sub_theme_list')(
-            context, {'theme': theme})
+        if theme:
+            sub_theme_list = get_action(u'sub_theme_list')(
+                context, {'theme': theme})
 
-        for sub_theme in sub_theme_list.get(u'data', []):
-            opt = {u'text': sub_theme[u'title'],
-                   u'value': sub_theme[u'id']}
-            sub_theme_options.append(opt)
+            for sub_theme in sub_theme_list.get(u'data', []):
+                opt = {u'text': sub_theme[u'title'],
+                       u'value': sub_theme[u'id']}
+                sub_theme_options.append(opt)
 
-        if research_question:
-            image = research_question.get('image_url', '')
-            if not (image.startswith('http') or
-                    image.startswith('https')):
-                research_question['image_url'] = image.split('/')[-1]
+        theme_options.insert(0, {'text': 'Select theme', 'value': ''})
+        sub_theme_options.insert(0, {'text': 'Select sub-theme', 'value': ''})
+
+        data = data or research_question
 
         if data:
             image = data.get('image_url', '')
-            if not (image.startswith('http') or image.startswith('https')):
+            if not (image.startswith('http') or
+                    image.startswith('https')):
                 data['image_url'] = image.split('/')[-1]
 
         form_vars = {
             u'id': research_question.get('id', ''),
             u'user': context.get('user'),
-            u'data': data or research_question,
+            u'data': data,
             u'theme': research_question.get('theme', ''),
             u'theme_options': theme_options,
             u'sub_theme': research_question.get('sub_theme', ''),
