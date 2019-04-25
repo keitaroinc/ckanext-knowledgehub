@@ -16,10 +16,8 @@ from ckan.model import ResourceView
 from ckan import lib
 
 
-
 log = logging.getLogger(__name__)
 model_dictize = lib.dictization.model_dictize
-
 
 
 def _get_context():
@@ -370,11 +368,15 @@ def get_resource_data(sql_string):
 
     return records_to_lower
 
+
 def get_last_visuals():
 
-    res_views = model.Session.query(ResourceView).order_by('"order" desc').limit(3).all()
-    data_dict_format = model_dictize.resource_view_list_dictize(res_views, _get_context())
+    res_views = model.Session.query(ResourceView)\
+        .order_by('"order" desc').limit(3).all()
+    data_dict_format = model_dictize\
+        .resource_view_list_dictize(res_views, _get_context())
     return data_dict_format
+
 
 def get_filter_values(resource_id, filter_name, previous_filters=[]):
     '''Returns resource field values with no duplicates.'''
@@ -453,6 +455,17 @@ def get_rq(limit, order_by):
     })
 
     return rq_list
+
+
+# Helper for transforming postgres array
+# type to python list type
+def pg_array_to_py_list(rq_list):
+
+    if rq_list.startswith('{'):
+        ids = rq_list.replace('{', '').replace('}', '').split(',')
+    else:
+        ids = [rq_list]
+    return ids
 
 
 # Overwrite of the original 'resource_view_icon'
