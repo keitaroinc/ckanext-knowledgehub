@@ -195,13 +195,6 @@ def resource_create(context, data_dict):
     :param validation_options: options to be used for validation
     :type validation_options: string
     '''
-    if 'research_question' in data_dict and \
-            type(data_dict['research_question']) is list:
-        data_dict['research_question'] = ','. \
-            join(data_dict['research_question'])
-    #     TODO we might need to get appropriate Themes and Sub-themes
-    #      for the chosen research questions and add them
-    #      to the solr index
 
     if (data_dict['schema'] == ''):
         del data_dict['schema']

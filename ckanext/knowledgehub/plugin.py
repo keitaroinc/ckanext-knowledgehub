@@ -64,12 +64,33 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_filter_values': h.get_filter_values,
             'get_rq': h.get_rq,
             'resource_view_icon': h.resource_view_icon,
-            'get_last_visuals' : h.get_last_visuals
+            'get_last_visuals': h.get_last_visuals,
+            'pg_array_to_py_list': h.pg_array_to_py_list
         }
 
     # IDatasetForm
     def _modify_package_schema(self, schema):
         defaults = [toolkit.get_validator('ignore_missing')]
+        package_defaults = [toolkit.get_validator('ignore_missing'),
+                            toolkit.get_converter('convert_to_extras')]
+
+        schema.update({
+            'unit_supported': package_defaults,
+            'im_product_name': package_defaults,
+            'indicator_label': package_defaults,
+            'indicator_code': package_defaults,
+            'indicator_old_name': package_defaults,
+            'unit_focal_point': package_defaults,
+            'sector': package_defaults,
+            'data_sources': package_defaults,
+            'frequency_of_update': package_defaults,
+            'sub_themes': package_defaults,
+            'analytical_value': package_defaults,
+            'indicator_type': package_defaults,
+            'theme': package_defaults,
+            'sub_theme': package_defaults,
+            'research_question': package_defaults
+        })
 
         schema['resources'].update({
             'db_type': defaults,
@@ -78,23 +99,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'port': defaults,
             'username': defaults,
             'password': defaults,
-            'sql': defaults,
-            'unit_supported': defaults,
-            'im_product_name': defaults,
-            'indicator_label': defaults,
-            'indicator_code': defaults,
-            'indicator_old_name': defaults,
-            'unit_focal_point': defaults,
-            'sector': defaults,
-            'data_sources': defaults,
-            'list_subtheme_for_theme': defaults,
-            'frequency_of_update': defaults,
-            'sub_themes': defaults,
-            'analytical_value': defaults,
-            'indicator_type': defaults,
-            'theme': defaults,
-            'sub_theme': defaults,
-            'research_question': defaults
+            'sql': defaults
         })
 
         return schema
@@ -110,6 +115,25 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def show_package_schema(self):
         schema = super(KnowledgehubPlugin, self).show_package_schema()
         defaults = [toolkit.get_validator('ignore_missing')]
+        package_defaults = [toolkit.get_converter('convert_from_extras'),
+                            toolkit.get_validator('ignore_missing')]
+
+        schema.update({
+            'unit_supported': package_defaults,
+            'im_product_name': package_defaults,
+            'indicator_label': package_defaults,
+            'indicator_code': package_defaults,
+            'indicator_old_name': package_defaults,
+            'unit_focal_point': package_defaults,
+            'sector': package_defaults,
+            'data_sources': package_defaults,
+            'frequency_of_update': package_defaults,
+            'analytical_value': package_defaults,
+            'indicator_type': package_defaults,
+            'theme': package_defaults,
+            'sub_theme': package_defaults,
+            'research_question': package_defaults
+        })
 
         schema['resources'].update({
             'db_type': defaults,
@@ -118,22 +142,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'port': defaults,
             'username': defaults,
             'password': defaults,
-            'sql': defaults,
-            'unit_supported': defaults,
-            'im_product_name': defaults,
-            'indicator_label': defaults,
-            'indicator_code': defaults,
-            'indicator_old_name': defaults,
-            'unit_focal_point': defaults,
-            'sector': defaults,
-            'data_sources': defaults,
-            'list_subtheme_for_theme': defaults,
-            'frequency_of_update': defaults,
-            'analytical_value': defaults,
-            'indicator_type': defaults,
-            'theme': defaults,
-            'sub_theme': defaults,
-            'research_question': defaults
+            'sql': defaults
         })
         return schema
 
