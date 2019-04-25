@@ -180,7 +180,7 @@ class CreateView(MethodView):
                             errors,
                             error_summary)
 
-        return h.redirect_to(u'dashboards.read',
+        return h.redirect_to(u'dashboards.index',
                              name=dashboard['name'])
 
 
