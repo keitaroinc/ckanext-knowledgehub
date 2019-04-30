@@ -8,6 +8,13 @@ import functools32
 
 from flask import Blueprint
 
+try:
+    # CKAN 2.7 and later
+    from ckan.common import config
+except ImportError:
+    # CKAN 2.6 and earlier
+    from pylons import config
+
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
 from ckan.common import g, _
@@ -480,3 +487,20 @@ def resource_view_icon(view):
         return 'table'
     else:
         return 'exclamation'
+
+
+def get_map_config():
+
+    map_config = {
+        'osm_url': config.get('ckanext.knowledgehub.map_osm_url',
+                              'https://cartodb-basemaps-{s}.global.ssl'
+                              '.fastly.net/'
+                              'light_nolabels/{z}/{x}/{y}{r}.png'),
+        'osm_attribute': config.get('ckanext.knowledgehub.map_osm_attribute',
+                                    '&copy; <a href='
+                                    '"http://www.openstreetmap.org/'
+                                    'copyright">OpenStreetMap</a> &copy; '
+                                    '<a href="http://cartodb.com/'
+                                    'attributions">CartoDB</a>')
+    }
+    return json.dumps(map_config)

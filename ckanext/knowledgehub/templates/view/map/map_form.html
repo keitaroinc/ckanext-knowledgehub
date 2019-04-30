@@ -1,0 +1,68 @@
+{% resource 'knowledgehub/map' %}
+{% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+{% import 'macros/form.html' as form %}
+
+{% if data %}
+{% set map = data.__extras or {} %}
+{% set filters = data.__extras.filters or [] %}
+{% set default_sql_string = data.__extras.sql_string or [] %}
+{% else %}
+{% set map = {} %}
+{% set filters = [] %}
+{% endif %}
+
+{% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
+
+<div id="map_field" class="item map_field visualization-fields-section">
+  <div class="item-wrapper">
+    <div class="accordion" id="map_fields_accordion">
+        {# General #}
+      <div class="accordion-group">
+        <div class="accordion-heading accordion-opened">
+          <a href="#map_fields_accordion_general" class="accordion-toggle" data-toggle="collapse" data-parent="#map_fields_accordion"><i class="fa fa-list-ul"></i>
+          {{ _('General') }}</a>
+        </div>
+        <div id="map_fields_accordion_general" class="accordion-body collapse in">
+          <div class="accordion-inner">
+
+            {# Title #} {% if data %} {% set map_title = data.title %} {% endif %}
+            <div class="control-group title">
+              <label class="control-label" for="map_field_title">{{ _('Title') }}</label>
+              <div class="controls input-controls">
+                  <input id="map_field_title" type="text" name="map_field_title" value="{{ map_title }}" placeholder="{{ _('Map title') }}" required="required">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+  </div>
+</div>
+
+<div class="preview-wrapper custom-width">
+   {% if map %}
+    {% set map_resource=map.map_resource %}
+    {% set map_title_field=map.map_title_field %}
+    {% set map_key_field=map.map_key_field %}
+    {% set data_key_field=map.data_key_field %}
+    {% set map_color_scheme=map.map_color_scheme %}
+    {% set filter_name = map.filter_name %}
+    {% set filter_value = map.filter_value %}
+  {% endif %}
+  {% set map_config = h.get_map_config() %}
+  {% snippet 'ajax_snippets/map_module.html',
+    map_config=map_config,
+    n=n,
+    measure_label = measure_label,
+    map_resource=map_resource,
+    map_title_field=map_title_field,
+    map_key_field=map_key_field,
+    data_key_field=data_key_field,
+    sql_string=sql_string,
+    map_color_scheme=map_color_scheme,
+    y_axis_column=y_axis_column,
+    filter_name=filter_name,
+    filter_value=filter_value
+  %}
+
+</div>
