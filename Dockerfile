@@ -38,17 +38,24 @@ RUN pip install cython && \
     pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation" && \
     pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt" && \
     # datarequests
-    pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests"
+    pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests" && \
+    # disqus
+    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus"
+    # googleanalytics
+    pip install --no-cache-dir -e "git+https://github.com/ckan/ckanext-googleanalytics.git#egg=ckanext-googleanalytics" && \
+    pip install -r ckanext-googleanalytics/requirements.txt
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
                   recline_view \
                   validation \
                   knowledgehub \
+                  disqus \
                   stats \
                   datastore \
                   datapusher \
-                  datarequests
+                  datarequests \
+                  googleanalytics
 
 RUN mkdir -p /var/lib/ckan/default && chown -R ckan:ckan /var/lib/ckan/default
 VOLUME /var/lib/ckan/default
@@ -61,6 +68,9 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.defau
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.extra_resource_fields = theme sub_theme research_question"
 # Show data request badge
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.datarequests.show_datarequests_badge = true"
+# Set up Disqus
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.name = knowledgehub-ckan"
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.disqus_url = knowledgehub-staging.keitaro.app"
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh

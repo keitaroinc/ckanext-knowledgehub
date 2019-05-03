@@ -468,11 +468,23 @@ def get_rq(limit, order_by):
 # type to python list type
 def pg_array_to_py_list(rq_list):
 
+    result = []
     if rq_list.startswith('{'):
         ids = rq_list.replace('{', '').replace('}', '').split(',')
+        for id in ids:
+            result.append(_normalize_pg_string(id))
     else:
-        ids = [rq_list]
-    return ids
+        result.append(rq_list)
+    return result
+
+
+def _normalize_pg_string(s):
+
+    if len(s.split(' ')) > 1:
+        result = s[1:-1]
+    else:
+        result = s
+    return result
 
 
 # Overwrite of the original 'resource_view_icon'
