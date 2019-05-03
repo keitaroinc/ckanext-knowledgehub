@@ -41,6 +41,9 @@ RUN pip install cython && \
     pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests" && \
     # disqus
     pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus"
+    # googleanalytics
+    pip install --no-cache-dir -e "git+https://github.com/ckan/ckanext-googleanalytics.git#egg=ckanext-googleanalytics" && \
+    pip install -r ckanext-googleanalytics/requirements.txt
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
@@ -51,7 +54,8 @@ ENV CKAN__PLUGINS envvars \
                   stats \
                   datastore \
                   datapusher \
-                  datarequests
+                  datarequests \
+		  googleanalytics
 
 RUN mkdir -p /var/lib/ckan/default && chown -R ckan:ckan /var/lib/ckan/default
 VOLUME /var/lib/ckan/default
