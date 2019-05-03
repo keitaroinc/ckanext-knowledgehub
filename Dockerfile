@@ -55,7 +55,7 @@ ENV CKAN__PLUGINS envvars \
                   datastore \
                   datapusher \
                   datarequests \
-		  googleanalytics
+		          googleanalytics
 
 RUN mkdir -p /var/lib/ckan/default && chown -R ckan:ckan /var/lib/ckan/default
 VOLUME /var/lib/ckan/default
