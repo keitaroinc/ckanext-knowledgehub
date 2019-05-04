@@ -151,7 +151,8 @@ def research_question_update(context, data_dict):
         log.debug('Could not find research question %s', id)
         raise logic.NotFound(_('Research question not found.'))
 
-    context['research_question'] = research_question.name
+    context['research_question_name'] = research_question.name
+    context['research_question_title'] = research_question.title
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.research_question_schema(),
                                 context)
