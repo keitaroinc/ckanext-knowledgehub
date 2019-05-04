@@ -1,12 +1,13 @@
+import re
+from six import string_types
+
 import ckan.plugins as p
-from ckan import logic as logic
 import ckan.lib.navl.dictization_functions as df
 import ckan.lib.dictization
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
-import ckanext.knowledgehub.helpers as extension_helpers
 
 _table_dictize = ckan.lib.dictization.table_dictize
 
@@ -47,7 +48,7 @@ def sub_theme_name_validator(key, data, errors, context):
 
 def research_question_name_validator(key, data, errors, context):
     session = context['session']
-    research_question_name = context.get('research_question')
+    research_question_name = context.get('research_question_name')
 
     if research_question_name and research_question_name == data[key]:
         return
@@ -60,6 +61,55 @@ def research_question_name_validator(key, data, errors, context):
         errors[key].append(
             p.toolkit._('This research question name already exists. '
                         'Choose another one.'))
+
+
+def research_question_title_validator(key, data, errors, context):
+    session = context['session']
+
+    research_question_title = context.get('research_question_title')
+
+    if research_question_title and research_question_title == data[key]:
+        return
+
+    query = session.query(ResearchQuestion.name).filter_by(title=data[key])
+
+    result = query.first()
+
+    if result:
+        errors[key].append(
+            p.toolkit._('This research question already exists. '
+                        'Choose another one.'))
+
+
+def research_question_title_characters_validator(key, data, errors, context):
+    '''Return the given value if it's a valid research question,
+     otherwise return appropriate error.
+    '''
+    title_match = re.compile("[a-zA-Z0-9_\-. ]*$")
+    if not isinstance(data[key], string_types):
+        errors[key].append(
+            p.toolkit._('Research question must be strings'))
+
+    # check basic textual rules
+    if data[key] in ['new', 'edit', 'search']:
+        errors[key].append(
+            p.toolkit._('That research question '
+                        'cannot be used'))
+
+    if len(data[key]) < 2:
+        errors[key].append(
+            p.toolkit._('Must be at least %s '
+                        'characters long') % 2)
+
+    if len(data[key]) > 160:
+        errors[key].append(
+            p.toolkit._('Research question must be a '
+                        'maximum of %i characters long') % 160)
+
+    if not title_match.match(data[key]):
+        errors[key].append(
+            p.toolkit._('Must be purely lowercase alphanumeric '
+                        '(ascii) characters and these symbols: -_.'))
 
 
 def check_sub_theme_parent(key, data, errors, context):
