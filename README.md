@@ -1,23 +1,32 @@
+[![Build Status](https://travis-ci.com/keitaroinc/ckanext-knowledgehub.svg?branch=master)](https://travis-ci.com/keitaroinc/ckanext-knowledgehub)
 
 # ckanext-knowledgehub
 
-[![Build Status](https://travis-ci.com/keitaroinc/ckanext-knowledgehub.svg?branch=master)](https://travis-ci.com/keitaroinc/ckanext-knowledgehub)
+This is the main repo for the Knowledge Hub on Displaced Populations in the MENA Region. All of the CKAN customizations are added in this extension.
 
-A CKAN extension to create CKAN Customization for Knowledge Hub on Displaced Populations in the MENA Region.
+# Table of contents
+  - [Getting started](#getting-started)
+     - [Requirements](#requirements)
+     - [Additional Requirements](#additional-requirements)
+     - [Installation](#installation)
+     - [Config Settings](#config-settings)  
+ - [Development](#development)
+     - [Development Installation](#development-installation)
+     - [Modify CSS](#modify-css)
+     - [Running the Tests](#running-the-tests)
 
-- [Installation](#installation)
-- [Config Settings](#config-settings)
-- [Development Installation](#development-installation)
-- [Modify CSS](#modify-css)
-- [Running the Tests](#running-the-tests)
 
+# Getting started
 
 ### Requirements
 
-This extension is being developed against CKAN 2.8.x version.
+This extension requires CKAN 2.8.x version. 
 
 
+### Additional Requirements
 
+* [Data Requests](https://github.com/conwetlab/ckanext-datarequests)
+* [Validation](https://github.com/frictionlessdata/ckanext-validation)
 
 
 ### Installation
@@ -69,7 +78,9 @@ These are the required configuration options used by the extension:
     ckanext.knowledgehub.dashboards_per_page = 20
 ```
 
-### Development Installation
+# Development
+
+### Development installation
 
 To install ckanext-knowledgehub for development, activate your CKAN virtualenv
 and do:
