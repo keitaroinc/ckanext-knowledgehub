@@ -40,7 +40,7 @@ RUN pip install cython && \
     # datarequests
     pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests" && \
     # disqus
-    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus"
+    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus" && \
     # googleanalytics
     pip install --no-cache-dir -e "git+https://github.com/ckan/ckanext-googleanalytics.git#egg=ckanext-googleanalytics" && \
     pip install -r ckanext-googleanalytics/requirements.txt
