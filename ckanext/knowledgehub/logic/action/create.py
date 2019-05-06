@@ -366,7 +366,6 @@ def resource_feddback(context, data_dict):
         :param type
         :param dataset
         :param resource
-        :param user
     '''
     check_access('resource_feedback', context, data_dict)
 
@@ -379,11 +378,14 @@ def resource_feddback(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    user = data.get('user')
+    user = context.get('user')
+    data['user'] = model.User.by_name(user.decode('utf8')).id
     resource = data.get('resource')
-    rf = ResourceFeedbacks.get(user=user, resource=resource).first()
+    rf = ResourceFeedbacks.get(user=data['user'], resource=resource).first()
 
     if not rf:
         rf = ResourceFeedbacks(**data)
         rf.save()
         return rf.as_dict()
+    else:
+        pass

@@ -8,6 +8,8 @@ isodate = toolkit.get_validator('isodate')
 ignore_empty = toolkit.get_validator('ignore_empty')
 email_validator = toolkit.get_validator('email_validator')
 convert_to_json_if_string = toolkit.get_converter('convert_to_json_if_string')
+package_id_or_name_exists = toolkit.get_converter('package_id_or_name_exists')
+resource_id_exists = toolkit.get_converter('resource_id_exists')
 
 
 def theme_schema():
@@ -102,8 +104,7 @@ def dashboard_schema():
 
 def resource_feedback_schema():
     return {
-            'type': [not_empty, unicode],
-            'dataset': [not_empty, package_id_or_name_exists],
-            'resource': [not_empty, resource_id_exists],
-            'user': [not_empty, user_id_exists]
-        }
+        'type': [not_empty, unicode],
+        'dataset': [not_empty, package_id_or_name_exists],
+        'resource': [not_empty, resource_id_exists]
+    }
