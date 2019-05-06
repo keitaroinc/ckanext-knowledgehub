@@ -98,3 +98,12 @@ def dashboard_schema():
                        convert_to_json_if_string,
                        unicode],
     }
+
+
+def resource_feedback_schema():
+    return {
+            'type': [not_empty, unicode],
+            'dataset': [not_empty, package_id_or_name_exists],
+            'resource': [not_empty, resource_id_exists],
+            'user': [not_empty, user_id_exists]
+        }

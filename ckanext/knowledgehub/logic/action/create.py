@@ -22,6 +22,7 @@ from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
+from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -356,3 +357,33 @@ def package_create(context, data_dict):
                     break
 
     return ckan_package_create(context, data_dict)
+
+
+def resource_feddback(context, data_dict):
+    '''
+    Resource feedback mechanism
+
+        :param type
+        :param dataset
+        :param resource
+        :param user
+    '''
+    check_access('resource_feedback', context, data_dict)
+
+    session = context['session']
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.resource_feedback_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    user = data.get('user')
+    resource = data.get('resource')
+    rf = ResourceFeedbacks.get(user=user, resource=resource).first()
+
+    if not rf:
+        rf = ResourceFeedbacks(**data)
+        rf.save()
+        return rf.as_dict()

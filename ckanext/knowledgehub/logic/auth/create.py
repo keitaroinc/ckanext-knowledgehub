@@ -32,3 +32,11 @@ def dashboard_create(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def resource_feedback(context, data_dict):
+    '''
+        Authorization check for resource feedback
+    '''
+    # all users
+    return {'success': True}
