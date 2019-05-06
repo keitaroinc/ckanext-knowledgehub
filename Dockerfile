@@ -43,7 +43,7 @@ RUN pip install cython && \
     pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus" && \
     # googleanalytics
     pip install --no-cache-dir -e "git+https://github.com/ckan/ckanext-googleanalytics.git#egg=ckanext-googleanalytics" && \
-    pip install -r ckanext-googleanalytics/requirements.txt
+    pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-googleanalytics/requirements.txt"
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
