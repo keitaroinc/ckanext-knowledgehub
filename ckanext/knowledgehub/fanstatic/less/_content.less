@@ -387,8 +387,11 @@ header.module-content.page-header {
 
 .visualization-section {
   background-color: @brand-bg-lightest;
+  .title{
+    padding-top: @grid-gutter-width * 2;
+  }
   .visualizations {
-    padding: @grid-gutter-width * 2;
+    padding: 0 @grid-gutter-width * 2 @grid-gutter-width * 2 @grid-gutter-width * 2;
   }
 }
 
@@ -594,3 +597,23 @@ header.module-content.page-header {
   padding: 2rem 0;
   font-family: "Lato";
 }
+.visualizations{
+  & .row{
+    & .resource-view{
+      & >div{
+       
+        &>*{
+          display: inline-block;
+          max-width: 33%;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+      
+    }
+  }
+  & .dataTables_wrapper{
+    display: none;
+  }
+}
+
