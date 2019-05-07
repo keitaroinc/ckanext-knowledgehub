@@ -502,7 +502,7 @@ def resource_view_icon(view):
         return 'exclamation'
 
 
-def get_map_config():
+def knowledgehub_get_map_config():
 
     map_config = {
         'osm_url': config.get('ckanext.knowledgehub.map_osm_url',

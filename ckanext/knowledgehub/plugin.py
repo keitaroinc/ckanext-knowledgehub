@@ -66,7 +66,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'resource_view_icon': h.resource_view_icon,
             'get_last_visuals': h.get_last_visuals,
             'pg_array_to_py_list': h.pg_array_to_py_list,
-            'get_map_config': h.get_map_config
+            'knowledgehub_get_map_config': h.knowledgehub_get_map_config
         }
 
     # IDatasetForm
