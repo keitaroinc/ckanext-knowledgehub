@@ -27,7 +27,7 @@ This extension requires CKAN 2.8.x version.
 
 * [Data Requests](https://github.com/conwetlab/ckanext-datarequests)
 * [Validation](https://github.com/frictionlessdata/ckanext-validation)
-
+* [Disqus](https://github.com/ckan/ckanext-disqus)
 
 ### Installation
 
@@ -64,18 +64,18 @@ These are the required configuration options used by the extension:
 
 1. The number of themes shown per page
 ```
-    # (optional, default: 10).
-    ckanext.knowledgehub.themes_per_page = 20
+# (optional, default: 10).
+ckanext.knowledgehub.themes_per_page = 20
 ```
 2. The number of sub-themes shown per page
  ```  
-   # (optional, default: 10).
-    ckanext.knowledgehub.sub_themes_per_page = 20
+# (optional, default: 10).
+ckanext.knowledgehub.sub_themes_per_page = 20
 ```
 3. The number of dashboards shown per page
 ```
-    # (optional, default: 10).
-    ckanext.knowledgehub.dashboards_per_page = 20
+# (optional, default: 10).
+ckanext.knowledgehub.dashboards_per_page = 20
 ```
 
 # Development
@@ -94,7 +94,7 @@ pip install -r dev-requirements.txt
 
 To initialize the tables do:
 ```
-    knowledgehub -c /etc/ckan/default/production.ini db init
+knowledgehub -c /etc/ckan/default/production.ini db init
 ```
 
 All code MUST follow [PEP8 Style Guide](https://www.python.org/dev/peps/pep-0008/). Most editors have plugins or integrations and automatic checking for PEP8 compliance so make sure you use them.
