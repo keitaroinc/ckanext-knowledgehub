@@ -171,16 +171,12 @@ ckan.module('chart', function() {
             var tick_count = (this.options.tick_count === true) ? '' : this.options.tick_count;
             var show_labels = this.options.show_labels;
             var y_label = (this.options.y_label === true) ? null : this.options.y_label;
-            var y_label_hide = this.options.y_label_hide;
             var y_from_zero = this.options.y_from_zero;
             var data_sort = this.options.data_sort;
             var additionalCategory = (this.options.category_name === true) ? '' : this.options.category_name;
             var dynamic_reference_label = (this.options.dynamic_reference_label === true) ? '' : this.options.dynamic_reference_label;
             var values;
-            var measure_label = ''
-            if (this.options.data_type !== 'qualitative') {
-                measure_label =  this.options.measure_label.toString().toLowerCase();
-            }
+            var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
 
             // Base options
             var options = {
@@ -219,7 +215,7 @@ ckan.module('chart', function() {
             }
 
             // Y-label
-            var y_label_text = !y_label_hide ? (y_label || measure_label || '') : '';
+            var y_label_text = y_label || '';
 
             // Sort data
             var sBarOrder = data_sort;
@@ -570,9 +566,6 @@ ckan.module('chart', function() {
             var yLabbel = chartField.find('input[name*=chart_field_y_label]');
             var yLabbelVal = yLabbel.val();
 
-            var yLabelHide = chartField.find('input[name*=chart_field_y_label_hide]');
-            var yLabelHideVal = yLabelHide.is(':checked');
-
             var yFromZero = chartField.find('input[name*=chart_field_y_from_zero]');
             var yFromZeroVal = yFromZero.is(':checked');
 
@@ -584,12 +577,9 @@ ckan.module('chart', function() {
 
             var dynamicReferenceLabel = chartField.find('input[name*=chart_field_dynamic_reference_label]');
             var dynamicReferenceLabelVal = dynamicReferenceLabel.val();
-
-            var measureLabelVal = '';
-            if (this.options.data_type !== 'qualitative') {
-                measureLabelVal = $('#chart_field_y_axis_column option:selected').text().toLowerCase();
-            }
-
+            
+            var measureLabelVal = $('#chart_field_y_axis_column option:selected').text();
+            
             this.options.colors = colorValue;
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
@@ -608,7 +598,6 @@ ckan.module('chart', function() {
             this.options.show_labels = dataLabelsVal;
             this.options.tick_count = tickCountVal;
             this.options.y_label = yLabbelVal;
-            this.options.y_label_hide = yLabelHideVal;
             this.options.y_from_zero = yFromZeroVal;
             this.options.category_name = categoryNameVal;
             this.options.data_sort = sortVal;
