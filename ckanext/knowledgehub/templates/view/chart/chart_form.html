@@ -3,12 +3,12 @@
 {% import 'macros/form.html' as form %}
 
 {% if data %}
-{% set chart = data.__extras or {} %}
-{% set filters = data.__extras.filters or [] %}
-{% set default_sql_string = data.__extras.sql_string or [] %}
+  {% set chart = data.__extras or {} %}
+  {% set filters = data.__extras.filters or [] %}
+  {% set default_sql_string = data.__extras.sql_string or [] %}
 {% else %}
-{% set chart = {} %}
-{% set filters = [] %}
+  {% set chart = {} %}
+  {% set filters = [] %}
 {% endif %}
 
 {% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
@@ -217,17 +217,6 @@
               </div>
             </div>
 
-            {# Y-axis title hide #}
-            {% if chart %}
-            {% set y_label_hide = chart.y_label_hide %}
-            {% endif %}
-            <div class="control-group control-checkbox justify-content-between ">
-              <label class="control-label" for="chart_field_y_label_hide">{{ _('Hide title') }}</label>
-              <div class="controls">
-                <input id="chart_field_y_label_hide" type="checkbox" name="chart_field_y_label_hide"
-                  value="{{ y_label_hide }}" {% if y_label_hide=='true' %}checked{% endif %}>
-              </div>
-            </div>
 
             {# Y-axis from zero #}
             {% if chart %}
@@ -470,7 +459,6 @@
   {% set tick_count = chart.tick_count %}
   {% set show_labels = chart.show_labels %}
   {% set y_label = chart.y_label %}
-  {% set y_label_hide = chart.y_label_hide %}
   {% set y_from_zero = chart.y_from_zero %}
   {% set data_sort = chart.sort %}
   {% set filters = chart.filters %}
@@ -501,7 +489,6 @@
           tick_count = tick_count,
           show_labels = show_labels,
           y_label = y_label,
-          y_label_hide = y_label_hide,
           y_from_zero = y_from_zero,
           data_sort = data_sort,
           filters = filters,

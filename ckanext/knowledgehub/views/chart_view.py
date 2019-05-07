@@ -37,7 +37,6 @@ chart_view = Blueprint(
 
 
 def _process_post_data(data, resource_id):
-
     config = {}
     filters = []
     for k, v in data.items():
