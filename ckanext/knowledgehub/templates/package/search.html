@@ -100,9 +100,11 @@
 {% endblock %}
 <div class="container-fluid visualization-section">
     <div class="row">
-        <div class="col-lg-10 col-lg-offset-1 visualizations">
+        <div class="col-lg-10 col-lg-offset-1 title">
             <h4>VISUALIZATIONS</h4>
             <hr>
+        </div>
+        <div class="col-lg-12 visualizations">
             <div class="row">
                 <div class="resource-view">
                     {% set vis = h.get_last_visuals() %}
@@ -174,6 +176,7 @@
                     </div>                         
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </div>
