@@ -372,7 +372,8 @@ def get_resource_data(sql_string):
 def get_last_visuals():
 
     res_views = model.Session.query(ResourceView)\
-        .order_by('"order" desc').limit(3).all()
+        .filter(ResourceView.view_type == 'chart')\
+        .limit(3).all()
     data_dict_format = model_dictize\
         .resource_view_list_dictize(res_views, _get_context())
     return data_dict_format
