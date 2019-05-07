@@ -104,7 +104,7 @@ def dashboard_schema():
 
 def resource_feedback_schema():
     return {
-        'type': [not_empty, unicode],
+        'type': [not_empty, validators.resource_feedbacks_type_validator],
         'dataset': [not_empty, package_id_or_name_exists],
         'resource': [not_empty, resource_id_exists]
     }

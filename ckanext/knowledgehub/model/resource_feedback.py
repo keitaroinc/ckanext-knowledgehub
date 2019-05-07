@@ -103,7 +103,8 @@ resource_feedbacks_table = Table(
     Column(
         'created_at',
         types.DateTime,
-        default=datetime.datetime.utcnow),
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow)
 )
 
 mapper(

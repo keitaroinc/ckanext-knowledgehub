@@ -388,4 +388,7 @@ def resource_feddback(context, data_dict):
         rf.save()
         return rf.as_dict()
     else:
-        print rf.type
+        filter = {'id': rf.id}
+        st = ResourceFeedbacks.update(filter, data)
+
+        return st.as_dict()
