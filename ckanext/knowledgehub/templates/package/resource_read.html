@@ -129,4 +129,7 @@
   {% endif %}
 </div>
 {% endblock %}
-
+{% block primary_content %}
+  {{ super() }}
+  {{ h.disqus_comments() }}
+{% endblock %}
