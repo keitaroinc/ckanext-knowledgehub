@@ -82,6 +82,10 @@ resource_feedbacks_table = Table(
         primary_key=True,
         default=make_uuid),
     Column(
+        'type',
+        types.UnicodeText,
+        nullable=False),
+    Column(
         'dataset',
         types.UnicodeText,
         ForeignKey('package.id', ondelete='CASCADE'),

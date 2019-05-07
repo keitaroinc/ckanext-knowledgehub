@@ -388,4 +388,4 @@ def resource_feddback(context, data_dict):
         rf.save()
         return rf.as_dict()
     else:
-        pass
+        print rf.type
