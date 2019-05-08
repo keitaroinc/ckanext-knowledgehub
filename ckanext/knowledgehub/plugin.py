@@ -164,6 +164,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def before_index(self, pkg_dict):
         research_question = pkg_dict.get('research_question')
 
+        # Store the titles of RQs instead of ids so they are searchable
         if research_question:
             rq_titles = []
 
