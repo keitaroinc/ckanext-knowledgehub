@@ -15,6 +15,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IRoutes, inherit=True)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -158,3 +159,30 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         map.redirect('/', '/dataset',
                      _redirect_code='301 Moved Permanently')
         return map
+
+    # IPackageController
+    def before_index(self, pkg_dict):
+        research_question = pkg_dict.get('research_question')
+
+        if research_question:
+            rq_titles = []
+
+            # Remove `{` from the beginning
+            research_question = research_question[1:]
+
+            # Remove `}` from the end
+            research_question = research_question[:-1]
+
+            rq_ids = research_question.split(',')
+
+            for rq_id in rq_ids:
+                try:
+                    rq = toolkit.get_action('research_question_show')({}, {'id': rq_id})
+                    rq_titles.append(rq.get('title'))
+                except logic.NotFound:
+                    continue
+
+            pkg_dict['research_question'] = ','.join(rq_titles)
+            pkg_dict['extras_research_question'] = ','.join(rq_titles)
+
+        return pkg_dict
