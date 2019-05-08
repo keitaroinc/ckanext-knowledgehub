@@ -15,6 +15,7 @@ from ckan import model
 from ckan.logic.action.create import resource_create as ckan_rsc_create
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
+from ckan.logic.action.create import package_create as ckan_package_create
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
@@ -23,6 +24,7 @@ from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
+from ckanext.knowledgehub import helpers as plugin_helpers
 
 
 log = logging.getLogger(__name__)
@@ -332,3 +334,25 @@ def dashboard_create(context, data_dict):
     session.commit()
 
     return _table_dictize(dashboard, context)
+
+
+def package_create(context, data_dict):
+    research_questions = data_dict.get('research_question')
+    rq_options = plugin_helpers.get_rq_options()
+    rq_ids = []
+
+    if research_questions:
+        if isinstance(research_questions, list):
+            for rq in research_questions:
+                for rq_opt in rq_options:
+                    if rq == rq_opt.get('text'):
+                        rq_ids.append(rq_opt.get('id'))
+                        break
+            data_dict['research_question'] = rq_ids
+        elif isinstance(research_questions, unicode):
+            for rq in rq_options:
+                if rq.get('text') == research_questions:
+                    data_dict['research_question'] = [rq.get('id')]
+                    break
+
+    return ckan_package_create(context, data_dict)
