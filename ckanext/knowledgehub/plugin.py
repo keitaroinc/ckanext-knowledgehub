@@ -15,6 +15,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IRoutes, inherit=True)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -66,7 +67,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'resource_view_icon': h.resource_view_icon,
             'get_last_visuals': h.get_last_visuals,
             'pg_array_to_py_list': h.pg_array_to_py_list,
-            'knowledgehub_get_map_config': h.knowledgehub_get_map_config
+            'knowledgehub_get_map_config': h.knowledgehub_get_map_config,
+            'rq_ids_to_titles': h.rq_ids_to_titles,
         }
 
     # IDatasetForm
@@ -158,3 +160,32 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         map.redirect('/', '/dataset',
                      _redirect_code='301 Moved Permanently')
         return map
+
+    # IPackageController
+    def before_index(self, pkg_dict):
+        research_question = pkg_dict.get('research_question')
+
+        # Store the titles of RQs instead of ids so they are searchable
+        if research_question:
+            rq_titles = []
+
+            # Remove `{` from the beginning
+            research_question = research_question[1:]
+
+            # Remove `}` from the end
+            research_question = research_question[:-1]
+
+            rq_ids = research_question.split(',')
+
+            for rq_id in rq_ids:
+                try:
+                    rq = toolkit.get_action(
+                        'research_question_show')({}, {'id': rq_id})
+                    rq_titles.append(rq.get('title'))
+                except logic.NotFound:
+                    continue
+
+            pkg_dict['research_question'] = ','.join(rq_titles)
+            pkg_dict['extras_research_question'] = ','.join(rq_titles)
+
+        return pkg_dict

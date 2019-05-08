@@ -88,7 +88,7 @@ def get_rq_options():
     rq_list = toolkit.get_action('research_question_list')(context, {})
 
     for rq in rq_list.get(u'data', []):
-        opt = {u'text': rq[u'title'], u'value': rq[u'title']}
+        opt = {u'text': rq[u'title'], u'value': rq[u'title'], u'id': rq[u'id']}
         rq_options.append(opt)
     return rq_options
 
@@ -517,3 +517,18 @@ def knowledgehub_get_map_config():
                                     'attributions">CartoDB</a>')
     }
     return json.dumps(map_config)
+
+
+def rq_ids_to_titles(rq_ids):
+    rqs = []
+    context = _get_context()
+
+    for rq_id in rq_ids:
+        try:
+            rq = toolkit.get_action(
+                'research_question_show')(context, {'id': rq_id})
+            rqs.append(rq.get('title'))
+        except logic.NotFound:
+            continue
+
+    return rqs
