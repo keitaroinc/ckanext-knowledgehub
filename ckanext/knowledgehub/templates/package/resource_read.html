@@ -30,7 +30,6 @@
             {% set tick_count = resource_view.__extras.tick_count %}
             {% set show_labels = resource_view.__extras.show_labels %}
             {% set y_label = resource_view.__extras.y_label %}
-            {% set y_label_hide = resource_view.__extras.y_label_hide %}
             {% set y_from_zero = resource_view.__extras.y_from_zero %}
             {% set data_sort = resource_view.__extras.sort %}
             {% set filters = resource_view.__extras.filters %}
@@ -61,7 +60,6 @@
                 tick_count = tick_count,
                 show_labels = show_labels,
                 y_label = y_label,
-                y_label_hide = y_label_hide,
                 y_from_zero = y_from_zero,
                 data_sort = data_sort,
                 filters = filters,
@@ -129,4 +127,7 @@
   {% endif %}
 </div>
 {% endblock %}
-
+{% block primary_content %}
+  {{ super() }}
+  {{ h.disqus_comments() }}
+{% endblock %}
