@@ -1,5 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm
 
 import ckanext.knowledgehub.helpers as h
