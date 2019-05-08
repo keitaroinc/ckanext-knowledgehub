@@ -69,7 +69,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_last_visuals': h.get_last_visuals,
             'pg_array_to_py_list': h.pg_array_to_py_list,
             'knowledgehub_get_map_config': h.knowledgehub_get_map_config,
+            'knowledgehub_get_geojson_resources': h.get_geojson_resources,
             'rq_ids_to_titles': h.rq_ids_to_titles,
+            'knowledgehub_get_dataset_url_path': h.get_dataset_url_path
         }
 
     # IDatasetForm

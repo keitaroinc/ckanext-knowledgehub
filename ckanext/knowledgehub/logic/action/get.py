@@ -453,3 +453,10 @@ def dashboard_list(context, data_dict):
 
     return {u'total': total, u'page': page,
             u'items_per_page': limit, u'data': dashboards}
+
+
+@toolkit.side_effect_free
+def knowledgehub_get_map_data(context, data_dict):
+
+    geojson_url = data_dict.get('geojson_url')
+    return kh_helpers.get_map_data(geojson_url)

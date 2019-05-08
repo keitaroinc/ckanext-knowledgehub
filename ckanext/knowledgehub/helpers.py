@@ -5,6 +5,7 @@ import inspect
 import uuid
 import json
 import functools32
+import requests
 
 from flask import Blueprint
 
@@ -506,15 +507,14 @@ def knowledgehub_get_map_config():
 
     map_config = {
         'osm_url': config.get('ckanext.knowledgehub.map_osm_url',
-                              'https://cartodb-basemaps-{s}.global.ssl'
-                              '.fastly.net/'
-                              'light_nolabels/{z}/{x}/{y}{r}.png'),
+                              'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}'
+                              '.png'),
         'osm_attribute': config.get('ckanext.knowledgehub.map_osm_attribute',
-                                    '&copy; <a href='
-                                    '"http://www.openstreetmap.org/'
-                                    'copyright">OpenStreetMap</a> &copy; '
-                                    '<a href="http://cartodb.com/'
-                                    'attributions">CartoDB</a>')
+                                    '&copy; <a '
+                                    'href="https://www.openstreetmap.org'
+                                    '/copyright">'
+                                    'OpenStreetMap</a>'
+                                    ' contributors')
     }
     return json.dumps(map_config)
 
@@ -532,3 +532,33 @@ def rq_ids_to_titles(rq_ids):
             continue
 
     return rqs
+
+
+def get_geojson_resources():
+    context = _get_context()
+    data = {
+        'query': 'format:geojson',
+        'order_by': 'name',
+    }
+    result = toolkit.get_action('resource_search')(context, data)
+    return [{'text': r['name'], 'value': r['url']}
+            for r in result.get('results', [])]
+
+
+def get_dataset_url_path(url):
+    # Remove http://host:port/lang part
+    parts = url.split('/dataset')
+    if len(parts) == 1:
+        return ''
+    return '/dataset%s' % parts[1]
+
+
+def get_map_data(geojson_url):
+
+    resp = requests.get(geojson_url)
+    geojson_data = resp.json()
+
+    map_data = {
+        'geojson_data': geojson_data
+    }
+    return map_data
