@@ -1,5 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm
 
 import ckanext.knowledgehub.helpers as h
@@ -178,7 +179,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
 
             for rq_id in rq_ids:
                 try:
-                    rq = toolkit.get_action('research_question_show')({}, {'id': rq_id})
+                    rq = toolkit.get_action(
+                        'research_question_show')({}, {'id': rq_id})
                     rq_titles.append(rq.get('title'))
                 except logic.NotFound:
                     continue
