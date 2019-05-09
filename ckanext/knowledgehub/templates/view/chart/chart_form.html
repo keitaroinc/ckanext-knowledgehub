@@ -270,7 +270,7 @@
 
             {# Show labels #}
             {% if chart %}
-            {% set show_labels = chart.show_labels %}
+              {% set show_labels = chart.show_labels %}
             {% endif %}
             <div class="control-group control-checkbox justify-content-between ">
               <label class="control-label" for="chart_field_labels">{{ _('Show data labels') }}</label>
@@ -282,7 +282,7 @@
 
             {# Show legend #}
             {% if chart %}
-            {% set show_legend = chart.show_legend %}
+              {% set show_legend = chart.show_legend %}
             {% endif %}
             <div class="control-group control-checkbox justify-content-between ">
               <label class="control-label" for="chart_field_legend">{{ _('Show legend') }}</label>

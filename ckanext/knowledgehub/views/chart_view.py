@@ -90,8 +90,10 @@ def _process_post_data(data, resource_id):
             data['chart_field_data_format']
         config['tooltip_name'] = \
             data['chart_field_tooltip_name']
-        config['show_labels'] = \
-            data['chart_field_labels']
+        if 'chart_field_labels' in data:
+            config['show_labels'] = 'true'
+        else:
+            config['show_labels'] = 'false'
         config['y_tick_format'] = \
             data['chart_field_y_ticks_format']
         config['sql_string'] = \
@@ -183,7 +185,6 @@ class EditView(MethodView):
 
     def post(self, id, resource_id, view_id, data=None, errors=None,
              error_summary=None):
-
         context = self._prepare()
 
         try:
