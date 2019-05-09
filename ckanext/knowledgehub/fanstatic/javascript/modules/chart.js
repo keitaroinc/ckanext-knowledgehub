@@ -507,11 +507,9 @@ ckan.module('chart', function() {
 
             var axisXSelect = chartField.find('[name*=chart_field_x_axis_column]');
             var axisXValue = axisXSelect.val();
-
            
             var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
-            axisYValue = axisYSelect.val();
-            
+            var axisYValue = axisYSelect.val();            
 
             var categoryName = chartField.find('[name*=chart_field_category_name]');
             var categoryNameVal = categoryName.val();
@@ -551,7 +549,7 @@ ckan.module('chart', function() {
 
             var dataLabels = chartField.find('input[name*=chart_field_labels]');
             var dataLabelsVal = dataLabels.is(':checked');
-
+            
             var yLabbel = chartField.find('input[name*=chart_field_y_label]');
             var yLabbelVal = yLabbel.val();
 
