@@ -2,12 +2,12 @@
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
 
 {% if data %}
-  {% set table = data.__extras or {} %}
-  {% set filters = data.__extras.filters or [] %}
-  {% set default_sql_string = data.__extras.sql_string or [] %}
+{% set table = data.__extras or {} %}
+{% set filters = data.__extras.filters or [] %}
+{% set default_sql_string = data.__extras.sql_string or [] %}
 {% else %}
-  {% set table = {} %}
-  {% set filters = [] %}
+{% set table = {} %}
+{% set filters = [] %}
 {% endif %}
 
 {% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
@@ -15,92 +15,115 @@
 
 <div id="table_item" class="item table_item visualization-fields-section">
   <div class="item-wrapper">
-
-      {% if data %}
-        {% set table_title = data.title %}
-      {% endif %}
-      <div class="control-group ">
-        <label class="control-label" for="table_field_title">{{ _('Title') }}</label>
-        <div class="controls input-controls">
-          <input id="table_field_title" name="table_field_title" value="{{ table_title }}" placeholder="{{ _('Table title') }}" type="text" required>
+    {% set table_id = h.get_uuid() %}
+    <div class="accordion" id="accordion_{{ table_id }}">
+      {# General #}
+      <div class="accordion-group">
+        <div class="accordion-heading accordion-opened">
+          <a href="#accordion_{{ table_id }}_general" class="accordion-toggle" data-toggle="collapse"
+            data-parent="#accordion_{{ table_id }}"><i class="fa fa-list-ul"></i>
+            {{ _('General') }}
+          </a>
         </div>
-      </div>
+        <div id="accordion_{{ table_id }}_general" class="accordion-body collapse in">
+          <div class="accordion-inner">
 
-      {# Measure, Y values #}
-      {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
-      <div class="control-group control-select">
-        <label class="control-label" for="table_field_y_axis_column">{{ _('Measure') }}</label>
-        <div class="controls input-controls">
-          <select id="table_field_y_axis_column" name="table_field_y_axis_column">
-            {% for y_value in y_axis_values %}
-            <option value="{{y_value}}" {% if table %}{{ 'selected' if y_value == table.y_axis }}{% endif %}>{{y_value}}
-            </option>
-            {% endfor %}
-          </select>
+
+            {% if data %}
+            {% set table_title = data.title %}
+            {% endif %}
+            <div class="control-group ">
+              <label class="control-label" for="table_field_title">{{ _('Title') }}</label>
+              <div class="controls input-controls">
+                <input id="table_field_title" name="table_field_title" value="{{ table_title }}"
+                  placeholder="{{ _('Table title') }}" type="text" required>
+              </div>
+            </div>
+
+            {# Measure, Y values #}
+            {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
+            <div class="control-group control-select">
+              <label class="control-label" for="table_field_y_axis_column">{{ _('Measure') }}</label>
+              <div class="controls input-controls">
+                <select id="table_field_y_axis_column" name="table_field_y_axis_column">
+                  {% for y_value in y_axis_values %}
+                  <option value="{{y_value}}" {% if table %}{{ 'selected' if y_value == table.y_axis }}{% endif %}>
+                    {{y_value}}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            {# Dimension, X values #}
+            {% set columns = h.get_resource_columns(res['id'], []) %}
+            <div class="control-group control-select">
+              <label class="control-label" for="table_main_value">{{ _('Dimension') }}</label>
+              <div class="controls input-controls">
+                <select id="table_main_value" name="table_main_value">
+                  {% for column in columns %}
+                  <option value="{{column}}" {% if table %}{{ 'selected' if column == table.main_value }}{% endif %}>
+                    {{column}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            {# Category values #}
+            <div class="control-group control-select">
+              <label class="control-label" for="table_category_name">{{ _('Category') }}</label>
+              <div class="controls input-controls">
+                <select id="table_category_name" name="table_category_name">
+                  <option value="">&mdash; {{ _('Select column') }} &mdash;</option>
+                  {% for category in columns %}
+                  <option value="{{category}}"
+                    {% if table %}{{ 'selected' if category == table.category_name }}{% endif %}>{{category}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+
+            {% set data_formats = h.get_data_formats() %}
+            <div class="control-group control-select">
+              <label class="control-label" for="table_data_format">{{ _('Data format') }}</label>
+              <div class="controls input-controls">
+                <select id="table_data_format" name="table_data_format">
+                  {% for format in data_formats %}
+                  <option value="{{ format.value }}"
+                    {% if table %}{{ 'selected' if format.value == table.data_format }}{% endif %}>{{ format.text }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          {% if table %}
+          {% set data_type = table.data_type %}
+          {% endif %}
+          <div class="control-group control-checkbox justify-content-start ">
+            <label class="control-label" for="table_data_type">{{ _('Qualitative data') }}</label>
+            <div class="controls">
+              <input id="table_data_type" type="checkbox" name="table_data_type" value="{{ data_type }}"
+                {% if data_type=='qualitative' %}checked{% endif %}>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {# Dimension, X values #}
-      {% set columns = h.get_resource_columns(res['id'], []) %}
-      <div class="control-group control-select">
-        <label class="control-label" for="table_main_value">{{ _('Dimension') }}</label>
-        <div class="controls input-controls">
-          <select id="table_main_value" name="table_main_value">
-            {% for column in columns %}
-            <option value="{{column}}" {% if table %}{{ 'selected' if column == table.main_value }}{% endif %}>{{column}}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-
-      {# Category values #}
-      <div class="control-group control-select">
-        <label class="control-label" for="table_category_name">{{ _('Category') }}</label>
-        <div class="controls input-controls">
-          <select id="table_category_name" name="table_category_name">
-          <option value="">&mdash; {{ _('Select column') }} &mdash;</option>
-          {% for category in columns %}
-          <option value="{{category}}"{% if table %}{{ 'selected' if category == table.category_name }}{% endif %}>{{category}}</option>
-          {% endfor %}
-          </select>
-        </div>
-      </div>
-    </div>
-
-    {% set data_formats = h.get_data_formats() %}
-    <div class="control-group control-select">
-      <label class="control-label" for="table_data_format">{{ _('Data format') }}</label>
-      <div class="controls input-controls">
-        <select id="table_data_format" name="table_data_format">
-          {% for format in data_formats %}
-          <option value="{{ format.value }}" {% if table %}{{ 'selected' if format.value == table.data_format }}{% endif %} >{{ format.text }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-
-    {% if table %}
-      {% set data_type = table.data_type %}
-    {% endif %}
-    <div class="control-group control-checkbox justify-content-start ">
-      <label class="control-label" for="table_data_type">{{ _('Qualitative data') }}</label>
-      <div class="controls">
-        <input id="table_data_type" type="checkbox" name="table_data_type" value="{{ data_type }}" {% if data_type=='qualitative' %}checked{% endif %}>
       </div>
     </div>
 
     <input id="resource_name" type="text" name="resource_name" value="{{ res['name'] }}" class="hidden">
 
-  {% if table %}
+    {% if table %}
     {% set main_value = table.main_value %}
     {% set y_axis = table.y_axis %}
     {% set category_name = table.category_name %}
     {% set data_format = table.data_format %}
     {% set table_title = data.title %}
     {% set data_type = table.data_type %}
-  {% endif %}
-  <div class="preview-wrapper">
-    {% snippet 'ajax_snippets/table_module.html',
+    {% endif %}
+    <div class="preview-wrapper">
+      {% snippet 'ajax_snippets/table_module.html',
       sql_string = sql_string,
       resource_id = res['id'],
       resource_name = res['name'],
@@ -110,9 +133,10 @@
       data_format = data_format,
       data_type = data_type,
       table_title = table_title %}
+    </div>
+    <ul class="inline text-right table-actions">
+      <li class="list-unstyled"><a class="btn  btn-default update-table-btn"><span class="fa fa-refresh"
+            aria-hidden="true"></span> {{ _('Update') }}</a></li>
+    </ul>
+    <span class="grippy"></span>
   </div>
-  <ul class="inline text-right table-actions">
-    <li class="list-unstyled"><a class="btn  btn-default update-table-btn"><span class="fa fa-refresh" aria-hidden="true"></span> {{ _('Update') }}</a></li>
-  </ul>
-  <span class="grippy"></span>
-</div>
