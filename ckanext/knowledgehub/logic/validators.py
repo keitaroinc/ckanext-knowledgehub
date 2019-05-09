@@ -171,7 +171,7 @@ def resource_feedbacks_type_validator(key, data, errors, context):
     clean_data = df.unflatten(data)
     rf_type = clean_data.get('type')
 
-    rf_types = ['userful', 'unuseful', 'trusted', 'untrusted']
+    rf_types = ['useful', 'unuseful', 'trusted', 'untrusted']
 
     if rf_type not in rf_types:
         errors[key].append(
