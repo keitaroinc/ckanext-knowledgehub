@@ -94,18 +94,6 @@
               </div>
             </div>
 
-            {# Data type #}
-            {% if chart %}
-            {% set data_type = chart.data_type %}
-            {% endif %}
-            <div class="control-group control-checkbox justify-content-between ">
-              <label class="control-label" for="chart_data_type">{{ _('Qualitative data') }}</label>
-              <div class="controls ">
-                <input id="chart_data_type" type="checkbox" name="chart_data_type" value="{{ data_type }}"
-                  {% if data_type=='qualitative' %}checked{% endif %}>
-              </div>
-            </div>
-
             {# Color #}
             {% set color_schemes = h.get_color_scheme() %}
             <div class="control-group control-select">
