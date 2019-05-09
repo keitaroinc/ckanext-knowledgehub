@@ -562,3 +562,27 @@ def get_map_data(geojson_url):
         'geojson_data': geojson_data
     }
     return map_data
+
+
+def get_geojson_properties(url):
+    # TODO handle if no url
+    resp = requests.get(url)
+    geojson = resp.json()
+
+    result = []
+    exclude_keys = [
+        'marker-symbol',
+        'marker-color',
+        'marker-size',
+        'stroke',
+        'stroke-width',
+        'stroke-opacity',
+        'fill',
+        'fill-opacity'
+    ]
+    print geojson
+
+    for k, v in geojson.get('features')[0].get('properties').iteritems():
+        if k not in exclude_keys:
+            result.append({'value': k, 'text': k})
+    return result

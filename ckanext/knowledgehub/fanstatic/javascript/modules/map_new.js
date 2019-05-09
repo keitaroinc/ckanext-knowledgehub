@@ -38,14 +38,16 @@ ckan.module('knowledgehub-map', function(jQuery) {
     }
   };
 
-
   return {
 
     initialize: function() {
 
       this.initLeaflet.call(this);
       this.mapResource = this.el.parent().parent().find('#map_resource');
+      this.mapTitleField = this.el.parent().parent().find('#map_title_field');
+
       this.mapResource.change(this.onResourceChange.bind(this));
+      this.mapTitleField.change(this.onPropertyChange.bind(this));
 
       $('.leaflet-control-zoom-in').css({
         'color': '#0072bc'
@@ -56,11 +58,53 @@ ckan.module('knowledgehub-map', function(jQuery) {
     },
 
     onResourceChange: function() {
-      this.resetMap.call(this);
-      this.options.map_resource = this.mapResource.val();
-      this.initializeMarkers.call(this, this.options.map_resource);
-      console.log('Tuka e');
 
+      this.options.map_title_field = this.mapTitleField.val();
+      if (this.options.map_resource != this.mapResource.val() && this.mapResource.val() != '') {
+        this.options.map_resource = this.mapResource.val();
+        //                  this.initializeMarkers.call(this, this.options.map_resource);
+        this.resetMap.call(this);
+        api.get('knowledgehub_get_geojson_properties', {
+            map_resource: this.options.map_resource
+          })
+          .done(function(data) {
+            if (data.success) {
+
+              this.mapTitleField.find('option').not(':first').remove();
+
+              $.each(data.result, function(idx, elem) {
+                this.mapTitleField.append(new Option(elem.text, elem.value));
+              }.bind(this));
+
+              this.initializeMarkers.call(this, this.options.map_resource);
+            } else {
+              this.resetMap.call(this);
+            }
+          }.bind(this))
+          .fail(function(error) {
+            this.resetMap.call(this);
+          }.bind(this));
+      } else {
+        this.resetMap.call(this);
+      }
+    },
+
+    onPropertyChange: function() {
+
+        this.options.map_resource = this.mapResource.val();
+        this.options.map_title_field = this.mapTitleField.val();
+
+        if (this.options.map_title_field && this.options.map_resource) {
+
+            this.map.eachLayer(function(layer) {
+                if (layer != this.osm) {
+                    this.map.removeLayer(layer);
+                }
+            }.bind(this));
+            this.initializeMarkers.call(this, this.options.map_resource);
+        } else {
+            this.resetMap.call(this);
+        }
     },
 
     resetMap: function() {
@@ -143,7 +187,6 @@ ckan.module('knowledgehub-map', function(jQuery) {
         .fail(function(error) {
           this.resetMap.call(this);
         }.bind(this));
-
-    },
+    }
   };
 });

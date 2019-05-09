@@ -460,3 +460,48 @@ def knowledgehub_get_map_data(context, data_dict):
 
     geojson_url = data_dict.get('geojson_url')
     return kh_helpers.get_map_data(geojson_url)
+
+
+def visualizations_for_rq(context, data_dict):
+    ''' List visualizations (resource views) based on a research question
+
+    Only resource views of type chart, table and map are considered.
+
+    :param research_question: Title of a research question
+    :type research_question: string
+
+    :returns: list of dictionaries, where each dictionary is a resource view
+    :rtype: list
+    '''
+
+    research_question = data_dict.get('research_question')
+
+    if not research_question:
+        raise toolkit.ValidationError(
+            'Query parameter `research_question` is required')
+
+    resource_views = []
+
+    datasets = toolkit.get_action('package_search')(context, {
+        'fq': '+extras_research_question:{0}'.format(research_question)
+    })
+
+    for dataset in datasets.get('results'):
+        for resource in dataset.get('resources'):
+            resource_view_list = toolkit.get_action('resource_view_list')(
+                context, {'id': resource.get('id')})
+
+            for resource_view in resource_view_list:
+                if resource_view.get('view_type') == 'chart' or \
+                   resource_view.get('view_type') == 'map' or \
+                   resource_view.get('view_type') == 'table':
+                    resource_views.append(resource_view)
+
+    return resource_views
+
+
+@toolkit.side_effect_free
+def knowledgehub_get_geojson_properties(context, data_dict):
+    map_resource_url = data_dict.get('map_resource')
+
+    return kh_helpers.get_geojson_properties(map_resource_url)
