@@ -1,6 +1,27 @@
 ckan.module('knowledgehub-map', function(jQuery) {
   'use strict';
 
+  //extend Leaflet to create a GeoJSON layer from a TopoJSON file
+  L.TopoJSON = L.GeoJSON.extend({
+    addData: function(data) {
+      var geojson, key;
+      if (data.type === "Topology") {
+        for (key in data.objects) {
+          if (data.objects.hasOwnProperty(key)) {
+            geojson = topojson.feature(data, data.objects[key]);
+            L.GeoJSON.prototype.addData.call(this, geojson);
+          }
+        }
+        return this;
+      }
+      L.GeoJSON.prototype.addData.call(this, data);
+      return this;
+    }
+  });
+  L.topoJson = function(data, options) {
+    return new L.TopoJSON(data, options);
+  };
+
   var api = {
     get: function(action, params) {
       var api_ver = 3;
@@ -35,6 +56,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
     },
 
     onResourceChange: function() {
+      this.resetMap.call(this);
       this.options.map_resource = this.mapResource.val();
       this.initializeMarkers.call(this, this.options.map_resource);
       console.log('Tuka e');
@@ -96,12 +118,23 @@ ckan.module('knowledgehub-map', function(jQuery) {
         .done(function(data) {
           if (data.success) {
             var geoJSON = data.result['geojson_data'];
-            this.featuresValues = data.result['features_values'];
+            //            geojson.addData(geoJSON);
+            this.geoL = L.topoJson(geoJSON, {
 
-            this.geoL = L.geoJSON(geoJSON, {
-
+              style: function(feature) {
+                return {
+                  color: '#000',
+                  opacity: 1,
+                  weight: 2,
+                  fillColor: '#737373',
+                  fillOpacity: 0.8
+                }
+              },
+              onEachFeature: function(feature, layer) {
+                layer.bindPopup('<p>' + feature.properties.NAME_EN + '</p>')
+              }
             }).addTo(this.map);
-            // Properly zoom the map to fit all markers/polygons
+            //            // Properly zoom the map to fit all markers/polygons
             this.map.fitBounds(this.geoL.getBounds());
           } else {
             this.resetMap.call(this);
