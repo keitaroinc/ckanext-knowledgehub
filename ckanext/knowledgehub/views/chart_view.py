@@ -66,8 +66,10 @@ def _process_post_data(data, resource_id):
             data['chart_field_y_label']
         config['x_text_rotate'] = \
             data['chart_field_x_text_rotate']
-        config['x_text_multiline'] = \
-            data['chart_field_x_text_multiline']
+        if 'chart_field_x_text_multiline' in data:
+            config['x_text_multiline'] = 'true'
+        else:
+            config['x_text_multiline'] = 'false'
         config['dynamic_reference_type'] = \
             data['chart_field_dynamic_reference_type']
         config['dynamic_reference_label'] = \
