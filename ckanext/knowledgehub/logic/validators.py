@@ -165,3 +165,17 @@ def dashboard_source_validator(key, data, errors, context):
             (dashboard_source is None or dashboard_source == ''):
         errors[key].append(
             p.toolkit._('Missing value'))
+
+
+def resource_feedbacks_type_validator(key, data, errors, context):
+    clean_data = df.unflatten(data)
+    rf_type = clean_data.get('type')
+
+    rf_types = ['useful', 'unuseful', 'trusted', 'untrusted']
+
+    if rf_type not in rf_types:
+        errors[key].append(
+            p.toolkit._(
+                'Allowed resource feedback types are: %s' % ', '.join(rf_types)
+            )
+        )

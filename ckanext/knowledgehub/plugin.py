@@ -69,6 +69,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_last_visuals': h.get_last_visuals,
             'pg_array_to_py_list': h.pg_array_to_py_list,
             'rq_ids_to_titles': h.rq_ids_to_titles,
+            'resource_feedback_count': h.resource_feedback_count
         }
 
     # IDatasetForm

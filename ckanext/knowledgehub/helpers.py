@@ -508,3 +508,20 @@ def rq_ids_to_titles(rq_ids):
             continue
 
     return rqs
+
+
+# Returns the total number of feedbacks for given type
+def resource_feedback_count(type, resource, dataset):
+    context = _get_context()
+    filter = {
+        'type': type,
+        'resource': resource,
+        'dataset': dataset
+    }
+
+    try:
+        rf_list = toolkit.get_action('resource_feedback_list')(context, filter)
+    except Exception:
+        return 0
+
+    return rf_list.get('total', 0)

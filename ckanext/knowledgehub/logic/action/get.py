@@ -6,11 +6,13 @@ import ckan.logic as logic
 from ckan.plugins import toolkit
 from ckan.common import _
 from ckan import lib
+from ckan import model
 
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
+from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub import helpers as kh_helpers
 
 from ckanext.knowledgehub.backend.factory import get_backend
@@ -492,3 +494,96 @@ def visualizations_for_rq(context, data_dict):
                     resource_views.append(resource_view)
 
     return resource_views
+
+
+@toolkit.side_effect_free
+def resource_user_feedback(context, data_dict):
+    ''' Returns user's feedback
+
+    :param resource: resource ID
+    :type page: string
+
+
+    :returns: a resource feedback as dictionary
+    :rtype: dictionary
+    '''
+    user = context.get('user')
+    user_id = model.User.by_name(user.decode('utf8')).id
+
+    resource = data_dict.get('resource')
+    if not resource:
+        raise ValidationError({'resource': _('Missing value')})
+
+    rf = ResourceFeedbacks.get(user=user_id, resource=resource).first()
+    if not rf:
+        raise NotFound(_(u'Resource feedback was not found.'))
+    else:
+        return rf.as_dict()
+
+
+@toolkit.side_effect_free
+def resource_feedback_list(context, data_dict):
+    ''' List resource feedbacks
+
+    :param page: current page in pagination (optional, default to 1)
+    :type page: integer
+    :param sort: sorting of the search results.  Optional.  Default:
+        "name asc" string of field name and sort-order. The allowed fields are
+        'name', and 'title'
+    :type sort: string
+    :param limit: Limit the search criteria (defaults to 1000000).
+    :type limit: integer
+    :param offset: Offset for the search criteria (defaults to 0).
+    :type offset: integer
+
+    :param type: one of the available resource feedbacks(useful, unuseful,
+    trusted, untrusted).
+    :type type: string
+    :param resource: resource ID
+    :type resource: string
+    :param dataset: dataset ID
+    :type dataset: string
+
+    :returns: a dictionary including total items,
+     page number, items per page and data(feedbacks)
+    :rtype: dictionary
+    '''
+    type = data_dict.get('type', '')
+    resource = data_dict.get('resource', '')
+    dataset = data_dict.get('dataset', '')
+
+    q = data_dict.get('q', '')
+    page_size = int(data_dict.get('pageSize', 1000000))
+    page = int(data_dict.get('page', 1))
+    order_by = data_dict.get('order_by', None)
+    offset = (page - 1) * page_size
+
+    kwargs = {}
+
+    if type:
+        kwargs['type'] = type
+    if resource:
+        kwargs['resource'] = resource
+    if dataset:
+        kwargs['dataset'] = dataset
+
+    kwargs['q'] = q
+    kwargs['limit'] = page_size
+    kwargs['offset'] = offset
+    kwargs['order_by'] = order_by
+
+    rf_list = []
+
+    try:
+        rf_db_list = ResourceFeedbacks.get(**kwargs).all()
+    except Exception:
+        return {'total': 0, 'page': page,
+                'pageSize': page_size, 'data': []}
+
+    for entry in rf_db_list:
+        rf_list.append(_table_dictize(entry, context))
+
+    total = len(rf_list)
+
+    return {'total': total, 'page': page,
+            'pageSize': page_size, 'data': rf_list}
