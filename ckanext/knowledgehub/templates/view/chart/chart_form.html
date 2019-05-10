@@ -167,7 +167,7 @@
 
             {# X-axis label multiline #}
             {% if chart %}
-            {% set x_text_multiline = chart.x_text_multiline %}
+              {% set x_text_multiline = chart.x_text_multiline %}
             {% endif %}
             <div class="control-group control-checkbox justify-content-between ">
               <label class="control-label"
@@ -195,7 +195,7 @@
 
             {# Y-axis title #}
             {% if chart %}
-            {% set y_label = chart.y_label %}
+              {% set y_label = chart.y_label %}
             {% endif %}
             <div class="control-group ">
               <label class="control-label" for="chart_field_y_label">{{ _('Y axis title') }}</label>
@@ -208,7 +208,7 @@
 
             {# Y-axis from zero #}
             {% if chart %}
-            {% set y_from_zero = chart.y_from_zero %}
+              {% set y_from_zero = chart.y_from_zero %}
             {% endif %}
             <div class="control-group control-checkbox justify-content-between ">
               <label class="control-label" for="chart_field_y_from_zero">{{ _('Start from zero') }}</label>
@@ -220,9 +220,9 @@
 
             {# Y-axis label format #}
             {% if chart and chart.tick_count%}
-            {% set ticks_formats = h.get_data_formats(5) %}
+              {% set ticks_formats = h.get_data_formats(5) %}
             {% else %}
-            {% set ticks_formats = h.get_data_formats() %}
+              {% set ticks_formats = h.get_data_formats() %}
             {% endif %}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_y_ticks_format">{{ _('Y axis label format') }}</label>
@@ -325,7 +325,7 @@
 
             {# Dynamic Reference Factor #}
             {% if chart %}
-            {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
+              {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
             {% endif %}
             <div class="control-group">
               <label class="control-label"
@@ -339,7 +339,7 @@
 
             {# Dynamic Reference Label #}
             {% if chart %}
-            {% set dynamic_reference_label = chart.dynamic_reference_label %}
+              {% set dynamic_reference_label = chart.dynamic_reference_label %}
             {% endif %}
             <div class="control-group">
               <label class="control-label"
@@ -364,7 +364,7 @@
     <span class="grippy"></span>
     {# Legacy #}
     {% if chart %}
-    {% set tooltip_name = chart.tooltip_name %}
+      {% set tooltip_name = chart.tooltip_name %}
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_tooltip_name">{{ _('Tooltip name') }}</label>
@@ -374,7 +374,7 @@
       </div>
     </div>
     {% if chart %}
-    {% set ptop = chart.padding_top %}
+      {% set ptop = chart.padding_top %}
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_padding_top">{{ _('Padding top') }}</label>
@@ -384,7 +384,7 @@
       </div>
     </div>
     {% if chart %}
-    {% set pbtm = chart.padding_bottom %}
+      {% set pbtm = chart.padding_bottom %}
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_padding_bottom">{{ _('Padding bottom') }}</label>
