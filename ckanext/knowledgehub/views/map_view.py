@@ -41,23 +41,22 @@ def _process_post_data(data, resource_id):
     config = {}
     filters = []
     for k, v in data.items():
-        if k.startswith('data_filter_name_'):
-            filter = {}
-            filter_id = k.split('_')[-1]
-            filter['order'] = int(filter_id)
-            filter['name'] = \
-                data.pop('data_filter_name_{}'.format(filter_id))
-            filter['value'] = \
-                data.pop('data_filter_value_{}'.format(filter_id))
-            filters.append(filter)
+        # if k.startswith('data_filter_name_'):
+        #     filter = {}
+        #     filter_id = k.split('_')[-1]
+        #     filter['order'] = int(filter_id)
+        #     filter['name'] = \
+        #         data.pop('data_filter_name_{}'.format(filter_id))
+        #     filter['value'] = \
+        #         data.pop('data_filter_value_{}'.format(filter_id))
+        #     filters.append(filter)
 
-        config['sql_string'] = \
-            data['sql_string']
+        config['map_resource'] = \
+            data['map_resource']
+        config['title'] = \
+            data['map_field_title']
 
     config['filters'] = json.dumps(filters)
-
-    config['data_type'] = 'qualitative' \
-        if 'map_data_type' in data else 'quantitative'
 
     view_dict = {}
     view_dict['resource_id'] = resource_id

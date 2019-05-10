@@ -499,6 +499,8 @@ def resource_view_icon(view):
         return 'bar-chart'
     elif view.get('view_type') == 'table':
         return 'table'
+    elif view.get('view_type') == 'map':
+        return 'map'
     else:
         return 'exclamation'
 
