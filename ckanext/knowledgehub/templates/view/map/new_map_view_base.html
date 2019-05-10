@@ -36,6 +36,7 @@
      {% block form %}
         {% snippet 'view/map/map_form.html', res=res, data=data, default_sql_string=default_sql_string, data_type=data_type %}
      {% endblock %}
+    <br/>
     <div class="form-actions">
       <button class="btn btn-primary" name="save" value="Save" type="submit">{% block save_button_text %}{{ _('Add') }}{% endblock %}</button>
     </div>
