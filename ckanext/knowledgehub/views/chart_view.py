@@ -82,8 +82,10 @@ def _process_post_data(data, resource_id):
             data['chart_field_chart_padding_bottom']
         config['tick_count'] = \
             data['chart_field_tick_count']
-        config['show_legend'] = \
-            data['chart_field_legend']
+        if 'chart_field_legend' in data:
+            config['show_legend'] = 'true'
+        else:            
+            config['show_legend'] = 'false'
         config['padding_top'] = \
             data['chart_field_padding_top']
         config['data_format'] = \
