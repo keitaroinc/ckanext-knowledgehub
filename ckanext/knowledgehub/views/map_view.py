@@ -29,14 +29,15 @@ abort = base.abort
 log = logging.getLogger(__name__)
 
 
-chart_view = Blueprint(
-    u'chart_view',
+map_view = Blueprint(
+    u'map_view',
     __name__,
     url_prefix=u'/dataset/<id>/resource/<resource_id>'
 )
 
 
 def _process_post_data(data, resource_id):
+
     config = {}
     filters = []
     for k, v in data.items():
@@ -50,71 +51,24 @@ def _process_post_data(data, resource_id):
                 data.pop('data_filter_value_{}'.format(filter_id))
             filters.append(filter)
 
-        config['type'] = \
-            data['chart_field_type']
-        config['title'] = \
-            data['chart_field_title']
-        config['x_axis'] = \
-            data['chart_field_x_axis_column']
-        config['y_axis'] = \
-            data['chart_field_y_axis_column']
-        config['category_name'] = \
-            data['chart_field_category_name']
-        config['color'] = \
-            data['chart_field_color']
-        config['y_label'] = \
-            data['chart_field_y_label']
-        config['x_text_rotate'] = \
-            data['chart_field_x_text_rotate']
-        if 'chart_field_x_text_multiline' in data:
-            config['x_text_multiline'] = 'true'
-        else:
-            config['x_text_multiline'] = 'false'
-        config['dynamic_reference_type'] = \
-            data['chart_field_dynamic_reference_type']
-        config['dynamic_reference_label'] = \
-            data['chart_field_dynamic_reference_label']
-        config['dynamic_reference_factor'] = \
-            data['chart_field_dynamic_reference_factor']
-        config['sort'] = \
-            data['chart_field_sort']
-        config['chart_padding_left'] = \
-            data['chart_field_chart_padding_left']
-        config['chart_padding_bottom'] = \
-            data['chart_field_chart_padding_bottom']
-        config['tick_count'] = \
-            data['chart_field_tick_count']
-        if 'chart_field_legend' in data:
-            config['show_legend'] = 'true'
-        else:
-            config['show_legend'] = 'false'
-        config['padding_top'] = \
-            data['chart_field_padding_top']
-        config['data_format'] = \
-            data['chart_field_data_format']
-        config['tooltip_name'] = \
-            data['chart_field_tooltip_name']
-        if 'chart_field_labels' in data:
-            config['show_labels'] = 'true'
-        else:
-            config['show_labels'] = 'false'
-        config['y_tick_format'] = \
-            data['chart_field_y_ticks_format']
         config['sql_string'] = \
             data['sql_string']
 
     config['filters'] = json.dumps(filters)
 
+    config['data_type'] = 'qualitative' \
+        if 'map_data_type' in data else 'quantitative'
+
     view_dict = {}
     view_dict['resource_id'] = resource_id
     view_dict['title'] = config['title']
-    view_dict['view_type'] = 'chart'
+    view_dict['view_type'] = 'map'
     view_dict.update(config)
 
     return view_dict
 
 
-@chart_view.before_request
+@map_view.before_request
 def before_request():
     try:
         context = dict(model=model, user=g.user,
@@ -126,7 +80,7 @@ def before_request():
 
 
 class EditView(MethodView):
-    u''' Edit existing Chart view '''
+    u''' Edit existing Map view '''
 
     def _prepare(self):
 
@@ -183,12 +137,13 @@ class EditView(MethodView):
         }
 
         return base.render(
-            u'view/chart/edit_chart_view_base.html',
+            u'view/map/edit_map_view_base.html',
             extra_vars=vars
         )
 
     def post(self, id, resource_id, view_id, data=None, errors=None,
              error_summary=None):
+
         context = self._prepare()
 
         try:
@@ -223,7 +178,7 @@ class EditView(MethodView):
 
 
 class CreateView(MethodView):
-    u''' Create new Chart view '''
+    u''' Create new Map view '''
 
     def _prepare(self):
 
@@ -275,7 +230,7 @@ class CreateView(MethodView):
         }
 
         return base.render(
-            u'view/chart/new_chart_view_base.html',
+            u'view/map/new_map_view_base.html',
             extra_vars=vars
         )
 
@@ -308,7 +263,7 @@ class CreateView(MethodView):
                              id=id, resource_id=resource_id)
 
 
-chart_view.add_url_rule(u'/new_chart',
-                        view_func=CreateView.as_view(str(u'new_chart')))
-chart_view.add_url_rule(u'/edit_chart/<view_id>',
-                        view_func=EditView.as_view(str(u'edit_chart')))
+map_view.add_url_rule(u'/new_map',
+                      view_func=CreateView.as_view(str(u'new_map')))
+map_view.add_url_rule(u'/edit_map/<view_id>',
+                      view_func=EditView.as_view(str(u'edit_map')))

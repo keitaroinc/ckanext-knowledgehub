@@ -14,6 +14,7 @@
       {% endfor %}
         <li><a href="{% url_for 'chart_view.new_chart', id=c.pkg_dict.name, resource_id=c.resource.id %}"><i class="fa fa-line-chart"></i> {{ _('Chart') }}</a></li>
         <li><a href="{% url_for 'table_view.new_table', id=c.pkg_dict.name, resource_id=c.resource.id %}"><i class="fa fa-table"></i> {{ _('Table') }}</a></li>
+        <li><a href="{% url_for 'map_view.new_map', id=c.pkg_dict.name, resource_id=c.resource.id %}"><i class="fa fa-map"></i> {{ _('Map') }}</a></li>
     </ul>
   </div>
   {% resource 'vendor/reorder' %}
