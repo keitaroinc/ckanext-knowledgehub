@@ -155,9 +155,9 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
               style: function(feature) {
                 return {
-                  color: '#f44141',
-                  opacity: 0,
-                  weight: 0,
+                  color: '#000',
+                  opacity: 0.3,
+                  weight: 0.3,
                   fillColor: '#f44141',
                   fillOpacity: 0.3
                 }
@@ -184,7 +184,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
                       var layer = e.target;
 
                       layer.setStyle({
-                        weight: 1,
+                        weight: 0.3,
                         color: '#737373',
                         dashArray: '3',
                         fillOpacity: 0.7
