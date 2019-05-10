@@ -574,12 +574,16 @@ def resource_feedback_list(context, data_dict):
 
     rf_list = []
 
-    rf_db_list = ResourceFeedbacks.get(**kwargs).all()
+    try:
+        rf_db_list = ResourceFeedbacks.get(**kwargs).all()
+    except Exception:
+        return {'total': 0, 'page': page,
+                'pageSize': page_size, 'data': []}
 
     for entry in rf_db_list:
         rf_list.append(_table_dictize(entry, context))
 
-    total = len(ResourceFeedbacks.get(**kwargs).all())
+    total = len(rf_list)
 
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': rf_list}

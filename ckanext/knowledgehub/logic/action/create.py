@@ -359,7 +359,7 @@ def package_create(context, data_dict):
     return ckan_package_create(context, data_dict)
 
 
-def resource_feddback(context, data_dict):
+def resource_feedback(context, data_dict):
     '''
     Resource feedback mechanism
 

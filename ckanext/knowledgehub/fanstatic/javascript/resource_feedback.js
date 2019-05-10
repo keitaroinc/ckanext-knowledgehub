@@ -28,7 +28,6 @@
             resource: resource
         })
         .done(function (data) {
-            console.log(data)
             if (data.success) {
                 var feedback =  data.result;
                 var type = feedback.type;
