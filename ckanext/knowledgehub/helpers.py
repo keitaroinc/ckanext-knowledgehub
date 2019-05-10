@@ -556,7 +556,12 @@ def get_dataset_url_path(url):
 def get_map_data(geojson_url):
 
     resp = requests.get(geojson_url)
-    geojson_data = resp.json()
+    try:
+        geojson_data = resp.json()
+    except ValueError as e:
+        # includes simplejson.decoder.JSONDecodeError
+        raise ValueError('Invalid JSON syntax: %s' %
+                         (e))
 
     map_data = {
         'geojson_data': geojson_data
@@ -564,25 +569,18 @@ def get_map_data(geojson_url):
     return map_data
 
 
-def get_geojson_properties(url):
-    # TODO handle if no url
-    resp = requests.get(url)
-    geojson = resp.json()
+# Returns the total number of feedbacks for given type
+def resource_feedback_count(type, resource, dataset):
+    context = _get_context()
+    filter = {
+        'type': type,
+        'resource': resource,
+        'dataset': dataset
+    }
 
-    result = []
-    exclude_keys = [
-        'marker-symbol',
-        'marker-color',
-        'marker-size',
-        'stroke',
-        'stroke-width',
-        'stroke-opacity',
-        'fill',
-        'fill-opacity'
-    ]
-    print geojson
+    try:
+        rf_list = toolkit.get_action('resource_feedback_list')(context, filter)
+    except Exception:
+        return 0
 
-    for k, v in geojson.get('features')[0].get('properties').iteritems():
-        if k not in exclude_keys:
-            result.append({'value': k, 'text': k})
-    return result
+    return rf_list.get('total', 0)

@@ -8,6 +8,9 @@ from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
 from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
 from ckanext.knowledgehub.model.dashboard import setup as dashboard_db_setup
+from ckanext.knowledgehub.model.resource_feedback import (
+    setup as resource_feedback_setup
+)
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +29,7 @@ def init():
         sub_theme_db_setup()
         rq_db_setup()
         dashboard_db_setup()
+        resource_feedback_setup()
     except Exception as e:
         error_shout(e)
     else:

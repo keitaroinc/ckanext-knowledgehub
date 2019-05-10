@@ -19,6 +19,9 @@
     <li class="active"><a href="#">{{ _('Add map view') }}</a></li>
 {% endblock %}
 
+{% block flash %}
+{% endblock %}
+
 {% block content_action %}
   {% link_for _('All views'), controller='package', action='resource_views', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='arrow-left' %}
 {% endblock %}

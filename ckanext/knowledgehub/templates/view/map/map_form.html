@@ -39,26 +39,6 @@
               </div>
             </div>
 
-            {% if map %}
-              {% set map_properties = h.querytool_get_geojson_properties(map.map_resource) %}
-            {% else %}
-              {% set map_properties = [] %}
-            {% endif %}
-
-            <div class="control-group control-select">
-              <label class="control-label" for="map_title_field">{{ _('Title field') }}</label>
-              <div class="controls ">
-                <select id="map_title_field" name="map_title_field" required=required>
-                <option value="">&mdash; {{ _('Select title field') }} &mdash;</option>
-                {% if map_properties %}
-                  {% for property in map_properties %}
-                    <option value="{{ property.value }}" {% if map %}{{ 'selected' if property.value == map.map_title_field }}{% endif %} >{{property.text}}</option>
-                  {% endfor %}
-                {% endif %}
-                </select>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
@@ -66,16 +46,24 @@
   </div>
 </div>
 
+<div class="flash-messages">
+  {% block flash_inner %}
+    {% for message in h.flash.pop_messages() | list %}
+      <div class="alert alert-warning fade in {{ message.category }}">
+        {{ h.literal(message) }}
+      </div>
+    {% endfor %}
+  {% endblock %}
+</div>
+
 <div class="preview-wrapper custom-width">
    {% if map %}
     {% set map_resource=map.map_resource %}
-    {% set map_title_field=map.map_title_field %}
   {% endif %}
   {% set map_config = h.knowledgehub_get_map_config() %}
   {% snippet 'ajax_snippets/map_module.html',
     map_config=map_config,
-    map_resource=map_resource,
-    map_title_field=map_title_field
+    map_resource=map_resource
   %}
 
 </div>

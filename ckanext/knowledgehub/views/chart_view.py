@@ -66,8 +66,10 @@ def _process_post_data(data, resource_id):
             data['chart_field_y_label']
         config['x_text_rotate'] = \
             data['chart_field_x_text_rotate']
-        config['x_text_multiline'] = \
-            data['chart_field_x_text_multiline']
+        if 'chart_field_x_text_multiline' in data:
+            config['x_text_multiline'] = 'true'
+        else:
+            config['x_text_multiline'] = 'false'
         config['dynamic_reference_type'] = \
             data['chart_field_dynamic_reference_type']
         config['dynamic_reference_label'] = \
@@ -82,16 +84,20 @@ def _process_post_data(data, resource_id):
             data['chart_field_chart_padding_bottom']
         config['tick_count'] = \
             data['chart_field_tick_count']
-        config['show_legend'] = \
-            data['chart_field_legend']
+        if 'chart_field_legend' in data:
+            config['show_legend'] = 'true'
+        else:
+            config['show_legend'] = 'false'
         config['padding_top'] = \
             data['chart_field_padding_top']
         config['data_format'] = \
             data['chart_field_data_format']
         config['tooltip_name'] = \
             data['chart_field_tooltip_name']
-        config['show_labels'] = \
-            data['chart_field_labels']
+        if 'chart_field_labels' in data:
+            config['show_labels'] = 'true'
+        else:
+            config['show_labels'] = 'false'
         config['y_tick_format'] = \
             data['chart_field_y_ticks_format']
         config['sql_string'] = \
@@ -183,7 +189,6 @@ class EditView(MethodView):
 
     def post(self, id, resource_id, view_id, data=None, errors=None,
              error_summary=None):
-
         context = self._prepare()
 
         try:
