@@ -128,15 +128,14 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
       // method that we will use to update the control based on feature properties passed
       this.info.update = function(infoData) {
-        //            $.each(infoData, function(idx, elem) {
-        //              this._div.innerHTML += '<p>' + idx + ': ' + elem + '</p>';
-        //            }.bind(this));
 
-        this._div.innerHTML = '<h4></h4>' + (infoData ?
-          infoData.ADM1_EN + ': ' + '<b><br/>' +
-          infoData.ADM0_PCODE + '<b>' : '');
+        this._div.innerHTML = '<h4></h4>';
+        if (infoData) {
+          $.each(infoData, function(idx, elem) {
+            this._div.innerHTML += '<b>' + idx + ': </b>' + elem + '<br/>';
+          }.bind(this));
+        }
       };
-
       this.info.addTo(this.map);
     },
 
@@ -156,52 +155,57 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
               style: function(feature) {
                 return {
-                  color: '#f44141',
-                  opacity: 0,
-                  weight: 0,
+                  color: '#000',
+                  opacity: 0.3,
+                  weight: 0.3,
                   fillColor: '#f44141',
                   fillOpacity: 0.3
                 }
               },
               onEachFeature: function(feature, layer) {
-                //                console.log(feature)
-                //                  TODO if feature is type point create pop ups
-                //                  TODO else create layer style and info window
-                // Here we create the style and info window for "Polygon" features
-                layer.on({
-                  mouseover: function highlightFeature(e) {
-                    var layer = e.target;
 
-                    layer.setStyle({
-                      weight: 1,
-                      color: '#737373',
-                      dashArray: '3',
-                      fillOpacity: 0.5
-                    });
+                if (feature.geometry.type === 'Point') {
 
-                    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-                      layer.bringToFront();
-                    }
+                  // Here we create the popups for the "Point" features
+                  this._infoDiv = L.DomUtil.create('div', 'feature-properties');
 
-                    this.info.update(feature.properties);
-                  }.bind(this),
-                  mouseout: function resetHighlight(e) {
-                    this.geoL.resetStyle(e.target);
-                    this.info.update();
-                  }.bind(this)
-                });
-                // Here we create the popups for the "Point" features
-                this._infoDiv = L.DomUtil.create('div', 'feature-properties');
 
-                $.each(feature.properties, function(idx, elem) {
-                  this._infoDiv.innerHTML += '<p>' + idx + ': ' + elem + '</p>';
-                }.bind(this));
+                  this._infoDiv.innerHTML = '<h4></h4>';
+                  $.each(feature.properties, function(idx, elem) {
+                    this._infoDiv.innerHTML += '<b>' + idx + ': </b>' + elem + '<br/>';
+                  }.bind(this));
 
-                layer.bindPopup(this._infoDiv)
+                  layer.bindPopup(this._infoDiv)
+
+                } else {
+                  // Here we create the style and info window for "Polygon" features
+                  layer.on({
+                    mouseover: function highlightFeature(e) {
+                      var layer = e.target;
+
+                      layer.setStyle({
+                        weight: 0.3,
+                        color: '#737373',
+                        dashArray: '3',
+                        fillOpacity: 0.7
+                      });
+
+                      if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                        layer.bringToFront();
+                      }
+                      this.info.update(feature.properties);
+                    }.bind(this),
+
+                    mouseout: function resetHighlight(e) {
+                      this.geoL.resetStyle(e.target);
+                      this.info.update();
+
+                    }.bind(this)
+                  });
+                }
               }.bind(this)
             }).addTo(this.map);
-            //            // Properly zoom the map to fit all markers/polygons
-
+            // Properly zoom the map to fit all markers/polygons
             this.map.fitBounds(this.geoL.getBounds());
           } else {
             this.resetMap.call(this);

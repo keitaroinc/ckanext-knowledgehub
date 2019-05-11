@@ -1,5 +1,6 @@
 {% resource 'knowledgehub/table' %}
 {% resource 'knowledgehub/chart' %}
+{% resource 'knowledgehub/map' %}
 {% resource 'knowledgehub/javascript/resource_feedback.js' %}
 
 {% ckan_extends %}
@@ -115,6 +116,16 @@
                   data_format = data_format,
                   data_type = data_type,
                   table_title = table_title %}
+
+          {% elif current_resource_view.view_type == 'map'  %}
+
+              {% if resource_view and resource_view.__extras %}
+                {% set map_resource=resource_view.__extras.map_resource %}
+              {% endif %}
+                {% set map_config = h.knowledgehub_get_map_config() %}
+                {% snippet 'ajax_snippets/map_module.html',
+                  map_config=map_config,
+                  map_resource=map_resource %}
 
           {% else %}
 

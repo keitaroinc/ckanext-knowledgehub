@@ -5,6 +5,8 @@
     {% set url = h.url_for('chart_view.edit_chart', id=pkg.name, resource_id=view.resource_id, view_id=view.id) %}
   {% elif view.view_type == 'table' %}
     {% set url = h.url_for('table_view.edit_table', id=pkg.name, resource_id=view.resource_id, view_id=view.id) %}
+  {% elif view.view_type == 'map' %}
+    {% set url = h.url_for('map_view.edit_map', id=pkg.name, resource_id=view.resource_id, view_id=view.id) %}
   {% else %}
     {% set url = h.url_for(controller='package', action='edit_view', id=pkg.name,
                          resource_id=view.resource_id, view_id=view.id) %}

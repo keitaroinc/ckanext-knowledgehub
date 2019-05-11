@@ -11,7 +11,7 @@
 {% set filters = [] %}
 {% endif %}
 
-{% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
+{# snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string #}
 
 <div id="map_field" class="item map_field visualization-fields-section">
   <div class="item-wrapper">
@@ -24,6 +24,14 @@
         </div>
         <div id="map_fields_accordion_general" class="accordion-body collapse in">
           <div class="accordion-inner">
+
+            {# Title #} {% if data %} {% set map_title = data.title %} {% endif %}
+            <div class="control-group title">
+              <label class="control-label" for="map_field_title">{{ _('Title') }}</label>
+              <div class="controls input-controls">
+                  <input id="map_field_title" type="text" name="map_field_title" value="{{ map_title }}" placeholder="{{ _('Map title') }}" required="required">
+              </div>
+            </div>
 
             {% set resources = h.knowledgehub_get_geojson_resources() %}
             <div class="control-group control-select">
