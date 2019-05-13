@@ -519,11 +519,14 @@ def resource_user_feedback(context, data_dict):
     if not resource:
         raise ValidationError({'resource': _('Missing value')})
 
-    rf = ResourceFeedbacks.get(user=user_id, resource=resource).first()
+    rf = ResourceFeedbacks.get(user=user_id, resource=resource).all()
     if not rf:
         raise NotFound(_(u'Resource feedback was not found.'))
     else:
-        return rf.as_dict()
+        user_feedbacks = []
+        for entry in rf:
+            user_feedbacks.append(_table_dictize(entry, context))
+        return user_feedbacks
 
 
 @toolkit.side_effect_free
