@@ -427,37 +427,39 @@
   </div>
 </div>
 
-<div class="preview-wrapper custom-width">
   {% if chart %}
-  {% set colors = chart.color %}
-  {% set x_axis = chart.x_axis %}
-  {% set y_axis = chart.y_axis %}
-  {% set chart_type = chart.type %}
-  {% set title = chart.title %}
-  {% set show_legend = chart.show_legend %}
-  {% set x_text_rotate = chart.x_text_rotate %}
-  {% set x_text_multiline = chart.x_text_multiline %}
-  {% set tooltip_name = chart.tooltip_name %}
-  {% set data_format = chart.data_format %}
-  {% set y_tick_format = chart.y_tick_format %}
-  {% set chart_padding_left = chart.chart_padding_left %}
-  {% set chart_padding_bottom = chart.chart_padding_bottom %}
-  {% set padding_bottom = chart.padding_bottom %}
-  {% set padding_top = chart.padding_top %}
-  {% set tick_count = chart.tick_count %}
-  {% set show_labels = chart.show_labels %}
-  {% set y_label = chart.y_label %}
-  {% set y_from_zero = chart.y_from_zero %}
-  {% set data_sort = chart.sort %}
-  {% set filters = chart.filters %}
-  {% set category_name = chart.category_name %}
-  {% set dynamic_reference_type = chart.dynamic_reference_type %}
-  {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
-  {% set dynamic_reference_label = chart.dynamic_reference_label %}
-  {% set data_type = chart.data_type %}
+    {% set colors = chart.color %}
+    {% set x_axis = chart.x_axis %}
+    {% set y_axis = chart.y_axis %}
+    {% set chart_type = chart.type %}
+    {% set title = chart.title %}
+    {% set show_legend = chart.show_legend %}
+    {% set x_text_rotate = chart.x_text_rotate %}
+    {% set x_text_multiline = chart.x_text_multiline %}
+    {% set tooltip_name = chart.tooltip_name %}
+    {% set data_format = chart.data_format %}
+    {% set y_tick_format = chart.y_tick_format %}
+    {% set chart_padding_left = chart.chart_padding_left %}
+    {% set chart_padding_bottom = chart.chart_padding_bottom %}
+    {% set padding_bottom = chart.padding_bottom %}
+    {% set padding_top = chart.padding_top %}
+    {% set tick_count = chart.tick_count %}
+    {% set show_labels = chart.show_labels %}
+    {% set y_label = chart.y_label %}
+    {% set y_from_zero = chart.y_from_zero %}
+    {% set data_sort = chart.sort %}
+    {% set filters = chart.filters %}
+    {% set category_name = chart.category_name %}
+    {% set dynamic_reference_type = chart.dynamic_reference_type %}
+    {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
+    {% set dynamic_reference_label = chart.dynamic_reference_label %}
+    {% set data_type = chart.data_type %}
+    {% set chart_id = chart.id %}
   {% endif %}
+<div class="preview-wrapper custom-width">
   {% snippet 'ajax_snippets/chart_module.html',
           type='chart',
+          chart_id = chart_id,
           colors=colors,
           x_axis=x_axis,
           y_axis=y_axis,
@@ -486,7 +488,4 @@
           dynamic_reference_factor=dynamic_reference_factor,
           dynamic_reference_label=dynamic_reference_label,
           data_type = data_type %}
-
-
-
 </div>
