@@ -1,6 +1,7 @@
 {% import 'macros/form.html' as form %}
 
 {% resource 'knowledgehub/javascript/modules/dashboard_type_select.js' %}
+{% resource 'knowledgehub/chart' %}
 
 <form id='dashboard-edit-form' class="dataset-form" method="post" data-module="basic-form">
   {% block error_summary %}
@@ -26,10 +27,16 @@
 
     {% set hiddenClass = 'hidden' if not data or data.type != 'external' else '' %}
     {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', hiddenClass], is_required=true) }}
+
+    {% set research_questions = [{'text': 'Choose research question', 'value': ''}] + h.get_rq_options() %}
+    <div class="internal-dashboard-viz-container">
+        <h3>Add visualizations based on Research Questions</h3>
+        <hr />
+        {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=1 %}
+    </div>
   {% endblock %}
 
   {{ form.required_message() }}
-
   <div class="form-actions">
     {% block delete_button %}
       {% if h.check_access('dashboard_delete')  %}

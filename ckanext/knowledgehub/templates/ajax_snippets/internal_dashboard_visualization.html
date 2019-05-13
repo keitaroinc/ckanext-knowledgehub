@@ -1,0 +1,14 @@
+{% import 'macros/form.html' as form %}
+
+{% resource 'knowledgehub/javascript/modules/dashboard_viz_rq.js' %}
+{% resource 'knowledgehub/javascript/modules/dashboard_viz_select.js' %}
+
+<div class="internal-dashboard-viz-container-item_{{ position }}">
+    {% set rq_attrs = {'data-module': 'knowledgehub-dashboard-viz-rq', 'data-module-position': position, 'class': 'form-control'} %}
+    {{ form.select('type', label=_('Research question'), options=research_questions, selected='', is_required=true, attrs=rq_attrs) }}
+    <div class="internal-dashboard-viz-dropdown">
+        {% set viz_attrs = {'data-module': 'knowledgehub-dashboard-viz-select', 'data-module-position': position, 'class': 'form-control'} %}
+        {{ form.select('type', label=_('Visualization'), options=[], selected='', is_required=true, attrs=viz_attrs) }}
+    </div>
+    <div class="internal-dashboard-viz-container-item-view"></div>
+</div>
