@@ -1,0 +1,77 @@
+{% resource 'knowledgehub/map' %}
+{% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+{% import 'macros/form.html' as form %}
+
+{% if data %}
+{% set map = data.__extras or {} %}
+{% set filters = data.__extras.filters or [] %}
+{% set default_sql_string = data.__extras.sql_string or [] %}
+{% else %}
+{% set map = {} %}
+{% set filters = [] %}
+{% endif %}
+
+{# snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string #}
+
+<div id="map_field" class="item map_field visualization-fields-section">
+  <div class="item-wrapper">
+    <div class="accordion" id="map_fields_accordion">
+        {# General #}
+      <div class="accordion-group">
+        <div class="accordion-heading accordion-opened">
+          <a href="#map_fields_accordion_general" class="accordion-toggle" data-toggle="collapse" data-parent="#map_fields_accordion"><i class="fa fa-list-ul"></i>
+          {{ _('General') }}</a>
+        </div>
+        <div id="map_fields_accordion_general" class="accordion-body collapse in">
+          <div class="accordion-inner">
+
+            {# Title #} {% if data %} {% set map_title = data.title %} {% endif %}
+            <div class="control-group title">
+              <label class="control-label" for="map_field_title">{{ _('Title') }}</label>
+              <div class="controls input-controls">
+                  <input id="map_field_title" type="text" name="map_field_title" value="{{ map_title }}" placeholder="{{ _('Map title') }}" required="required">
+              </div>
+            </div>
+
+            {% set resources = h.knowledgehub_get_geojson_resources() %}
+            <div class="control-group control-select">
+              <label class="control-label" for="map_resource">{{ _('Map resource') }}</label>
+              <div class="controls ">
+                <select id="map_resource" name="map_resource" required=required>
+                <option value="">&mdash; {{ _('Select map resource') }} &mdash;</option>
+                {% for resource in resources %}
+                  {% set isSelected = map and h.knowledgehub_get_dataset_url_path(map.map_resource) == h.knowledgehub_get_dataset_url_path(resource.value) %}
+                  <option value="{{ resource.value }}" {% if isSelected  %}selected{% endif %} >{{resource.text}}</option>
+                {% endfor %}
+                </select>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      </div>
+  </div>
+</div>
+
+<div class="flash-messages">
+  {% block flash_inner %}
+    {% for message in h.flash.pop_messages() | list %}
+      <div class="alert alert-warning fade in {{ message.category }}">
+        {{ h.literal(message) }}
+      </div>
+    {% endfor %}
+  {% endblock %}
+</div>
+
+<div class="preview-wrapper custom-width">
+   {% if map %}
+    {% set map_resource=map.map_resource %}
+  {% endif %}
+  {% set map_config = h.knowledgehub_get_map_config() %}
+  {% snippet 'ajax_snippets/map_module.html',
+    map_config=map_config,
+    map_resource=map_resource
+  %}
+
+</div>

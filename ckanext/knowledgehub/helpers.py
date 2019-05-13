@@ -5,8 +5,16 @@ import inspect
 import uuid
 import json
 import functools32
+import requests
 
 from flask import Blueprint
+
+try:
+    # CKAN 2.7 and later
+    from ckan.common import config
+except ImportError:
+    # CKAN 2.6 and earlier
+    from pylons import config
 
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
@@ -491,8 +499,26 @@ def resource_view_icon(view):
         return 'bar-chart'
     elif view.get('view_type') == 'table':
         return 'table'
+    elif view.get('view_type') == 'map':
+        return 'map'
     else:
         return 'exclamation'
+
+
+def knowledgehub_get_map_config():
+
+    map_config = {
+        'osm_url': config.get('ckanext.knowledgehub.map_osm_url',
+                              'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}'
+                              '.png'),
+        'osm_attribute': config.get('ckanext.knowledgehub.map_osm_attribute',
+                                    '&copy; <a '
+                                    'href="https://www.openstreetmap.org'
+                                    '/copyright">'
+                                    'OpenStreetMap</a>'
+                                    ' contributors')
+    }
+    return json.dumps(map_config)
 
 
 def rq_ids_to_titles(rq_ids):
@@ -508,3 +534,55 @@ def rq_ids_to_titles(rq_ids):
             continue
 
     return rqs
+
+
+def get_geojson_resources():
+    context = _get_context()
+    data = {
+        'query': 'format:geojson',
+        'order_by': 'name',
+    }
+    result = toolkit.get_action('resource_search')(context, data)
+    return [{'text': r['name'], 'value': r['url']}
+            for r in result.get('results', [])]
+
+
+def get_dataset_url_path(url):
+    # Remove http://host:port/lang part
+    parts = url.split('/dataset')
+    if len(parts) == 1:
+        return ''
+    return '/dataset%s' % parts[1]
+
+
+def get_map_data(geojson_url):
+
+    resp = requests.get(geojson_url)
+    try:
+        geojson_data = resp.json()
+    except ValueError as e:
+        # includes simplejson.decoder.JSONDecodeError
+        raise ValueError('Invalid JSON syntax: %s' %
+                         (e))
+
+    map_data = {
+        'geojson_data': geojson_data
+    }
+    return map_data
+
+
+# Returns the total number of feedbacks for given type
+def resource_feedback_count(type, resource, dataset):
+    context = _get_context()
+    filter = {
+        'type': type,
+        'resource': resource,
+        'dataset': dataset
+    }
+
+    try:
+        rf_list = toolkit.get_action('resource_feedback_list')(context, filter)
+    except Exception:
+        return 0
+
+    return rf_list.get('total', 0)

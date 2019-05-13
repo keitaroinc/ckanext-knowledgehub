@@ -1,6 +1,30 @@
 {% resource 'knowledgehub/table' %}
 {% resource 'knowledgehub/chart' %}
+{% resource 'knowledgehub/map' %}
+{% resource 'knowledgehub/javascript/resource_feedback.js' %}
+
 {% ckan_extends %}
+
+{% block resource_actions %}
+  {{ super() }}
+  <div class="resource-feedback-actions">
+    <button id="btn-useful" class="btn btn-default" type="button">
+      <i class="fa fa-thumbs-up"></i>{{ _('Useful') }} <span id="count-useful" class="badge">{{ h.resource_feedback_count('useful', res.id, res.package_id) }}</span>
+    </button>
+    <button id="btn-unuseful" class="btn btn-default" type="button">
+      <i class="fa fa-thumbs-down"></i>{{ _('Unuseful') }} <span id="count-unuseful" class="badge">{{ h.resource_feedback_count('unuseful', res.id, res.package_id) }}</span>
+    </button>
+    <button id="btn-trusted" class="btn btn-default" type="button">
+      <i class="fa fa-check"></i>{{ _('Trusted') }} <span id="count-trusted" class="badge">{{ h.resource_feedback_count('trusted', res.id, res.package_id) }}</span>
+    </button>
+    <button id="btn-untrusted" class="btn btn-default" type="button">
+      <i class="fa fa-times"></i>{{ _('Untrusted') }} <span id="count-untrusted" class="badge">{{ h.resource_feedback_count('untrusted', res.id, res.package_id) }}</span>
+    </button>
+
+    <input id="resource" value="{{ res.id }}" type="hidden" />
+    <input id="dataset" value="{{ res.package_id }}" type="hidden" />
+  </div>
+{% endblock %}
 
 {% block resource_view_content %}
 <div class="resource-view">
@@ -92,6 +116,16 @@
                   data_format = data_format,
                   data_type = data_type,
                   table_title = table_title %}
+
+          {% elif current_resource_view.view_type == 'map'  %}
+
+              {% if resource_view and resource_view.__extras %}
+                {% set map_resource=resource_view.__extras.map_resource %}
+              {% endif %}
+                {% set map_config = h.knowledgehub_get_map_config() %}
+                {% snippet 'ajax_snippets/map_module.html',
+                  map_config=map_config,
+                  map_resource=map_resource %}
 
           {% else %}
 

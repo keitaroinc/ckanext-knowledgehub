@@ -73,9 +73,8 @@ ckan.module('chart', function() {
             // We need to encode some characters, eg, '+' sign:
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
             
-            sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            var sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
             
-
             return sql
         },
         // Get the data from Datastore.
@@ -508,11 +507,9 @@ ckan.module('chart', function() {
 
             var axisXSelect = chartField.find('[name*=chart_field_x_axis_column]');
             var axisXValue = axisXSelect.val();
-
            
             var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
-            axisYValue = axisYSelect.val();
-            
+            var axisYValue = axisYSelect.val();            
 
             var categoryName = chartField.find('[name*=chart_field_category_name]');
             var categoryNameVal = categoryName.val();
@@ -552,7 +549,7 @@ ckan.module('chart', function() {
 
             var dataLabels = chartField.find('input[name*=chart_field_labels]');
             var dataLabelsVal = dataLabels.is(':checked');
-
+            
             var yLabbel = chartField.find('input[name*=chart_field_y_label]');
             var yLabbelVal = yLabbel.val();
 
