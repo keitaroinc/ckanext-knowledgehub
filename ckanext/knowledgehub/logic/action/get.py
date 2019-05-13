@@ -502,6 +502,7 @@ def visualizations_for_rq(context, data_dict):
     return resource_views
 
 
+@toolkit.side_effect_free
 def resource_user_feedback(context, data_dict):
     ''' Returns user's feedback
 
