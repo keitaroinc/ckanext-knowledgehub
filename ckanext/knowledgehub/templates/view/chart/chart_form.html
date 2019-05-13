@@ -214,10 +214,10 @@
               <label class="control-label" for="chart_field_y_from_zero">{{ _('Start from zero') }}</label>
               <div class="controls">
                 <input id="chart_field_y_from_zero" type="checkbox" name="chart_field_y_from_zero"
-                  value="{{ y_from_zero }}" {% if y_from_zero=='true' %}checked{% endif %}>
+                  value="{{ y_from_zero }}" {% if y_from_zero=='false' %}{% else %}checked{% endif %}>
               </div>
             </div>
-
+            
             {# Y-axis label format #}
             {% if chart and chart.tick_count%}
               {% set ticks_formats = h.get_data_formats(5) %}
