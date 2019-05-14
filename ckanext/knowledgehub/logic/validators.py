@@ -179,3 +179,17 @@ def resource_feedbacks_type_validator(key, data, errors, context):
                 'Allowed resource feedback types are: %s' % ', '.join(rf_types)
             )
         )
+
+
+def kwh_data_type_validator(key, data, errors, context):
+    clean_data = df.unflatten(data)
+    rf_type = clean_data.get('type')
+
+    rf_types = ['theme', 'sub-theme', 'rq', 'user-input']
+
+    if rf_type not in rf_types:
+        errors[key].append(
+            p.toolkit._(
+                'Allowed KWH data types are: %s' % ', '.join(rf_types)
+            )
+        )

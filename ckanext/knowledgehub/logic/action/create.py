@@ -23,6 +23,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
+from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -402,4 +403,38 @@ def resource_feedback(context, data_dict):
         filter = {'id': rf.id}
         rf = ResourceFeedbacks.update(filter, data)
 
+        return rf.as_dict()
+
+
+def kwh_data(context, data_dict):
+    '''
+    Store Knowledge Hub data
+
+        :param type
+        :param content
+    '''
+    check_access('kwh_data', context, data_dict)
+
+    session = context['session']
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.kwh_data_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    data['user'] = model.User.by_name(user.decode('utf8')).id
+    resource = data.get('resource')
+
+    rf = KWHData.get(
+        user=data['user'],
+        content=data['content'],
+        type=data['type']
+    ).first()
+
+    if not rf:
+        rf = KWHData(**data)
+        rf.save()
         return rf.as_dict()
