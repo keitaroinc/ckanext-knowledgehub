@@ -5,7 +5,14 @@
     var unusefulBtn = $('#btn-unuseful');
     var trustedBtn = $('#btn-trusted');
     var untrustedBtn = $('#btn-untrusted');
-    var userFeedback = '';
+    var userFeedbacks = {};
+    var oppositeRF = {
+        useful: 'unuseful',
+        unuseful: 'useful',
+        trusted: 'untrusted',
+        untrusted: 'trusted'
+    }
+
 
     var api = {
         get: function (action, params) {
@@ -29,12 +36,14 @@
         })
         .done(function (data) {
             if (data.success) {
-                var feedback =  data.result;
-                var type = feedback.type;
-                userFeedback = type;
+                var feedbacks = data.result;
+                feedbacks.forEach(function (feedback) {
+                    var type = feedback.type;
+                    userFeedbacks[type] = type;
 
-                var activeButton = $("#btn-" + type);
-                activeButton.attr('disabled', true);
+                    var activeButton = $("#btn-" + type);
+                    activeButton.attr('disabled', true);
+                });
             }
         })
         .fail(function (error) {
@@ -51,18 +60,20 @@
         })
         .done(function (data) {
             if (data.success) {
-                var userCount = $("#count-" + userFeedback);
+                var oppositeType = oppositeRF[type];
                 var newUserCount = $("#count-" + type);
-                if (userFeedback) {
-                    removeDisabledAttr();
+                var userCount = $("#count-" + oppositeType);
 
-                    userCount.text(parseInt(userCount.text()) - 1);
-                    newUserCount.text(parseInt(newUserCount.text()) + 1);
-                } else {
-                    newUserCount.text(parseInt(newUserCount.text()) + 1);
+                if (Object.keys(userFeedbacks).length > 0) {
+                    if (userFeedbacks[oppositeType] !== undefined) {
+                        removeDisabledAttr(oppositeType);
+                        userCount.text(parseInt(userCount.text()) - 1);
+                    }
                 }
 
-                userFeedback = type;
+                newUserCount.text(parseInt(newUserCount.text()) + 1);
+                delete userFeedbacks[oppositeType];
+                userFeedbacks[type] = type;
                 btn.attr('disabled', true);
             }
         })
@@ -71,11 +82,16 @@
         });
     };
 
-    function removeDisabledAttr() {
-        usefulBtn.removeAttr("disabled");
-        unusefulBtn.removeAttr("disabled");
-        trustedBtn.removeAttr("disabled");
-        untrustedBtn.removeAttr("disabled")
+    function removeDisabledAttr(type) {
+        if (type === 'useful') {
+            usefulBtn.removeAttr("disabled");
+        } else if (type === 'unuseful') {
+            unusefulBtn.removeAttr("disabled");
+        } else if (type === 'trusted') {
+            trustedBtn.removeAttr("disabled");
+        } else if (type === 'untrusted') {
+            untrustedBtn.removeAttr("disabled");
+        }
     };
 
     $(document).ready(function () {

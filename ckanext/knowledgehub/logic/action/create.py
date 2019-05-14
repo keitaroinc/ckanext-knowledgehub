@@ -381,7 +381,18 @@ def resource_feedback(context, data_dict):
     user = context.get('user')
     data['user'] = model.User.by_name(user.decode('utf8')).id
     resource = data.get('resource')
-    rf = ResourceFeedbacks.get(user=data['user'], resource=resource).first()
+    oppisite_rf = {
+        'useful': 'unuseful',
+        'unuseful': 'useful',
+        'trusted': 'untrusted',
+        'untrusted': 'trusted'
+    }
+
+    rf = ResourceFeedbacks.get(
+        user=data['user'],
+        resource=resource,
+        type=oppisite_rf[data['type']]
+    ).first()
 
     if not rf:
         rf = ResourceFeedbacks(**data)
@@ -389,6 +400,6 @@ def resource_feedback(context, data_dict):
         return rf.as_dict()
     else:
         filter = {'id': rf.id}
-        st = ResourceFeedbacks.update(filter, data)
+        rf = ResourceFeedbacks.update(filter, data)
 
-        return st.as_dict()
+        return rf.as_dict()
