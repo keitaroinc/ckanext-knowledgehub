@@ -155,10 +155,10 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
               style: function(feature) {
                 return {
-                  color: '#000',
+                  color: '#b20c0c',
                   opacity: 0.3,
                   weight: 0.3,
-                  fillColor: '#f44141',
+                  fillColor: '#c11414',
                   fillOpacity: 0.3
                 }
               },
@@ -185,7 +185,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
                       layer.setStyle({
                         weight: 0.3,
-                        color: '#737373',
+                        color: '#c11414',
                         dashArray: '3',
                         fillOpacity: 0.7
                       });
