@@ -172,7 +172,7 @@ ckan.module('chart', function() {
             var dynamic_reference_label = (this.options.dynamic_reference_label === true) ? '' : this.options.dynamic_reference_label;
             var values;
             var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
-
+            
             // Base options
             var options = {
                 bindto: this.el[0],
@@ -398,7 +398,7 @@ ckan.module('chart', function() {
                             type: 'category',
                             categories: categories,
                             tick: {
-                                count:5,
+                                count: tick_count,
                                 rotate: x_text_rotate,
                                 multiline: x_text_multiline,
                                 multilineMax: 3
