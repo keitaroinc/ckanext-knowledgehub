@@ -13,3 +13,39 @@
   .label-closed.label{
     background-color: @brand-danger;
   }
+//DEFAULT TABLE LOOK
+.table.table-bordered,
+.table-bordered.dataTable{
+  border: none;
+  &>thead{
+    &>tr{
+      &>th,td{
+        background-color: @brand-primary;
+        background: @brand-primary;
+        color: #fff;
+        font-weight: 700;
+        border: none;
+        border-bottom: 2px solid #fff;
+      }
+    }
+  }
+  tr{
+      &>*:not(:last-child){
+        border-right: 2px solid #fff;
+      }
+    }
+  & tbody{
+    & tr{
+      & th,td{
+        border: none;
+        border-bottom: 1px dotted #CCCCCC;
+      }
+      &>*:nth-child(odd){
+        background-color: #fff;
+      }
+      &>*:nth-child(even){
+        background-color: rgba(191, 191, 191, 0.301);
+      }
+    }
+  }
+}
