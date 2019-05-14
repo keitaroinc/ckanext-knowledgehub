@@ -11,6 +11,9 @@ from ckanext.knowledgehub.model.dashboard import setup as dashboard_db_setup
 from ckanext.knowledgehub.model.resource_feedback import (
     setup as resource_feedback_setup
 )
+from ckanext.knowledgehub.model.kwh_data import (
+    setup as kwh_data_setup
+)
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +33,7 @@ def init():
         rq_db_setup()
         dashboard_db_setup()
         resource_feedback_setup()
+        kwh_data_setup()
     except Exception as e:
         error_shout(e)
     else:
