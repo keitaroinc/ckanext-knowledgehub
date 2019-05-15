@@ -1,7 +1,6 @@
 # encoding: utf-8
 import logging
 import json
-import urllib
 
 from flask import Blueprint
 from flask.views import MethodView
