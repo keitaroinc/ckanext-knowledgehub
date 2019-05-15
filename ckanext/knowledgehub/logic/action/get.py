@@ -464,6 +464,7 @@ def knowledgehub_get_map_data(context, data_dict):
     return kh_helpers.get_map_data(geojson_url)
 
 
+@toolkit.side_effect_free
 def visualizations_for_rq(context, data_dict):
     ''' List visualizations (resource views) based on a research question
 
