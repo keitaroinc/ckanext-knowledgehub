@@ -98,6 +98,10 @@ def _process_post_data(data, resource_id):
             config['show_labels'] = 'true'
         else:
             config['show_labels'] = 'false'
+        if 'chart_field_y_from_zero' in data:
+            config['y_from_zero'] = 'true'
+        else:
+            config['y_from_zero'] = 'false'
         config['y_tick_format'] = \
             data['chart_field_y_ticks_format']
         config['sql_string'] = \
