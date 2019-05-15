@@ -27,6 +27,7 @@
               <blockquote>{{ h.markdown_extract(h.get_translated(c.package, 'notes')) }}</blockquote>
               <p>{% trans dataset=c.package.title, url=h.url_for(controller='package', action='read', id=c.package['name']) %}Source: <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
             {% endif %}
+          </div>
             <div class="resource-feedback-actions">
               <div class="resource-feedback-group">
                 <button id="btn-useful" class="btn btn-default" type="button">
@@ -51,7 +52,7 @@
                 <input id="dataset" value="{{ res.package_id }}" type="hidden" />
               </div>
             </div>
-          </div>
+          
         {% endblock %}
 
 {% block resource_view_content %}
