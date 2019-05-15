@@ -1,7 +1,10 @@
 {% import 'macros/form.html' as form %}
 
 {% resource 'knowledgehub/javascript/modules/dashboard_type_select.js' %}
+{% resource 'knowledgehub/javascript/modules/dashboard_add_viz_btn.js' %}
 {% resource 'knowledgehub/chart' %}
+{% resource 'knowledgehub/table' %}
+{% resource 'knowledgehub/map' %}
 
 <form id='dashboard-edit-form' class="dataset-form" method="post" data-module="basic-form">
   {% block error_summary %}
@@ -28,11 +31,23 @@
     {% set hiddenClass = 'hidden' if not data or data.type != 'external' else '' %}
     {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', hiddenClass], is_required=true) }}
 
-    {% set research_questions = [{'text': 'Choose research question', 'value': ''}] + h.get_rq_options() %}
-    <div class="internal-dashboard-viz-container">
-        <h3>Add visualizations based on Research Questions</h3>
+    {% set research_questions = [{'text': 'Choose research question', 'value': ''}] + h.get_rq_options(idValue=true) %}
+    <script type="text/javascript">
+        window.research_questions = {{ research_questions | tojson }}
+    </script>
+    <div class="internal-dashboard-viz-container" {% if data.indicators %} style="display: block" {% endif %}>
+        <h3>{{ _('Add visualizations based on Research Questions') }}</h3>
         <hr />
-        {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=1 %}
+        <div class="internal-dashboard-viz-container-items">
+            {% if data.indicators %}
+                {% for indicator in data.indicators %}
+                    {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=indicator.order, selected_rq=indicator.research_question, selected_viz=indicator.resource_view_id, viz_options=[{'text': indicator.resource_view.title, 'value': indicator.resource_view.id}], resource_view=indicator.resource_view %}
+                {% endfor %}
+            {% else %}
+                {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=1 %}
+            {% endif %}
+        </div>
+        <button class="btn btn-primary add-visualization-btn" data-module="knowledgehub-dashboard-add-viz-btn">{{ _('Add visualization') }}</button>
     </div>
   {% endblock %}
 

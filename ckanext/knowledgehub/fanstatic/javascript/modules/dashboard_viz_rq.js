@@ -23,10 +23,20 @@ ckan.module('knowledgehub-dashboard-viz-rq', function ($) {
     return {
         initialize: function () {
             this.el.on('change', this.selectRQ.bind(this));
-            this.vizDropdown = this.el.parent().parent().parent().find('.internal-dashboard-viz-dropdown')
+            this.vizContainerItem = $('div[data-viz-position=' + this.options.position + ']').find('.internal-dashboard-viz-container-item-view');
+            this.vizDropdown = $('div[data-viz-position=' + this.options.position + ']').find('.internal-dashboard-viz-dropdown')
+            this.vizDropdownSelect = this.vizDropdown.find('select');
+
+            if (this.options.position !== 1) {
+                window.ckan.module.initializeElement(this.vizDropdownSelect[0]);
+            }
+
         },
         selectRQ() {
-            var RQValue = this.el.val();
+            var RQValue = this.el.find('option[value=' + this.el.val() + ']').text()
+
+            this.vizContainerItem.html('');
+            this.vizDropdownSelect.html('');
 
             if (RQValue) {
                 api.get('visualizations_for_rq', { research_question: RQValue})
@@ -34,18 +44,19 @@ ckan.module('knowledgehub-dashboard-viz-rq', function ($) {
                         if (data.success) {
                             this.vizDropdown.css({ display: 'block' });
                             if (data.result.length > 0) {
-                                var select = this.vizDropdown.find('select');
-                                select.append('<option value="" selected>Choose visualization</option>')
+                                this.vizDropdownSelect.append('<option value="" selected>Choose visualization</option>')
                                 data.result.forEach(function(resView) {
-                                    select.append('<option value="' + window.encodeURIComponent(JSON.stringify(resView)) + '">' + resView.title + '</option>');
-                                })
+                                    this.vizDropdownSelect.append('<option value="' + resView.id + '" data-resource-view="' + window.encodeURIComponent(JSON.stringify(resView)) + '">' + resView.title + '</option>');
+                                }.bind(this))
+                            } else {
+                                this.vizDropdownSelect.append('<option value="" selected>No visualizations found</option>')
                             }
                         } else {
                             alert(this._('Could not get visualizations for research question: ' + RQValue));
                         }
                     }.bind(this))
             } else {
-                this.vizDropdown.css({display: 'none'});
+                this.vizDropdown.css({ display: 'none' });
             }
         }
     }

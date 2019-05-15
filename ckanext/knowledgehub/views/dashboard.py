@@ -1,5 +1,7 @@
 # encoding: utf-8
 import logging
+import json
+import urllib
 
 from flask import Blueprint
 from flask.views import MethodView
@@ -169,6 +171,21 @@ class CreateView(MethodView):
                 dict_fns.unflatten(tuplize_dict(
                     parse_params(request.form))))
 
+            indicators = []
+            for k, v in data_dict.items():
+                item = {}
+
+                if k.startswith('research_question'):
+                    id = k.split('_')[-1]
+
+                    item['order'] = int(id)
+                    item['research_question'] = data_dict['research_question_{}'.format(id)]
+                    item['resource_view_id'] = data_dict['visualization_{}'.format(id)]
+
+                    indicators.append(item)
+
+            data_dict['indicators'] = json.dumps(indicators)
+
             dashboard = get_action(u'dashboard_create')(
                 context, data_dict)
         except dict_fns.DataError:
@@ -176,12 +193,20 @@ class CreateView(MethodView):
         except ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
+            data_dict['indicators'] = json.loads(data_dict['indicators'])
+
+            for ind in data_dict['indicators']:
+                res_view_id = ind.get('resource_view_id')
+                res_view = get_action('resource_view_show')(_get_context(), {
+                    'id': res_view_id
+                })
+                ind['resource_view'] = res_view
+
             return self.get(data_dict,
                             errors,
                             error_summary)
 
-        return h.redirect_to(u'dashboards.index',
-                             name=dashboard['name'])
+        return h.redirect_to(u'dashboards.index')
 
 
 class EditView(MethodView):
