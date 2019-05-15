@@ -83,13 +83,16 @@ def id_to_title(model, id):
     return entry.get('title') or entry.get('name')
 
 
-def get_rq_options():
+def get_rq_options(idValue=False):
     context = _get_context()
     rq_options = []
     rq_list = toolkit.get_action('research_question_list')(context, {})
 
     for rq in rq_list.get(u'data', []):
-        opt = {u'text': rq[u'title'], u'value': rq[u'title'], u'id': rq[u'id']}
+        if idValue:
+            opt = {u'text': rq[u'title'], u'value': rq[u'id']}
+        else:
+            opt = {u'text': rq[u'title'], u'value': rq[u'title'], u'id': rq[u'id']}
         rq_options.append(opt)
     return rq_options
 
