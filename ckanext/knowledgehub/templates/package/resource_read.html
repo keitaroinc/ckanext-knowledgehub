@@ -7,8 +7,8 @@
 
 {% block resource_actions %}
   {{ super() }}
-  
 {% endblock %}
+
 {% block resource_content %}
           {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
           {% block resource_read_url %}
@@ -18,38 +18,30 @@
               <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
             {% endif %}
           {% endblock %}
-          <div class="prose notes" property="rdfs:label">
-            {% if res.description %}
-              {{ h.render_markdown(res.description) }}
-            {% endif %}
-            {% if not res.description and c.package.notes %}
-              <h3>{{ _('From the dataset abstract') }}</h3>
-              <blockquote>{{ h.markdown_extract(h.get_translated(c.package, 'notes')) }}</blockquote>
-              <div class="resource-feedback-actions">
-                <div class="resource-feedback-group">
-                  <button id="btn-useful" class="btn btn-default" type="button">
-                    <i class="fa fa-thumbs-up"></i>{{ _('Useful') }} <span id="count-useful"
-                      class="badge">{{ h.resource_feedback_count('useful', res.id, res.package_id) }}</span>
-                  </button>
-                  <button id="btn-unuseful" class="btn btn-default" type="button">
-                    <i class="fa fa-thumbs-down"></i>{{ _('Unuseful') }} <span id="count-unuseful"
-                      class="badge">{{ h.resource_feedback_count('unuseful', res.id, res.package_id) }}</span>
-                  </button>
-                </div>
-                <div class="resource-feedback-group">
-                  <button id="btn-trusted" class="btn btn-default" type="button">
-                    <i class="fa fa-check"></i>{{ _('Trusted') }} <span id="count-trusted"
-                      class="badge">{{ h.resource_feedback_count('trusted', res.id, res.package_id) }}</span>
-                  </button>
-                  <button id="btn-untrusted" class="btn btn-default" type="button">
-                    <i class="fa fa-times"></i>{{ _('Untrusted') }} <span id="count-untrusted"
-                      class="badge">{{ h.resource_feedback_count('untrusted', res.id, res.package_id) }}</span>
-                  </button>
-                  <input id="resource" value="{{ res.id }}" type="hidden" />
-                  <input id="dataset" value="{{ res.package_id }}" type="hidden" />
-                </div>
-              </div>
-            {% endif %}
+
+          <div class="resource-feedback-actions">
+            <div class="resource-feedback-group">
+              <button id="btn-useful" class="btn btn-default" type="button">
+                <i class="fa fa-thumbs-up"></i>{{ _('Useful') }} <span id="count-useful"
+                  class="badge">{{ h.resource_feedback_count('useful', res.id, res.package_id) }}</span>
+              </button>
+              <button id="btn-unuseful" class="btn btn-default" type="button">
+                <i class="fa fa-thumbs-down"></i>{{ _('Unuseful') }} <span id="count-unuseful"
+                  class="badge">{{ h.resource_feedback_count('unuseful', res.id, res.package_id) }}</span>
+              </button>
+            </div>
+            <div class="resource-feedback-group">
+              <button id="btn-trusted" class="btn btn-default" type="button">
+                <i class="fa fa-check"></i>{{ _('Trusted') }} <span id="count-trusted"
+                  class="badge">{{ h.resource_feedback_count('trusted', res.id, res.package_id) }}</span>
+              </button>
+              <button id="btn-untrusted" class="btn btn-default" type="button">
+                <i class="fa fa-times"></i>{{ _('Untrusted') }} <span id="count-untrusted"
+                  class="badge">{{ h.resource_feedback_count('untrusted', res.id, res.package_id) }}</span>
+              </button>
+              <input id="resource" value="{{ res.id }}" type="hidden" />
+              <input id="dataset" value="{{ res.package_id }}" type="hidden" />
+            </div>
           </div>
         {% endblock %}
 
@@ -189,6 +181,7 @@
   {% endif %}
 </div>
 {% endblock %}
+
 {% block primary_content %}
   {{ super() }}
   {{ h.disqus_comments() }}
