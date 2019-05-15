@@ -426,7 +426,6 @@ def kwh_data(context, data_dict):
 
     user = context.get('user')
     data['user'] = model.User.by_name(user.decode('utf8')).id
-    resource = data.get('resource')
 
     rf = KWHData.get(
         user=data['user'],
