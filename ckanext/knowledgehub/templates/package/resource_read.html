@@ -25,32 +25,34 @@
             {% if not res.description and c.package.notes %}
               <h3>{{ _('From the dataset abstract') }}</h3>
               <blockquote>{{ h.markdown_extract(h.get_translated(c.package, 'notes')) }}</blockquote>
-              <div class="resource-feedback-actions">
-                <div class="resource-feedback-group">
-                  <button id="btn-useful" class="btn btn-default" type="button">
-                    <i class="fa fa-thumbs-up"></i>{{ _('Useful') }} <span id="count-useful"
-                      class="badge">{{ h.resource_feedback_count('useful', res.id, res.package_id) }}</span>
-                  </button>
-                  <button id="btn-unuseful" class="btn btn-default" type="button">
-                    <i class="fa fa-thumbs-down"></i>{{ _('Unuseful') }} <span id="count-unuseful"
-                      class="badge">{{ h.resource_feedback_count('unuseful', res.id, res.package_id) }}</span>
-                  </button>
-                </div>
-                <div class="resource-feedback-group">
-                  <button id="btn-trusted" class="btn btn-default" type="button">
-                    <i class="fa fa-check"></i>{{ _('Trusted') }} <span id="count-trusted"
-                      class="badge">{{ h.resource_feedback_count('trusted', res.id, res.package_id) }}</span>
-                  </button>
-                  <button id="btn-untrusted" class="btn btn-default" type="button">
-                    <i class="fa fa-times"></i>{{ _('Untrusted') }} <span id="count-untrusted"
-                      class="badge">{{ h.resource_feedback_count('untrusted', res.id, res.package_id) }}</span>
-                  </button>
-                  <input id="resource" value="{{ res.id }}" type="hidden" />
-                  <input id="dataset" value="{{ res.package_id }}" type="hidden" />
-                </div>
-              </div>
+              <p>{% trans dataset=c.package.title, url=h.url_for(controller='package', action='read', id=c.package['name']) %}Source: <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
             {% endif %}
           </div>
+            <div class="resource-feedback-actions">
+              <div class="resource-feedback-group">
+                <button id="btn-useful" class="btn btn-default" type="button">
+                  <i class="fa fa-thumbs-up"></i>{{ _('Useful') }} <span id="count-useful"
+                    class="badge">{{ h.resource_feedback_count('useful', res.id, res.package_id) }}</span>
+                </button>
+                <button id="btn-unuseful" class="btn btn-default" type="button">
+                  <i class="fa fa-thumbs-down"></i>{{ _('Unuseful') }} <span id="count-unuseful"
+                    class="badge">{{ h.resource_feedback_count('unuseful', res.id, res.package_id) }}</span>
+                </button>
+              </div>
+              <div class="resource-feedback-group">
+                <button id="btn-trusted" class="btn btn-default" type="button">
+                  <i class="fa fa-check"></i>{{ _('Trusted') }} <span id="count-trusted"
+                    class="badge">{{ h.resource_feedback_count('trusted', res.id, res.package_id) }}</span>
+                </button>
+                <button id="btn-untrusted" class="btn btn-default" type="button">
+                  <i class="fa fa-times"></i>{{ _('Untrusted') }} <span id="count-untrusted"
+                    class="badge">{{ h.resource_feedback_count('untrusted', res.id, res.package_id) }}</span>
+                </button>
+                <input id="resource" value="{{ res.id }}" type="hidden" />
+                <input id="dataset" value="{{ res.package_id }}" type="hidden" />
+              </div>
+            </div>
+          
         {% endblock %}
 
 {% block resource_view_content %}
