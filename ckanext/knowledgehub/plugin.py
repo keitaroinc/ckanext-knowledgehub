@@ -1,3 +1,5 @@
+from routes.mapper import SubMapper
+
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import logic
@@ -166,6 +168,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def before_map(self, map):
         map.redirect('/', '/dataset',
                      _redirect_code='301 Moved Permanently')
+        # Override the package search action.
+        with SubMapper(
+            map,
+            controller='ckanext.knowledgehub.controllers:KWHPackageController'
+        ) as m:
+            m.connect('search', '/dataset', action='search')
+
         return map
 
     # IPackageController

@@ -185,7 +185,7 @@ def kwh_data_type_validator(key, data, errors, context):
     clean_data = df.unflatten(data)
     rf_type = clean_data.get('type')
 
-    rf_types = ['theme', 'sub-theme', 'rq', 'user-input']
+    rf_types = ['theme', 'sub-theme', 'rq', 'search']
 
     if rf_type not in rf_types:
         errors[key].append(
