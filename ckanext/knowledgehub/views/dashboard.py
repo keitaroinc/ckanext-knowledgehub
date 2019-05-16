@@ -201,6 +201,20 @@ class CreateView(MethodView):
                 })
                 ind['resource_view'] = res_view
 
+                rq = get_action('research_question_show')(_get_context(), {
+                    'id': ind['research_question']
+                })
+
+                viz_options = [{'text': 'Choose visualization', 'value': ''}]
+                visualizations = get_action('visualizations_for_rq')(_get_context(), {
+                    'research_question': rq['title']
+                })
+
+                for viz in visualizations:
+                    viz_options.append({'text': viz.get('title'), 'value': viz.get('id')})
+
+                ind['viz_options'] = viz_options
+
             return self.get(data_dict,
                             errors,
                             error_summary)
@@ -241,6 +255,29 @@ class EditView(MethodView):
         dashboard = data
         errors = errors or {}
 
+        data['indicators'] = json.loads(data['indicators'])
+
+        for ind in data['indicators']:
+            res_view_id = ind.get('resource_view_id')
+            res_view = get_action('resource_view_show')(_get_context(), {
+                'id': res_view_id
+            })
+            ind['resource_view'] = res_view
+
+            rq = get_action('research_question_show')(_get_context(), {
+                'id': ind['research_question']
+            })
+
+            viz_options = [{'text': 'Choose visualization', 'value': ''}]
+            visualizations = get_action('visualizations_for_rq')(_get_context(), {
+                'research_question': rq['title']
+            })
+
+            for viz in visualizations:
+                viz_options.append({'text': viz.get('title'), 'value': viz.get('id')})
+
+            ind['viz_options'] = viz_options
+
         return base.render(
             u'dashboard/edit_form_page.html',
             extra_vars={'data': data, 'errors': errors,
@@ -258,6 +295,22 @@ class EditView(MethodView):
                     parse_params(request.form)
                 ))
             )
+
+            indicators = []
+            for k, v in data_dict.items():
+                item = {}
+
+                if k.startswith('research_question'):
+                    id = k.split('_')[-1]
+
+                    item['order'] = int(id)
+                    item['research_question'] = data_dict['research_question_{}'.format(id)]
+                    item['resource_view_id'] = data_dict['visualization_{}'.format(id)]
+
+                    indicators.append(item)
+
+            data_dict['indicators'] = json.dumps(indicators)
+
             dashboard = get_action(u'dashboard_update')(
                 context, data_dict)
             h.flash_notice(_(u'Dashboard has been updated.'))
@@ -266,6 +319,29 @@ class EditView(MethodView):
         except ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
+            data_dict['indicators'] = json.loads(data_dict['indicators'])
+
+            for ind in data_dict['indicators']:
+                res_view_id = ind.get('resource_view_id')
+                res_view = get_action('resource_view_show')(_get_context(), {
+                    'id': res_view_id
+                })
+                ind['resource_view'] = res_view
+
+                rq = get_action('research_question_show')(_get_context(), {
+                    'id': ind['research_question']
+                })
+
+                viz_options = [{'text': 'Choose visualization', 'value': ''}]
+                visualizations = get_action('visualizations_for_rq')(_get_context(), {
+                    'research_question': rq['title']
+                })
+
+                for viz in visualizations:
+                    viz_options.append({'text': viz.get('title'), 'value': viz.get('id')})
+
+                ind['viz_options'] = viz_options
+
             return self.get(name, data_dict,
                             errors, error_summary)
 

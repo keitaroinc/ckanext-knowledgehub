@@ -35,13 +35,13 @@
     <script type="text/javascript">
         window.research_questions = {{ research_questions | tojson }}
     </script>
-    <div class="internal-dashboard-viz-container" {% if data.indicators %} style="display: block" {% endif %}>
+    <div class="internal-dashboard-viz-container" {% if data.indicators or data.type %} style="display: block" {% endif %}>
         <h3>{{ _('Add visualizations based on Research Questions') }}</h3>
         <hr />
         <div class="internal-dashboard-viz-container-items">
             {% if data.indicators %}
                 {% for indicator in data.indicators %}
-                    {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=indicator.order, selected_rq=indicator.research_question, selected_viz=indicator.resource_view_id, viz_options=[{'text': indicator.resource_view.title, 'value': indicator.resource_view.id}], resource_view=indicator.resource_view %}
+                    {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=indicator.order, selected_rq=indicator.research_question, selected_viz=indicator.resource_view_id, viz_options=indicator.viz_options, resource_view=indicator.resource_view %}
                 {% endfor %}
             {% else %}
                 {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=1 %}
