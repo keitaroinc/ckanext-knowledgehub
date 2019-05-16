@@ -4,10 +4,36 @@ This module handles displaying a visualization from a dropdown of resource views
 
 */
 ckan.module('knowledgehub-dashboard-viz-select', function ($) {
+    var api = {
+        get: function(action, params) {
+            var api_ver = 3;
+            var base_url = ckan.sandbox().client.endpoint;
+            params = $.param(params);
+            var url = base_url + '/api/' + api_ver + '/action/' + action + '?' + params;
+            return $.getJSON(url);
+        },
+        post: function(action, data) {
+            var api_ver = 3;
+            var base_url = ckan.sandbox().client.endpoint;
+            var url = base_url + '/api/' + api_ver + '/action/' + action;
+            return $.post(url, data, 'json');
+        }
+    };
+
     return {
         initialize: function () {
             this.el.on('change', this._selectViz.bind(this));
             this.vizContainerItem = $('div[data-viz-position=' + this.options.position + ']').find('.internal-dashboard-viz-container-item-view');
+            $.each(this.el.find('option'), function(i, el) {
+                el = $(el);
+                res_view_id = el.attr('value');
+                if (res_view_id) {
+                    api.get('resource_view_show', { id: res_view_id })
+                        .done(function(data) {
+                            el.attr('data-resource-view', window.encodeURIComponent(JSON.stringify(data.result)))
+                        })
+                }
+            })
         },
         _selectViz() {
             this.vizContainerItem.html('')
