@@ -207,9 +207,10 @@ class CreateView(MethodView):
         try:
             kwh_data = {
                 'type': 'sub-theme',
-                'content': sub_theme.get('title')
+                'content': sub_theme.get('title'),
+                'sub_theme': sub_theme.get('id')
             }
-            logic.get_action(u'kwh_data')(
+            logic.get_action(u'kwh_data_create')(
                 context, kwh_data
             )
         except Exception as e:
@@ -291,7 +292,7 @@ class EditView(MethodView):
         data_dict['id'] = sub_theme.get('id')
 
         try:
-            sub_theme = logic.get_action(u'sub_theme_update')(
+            st = logic.get_action(u'sub_theme_update')(
                 context, data_dict
             )
             h.flash_notice(_(u'Sub-Theme has been updated.'))
@@ -305,9 +306,10 @@ class EditView(MethodView):
         try:
             kwh_data = {
                 'type': 'sub-theme',
-                'content': sub_theme.get('title')
+                'old_content': sub_theme.get('title'),
+                'new_content': st.get('title')
             }
-            logic.get_action(u'kwh_data')(
+            logic.get_action(u'kwh_data_update')(
                 context, kwh_data
             )
         except Exception as e:

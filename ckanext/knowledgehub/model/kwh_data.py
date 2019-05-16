@@ -36,12 +36,13 @@ class KWHData(DomainObject):
 
         if id_or_name:
             query = query.filter(
-                or_(cls.id == id_or_name, cls.name == id_or_name)
+                or_(cls.id == id_or_name, cls.content == id_or_name)
             )
 
         if q:
             query = query.filter(
-                or_(cls.name.contains(q), cls.name.ilike(r"%{}%".format(q)))
+                or_(cls.content.contains(q),
+                    cls.content.ilike(r"%{}%".format(q)))
             )
 
         if order_by:
@@ -94,6 +95,18 @@ kwh_data_table = Table(
         types.UnicodeText,
         ForeignKey('user.id', ondelete='CASCADE'),
         nullable=False),
+    Column(
+        'theme',
+        types.UnicodeText,
+        ForeignKey('theme.id', ondelete='CASCADE')),
+    Column(
+        'sub_theme',
+        types.UnicodeText,
+        ForeignKey('sub_themes.id', ondelete='CASCADE')),
+    Column(
+        'rq',
+        types.UnicodeText,
+        ForeignKey('research_question.id', ondelete='CASCADE')),
     Column(
         'created_at',
         types.DateTime,

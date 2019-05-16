@@ -111,5 +111,16 @@ def resource_feedback_schema():
 def kwh_data_schema():
     return {
         'type': [not_empty, validators.kwh_data_type_validator],
-        'content': [not_empty, unicode]
+        'content': [not_empty, unicode],
+        'theme': [ignore_missing, unicode],
+        'sub_theme': [ignore_missing, unicode],
+        'rq': [ignore_missing, unicode]
+    }
+
+
+def kwh_data_schema_update():
+    return {
+        'type': [not_empty, validators.kwh_data_type_validator],
+        'old_content': [not_empty, unicode],
+        'new_content': [not_empty, unicode]
     }

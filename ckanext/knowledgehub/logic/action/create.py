@@ -406,7 +406,7 @@ def resource_feedback(context, data_dict):
         return rf.as_dict()
 
 
-def kwh_data(context, data_dict):
+def kwh_data_create(context, data_dict):
     '''
     Store Knowledge Hub data
 
@@ -427,13 +427,13 @@ def kwh_data(context, data_dict):
     user = context.get('user')
     data['user'] = model.User.by_name(user.decode('utf8')).id
 
-    rf = KWHData.get(
+    kwh_data = KWHData.get(
         user=data['user'],
         content=data['content'],
         type=data['type']
     ).first()
 
-    if not rf:
-        rf = KWHData(**data)
-        rf.save()
-        return rf.as_dict()
+    if not kwh_data:
+        kwh_data = KWHData(**data)
+        kwh_data.save()
+        return kwh_data.as_dict()
