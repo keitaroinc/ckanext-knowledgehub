@@ -6,7 +6,7 @@
 {% resource 'knowledgehub/table' %}
 {% resource 'knowledgehub/map' %}
 
-<form id='dashboard-edit-form' class="dataset-form" method="post" data-module="basic-form">
+<form id='dashboard-edit-form' class="dataset-form" method="post" data-module="basic-form" novalidate>
   {% block error_summary %}
     {{ form.errors(error_summary) }}
   {% endblock %}
@@ -35,7 +35,7 @@
     <script type="text/javascript">
         window.research_questions = {{ research_questions | tojson }}
     </script>
-    <div class="internal-dashboard-viz-container" {% if data.indicators or data.type %} style="display: block" {% endif %}>
+    <div class="internal-dashboard-viz-container" {% if data.indicators or data.type == 'internal' %} style="display: block" {% endif %}>
         <h3>{{ _('Add visualizations based on Research Questions') }}</h3>
         <hr />
         <div class="internal-dashboard-viz-container-items">
