@@ -95,14 +95,17 @@ ckan.module('data-transformation', function($) {
 
     var filter_items = $('#data-transformation-module').find('.filter_item');
     var filters = [];
+    var operator = '';
     var name = '';
     var value = '';
 
     $.each(filter_items, function(idx, elem) {
 
+      operator = $(elem).find('input[name*=data_filter_operator_]:checked').val();
       name = $(elem).find('[id*=data_filter_name_]').select2('val');
       value = $(elem).find('[id*=data_filter_value_]').select2('val');
       filters.push({
+        'operator': operator,
         'name': name,
         'value': value
       });
@@ -111,12 +114,12 @@ ckan.module('data-transformation', function($) {
   }
 
   function _generateWhereClause(filters) {
-    console.log(filters);
     var where_clause = '';
 
     if (filters.length > 1) {
 
       filters.forEach(function(filter, index) {
+        console.log(filter);
 
         var name = filter['name'];
         var value = filter['value'];
@@ -126,7 +129,8 @@ ckan.module('data-transformation', function($) {
           where_clause = 'WHERE ("' + name + '" = \'' + value + '\')';
 
         } else {
-          where_clause += ' AND ("' + name + '" = \'' + value + '\')';
+          var operator = filter['operator'];
+          where_clause += ' ' + operator + ' ("' + name + '" = \'' + value + '\')';
         }
       });
 
