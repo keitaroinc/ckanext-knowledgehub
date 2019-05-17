@@ -74,7 +74,8 @@ ckan.module('data-transformation', function($) {
       var order = i + 1;
       var selectFilterName = item.find('[id*=data_filter_name_]');
       var selectFilterValue = item.find('[id*=data_filter_value_]');
-      var selectFilterValue = item.find('[id*=data_filter_operator_]');
+      var inputFilterAndOperator = item.find('[id*=data_filter_operator_and_]');
+      var inputFilterOrOperator = item.find('[id*=data_filter_operator_or_]');
 
 
       item.attr('id', 'filter_item_' + order);
@@ -85,8 +86,11 @@ ckan.module('data-transformation', function($) {
       selectFilterValue.attr('id', 'data_filter_value_' + order);
       selectFilterValue.attr('name', 'data_filter_value_' + order);
 
-      selectFilterValue.attr('id', 'data_filter_operator_' + order);
-      selectFilterValue.attr('name', 'data_filter_operator_' + order);
+      inputFilterAndOperator.attr('id', 'data_filter_operator_and_' + order);
+      inputFilterAndOperator.attr('name', 'data_filter_operator_' + order);
+
+      inputFilterOrOperator.attr('id', 'data_filter_operator_or_' + order);
+      inputFilterOrOperator.attr('name', 'data_filter_operator_' + order);
 
     });
   }
