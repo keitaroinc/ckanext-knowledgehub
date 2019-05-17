@@ -1,34 +1,40 @@
 <div id="filter_item_{{ n }}" class="filter_item">
     <div class="text-right filter-actions">
         <a class="btn remove-filter-item-btn">
-          <span class="fa fa-trash-o" aria-hidden="true"></span> {{ _('Remove') }}</a>
+            <span class="fa fa-trash-o" aria-hidden="true"></span> {{ _('Remove') }}</a>
     </div>
+    <div class="filter-input-wrapper">
+        {% if n != '1' %}
 
-    {% if n != '1' %}
-        <div class="filter-input-wrapper">
-            <div class="filter-operator">
-                <input name="data_filter_operator_{{ n }}" id="data_filter_operator_and_{{ n }}" value="AND" required checked type="radio">
-                <label for="data_filter_operator_and_{{ n }}" class="btn btn-primary">AND</label>
-            </div>
-            <div class="filter-operator">
-                <input name="data_filter_operator_{{ n }}" id="data_filter_operator_or_{{ n }}" value="OR" required type="radio">
-                <label for="data_filter_operator_or_{{ n }}" class="btn btn-primary">OR</label>
+        <div class="filter-operator">
+            <input name="data_filter_operator_{{ n }}" id="data_filter_operator_and_{{ n }}" value="AND" required
+                checked type="radio">
+            <label for="data_filter_operator_and_{{ n }}" class="btn btn-primary">AND</label>
+        </div>
+        <div class="filter-operator">
+            <input name="data_filter_operator_{{ n }}" id="data_filter_operator_or_{{ n }}" value="OR" required
+                type="radio">
+            <label for="data_filter_operator_or_{{ n }}" class="btn btn-primary">OR</label>
+        </div>
+
+        {% endif %}
+
+        <div class="control-group control-select">
+            <label class="control-label" for="data_filter_name_{{ n }}">{{ _('Filter') }}</label>
+            <div class="controls ">
+                <input id="data_filter_name_{{ n }}" name="data_filter_name_{{ n }}"
+                    value="{% if selected_filter %}{{ selected_filter.name }}{% endif %}" required=required />
             </div>
         </div>
-    {% endif %}
-
-    <div class="control-group control-select">
-      <label class="control-label" for="data_filter_name_{{ n }}">{{ _('Filter') }}</label>
-      <div class="controls ">
-          <input id="data_filter_name_{{ n }}" name="data_filter_name_{{ n }}" value="{% if selected_filter %}{{ selected_filter.name }}{% endif %}"required=required/>
-      </div>
-    </div>
-    <div class="control-group control-select data_filter_value_{{ n }} {{ class }}">
-      <label class="control-label" for="data_filter_value_{{ n }}">{{ _('Filter Value') }}</label>
-      <div class="controls ">
-          <input id="data_filter_value_{{ n }}" name="data_filter_value_{{ n }}" value="{% if selected_filter %}{{ selected_filter.value }}{% endif %}"required=required/>
-      </div>
+        <div class="control-group control-select data_filter_value_{{ n }} {{ class }}">
+            <label class="control-label" for="data_filter_value_{{ n }}">{{ _('Filter Value') }}</label>
+            <div class="controls ">
+                <input id="data_filter_value_{{ n }}" name="data_filter_value_{{ n }}"
+                    value="{% if selected_filter %}{{ selected_filter.value }}{% endif %}" required=required />
+            </div>
+        </div>
     </div>
     <hr>
-  </div>
+</div>
+
 </div>
