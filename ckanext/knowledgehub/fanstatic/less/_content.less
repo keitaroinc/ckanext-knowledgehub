@@ -560,7 +560,6 @@ header.module-content.page-header {
   >hr {
     display: none;
   }
-
   > .btn-primary {
     position: absolute;
     top: 0;
@@ -569,25 +568,19 @@ header.module-content.page-header {
   }
  
   >.filter_item {
-    flex: 1 0 50%;
+    flex: 1 0 100%;
   }
   & .filter-input-wrapper{
     margin: 0 1rem;
     .flex;
     .align-items-end;
-    .control-group{
-      .flex;
-    }
     .control-group.control-select{
-      display: block;
       flex:1;
+      padding-right: 1rem;
     }
     .filter-operator{
-      display: inline-block;
       margin-right: 1rem;
       margin-bottom: 8px;
-      .flex;
-      .align-items-center;
       input{
         display: none;
         &:checked{
