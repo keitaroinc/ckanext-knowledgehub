@@ -10,6 +10,7 @@ ckan.module('knowledgehub-dashboard-type-select', function ($) {
         initialize: function () {
             this.sourceField = $('#dashboard-edit-form').find('#field-source')
             this.visulizationsContainer = $('.internal-dashboard-viz-container');
+            this.editForm = $('#dashboard-edit-form');
             this.el.on('change', this.selectType.bind(this));
         },
         selectType() {
@@ -17,12 +18,15 @@ ckan.module('knowledgehub-dashboard-type-select', function ($) {
             if (!typeValue) {
                 this.sourceField.parent().parent().addClass('hidden');
                 this.visulizationsContainer.css({ display: 'none' });
+                this.editForm.attr('novalidate', '')
             } else if (typeValue === 'internal') {
                 this.sourceField.parent().parent().addClass('hidden');
                 this.visulizationsContainer.css({display: 'block'});
+                this.editForm.removeAttr('novalidate')
             } else if (typeValue === 'external') {
                 this.sourceField.parent().parent().removeClass('hidden');
                 this.visulizationsContainer.css({ display: 'none' });
+                this.editForm.attr('novalidate', '')
             }
         }
     }

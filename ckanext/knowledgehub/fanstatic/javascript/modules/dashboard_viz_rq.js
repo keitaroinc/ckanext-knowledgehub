@@ -33,10 +33,15 @@ ckan.module('knowledgehub-dashboard-viz-rq', function ($) {
 
         },
         selectRQ() {
-            var RQValue = this.el.find('option[value=' + this.el.val() + ']').text()
-
             this.vizContainerItem.html('');
             this.vizDropdownSelect.html('');
+
+            if (!this.el.val()) {
+                this.vizDropdown.css({ display: 'none' });
+                return;
+            }
+
+            var RQValue = this.el.find('option[value=' + this.el.val() + ']').text()
 
             if (RQValue) {
                 api.get('visualizations_for_rq', { research_question: RQValue})
