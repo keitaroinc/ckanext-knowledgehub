@@ -570,12 +570,18 @@ header.module-content.page-header {
     margin: 0 1rem 0 0;
   }
   & .filter_item{
+    position:relative;
+    padding: 1rem 0;
     .flex;
     .align-items-end;
     .remove-filter-item-btn{
       position: absolute;
       top:0;
       right:0;
+      &:hover{
+        border:none;
+        color: darken(@brand-danger, 20%)
+      }
     }
     .control-group.control-select{
       flex:1;
