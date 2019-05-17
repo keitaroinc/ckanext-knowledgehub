@@ -38,6 +38,29 @@ ckan.module('data-transformation', function($) {
       }
 
       return $.get(url, params || {}).then(success, error);
+    },
+    // function for dynamic sorting
+    compareValues: function(key, order) {
+      return function(a, b) {
+        if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+          // property doesn't exist on either object
+          return 0;
+        }
+        const varA = (typeof a[key] === 'string') ?
+          a[key].toUpperCase() : a[key];
+        const varB = (typeof b[key] === 'string') ?
+          b[key].toUpperCase() : b[key];
+
+        let comparison = 0;
+        if (varA > varB) {
+          comparison = 1;
+        } else if (varA < varB) {
+          comparison = -1;
+        }
+        return (
+          (order == 'desc') ? (comparison * -1) : comparison
+        );
+      };
     }
   }
 
@@ -51,6 +74,7 @@ ckan.module('data-transformation', function($) {
       var order = i + 1;
       var selectFilterName = item.find('[id*=data_filter_name_]');
       var selectFilterValue = item.find('[id*=data_filter_value_]');
+      var selectFilterValue = item.find('[id*=data_filter_operator_]');
 
 
       item.attr('id', 'filter_item_' + order);
@@ -61,6 +85,9 @@ ckan.module('data-transformation', function($) {
       selectFilterValue.attr('id', 'data_filter_value_' + order);
       selectFilterValue.attr('name', 'data_filter_value_' + order);
 
+      selectFilterValue.attr('id', 'data_filter_operator_' + order);
+      selectFilterValue.attr('name', 'data_filter_operator_' + order);
+
     });
   }
 
@@ -68,14 +95,17 @@ ckan.module('data-transformation', function($) {
 
     var filter_items = $('#data-transformation-module').find('.filter_item');
     var filters = [];
+    var operator = '';
     var name = '';
     var value = '';
 
     $.each(filter_items, function(idx, elem) {
 
+      operator = $(elem).find('input[name*=data_filter_operator_]:checked').val();
       name = $(elem).find('[id*=data_filter_name_]').select2('val');
       value = $(elem).find('[id*=data_filter_value_]').select2('val');
       filters.push({
+        'operator': operator,
         'name': name,
         'value': value
       });
@@ -89,6 +119,7 @@ ckan.module('data-transformation', function($) {
     if (filters.length > 1) {
 
       filters.forEach(function(filter, index) {
+        console.log(filter);
 
         var name = filter['name'];
         var value = filter['value'];
@@ -98,7 +129,8 @@ ckan.module('data-transformation', function($) {
           where_clause = 'WHERE ("' + name + '" = \'' + value + '\')';
 
         } else {
-          where_clause += ' AND ("' + name + '" = \'' + value + '\')';
+          var operator = filter['operator'];
+          where_clause += ' ' + operator + ' ("' + name + '" = \'' + value + '\')';
         }
       });
 
@@ -118,6 +150,7 @@ ckan.module('data-transformation', function($) {
     var where_clause = _generateWhereClause(filters)
     var sql = 'SELECT * FROM "' + resource_id + '" ' + where_clause + '';
     $('#sql-string').val(sql);
+    console.log(sql);
     return sql;
   }
 
@@ -260,8 +293,16 @@ ckan.module('data-transformation', function($) {
       var filter_name_select_id = filter_name_select.attr('id');
       filter_value_select_id = filter_name_select_id.replace('name', 'value');
 
+      //    Set appropriate filter operator checked
+      if (filter.operator) {
+        var filter_operator_select_id = filter_name_select_id.replace('name', 'operator_' + filter.operator.toLowerCase());
+        $('#' + filter_operator_select_id).attr('checked', 'checked');
+      }
+
+      //    Set appropriate filter name as selected
       filter_name_select.select2('val', filter['name']);
 
+      //    Initialize filter value select to get values for the selected filter name
       applyDropdown(self, filter_value_select, filter['name'], resource_id);
       filter_value_select.select2('val', filter['value']);
 
@@ -299,6 +340,9 @@ ckan.module('data-transformation', function($) {
       resource_id = self.options.resourceId,
       fields = self.options.fields,
       filters = self.options.filters;
+
+    filters.sort(api.compareValues('order', 'asc'));
+    console.log(filters);
 
     self.el.find("#add-filter-button").click(function() {
       addFilter(self, resource_id, fields);

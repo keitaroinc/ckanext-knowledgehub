@@ -48,6 +48,13 @@ def _process_post_data(data, resource_id):
                 data.pop('data_filter_name_{}'.format(filter_id))
             filter['value'] = \
                 data.pop('data_filter_value_{}'.format(filter_id))
+
+            if 'data_filter_operator_{}'.format(filter_id) in data:
+                filter['operator'] = \
+                    data.pop('data_filter_operator_{}'.format(filter_id))
+            else:
+                filter['operator'] = ''
+
             filters.append(filter)
 
         config['type'] = \
@@ -177,6 +184,10 @@ class EditView(MethodView):
             data = data or old_data
         except (NotFound, NotAuthorized):
             abort(404, _('View not found'))
+
+        filters = json.loads(data['__extras']['filters'])
+        filters.sort(key=itemgetter('order'))
+        data['__extras']['filters'] = json.dumps(filters)
 
         vars = {
             'pkg': package,
