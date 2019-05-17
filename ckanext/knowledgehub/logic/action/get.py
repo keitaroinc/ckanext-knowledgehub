@@ -14,6 +14,7 @@ from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub import helpers as kh_helpers
+from ckan.lib import helpers as h
 
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -597,3 +598,9 @@ def resource_feedback_list(context, data_dict):
 
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': rf_list}
+
+    
+@toolkit.side_effect_free
+def get_rq_url(context, data_dict):
+    
+    return h.url_for('research_question.read', name=data_dict['name'])
