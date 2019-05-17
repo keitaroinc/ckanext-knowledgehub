@@ -552,25 +552,53 @@ header.module-content.page-header {
 
 .data-transformation-module {
   padding-top: 40px;
-
+  position:relative;
+  .flex;
+  .flex-wrap;
   >hr {
     display: none;
   }
 
-  >button,
-  input {
+  > .btn-primary {
     position: absolute;
     top: 0;
     left: 0;
   }
-
-  position:relative;
-  display: flex;
-  flex-wrap: wrap;
-
+ 
   >* {
-    flex: 1 0 30%;
-    margin: 0 5px;
+    flex: 1 0 calc(50% - 2rem);
+    margin: 0 1rem 0 0;
+  }
+  & .filter_item{
+    padding: 1rem 0;
+    .flex;
+    .filter-actions{
+      order:2;
+      align-self: center;
+     .remove-filter-item-btn{
+      &:hover{
+        border:none;
+        color: darken(@brand-danger, 20%)
+      }
+     }
+    }
+    .control-group.control-select{
+      order:1;
+      flex:1;
+    }
+    .filter-operator{
+      margin: .5rem 1rem;
+      .flex;
+      .align-items-center;
+      input{
+        margin: 0 1rem 0 0;
+      }
+      & >label{
+        min-width: 60px;
+        font-size: 10px;
+        padding: 5px 10px;
+      }
+    }
   }
 }
 
