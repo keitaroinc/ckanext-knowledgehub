@@ -155,11 +155,11 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
               style: function(feature) {
                 return {
-                  color: '#b20c0c',
-                  opacity: 0.3,
+                  color: '#EF4A60',
+                  opacity: 0.5,
                   weight: 0.3,
-                  fillColor: '#c11414',
-                  fillOpacity: 0.3
+                  fillColor: '#F37788',
+                  fillOpacity: 0.5
                 }
               },
               onEachFeature: function(feature, layer) {
@@ -184,10 +184,10 @@ ckan.module('knowledgehub-map', function(jQuery) {
                       var layer = e.target;
 
                       layer.setStyle({
-                        weight: 0.3,
-                        color: '#c11414',
+                        weight: 1.5,
+                        color: '#404040',
                         dashArray: '3',
-                        fillOpacity: 0.7
+                        fillOpacity: 1
                       });
 
                       if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
