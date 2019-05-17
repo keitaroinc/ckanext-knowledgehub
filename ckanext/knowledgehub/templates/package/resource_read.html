@@ -90,6 +90,8 @@
               {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
               {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
               {% set sql_string = resource_view.__extras.sql_string %}
+              {% set resource_id = resource_view.resource_id %}
+              {% set chart_title = resource_view.title %}
             {% endif %}
             {% snippet 'ajax_snippets/chart_module.html',
                 type='chart',
@@ -120,8 +122,11 @@
                 measure_label=measure_label,
                 dynamic_reference_type=dynamic_reference_type,
                 dynamic_reference_factor=dynamic_reference_factor,
-                dynamic_reference_label=dynamic_reference_label 
-              %}
+                dynamic_reference_label=dynamic_reference_label %}
+              {% snippet 'ajax_snippets/visual_info_module.html',
+              title = chart_title,
+              resource_id = resource_id %}
+
           {% elif current_resource_view.view_type == 'table'  %}
 
               {% if resource_view and resource_view.__extras %}
@@ -145,16 +150,24 @@
                   data_format = data_format,
                   data_type = data_type,
                   table_title = table_title %}
+                {% snippet 'ajax_snippets/visual_info_module.html',
+                  title = table_title,
+                  resource_id = resource_id %}
 
           {% elif current_resource_view.view_type == 'map'  %}
 
               {% if resource_view and resource_view.__extras %}
                 {% set map_resource=resource_view.__extras.map_resource %}
+                {% set resource_id = resource_view.resource_id %}
+                {% set title = resource_view.title %}
               {% endif %}
                 {% set map_config = h.knowledgehub_get_map_config() %}
                 {% snippet 'ajax_snippets/map_module.html',
                   map_config=map_config,
                   map_resource=map_resource %}
+                {% snippet 'ajax_snippets/visual_info_module.html',
+                  title = title,
+                  resource_id = resource_id %}
 
           {% else %}
 
@@ -163,7 +176,9 @@
                  resource=c.resource,
                  package=c.package %}
 
+
           {% endif %}
+
         {% endif %}
       {% endfor %}
   {% else %}
