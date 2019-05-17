@@ -3,6 +3,18 @@
         <a class="btn remove-filter-item-btn">
           <span class="fa fa-trash-o" aria-hidden="true"></span> {{ _('Remove') }}</a>
     </div>
+
+    <div class="control-group">
+        <div class="filter-operator">
+            <input name="data_filter_operator_{{ n }}" id="data_filter_operator_and_{{ n }}" value="AND" required type="radio">
+            <label for="data_filter_operator_and_{{ n }}" class="btn btn-primary">AND</label>
+        </div>
+        <div class="filter-operator">
+            <input name="data_filter_operator_{{ n }}" id="data_filter_operator_or_{{ n }}" value="OR" required type="radio">
+            <label for="data_filter_operator_or_{{ n }}" class="btn btn-primary">OR</label>
+        </div>
+    </div>
+
     <div class="control-group control-select">
       <label class="control-label" for="data_filter_name_{{ n }}">{{ _('Filter') }}</label>
       <div class="controls ">
