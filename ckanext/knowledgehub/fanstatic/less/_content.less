@@ -552,6 +552,8 @@ header.module-content.page-header {
 
 .data-transformation-module {
   padding-top: 40px;
+  margin-left: -1rem;
+  margin-right: -1rem;
   position:relative;
   .flex;
   .flex-wrap;
@@ -563,40 +565,44 @@ header.module-content.page-header {
     position: absolute;
     top: 0;
     left: 0;
+    margin-left: 1rem;
   }
  
-  >* {
-    flex: 1 0 calc(50% - 2rem);
-    margin: 0 1rem 0 0;
+  >.filter_item {
+    flex: 1 0 50%;
   }
-  & .filter_item{
-    padding: 1rem 0;
+  & .filter-input-wrapper{
+    margin: 0 1rem;
     .flex;
-    .filter-actions{
-      order:2;
-      align-self: center;
-     .remove-filter-item-btn{
-      &:hover{
-        border:none;
-        color: darken(@brand-danger, 20%)
-      }
-     }
+    .align-items-end;
+    .control-group{
+      .flex;
     }
     .control-group.control-select{
-      order:1;
+      display: block;
       flex:1;
     }
     .filter-operator{
-      margin: .5rem 1rem;
+      display: inline-block;
+      margin-right: 1rem;
+      margin-bottom: 8px;
       .flex;
       .align-items-center;
       input{
-        margin: 0 1rem 0 0;
+        display: none;
+        &:checked{
+          & ~ label{
+            background-color: darken(@brand-primary, 20%);
+          }
+        }
       }
       & >label{
-        min-width: 60px;
+        min-width: 50px;
         font-size: 10px;
         padding: 5px 10px;
+        &:after{
+          content: "";
+        }
       }
     }
   }
