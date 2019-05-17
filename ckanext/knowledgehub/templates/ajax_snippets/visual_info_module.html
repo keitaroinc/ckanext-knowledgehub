@@ -1,0 +1,11 @@
+{% resource 'knowledgehub/javascript/visualization_info.js' %}
+{% set rq_titles = h.get_rq_titles_from_res(resource_id) %}
+{% set rq_ids = h.get_rq_ids(resource_id) %}
+
+<button data-module="visualization_info"
+        data-module-title="{{ title }}"
+        data-module-resource_id="{{ resource_id }}"
+        data-module-rqs = " {{ rq_titles }}"
+        data-module-id = "{{ rq_ids }}">
+    <i class="fa fa-info-circle"></i>
+  </button>

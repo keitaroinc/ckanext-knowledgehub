@@ -20,7 +20,7 @@ import ckan.plugins.toolkit as toolkit
 import ckan.model as model
 from ckan.common import g, _
 from ckan import logic
-from ckan.model import ResourceView
+from ckan.model import ResourceView, Resource
 from ckan import lib
 
 
@@ -379,6 +379,35 @@ def get_resource_data(sql_string):
 
     return records_to_lower
 
+# get the titles for the RQs from the resource ID
+def get_rq_titles_from_res(res_id):
+
+    pkg_id = model.Session.query(Resource.package_id)\
+        .filter(Resource.id == res_id ).all()
+    only_id = pkg_id[0]
+    package_sh = toolkit.get_action('package_show')({}, {'id': only_id[0]})
+    if not package_sh.get('research_question'):
+        return 0
+    rqs = package_sh['research_question']
+    list_rqs = pg_array_to_py_list(rqs)
+    titles = rq_ids_to_titles(list_rqs)
+    list_titles = []
+
+    for tit in titles:
+        clean = tit.replace("'","")
+        list_titles.append(clean)
+    return list_titles
+
+# get the ids for the RQs from the resource ID
+def get_rq_ids(res_id):
+    pkg_id = model.Session.query(Resource.package_id)\
+        .filter(Resource.id == res_id ).all()
+    only_id = pkg_id[0]
+    package_sh = toolkit.get_action('package_show')({}, {'id': only_id[0]})
+    if not package_sh.get('research_question'):
+        return 0
+    rqs = package_sh['research_question']
+    return rqs
 
 def get_last_visuals():
 
