@@ -78,8 +78,6 @@ ckan.module('visualization_info', function ($) {
         content: content,
         html: true,
         placement: 'right'});
-    
-        $('#popover_content_wrapper').append(content);
     }
     
     };
