@@ -7,8 +7,9 @@ ckan.module('knowledgehub-dashboard-add-viz-btn', function ($) {
     return {
         initialize: function () {
             this.el.on('click', this._onClick.bind(this));
+            var total_viz = $('.internal-dashboard-viz-container-item').length;
             this.state = {
-                total_viz: 1
+                total_viz: total_viz
             };
             this.sandbox.subscribe('knowledgehub:remove-viz', function() {
                 this.state.total_viz = --this.state.total_viz;
