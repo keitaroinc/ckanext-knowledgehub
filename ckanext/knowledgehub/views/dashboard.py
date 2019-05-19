@@ -107,6 +107,16 @@ def view(name):
     except NotFound:
         base.abort(404, _(u'Dashboard not found'))
 
+    if dashboard_dict.get('type') == 'internal':
+        dashboard_dict['indicators'] = json.loads(dashboard_dict['indicators'])
+
+        for ind in dashboard_dict['indicators']:
+            res_view_id = ind.get('resource_view_id')
+            res_view = get_action('resource_view_show')(_get_context(), {
+                'id': res_view_id
+            })
+            ind['resource_view'] = res_view
+
     extra_vars['dashboard'] = dashboard_dict
 
     return base.render(u'dashboard/view.html', extra_vars=extra_vars)
