@@ -226,7 +226,7 @@ ckan.module('table', function () {
                         html = module.render_data_table(rows, main_value, y_axis);
                     }
 
-                    var table = $('#table-item');
+                    var table = module.el.next('#table-item-' + module.options.resource_id);
                     // Enable jquery.datatable
                     if ($.fn.DataTable.isDataTable(table)) table.DataTable().destroy();
                     table.html(html);

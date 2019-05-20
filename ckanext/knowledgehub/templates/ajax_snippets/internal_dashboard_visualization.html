@@ -90,7 +90,7 @@
                   {% set data_type = resource_view.__extras.data_type %}
                   {% set table_title = resource_view.title %}
                   {% set resource_name = resource_view.__extras.resource_name %}
-                  {% set resource_id = resource_view.resource_id %}
+                  {% set resource_id = resource_view.id %}
                 {% endif %}
                   {% snippet 'ajax_snippets/table_module.html',
                     sql_string = sql_string,

@@ -58,6 +58,7 @@ ckan.module('knowledgehub-dashboard-viz-select', function ($) {
                 } else if (resView.view_type === 'table') {
                     snippetName = 'table_module.html'
                     resView.__extras.table_title = resView.__extras.title;
+                    resView.__extras.resource_id = resView.id;
                 } else if (resView.view_type === 'map') {
                     snippetName = 'map_module.html'
                     var map_config = $('div[data-map-config]').attr('data-map-config')

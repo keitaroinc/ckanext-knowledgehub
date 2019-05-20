@@ -1,8 +1,110 @@
+{% resource 'knowledgehub/chart' %}
+{% resource 'knowledgehub/table' %}
+{% resource 'knowledgehub/map' %}
+
 {% extends 'page.html' %}
 
 {% block content %}
     {% if dashboard.type == 'internal' %}
-        <div style="width: 100%; height: 100px; background:white;">Displaying internal dashboard has not been implemented yet.</div>
+        <div class="row" style="width: 100%; height: 100%; background-color: white;">
+            {% for indicator in dashboard.indicators %}
+                <div class="col-lg-4">
+                    {% set resource_view = indicator.resource_view %}
+                    {% if resource_view.view_type == 'chart' %}
+                        {% if resource_view and resource_view.__extras %}
+                        {% set colors = resource_view.__extras.color %}
+                        {% set x_axis = resource_view.__extras.x_axis %}
+                        {% set y_axis = resource_view.__extras.y_axis %}
+                        {% set chart_type = resource_view.__extras.type %}
+                        {% set title = resource_view.__extras.title %}
+                        {% set show_legend = resource_view.__extras.show_legend %}
+                        {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
+                        {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
+                        {% set tooltip_name = resource_view.__extras.tooltip_name %}
+                        {% set data_format = resource_view.__extras.data_format %}
+                        {% set y_tick_format = resource_view.__extras.y_tick_format %}
+                        {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
+                        {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
+                        {% set padding_bottom = resource_view.__extras.padding_bottom %}
+                        {% set padding_top = resource_view.__extras.padding_top %}
+                        {% set tick_count = resource_view.__extras.tick_count %}
+                        {% set show_labels = resource_view.__extras.show_labels %}
+                        {% set y_label = resource_view.__extras.y_label %}
+                        {% set y_from_zero = resource_view.__extras.y_from_zero %}
+                        {% set data_sort = resource_view.__extras.sort %}
+                        {% set filters = resource_view.__extras.filters %}
+                        {% set category_name = resource_view.__extras.category_name %}
+                        {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
+                        {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
+                        {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
+                        {% set sql_string = resource_view.__extras.sql_string %}
+                        {% endif %}
+                        {% snippet 'ajax_snippets/chart_module.html',
+                            type='chart',
+                            colors=colors,
+                            x_axis=x_axis,
+                            y_axis=y_axis,
+                            chart_type=chart_type,
+                            sql_string=sql_string,
+                            title= title,
+                            show_legend = show_legend,
+                            x_text_rotate= x_text_rotate,
+                            x_text_multiline= x_text_multiline,
+                            tooltip_name = tooltip_name,
+                            data_format = data_format,
+                            y_tick_format = y_tick_format,
+                            chart_padding_left = chart_padding_left,
+                            chart_padding_bottom = chart_padding_bottom,
+                            padding_bottom = padding_bottom,
+                            padding_top = padding_top,
+                            tick_count = tick_count,
+                            show_labels = show_labels,
+                            y_label = y_label,
+                            y_from_zero = y_from_zero,
+                            data_sort = data_sort,
+                            filters = filters,
+                            category_name=category_name,
+                            measure_label=measure_label,
+                            dynamic_reference_type=dynamic_reference_type,
+                            dynamic_reference_factor=dynamic_reference_factor,
+                            dynamic_reference_label=dynamic_reference_label %}
+
+                    {% elif resource_view.view_type == 'table'  %}
+
+                        {% if resource_view and resource_view.__extras %}
+                            {% set main_value = resource_view.__extras.main_value %}
+                            {% set y_axis = resource_view.__extras.y_axis %}
+                            {% set sql_string = resource_view.__extras.sql_string %}
+                            {% set category_name = resource_view.__extras.category_name %}
+                            {% set data_format = resource_view.__extras.data_format %}
+                            {% set data_type = resource_view.__extras.data_type %}
+                            {% set table_title = resource_view.title %}
+                            {% set resource_name = resource_view.__extras.resource_name %}
+                            {% set resource_id = resource_view.id %}
+                        {% endif %}
+                            {% snippet 'ajax_snippets/table_module.html',
+                            sql_string = sql_string,
+                            resource_id = resource_id,
+                            resource_name = resource_name,
+                            y_axis = y_axis,
+                            main_value = main_value,
+                            category_name = category_name,
+                            data_format = data_format,
+                            data_type = data_type,
+                            table_title = table_title %}
+
+                    {% elif resource_view.view_type == 'map'  %}
+
+                        {% if resource_view and resource_view.__extras %}
+                            {% set map_resource=resource_view.__extras.map_resource %}
+                        {% endif %}
+                            {% snippet 'ajax_snippets/map_module.html',
+                            map_config=map_config,
+                            map_resource=map_resource %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
     {% elif dashboard.type == 'external' %}
         <iframe src="{{ dashboard.source }}" frameborder="0" class="dashboard-view-iframe"></iframe>
     {% else %}
