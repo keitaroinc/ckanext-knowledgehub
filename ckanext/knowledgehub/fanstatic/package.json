@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.0",
     "gulp-autoprefixer": "^5.0.0",
     "gulp-clean-css": "^3.9.4",
     "gulp-less": "^3.5.0",
+    "lato-font": "^3.0.0",
     "npm": "^6.0.1"
   },
   "devDependencies": {
