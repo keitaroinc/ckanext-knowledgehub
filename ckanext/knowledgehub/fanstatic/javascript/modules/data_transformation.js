@@ -75,8 +75,9 @@ ckan.module('data-transformation', function($) {
       var selectFilterName = item.find('[id*=data_filter_name_]');
       var selectFilterValue = item.find('[id*=data_filter_value_]');
       var inputFilterAndOperator = item.find('[id*=data_filter_operator_and_]');
+      var labelFilterAndOperator = item.find('label[for*=data_filter_operator_and_]');
       var inputFilterOrOperator = item.find('[id*=data_filter_operator_or_]');
-
+      var labelFilterOrOperator = item.find('label[for*=data_filter_operator_or_]');
 
       item.attr('id', 'filter_item_' + order);
 
@@ -88,9 +89,11 @@ ckan.module('data-transformation', function($) {
 
       inputFilterAndOperator.attr('id', 'data_filter_operator_and_' + order);
       inputFilterAndOperator.attr('name', 'data_filter_operator_' + order);
+      labelFilterAndOperator.attr('for', 'data_filter_operator_and_' + order);
 
       inputFilterOrOperator.attr('id', 'data_filter_operator_or_' + order);
       inputFilterOrOperator.attr('name', 'data_filter_operator_' + order);
+      labelFilterOrOperator.attr('for', 'data_filter_operator_or_' + order);
 
     });
   }
@@ -262,22 +265,20 @@ ckan.module('data-transformation', function($) {
 
   function handleRenderedFilter(self, item_id, resource_id, fields, filter) {
 
+    var filter_operator;
     var filter_name_select;
     var filter_value_select;
     var filter_value_select_id;
 
     if (item_id) {
       filter_name_select = $('[id=data_filter_name_' + item_id + ']');
+      filter_value_select = $('[id=data_filter_value_' + item_id + ']');
+      filter_operator = $('[id=data_filter_value_' + item_id + ']');
+
     } else {
       filter_name_select = $('[id*=data_filter_name_]');
-    }
-
-    if (item_id) {
-      filter_value_select = $('[id=data_filter_value_' + item_id + ']');
-    } else {
       filter_value_select = $('[id*=data_filter_value_]');
     }
-
 
     var filter_name_select_data = $.map(fields, function(d) {
       return {
