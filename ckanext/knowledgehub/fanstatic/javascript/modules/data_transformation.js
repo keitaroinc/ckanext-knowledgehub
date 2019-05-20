@@ -126,7 +126,6 @@ ckan.module('data-transformation', function($) {
     if (filters.length > 1) {
 
       filters.forEach(function(filter, index) {
-        console.log(filter);
 
         var name = filter['name'];
         var value = filter['value'];
@@ -157,7 +156,6 @@ ckan.module('data-transformation', function($) {
     var where_clause = _generateWhereClause(filters)
     var sql = 'SELECT * FROM "' + resource_id + '" ' + where_clause + '';
     $('#sql-string').val(sql);
-    console.log(sql);
     return sql;
   }
 
@@ -173,9 +171,7 @@ ckan.module('data-transformation', function($) {
     }
 
     api.getTemplate('filter_item.html', {
-        fields: fields.toString(),
         n: total_items,
-        resource_id: resource_id,
         class: 'hidden'
       })
       .done(function(data) {
@@ -273,11 +269,12 @@ ckan.module('data-transformation', function($) {
     if (item_id) {
       filter_name_select = $('[id=data_filter_name_' + item_id + ']');
       filter_value_select = $('[id=data_filter_value_' + item_id + ']');
-      filter_operator = $('[id=data_filter_value_' + item_id + ']');
+      filter_operator = $('[name=data_filter_operator_' + item_id + ']');
 
     } else {
       filter_name_select = $('[id*=data_filter_name_]');
       filter_value_select = $('[id*=data_filter_value_]');
+      filter_operator = $('[id=data_filter_operator_]');
     }
 
     var filter_name_select_data = $.map(fields, function(d) {
@@ -300,8 +297,8 @@ ckan.module('data-transformation', function($) {
 
       //    Set appropriate filter operator checked
       if (filter.operator) {
-        var filter_operator_select_id = filter_name_select_id.replace('name', 'operator_' + filter.operator.toLowerCase());
-        $('#' + filter_operator_select_id).attr('checked', 'checked');
+        var filter_operator_button_id = filter_name_select_id.replace('name', 'operator_' + filter.operator.toLowerCase());
+        $('#' + filter_operator_button_id).attr('checked', 'checked');
       }
 
       //    Set appropriate filter name as selected
@@ -338,6 +335,11 @@ ckan.module('data-transformation', function($) {
       var filters = _getFilters();
       var sql = generateSql(resource_id, filters);
     });
+
+    filter_operator.change(function() {
+      var filters = _getFilters();
+      var sql = generateSql(resource_id, filters);
+    });
   }
 
   function initialize() {
@@ -347,7 +349,6 @@ ckan.module('data-transformation', function($) {
       filters = self.options.filters;
 
     filters.sort(api.compareValues('order', 'asc'));
-    console.log(filters);
 
     self.el.find("#add-filter-button").click(function() {
       addFilter(self, resource_id, fields);
