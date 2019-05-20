@@ -1,7 +1,0 @@
-{% resource 'knowledgehub/slick' %}
-
-<div class="dashboard-carousel hidden" data-module="dashboards_carousel">
-  {% for dashboard in dashboards %}
-    {% snippet "dashboard/snippets/dashboard_item.html", dashboard=dashboard, position=loop.index %}
-  {% endfor %}
-</div>
