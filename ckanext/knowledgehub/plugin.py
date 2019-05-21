@@ -6,8 +6,11 @@ from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm
 
 import ckanext.knowledgehub.helpers as h
+from ckanext.knowledgehub.rnn import worker as kwh_data_worker
 
 from ckanext.knowledgehub.helpers import _register_blueprints
+
+toolkit.enqueue_job(kwh_data_worker.learn, title=u'Predictive search', queue=u'predictive-search')
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
