@@ -1,7 +1,7 @@
 {# Display a grid of dashboard items. dashboards - A list of dashboards.
 Example: {% snippet "dashboard/snippets/dashboard_list.html" %} #} {% block
 dashboard_list %} {% if dashboards %}
-<ul class="component-list list-unstyled">
+<ul class="component-list list-unstyled" style="justify-content: center;">
   {% block dashboard_list_inner %} {% for dashboard in dashboards %} {% snippet
   "dashboard/snippets/dashboard_item.html", dashboard=dashboard,
   position=loop.index %} {% endfor %} {% endblock %}
