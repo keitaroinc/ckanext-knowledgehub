@@ -21,7 +21,7 @@
   {% endblock %}
   {% block dashboards_list %}
     {% if page.items %}
-        {% snippet "dashboard/snippets/dashboard_carousel.html", dashboards=page.items %}
+        {% snippet "dashboard/snippets/dashboard_list.html", dashboards=page.items %}
     {% else %}
       <p class="empty">
         {{ _('There are currently no dashboards for this site') }}.
