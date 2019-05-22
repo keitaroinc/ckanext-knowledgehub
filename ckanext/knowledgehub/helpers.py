@@ -23,7 +23,9 @@ from ckan import logic
 from ckan.model import ResourceView, Resource
 from ckan import lib
 
+from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.model import Dashboard
+
 
 log = logging.getLogger(__name__)
 model_dictize = lib.dictization.model_dictize
@@ -631,3 +633,14 @@ def get_dashboards(limit=5, order_by='created_by asc'):
     dashboards = Dashboard.search(limit=limit, order_by=order_by).all()
 
     return dashboards
+
+
+def predict_completions(text, n=3):
+    sequence = int(config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10))
+    if sequence > len(text):
+        return []
+
+    seq = text[-sequence:].lower()
+    print text
+    print seq
+    print rnn_helpers.predict_completions(seq, 3)

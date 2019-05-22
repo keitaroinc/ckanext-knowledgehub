@@ -57,3 +57,11 @@ def kwh_data(context, data_dict):
     # sysadmins only
     return {'success': False}
 
+
+def corpus_create(context, data_dict):
+    '''
+        Authorization check for storing RNN corpus
+    '''
+    # sysadmins only
+    return {'success': False}
+

@@ -124,3 +124,9 @@ def kwh_data_schema_update():
         'old_content': [not_empty, unicode],
         'new_content': [not_empty, unicode]
     }
+
+
+def corpus_create():
+    return {
+        'corpus': [not_empty, unicode]
+    }

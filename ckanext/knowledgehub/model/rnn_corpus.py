@@ -75,7 +75,7 @@ class RNNCorpus(DomainObject):
 
 
 rnn_corpus_table = Table(
-    'kwh_data',
+    'rnn_corpus',
     metadata,
     Column(
         'id',

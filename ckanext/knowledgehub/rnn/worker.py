@@ -3,10 +3,7 @@ import logging
 import pickle
 
 import numpy as np
-np.random.seed(42)
-
 import tensorflow as tf
-tf.set_random_seed(42)
 
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Activation
@@ -17,10 +14,14 @@ from keras.optimizers import RMSprop
 from keras.callbacks import EarlyStopping
 
 from ckan.common import config
+from ckan.plugins import toolkit
 
 from ckanext.knowledgehub.rnn import helpers as rnn_helper
+from ckanext.knowledgehub import helpers as h
 
 
+np.random.seed(42)
+tf.set_random_seed(42)
 log = logging.getLogger(__name__)
 
 
@@ -30,13 +31,12 @@ def learn():
     except Exception as e:
         log.debug('Error while training the model: %s' % str(e))
 
-    chars = sorted(list(set(data)))
-    char_indices = dict((c, i) for i, c in enumerate(chars))
-    indices_char = dict((i, c) for i, c in enumerate(chars))
-
+    chars, char_indices, indices_char = rnn_helper.prepare_rnn_corpus(data)
     log.info('unique chars: %d' % len(chars))
 
-    sequence_length = int(config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10))
+    sequence_length = int(
+        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10)
+    )
     if len(data) <= sequence_length:
         return
 
@@ -71,9 +71,9 @@ def learn():
 
         callbacks = [
             EarlyStopping(
-                monitor='val_loss',
-                min_delta=0.01,
-                patience=3,
+                monitor='val_acc',
+                min_delta=0.001,
+                patience=5,
                 verbose=1,
                 mode='auto',
                 baseline=None,
@@ -93,7 +93,10 @@ def learn():
         log.debug('Error while creating RNN model: %s' % str(e))
         return
 
-    model_path = config.get(u'ckanext.knowledgehub.rnn.model', './keras_model.h5')
+    model_path = config.get(
+        u'ckanext.knowledgehub.rnn.model',
+        './keras_model.h5'
+    )
     model_dir = os.path.dirname(model_path)
     if not os.path.exists(model_dir):
         try:
@@ -104,11 +107,17 @@ def learn():
 
     try:
         model.save(model_path)
+        toolkit.get_action('corpus_create')({}, {
+            'corpus': data
+        })
     except Exception as e:
         log.debug('Error while saving RNN model: %s' % str(e))
         return
 
-    history_path = config.get(u'ckanext.knowledgehub.rnn.history', './history.p')
+    history_path = config.get(
+        u'ckanext.knowledgehub.rnn.history',
+        './history.p'
+    )
     history_dir = os.path.dirname(history_path)
     if not os.path.exists(history_dir):
         try:
@@ -123,3 +132,4 @@ def learn():
         log.debug('Error while saving RNN history: %s' % str(e))
         return
 
+    h.predict_completions('Test Total ', 3)

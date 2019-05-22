@@ -14,6 +14,7 @@ from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.model import KWHData
+from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckan.lib import helpers as h
 
@@ -675,6 +676,24 @@ def kwh_data_list(context, data_dict):
 
 
 @toolkit.side_effect_free
+def get_last_rnn_corpus(context, data_dict):
+    ''' Returns last RNN corpus
+
+    :returns: a RNN corpus
+    :rtype: string
+    '''
+
+    c = RNNCorpus.get(order_by='created_at desc', limit=1).first()
+    if not c:
+        raise NotFound(_(u'There is not corpus stored yet!'))
+    else:
+        return c.corpus
+
+
+@toolkit.side_effect_free
 def get_rq_url(context, data_dict):
     
     return h.url_for('research_question.read', name=data_dict['name'])
+
+
+

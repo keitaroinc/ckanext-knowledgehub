@@ -24,6 +24,7 @@ from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.model import KWHData
+from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -437,3 +438,25 @@ def kwh_data_create(context, data_dict):
         kwh_data = KWHData(**data)
         kwh_data.save()
         return kwh_data.as_dict()
+
+
+def corpus_create(context, data_dict):
+    '''
+    Store RNN corpus
+
+        :param corpus
+    '''
+    check_access('corpus_create', context, data_dict)
+
+    session = context['session']
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.corpus_create(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    corpus = RNNCorpus(**data)
+    corpus.save()
+    return corpus.as_dict()
