@@ -369,13 +369,12 @@ ckan.module('data-transformation', function($) {
         console.log('New' + result);
       });
     });
-    // Generate and render existing filters
-    var f = [];
-    filters.forEach(function(filter, idx) {
-      addFilter(self, resource_id, fields, filter).then(function(result) {
-        console.log(filter.order + ' ' + result);
-      });
-    });
+    // Generate and render existing filters in appropriate order
+    var f = addFilter(self, resource_id, fields, filters[0]);
+
+    for (var i = 1; i < filters.length; i++) {
+      f = f.then(addFilter(self, resource_id, fields, filters[i]));
+    }
   }
 
   return {
