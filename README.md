@@ -9,7 +9,7 @@ This is the main repo for the Knowledge Hub on Displaced Populations in the MENA
      - [Requirements](#requirements)
      - [Additional Requirements](#additional-requirements)
      - [Installation](#installation)
-     - [Config Settings](#config-settings)  
+     - [Config Settings](#config-settings)
  - [Development](#development)
      - [Development Installation](#development-installation)
      - [Modify CSS](#modify-css)
@@ -20,7 +20,7 @@ This is the main repo for the Knowledge Hub on Displaced Populations in the MENA
 
 ### Requirements
 
-This extension requires CKAN 2.8.x version. 
+This extension requires CKAN 2.8.x version.
 
 
 ### Additional Requirements
@@ -68,7 +68,7 @@ These are the required configuration options used by the extension:
 ckanext.knowledgehub.themes_per_page = 20
 ```
 2. The number of sub-themes shown per page
- ```  
+ ```
 # (optional, default: 10).
 ckanext.knowledgehub.sub_themes_per_page = 20
 ```
@@ -77,6 +77,42 @@ ckanext.knowledgehub.sub_themes_per_page = 20
 # (optional, default: 10).
 ckanext.knowledgehub.dashboards_per_page = 20
 ```
+4. Predictive Search
+     - Length of the seuqunce after which the model can start predict
+     ```
+     # (optional, default: 15)
+     ckanext.knowledgehub.rnn.sequence_length = 12
+     ```
+     - Number of chars to be skipped in generation of next sentence
+     ```
+     # (optional, default: 3)
+     ckanext.knowledgehub.rnn.sentence_step = 2
+     ```
+     - Number of predictions to return
+     ```
+     # (optional, default: 3)
+     ckanext.knowledgehub.rnn.number_prediction = 2
+     ```
+     - Minimum length of the corpus after it should start to predict
+     ```
+     # (optional, default: 3)
+     ckanext.knowledgehub.rnn.min_length_corpus = 300
+     ```
+     - Maximum epochs to learn
+     ```
+     # (optional, default: 50)
+     ckanext.knowledgehub.rnn.max_epochs = 30
+     ```
+     - Full path to the RNN model
+     ```
+     # (optional, default: ./keras_model.h5)
+     ckanext.knowledgehub.rnn.model = /home/user/model.h5
+     ```
+     - Full path to the model history
+     ```
+     # (optional, default: ./history.p)
+     ckanext.knowledgehub.rnn.history = /home/user/history.p
+     ```
 
 # Development
 

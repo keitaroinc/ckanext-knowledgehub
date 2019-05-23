@@ -635,12 +635,22 @@ def get_dashboards(limit=5, order_by='created_by asc'):
     return dashboards
 
 
-def predict_completions(text, n=3):
-    sequence = int(config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10))
-    if sequence > len(text):
-        return []
+def get_kwh_data():
+    corpus = ''
+    try:
+        kwh_data = toolkit.get_action('kwh_data_list')({}, {})
+    except Exception as e:
+        log.debug('Error while loading KnowledgeHub data: %s' % str(e))
+        return corpus
 
-    seq = text[-sequence:].lower()
+    if kwh_data.get('total'):
+        data = kwh_data.get('data', [])
+        for entry in data:
+            corpus += ' %s' % entry.get('content')
+
+    return corpus
+
+
+def predict_completions(text):
     print text
-    print seq
-    print rnn_helpers.predict_completions(seq, 3)
+    print rnn_helpers.predict_completions(text)

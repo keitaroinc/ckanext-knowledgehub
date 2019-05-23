@@ -11,12 +11,12 @@ from keras.layers import LSTM, Dropout
 from keras.layers import TimeDistributed
 from keras.layers.core import Dense, Activation, Dropout, RepeatVector
 from keras.optimizers import RMSprop
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
 from ckan.common import config
 from ckan.plugins import toolkit
 
-from ckanext.knowledgehub.rnn import helpers as rnn_helper
+from ckanext.knowledgehub.rnn import helpers as rnn_h
 from ckanext.knowledgehub import helpers as h
 
 
@@ -27,15 +27,16 @@ log = logging.getLogger(__name__)
 
 def learn():
     try:
-        data = rnn_helper.get_kwh_data()
+        original_data = h.get_kwh_data()
+        data = original_data.lower()
     except Exception as e:
         log.debug('Error while training the model: %s' % str(e))
 
-    chars, char_indices, indices_char = rnn_helper.prepare_rnn_corpus(data)
-    log.info('unique chars: %d' % len(chars))
+    unique_chars, char_indices, indices_char = rnn_h.prepare_rnn_corpus(data)
+    log.info('unique chars: %d' % len(unique_chars))
 
     sequence_length = int(
-        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10)
+        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 15)
     )
     if len(data) <= sequence_length:
         return
@@ -49,8 +50,13 @@ def learn():
 
     log.info('num training examples: %d ' % len(sentences))
 
-    X = np.zeros((len(sentences), sequence_length, len(chars)), dtype=np.bool)
-    y = np.zeros((len(sentences), len(chars)), dtype=np.bool)
+    X = np.zeros((
+        len(sentences),
+        sequence_length,
+        len(unique_chars)),
+        dtype=np.bool
+    )
+    y = np.zeros((len(sentences), len(unique_chars)), dtype=np.bool)
     for i, sentence in enumerate(sentences):
         for t, char in enumerate(sentence):
             X[i, t, char_indices[char]] = 1
@@ -59,8 +65,8 @@ def learn():
     history = ''
     try:
         model = Sequential()
-        model.add(LSTM(128, input_shape=(sequence_length, len(chars))))
-        model.add(Dense(len(chars)))
+        model.add(LSTM(128, input_shape=(sequence_length, len(unique_chars))))
+        model.add(Dense(len(unique_chars)))
         model.add(Activation('softmax'))
 
         optimizer = RMSprop(lr=0.01)
@@ -69,17 +75,40 @@ def learn():
             optimizer=optimizer,
             metrics=['accuracy'])
 
-        callbacks = [
-            EarlyStopping(
-                monitor='val_acc',
-                min_delta=0.001,
-                patience=5,
-                verbose=1,
-                mode='auto',
-                baseline=None,
-                restore_best_weights=False
-            )
-        ]
+        model_path = config.get(
+            u'ckanext.knowledgehub.rnn.model',
+            './keras_model.h5'
+        )
+        model_dir = os.path.dirname(model_path)
+        if not os.path.exists(model_dir):
+            try:
+                os.makedirs(model_dir)
+            except Exception as e:
+                log.debug('Error while creating RNN model DIR: %s' % str(e))
+                return
+
+        # earlyStopping, mcp_save and reduce_lr_loss are used to avoid
+        # overfitting and keep only best results
+        earlyStopping = EarlyStopping(
+            monitor='val_loss',
+            patience=10,
+            verbose=0,
+            mode='min'
+        )
+        mcp_save = ModelCheckpoint(
+            model_path,
+            save_best_only=True,
+            monitor='val_loss',
+            mode='min'
+        )
+        reduce_lr_loss = ReduceLROnPlateau(
+            monitor='val_loss',
+            factor=0.1,
+            patience=7,
+            verbose=1,
+            epsilon=1e-4,
+            mode='min'
+        )
         history = model.fit(
             X,
             y,
@@ -87,28 +116,20 @@ def learn():
             batch_size=128,
             epochs=int(config.get(u'ckanext.knowledgehub.rnn.max_epochs', 50)),
             shuffle=True,
-            callbacks=callbacks
+            callbacks=[
+                earlyStopping,
+                mcp_save,
+                reduce_lr_loss
+            ]
         ).history
     except Exception as e:
         log.debug('Error while creating RNN model: %s' % str(e))
         return
 
-    model_path = config.get(
-        u'ckanext.knowledgehub.rnn.model',
-        './keras_model.h5'
-    )
-    model_dir = os.path.dirname(model_path)
-    if not os.path.exists(model_dir):
-        try:
-            os.makedirs(model_dir)
-        except Exception as e:
-            log.debug('Error while creating RNN model DIR: %s' % str(e))
-            return
-
     try:
-        model.save(model_path)
+        # model.save(model_path)
         toolkit.get_action('corpus_create')({}, {
-            'corpus': data
+            'corpus': original_data
         })
     except Exception as e:
         log.debug('Error while saving RNN model: %s' % str(e))
@@ -131,5 +152,3 @@ def learn():
     except Exception as e:
         log.debug('Error while saving RNN history: %s' % str(e))
         return
-
-    h.predict_completions('Test Total ', 3)
