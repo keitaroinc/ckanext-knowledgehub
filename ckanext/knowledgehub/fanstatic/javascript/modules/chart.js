@@ -74,7 +74,7 @@ ckan.module('chart', function() {
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
             
             var sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
-            
+
             return sql
         },
         // Get the data from Datastore.
@@ -610,16 +610,20 @@ ckan.module('chart', function() {
         getFilters: function() {
             var filter_items = $('#data-transformation-module').find('.filter_item');
             var filters = [];
+            var operator = '';
             var name = '';
             var value = '';
 
-            $.each(filter_items, function (idx, elem) {
-                name = $(elem).find('[id*=data_filter_name_]').select2('val');
-                value = $(elem).find('[id*=data_filter_value_]').select2('val');
-                filters.push({
-                    'name': name,
-                    'value': value
-                });
+            $.each(filter_items, function(idx, elem) {
+
+              operator = $(elem).find('input[name*=data_filter_operator_]:checked').val();
+              name = $(elem).find('[id*=data_filter_name_]').select2('val');
+              value = $(elem).find('[id*=data_filter_value_]').select2('val');
+              filters.push({
+                'operator': operator,
+                'name': name,
+                'value': value
+              });
             });
             return filters;
         },

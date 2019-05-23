@@ -90,9 +90,11 @@ def get_rq_options(idValue=False):
 
     for rq in rq_list.get(u'data', []):
         if idValue:
-            opt = {u'text': rq[u'title'], u'value': rq[u'id']}
+            opt = {u'text': rq[u'title'],
+                   u'value': rq[u'id']}
         else:
-            opt = {u'text': rq[u'title'], u'value': rq[u'title'], u'id': rq[u'id']}
+            opt = {u'text': rq[u'title'],
+                   u'value': rq[u'title'], u'id': rq[u'id']}
         rq_options.append(opt)
     return rq_options
 
@@ -379,11 +381,12 @@ def get_resource_data(sql_string):
 
     return records_to_lower
 
+
 # get the titles for the RQs from the resource ID
 def get_rq_titles_from_res(res_id):
 
     pkg_id = model.Session.query(Resource.package_id)\
-        .filter(Resource.id == res_id ).all()
+        .filter(Resource.id == res_id).all()
     only_id = pkg_id[0]
     package_sh = toolkit.get_action('package_show')({}, {'id': only_id[0]})
     if not package_sh.get('research_question'):
@@ -394,20 +397,22 @@ def get_rq_titles_from_res(res_id):
     list_titles = []
 
     for tit in titles:
-        clean = tit.replace("'","")
+        clean = tit.replace("'", "")
         list_titles.append(clean)
     return list_titles
+
 
 # get the ids for the RQs from the resource ID
 def get_rq_ids(res_id):
     pkg_id = model.Session.query(Resource.package_id)\
-        .filter(Resource.id == res_id ).all()
+        .filter(Resource.id == res_id).all()
     only_id = pkg_id[0]
     package_sh = toolkit.get_action('package_show')({}, {'id': only_id[0]})
     if not package_sh.get('research_question'):
         return 0
     rqs = package_sh['research_question']
     return rqs
+
 
 def get_last_visuals():
 
@@ -471,8 +476,9 @@ def _create_where_clause(filters):
                     where_clause = u'WHERE ("{0}" {1} \'{2}\')'.format(
                         name, op, value)
                 else:
-                    where_clause += u' AND ("{0}" {1} \'{2}\')'.format(
-                        name, op, value)
+                    operator = _['operator']
+                    where_clause += u' ' + operator + u' ("{0}" {1} \'{2}\')'.\
+                        format(name, op, value)
 
         else:
             _ = filters[0]
