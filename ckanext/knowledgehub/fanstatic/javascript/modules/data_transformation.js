@@ -145,9 +145,7 @@ ckan.module('data-transformation', function($) {
             var operator = filter['operator'];
             where_clause += ' ' + operator + ' ("' + name + '" = \'' + value + '\')';
           }
-
         }
-
       });
 
     } else if (filters.length == 1) {
@@ -155,8 +153,9 @@ ckan.module('data-transformation', function($) {
       var filter = filters[0];
       var name = filter['name'];
       var value = filter['value'];
-      where_clause = 'WHERE ("' + name + '" = \'' + value + '\')';
-
+      if (name && value) {
+        where_clause = 'WHERE ("' + name + '" = \'' + value + '\')';
+      }
     }
     return where_clause;
   }
@@ -362,19 +361,21 @@ ckan.module('data-transformation', function($) {
       fields = self.options.fields,
       filters = self.options.filters;
 
-    filters.sort(api.compareValues('order', 'asc'));
-
     self.el.find("#add-filter-button").click(function() {
       addFilter(self, resource_id, fields).then(function(result) {
         console.log('New' + result);
       });
     });
-    // Generate and render existing filters in appropriate order
-    var f = addFilter(self, resource_id, fields, filters[0]);
+    if (filters.length) {
+      // Generate and render existing filters in appropriate order
+      filters.sort(api.compareValues('order', 'asc'));
+      var f = addFilter(self, resource_id, fields, filters[0]);
 
-    for (var i = 1; i < filters.length; i++) {
-      f = f.then(addFilter(self, resource_id, fields, filters[i]));
+      for (var i = 1; i < filters.length; i++) {
+        f = f.then(addFilter(self, resource_id, fields, filters[i]));
+      }
     }
+
   }
 
   return {
