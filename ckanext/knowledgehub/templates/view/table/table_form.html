@@ -98,16 +98,6 @@
               </div>
             </div>
           </div>
-          {% if table %}
-          {% set data_type = table.data_type %}
-          {% endif %}
-          <div class="control-group control-checkbox justify-content-start ">
-            <label class="control-label" for="table_data_type">{{ _('Qualitative data') }}</label>
-            <div class="controls">
-              <input id="table_data_type" type="checkbox" name="table_data_type" value="{{ data_type }}"
-                {% if data_type=='qualitative' %}checked{% endif %}>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -120,7 +110,6 @@
     {% set category_name = table.category_name %}
     {% set data_format = table.data_format %}
     {% set table_title = data.title %}
-    {% set data_type = table.data_type %}
     {% endif %}
     <div class="preview-wrapper">
       {% snippet 'ajax_snippets/table_module.html',
@@ -131,7 +120,6 @@
       main_value = main_value,
       category_name = category_name,
       data_format = data_format,
-      data_type = data_type,
       table_title = table_title %}
     </div>
     <ul class="inline text-right table-actions">
