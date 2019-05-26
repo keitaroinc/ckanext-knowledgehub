@@ -26,9 +26,11 @@ gulp.task("less", function () {
   );
 });
 gulp.task('fonts', function () {
-  return gulp.src(['node_modules/lato-font/fonts/lato-medium/*',
+  return gulp.src(['node_modules/lato-font/fonts/lato-thin/*',
+                  'node_modules/lato-font/fonts/lato-medium/*',
                   'node_modules/lato-font/fonts/lato-bold/*',
-                  'node_modules/lato-font/fonts/lato-heavy/*'])
+                  'node_modules/lato-font/fonts/lato-heavy/*',
+                  ])
     .pipe(gulp.dest('fonts'))
 })
 
