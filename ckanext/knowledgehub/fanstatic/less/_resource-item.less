@@ -1,8 +1,8 @@
 .resource-feedback-actions {
-  display: flex;
-  margin: 3rem 0;
+  .flex;
+  margin: 5rem 0;
   .resource-feedback-group {
-    display: flex;
+    .flex;
     margin-right: 1rem;
     &>button {
       .btn-reset;
@@ -16,7 +16,7 @@
       }
       & i {
         padding: 0 5px;
-        font-size: @font-size-base
+        font-size: @font-size-base * 1.5;
       }
       & .badge {
         margin: 0 5px;
@@ -27,7 +27,7 @@
     &>*:nth-child(odd){
       &:hover {
         color: @brand-primary;
-        background-color: #fff;
+        background-color: @white;
         & span {
           background-color: @brand-primary;
         }
@@ -41,14 +41,14 @@
     }
     &>*:nth-child(even){
       &:hover {
-        background-color: #fff;
+        background-color: @white;
         color: @gray;
         & .badge {
           background-color: @gray;
         }
       }
       &:disabled {
-        color: @gray !important;
+        color: @gray;
         & span {
           background-color: @gray;
         }
@@ -56,6 +56,13 @@
     }
   }
 }
-.resource-view{
-  position: relative;
+
+.visualization-logo{
+  max-width: 300px;
+}
+.resource-list.reordering .resource-item.ui-sortable-helper{
+  border: 1px solid @brand-primary;
+  & .handle{
+    border: 1px solid @brand-primary;
+  }
 }

@@ -1,0 +1,70 @@
+.visualization-section {
+  background-color: @brand-bg-lightest;
+
+  .title {
+    padding-top: @grid-gutter-width * 2;
+  }
+  h4{
+    color: @brand-primary;
+  }
+  hr{
+    border-top: 2px solid @brand-primary;
+    background: @brand-primary;
+  }
+
+  .visualizations {
+    padding: 0 @grid-gutter-width * 2 @grid-gutter-width * 2 @grid-gutter-width * 2;
+  }
+}
+.module-content,
+.visualization-wrapper {
+
+  >.resource-view {
+    .flex;
+    .align-items-start;
+    flex-direction: row-reverse;
+    @media (max-width: 1000px) {
+     flex-direction: column;
+     & div{
+       width: 100%;
+     }
+    }
+
+    &>button {
+      margin-top: 20px;
+      margin-right: 20px;
+    }
+
+    &>.dataTables_wrapper {
+      flex: 1 0 calc(100% - 2rem);
+    }
+
+    &>div {
+      flex: 1;
+      .flex;
+      .flex-column;
+
+      .item-content {
+        order: 2;
+      }
+
+      .btn-chart-download {
+        order: 1;
+        margin-left: auto;
+      }
+    }
+  }
+}
+.visualizations,
+.preview-wrapper{
+  .visualization-logo{
+    display: none;
+  }
+}
+.chart-one{
+  &:last-child{
+    &> g{
+      transform: translateY(300px)
+    }
+  }
+}

@@ -13,6 +13,12 @@
   .label-closed.label{
     background-color: @brand-danger;
   }
+
+ .dropdown-menu{
+   li{
+     width: 100%;
+   }
+ } 
 //DEFAULT TABLE LOOK
 .table.table-bordered,
 .table-bordered.dataTable{
@@ -22,29 +28,29 @@
       &>th,td{
         background-color: @brand-primary;
         background: @brand-primary;
-        color: #fff;
+        color: @white;
         font-weight: 700;
         border: none;
-        border-bottom: 2px solid #fff;
+        border-bottom: 2px solid @white;
       }
     }
   }
   tr{
       &>*:not(:last-child){
-        border-right: 2px solid #fff;
+        border-right: 2px solid @white;
       }
     }
   & tbody{
     & tr{
       & th,td{
         border: none;
-        border-bottom: 1px dotted #CCCCCC;
+        border-bottom: 1px dotted @gray-brand-lightest;
       }
       &>*:nth-child(odd){
-        background-color: #fff;
+        background-color: @white;
       }
       &>*:nth-child(even){
-        background-color: rgba(191, 191, 191, 0.301);
+        background-color: @gray-lightest;
       }
     }
   }

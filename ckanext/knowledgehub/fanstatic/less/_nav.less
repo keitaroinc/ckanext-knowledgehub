@@ -1,0 +1,173 @@
+/* .account-masthead */
+.control-checkbox {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+
+  >label {
+    margin-right: 15px;
+  }
+
+  >div {
+    flex: 0 0 15px;
+
+    >input {
+      width: 15px;
+    }
+  }
+}
+
+.input-controls {
+  margin-bottom: 0;
+
+  >* {
+    padding: 6px 12px;
+    border: 1px solid @gray-brand-lightest;
+  }
+
+  >select {
+    background-color: inherit;
+  }
+
+}
+
+.account-masthead {
+  background: @brand-primary;
+
+  .account {
+    ul {
+      li {
+        border-left: none;
+
+        a {
+          color: @gray-lighter;
+
+          &:hover {
+            color: @white;
+            background-color: transparent;
+          }
+        }
+      }
+    }
+
+    .notifications {
+      a {
+        span {
+          &.badge {
+            background-color: @gray-base;
+            color: @white;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* .masthead */
+
+.masthead {
+  background: @brand-primary;
+  margin-bottom: 0;
+  padding: 0;
+  color: inherit;
+
+  .logo {
+    display: inline-block;
+    margin-bottom: @grid-gutter-width / 1.5;
+
+    img {
+      max-height: @grid-gutter-width+20;
+      max-width: 100%;
+    }
+  }
+
+  .debug {
+    top: -30px;
+    display: inline-block;
+    font-size: smaller;
+    opacity: 0.3;
+  }
+
+  hgroup {
+    h1 {
+      margin: @grid-gutter-width / 3 0;
+    }
+
+    h2 {
+      .text-muted;
+      position: static;
+      margin: (@grid-gutter-width - 10) @grid-gutter-width / 2;
+    }
+  }
+
+  a {
+    color: @brand-primary;
+  }
+
+  input[type="text"] {
+    border-color: @input-border;
+
+    &:focus {
+      border-color: @input-border-focus;
+    }
+  }
+
+  .navigation {
+    font-size: @font-size-large;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+
+    .nav-pills {
+      li {
+        &.active {
+          a {
+            color: @brand-accent;
+            background-color: transparent;
+          }
+        }
+
+        a {
+
+          &:hover,
+          &:focus,
+          &:active {
+            color: @brand-accent;
+            background-color: transparent;
+          }
+        }
+      }
+    }
+  }
+}
+
+.navbar-default {
+
+  .shadow;
+  z-index: 1;
+
+  .navbar-nav li {
+    a {
+      font-size: @font-size-large - 2;
+      font-weight: @headings-font-weight;
+      border-bottom: 2.5px solid transparent;
+
+      &:hover,
+      &:active,
+      &:focus {
+        border-bottom: 2.5px solid @brand-primary;
+
+        @media (max-width: @screen-sm-max) {
+          border-bottom: 2.5px solid transparent;
+        }
+      }
+    }
+  }
+}
+
+.navbar-toggle {
+  color: @white;
+
+  &:hover {
+    background-color: darken(@brand-primary, 5%);
+  }
+}

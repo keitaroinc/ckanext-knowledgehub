@@ -16,12 +16,16 @@
 
 .content_action > .btn-default {
   margin-bottom: @grid-gutter-width / 3;
+  outline: none;
+  border: none;
+  &:hover{
+    background-color: @gray-lighter;
+  }
 }
 .btn-data-source {
   bottom: 49px;
   left: 193px;
 }
-
 .btn-remove-data-source {
   position: relative;
   top: 31px;
@@ -58,7 +62,8 @@
 
 .btn-chart-download{
   cursor: pointer;
-  margin-top: 15px;
-  padding: 10px;
+  margin-left: auto;
+  padding: 0 10px;
   z-index: 10;
 }
+
