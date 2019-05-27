@@ -7,12 +7,12 @@
 //## Gray and brand colors for use across Bootstrap.
 
 @gray-base: #000;
-@gray-darker: lighten(@gray-base, 13.5%); // #222
-@gray-dark: lighten(@gray-base, 20%); // #333
-@gray: lighten(@gray-base, 33.5%); // #555
-@gray-light: lighten(@gray-base, 46.7%); // #777
-@gray-lighter: lighten(@gray-base, 93.5%); // #eee
-@gray-lightest: #f6f6f6;
+@gray-darker: #404040; 
+@gray-dark: #404040; 
+@gray: #666;
+@gray-light: #666; 
+@gray-lighter: #E5E5E5; 
+@gray-lightest: #E5E5E5;
 @gray-line:#ddd;
 @gray-brand-lightest: #cccccc;
 @gray-brand-light: #999999;
@@ -21,14 +21,23 @@
 @white: #fff;
 
 @brand-primary: #0072bc;
-@brand-secondary: @gray-dark;
+@brand-primary-50: #7FB8DD;
+@brand-primary-25: #BFDCEE;
+@brand-primary-dark: #18375F;
+@brand-primary-dark-75: #526987;
+@brand-primary-dark-50: #8B9BAF;
+@brand-primary-dark-25: #C5CDD7;
+@brand-secondary: @brand-primary-dark;
 @brand-success: @brand-secondary;
 @brand-info: #0072bc;
 @brand-warning: orange;
+@brand-danger-dark: #B33848;
 @brand-danger: #EF4A60;
+@brand-danger-25: #FBD2D7; 
 @brand-accent: #faeb00;
 @brand-bg-lightest:#fafafa;
 @brand-green: #00B398;
+@brand-green-light: #7FD9CB;
 
 @featured-groups-wrap-bg: @gray-lighter;
 @featured-group-bg: @brand-accent;
@@ -259,7 +268,7 @@
 //** Dropdown link text color.
 @dropdown-link-color: @gray-dark;
 //** Hover color for dropdown links.
-@dropdown-link-hover-color: darken(@gray-dark, 5%);
+@dropdown-link-hover-color: #666666;
 //** Hover background for dropdown links.
 @dropdown-link-hover-bg: #f5f5f5;
 
@@ -513,8 +522,8 @@
 @state-warning-bg: #fcf8e3;
 @state-warning-border: darken(spin(@state-warning-bg, -10), 5%);
 
-@state-danger-text: #a94442;
-@state-danger-bg: #f2dede;
+@state-danger-text: @brand-danger-dark;
+@state-danger-bg: @brand-danger-25;
 @state-danger-border: darken(spin(@state-danger-bg, -10), 5%);
 
 //== Tooltips

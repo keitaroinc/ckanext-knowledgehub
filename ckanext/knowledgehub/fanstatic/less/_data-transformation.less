@@ -1,0 +1,136 @@
+/* new_chart_form */
+.accordion {
+  .flex;
+  .flex-wrap;
+}
+
+.accordion-heading {
+  .subtitle;
+  font-size: @font-size-h5;
+  background-color: @gray-lighter;
+  padding: @grid-gutter-width / 3;
+
+  >a {
+    text-decoration: none;
+  }
+}
+
+.accordion-inner {
+  padding: @grid-gutter-width / 2 0 @grid-gutter-width 0;
+  input,
+  select,
+  textarea {
+    width: 100%;
+  }
+
+  >* {
+    margin-top: 5px;
+  }
+
+  >.form-group {
+    margin-bottom: 5px;
+
+    >.controls {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.accordion-group {
+  width: 20%;
+  padding: 0 @grid-gutter-width / 2 0 0;
+
+  &.last {
+    padding: 0;
+  }
+}
+
+.data-transformation-module {
+  padding-top: 40px;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  position: relative;
+  .flex;
+  .flex-wrap;
+
+  >hr {
+    display: none;
+  }
+
+  >.btn-primary {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin-left: 1rem;
+  }
+
+  >.filter_item {
+    flex: 1 0 100%;
+  }
+
+  & .filter-input-wrapper {
+    margin: 0 1rem;
+    .flex;
+    .align-items-end;
+
+    .control-group.control-select {
+      flex: 1;
+      padding-right: 1rem;
+    }
+
+    .filter-operator {
+      margin-right: 1rem;
+      margin-bottom: 8px;
+
+      input {
+        display: none;
+
+        &:checked {
+          &~label {
+            background-color: darken(@brand-primary, 20%);
+          }
+        }
+      }
+
+      &>label {
+        min-width: 50px;
+        font-size: 10px;
+        padding: 5px 10px;
+
+        &:after {
+          content: "";
+        }
+      }
+    }
+  }
+}
+
+.dt-header,
+.dc-header {
+  font-size: 1.8rem;
+  font-weight: 900;
+  padding: 2rem 1rem 2rem 0;
+  font-family: "Lato";
+  .flex;
+  .align-items-end;
+  .justify-content-between;
+}
+
+.control-group input[type="checkbox"] {
+  margin: 10px 0;
+}
+
+.view-actions {
+  margin-bottom: @grid-gutter-width;
+}
+
+.select2-container {
+  width: 100% !important;
+}
+.dataTables_filter {
+  &>label {
+    &::after {
+      content: ""
+    }
+  }
+}

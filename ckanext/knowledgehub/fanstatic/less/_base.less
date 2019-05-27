@@ -1,0 +1,41 @@
+[role="main"] {
+  padding: 0;
+  &:nth-child(odd) {
+    background: @brand-bg-lightest;
+  }
+  .secondary{
+    z-index: 10;
+  }
+}
+.home-content {
+  background-color: @brand-bg-lightest;
+}
+a {
+  color: @brand-primary;
+}
+.homepage .stats ul li {
+  a {
+    color: @white;
+    font-size: large;
+
+    &:hover {
+      color: @brand-accent;
+    }
+  }
+  span {
+    color: @brand-accent;
+    font-size: larger;
+  }
+}
+
+.dashboards,
+.group-list-items {
+  >h4 {
+    color: @brand-primary;
+  }
+
+  >hr {
+    background-color: @brand-primary;
+    border-top: 2px solid @brand-primary;
+  }
+}
