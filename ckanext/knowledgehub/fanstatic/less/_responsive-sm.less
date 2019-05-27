@@ -1,0 +1,47 @@
+
+
+@media only screen and (max-width: @screen-sm) {
+  .filters{
+    display: none;
+    position: fixed;
+    top:0;
+    left: 0;
+    right: 0;
+    bottom:0;
+    background: @white;
+    z-index: 1000;
+  }
+  .toolbar {
+    .breadcrumb {
+      a {
+        color: initial;
+      }
+    }
+  }
+  .dataset-item{
+    width: 100%;
+  }
+  .navbar-default { 
+    .navbar-nav li {
+      a {
+        &:hover,
+        &:active,
+        &:focus {
+          border-bottom: 2.5px solid transparent;   
+        }
+      }
+    }
+  }
+  .component-list {
+    .component-item {
+        width: 100%;
+      }
+    }
+}
+@media only screen and (min-width: @screen-sm-max) {
+  .filters{
+    display: block;
+    position: relative;
+    
+  }
+}

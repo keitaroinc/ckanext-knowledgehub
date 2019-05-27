@@ -1,0 +1,39 @@
+.rq-section{
+  background-color: @white
+}
+.rq-box {
+  flex: 1;
+  min-width: 16.6666%;
+  height: 250px;
+  .flex;
+  .align-items-end;
+  .justify-content-center;
+  text-align: center;
+  background-color: @brand-primary;
+  .rq-heading {
+    a {
+      color: @white;
+      padding: @grid-gutter-width / 3;
+      font-size: 21px;
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      line-height: 30px; /* fallback */
+      max-height: 100px; /* fallback */
+      -webkit-line-clamp: 3; /* number of lines to show */
+      -webkit-box-orient: vertical;
+      &:hover,
+      &:active,
+      &:focus {
+        color: @brand-accent;
+      }
+    }
+  }
+  small {
+    color: @white;
+    opacity: 0.7;
+    font-size: 14px;
+    font-weight: 600
+  }
+}

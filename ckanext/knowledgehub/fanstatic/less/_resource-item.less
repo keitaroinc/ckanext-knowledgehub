@@ -1,13 +1,13 @@
 .resource-feedback-actions {
-  display: flex;
-  margin: 3rem 0;
+  .flex;
+  margin: 5rem 0;
   .resource-feedback-group {
-    display: flex;
+    .flex;
     margin-right: 1rem;
     &>button {
       .btn-reset;
-      display: flex;
-      align-items: center;
+     .flex;
+      .align-items-center;
       padding: 5px;
       font-size: @font-size-base/2;
       &:active,
@@ -16,7 +16,7 @@
       }
       & i {
         padding: 0 5px;
-        font-size: @font-size-base
+        font-size: @font-size-base * 1.5;
       }
       & .badge {
         margin: 0 5px;
@@ -27,7 +27,6 @@
     &>*:nth-child(odd){
       &:hover {
         color: @brand-primary;
-        background-color: #fff;
         & span {
           background-color: @brand-primary;
         }
@@ -41,14 +40,13 @@
     }
     &>*:nth-child(even){
       &:hover {
-        background-color: #fff;
         color: @gray;
         & .badge {
           background-color: @gray;
         }
       }
       &:disabled {
-        color: @gray !important;
+        color: @gray;
         & span {
           background-color: @gray;
         }
@@ -56,6 +54,5 @@
     }
   }
 }
-.resource-view{
-  position: relative;
-}
+
+

@@ -41,11 +41,11 @@
               </div>
               <div class="resource-feedback-group">
                 <button id="btn-trusted" class="btn btn-default" type="button">
-                  <i class="fa fa-check"></i>{{ _('Trusted') }} <span id="count-trusted"
+                  <i class="fa fa-check-circle-o"></i>{{ _('Trusted') }} <span id="count-trusted"
                     class="badge">{{ h.resource_feedback_count('trusted', res.id, res.package_id) }}</span>
                 </button>
                 <button id="btn-untrusted" class="btn btn-default" type="button">
-                  <i class="fa fa-times"></i>{{ _('Untrusted') }} <span id="count-untrusted"
+                  <i class="fa fa-times-circle-o"></i>{{ _('Untrusted') }} <span id="count-untrusted"
                     class="badge">{{ h.resource_feedback_count('untrusted', res.id, res.package_id) }}</span>
                 </button>
                 <input id="resource" value="{{ res.id }}" type="hidden" />
@@ -206,7 +206,9 @@
   {% endif %}
 </div>
 {% endblock %}
+
 {% block primary_content %}
+
   {{ super() }}
   {{ h.disqus_comments() }}
 {% endblock %}
