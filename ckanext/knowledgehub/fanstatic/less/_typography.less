@@ -13,12 +13,20 @@
   .label-closed.label{
     background-color: @brand-danger;
   }
-
+  .group-list {
+    padding: @grid-gutter-width * 2 @grid-gutter-width @grid-gutter-width @grid-gutter-width;
+  }
  .dropdown-menu{
    li{
      width: 100%;
    }
  } 
+ .resource-list.reordering .resource-item.ui-sortable-helper{
+  border: 1px solid @brand-primary;
+  & .handle{
+    border: 1px solid @brand-primary;
+  }
+}
 //DEFAULT TABLE LOOK
 .table.table-bordered,
 .table-bordered.dataTable{

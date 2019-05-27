@@ -6,8 +6,8 @@
     margin-right: 1rem;
     &>button {
       .btn-reset;
-      display: flex;
-      align-items: center;
+     .flex;
+      .align-items-center;
       padding: 5px;
       font-size: @font-size-base/2;
       &:active,
@@ -27,7 +27,6 @@
     &>*:nth-child(odd){
       &:hover {
         color: @brand-primary;
-        background-color: @white;
         & span {
           background-color: @brand-primary;
         }
@@ -41,7 +40,6 @@
     }
     &>*:nth-child(even){
       &:hover {
-        background-color: @white;
         color: @gray;
         & .badge {
           background-color: @gray;
@@ -57,12 +55,4 @@
   }
 }
 
-.visualization-logo{
-  max-width: 300px;
-}
-.resource-list.reordering .resource-item.ui-sortable-helper{
-  border: 1px solid @brand-primary;
-  & .handle{
-    border: 1px solid @brand-primary;
-  }
-}
+
