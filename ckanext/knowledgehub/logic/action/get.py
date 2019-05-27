@@ -273,7 +273,7 @@ def resource_view_list(context, data_dict):
     if not resource:
         raise NotFound
     context['resource'] = resource
-    check_access('resource_view_list', context, data_dict)
+    # check_access('resource_view_list', context, data_dict)
     q = model.Session.query(model.ResourceView).filter_by(resource_id=id)
 
     resource_views = [
@@ -599,8 +599,8 @@ def resource_feedback_list(context, data_dict):
     return {'total': total, 'page': page,
             'pageSize': page_size, 'data': rf_list}
 
-    
+
 @toolkit.side_effect_free
 def get_rq_url(context, data_dict):
-    
+
     return h.url_for('research_question.read', name=data_dict['name'])
