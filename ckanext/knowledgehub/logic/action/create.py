@@ -414,7 +414,7 @@ def kwh_data_create(context, data_dict):
         :param type
         :param content
     '''
-    check_access('kwh_data', context, data_dict)
+    # check_access('kwh_data', context, data_dict)
 
     session = context['session']
 
@@ -426,12 +426,14 @@ def kwh_data_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user'] = model.User.by_name(user.decode('utf8')).id
+    user_data = model.User.by_name(user.decode('utf8'))
+    if user_data:
+        data['user'] = user_data.id
 
     kwh_data = KWHData.get(
-        user=data['user'],
-        content=data['content'],
-        type=data['type']
+        user=data.get('user'),
+        content=data.get('content'),
+        type=data.get('type')
     ).first()
 
     if not kwh_data:

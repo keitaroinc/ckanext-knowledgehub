@@ -16,6 +16,7 @@ from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub import helpers as kh_helpers
+from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckan.lib import helpers as h
 
 from ckanext.knowledgehub.backend.factory import get_backend
@@ -692,8 +693,23 @@ def get_last_rnn_corpus(context, data_dict):
 
 @toolkit.side_effect_free
 def get_rq_url(context, data_dict):
-    
+
     return h.url_for('research_question.read', name=data_dict['name'])
 
 
+@toolkit.side_effect_free
+def get_predictions(context, data_dict):
+    ''' Returns a list of predictions
 
+    :param text: the text for which predictions have to be made
+    :type text: string
+
+    :returns: predictions
+    :rtype: list
+    '''
+
+    text = data_dict.get('text')
+    if not text:
+        raise ValidationError({'text': _('Missing value')})
+
+    return rnn_helpers.predict_completions(text)

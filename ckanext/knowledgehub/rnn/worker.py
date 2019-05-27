@@ -35,6 +35,12 @@ def learn():
     unique_chars, char_indices, indices_char = rnn_h.prepare_rnn_corpus(data)
     log.info('unique chars: %d' % len(unique_chars))
 
+    min_length_corpus = int(
+        config.get(u'ckanext.knowledgehub.rnn.min_length_corpus', 300)
+    )
+    if min_length_corpus > len(data):
+        return
+
     sequence_length = int(
         config.get(u'ckanext.knowledgehub.rnn.sequence_length', 15)
     )

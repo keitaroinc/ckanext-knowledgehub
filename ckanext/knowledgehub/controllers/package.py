@@ -1,3 +1,5 @@
+import logging
+
 from urllib import urlencode
 from six import string_types
 from paste.deploy.converters import asbool
@@ -17,6 +19,8 @@ NotAuthorized = logic.NotAuthorized
 check_access = logic.check_access
 get_action = logic.get_action
 render = base.render
+
+log = logging.getLogger(__name__)
 
 
 def _encode_params(params):

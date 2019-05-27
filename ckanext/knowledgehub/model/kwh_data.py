@@ -93,8 +93,7 @@ kwh_data_table = Table(
     Column(
         'user',
         types.UnicodeText,
-        ForeignKey('user.id', ondelete='CASCADE'),
-        nullable=False),
+        ForeignKey('user.id', ondelete='CASCADE')),
     Column(
         'theme',
         types.UnicodeText,

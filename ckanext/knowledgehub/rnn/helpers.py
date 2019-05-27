@@ -3,6 +3,8 @@ import os
 
 import heapq
 import numpy as np
+import tensorflow as tf
+from keras import backend as K
 from keras.models import load_model
 
 from ckan.plugins import toolkit
@@ -75,15 +77,12 @@ def predict_completions(text):
         log.debug('Error while preparing the RNN corpus: %s' % str(e))
         return []
 
-    min_length_corpus = int(
-        config.get(u'ckanext.knowledgehub.rnn.min_length_corpus', 300)
-    )
-    if min_length_corpus > len(text):
-        return []
-
     sequence_length = int(
         config.get(u'ckanext.knowledgehub.rnn.sequence_length', 15)
     )
+    if sequence_length > len(text):
+        return []
+
     text = text[-sequence_length:].lower()
 
     model_path = config.get(
@@ -96,19 +95,26 @@ def predict_completions(text):
 
     try:
         n = int(config.get(u'ckanext.knowledgehub.rnn.number_prediction', 3))
-        model = load_model(model_path)
-        x = prepare_input(text, unique_chars, char_indices)
-        preds = model.predict(x, verbose=0)[0]
-        next_indices = sample(preds, n)
-        return [
-            indices_char[idx] +
-            predict_completion(
-                model,
-                text[1:] + indices_char[idx],
-                unique_chars,
-                char_indices,
-                indices_char
-            ) for idx in next_indices]
+        graph = tf.Graph()
+        with graph.as_default():
+            session = tf.Session()
+            with session.as_default():
+                model = load_model(model_path)
+                x = prepare_input(text, unique_chars, char_indices)
+                preds = model.predict(x, verbose=0)[0]
+                next_indices = sample(preds, n)
+                return [
+                    indices_char[idx] +
+                    predict_completion(
+                        model,
+                        text[1:] + indices_char[idx],
+                        unique_chars,
+                        char_indices,
+                        indices_char
+                    ) for idx in next_indices]
     except Exception as e:
         log.debug('Error while prediction: %s' % str(e))
         return []
+    finally:
+        # always clean previous session
+        K.clear_session()
