@@ -273,6 +273,7 @@ def resource_view_list(context, data_dict):
     if not resource:
         raise NotFound
     context['resource'] = resource
+    # TODO need to implement custom authorization actions
     # check_access('resource_view_list', context, data_dict)
     q = model.Session.query(model.ResourceView).filter_by(resource_id=id)
 

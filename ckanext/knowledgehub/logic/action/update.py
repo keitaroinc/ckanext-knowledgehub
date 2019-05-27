@@ -266,8 +266,8 @@ def resource_view_update(context, data_dict):
 
     context['resource_view'] = resource_view
     context['resource'] = model.Resource.get(resource_view.resource_id)
-
-    check_access('resource_view_update', context, data_dict)
+    # TODO need to implement custom authorization actions
+    # check_access('resource_view_update', context, data_dict)
 
     resource_view = model_save.resource_view_dict_save(data, context)
     if not context.get('defer_commit'):
