@@ -267,8 +267,8 @@ def resource_view_create(context, data_dict):
     if errors:
         model.Session.rollback()
         raise ValidationError(errors)
-
-    check_access('resource_view_create', context, data_dict)
+    # TODO need to implement custom authorization actions
+    # check_access('resource_view_create', context, data_dict)
 
     max_order = model.Session.query(
         func.max(model.ResourceView.order)
