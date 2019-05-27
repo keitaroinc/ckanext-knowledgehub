@@ -23,6 +23,7 @@ from ckan import logic
 from ckan.model import ResourceView, Resource
 from ckan import lib
 
+from ckanext.knowledgehub.model import Dashboard
 
 log = logging.getLogger(__name__)
 model_dictize = lib.dictization.model_dictize
@@ -624,3 +625,9 @@ def resource_feedback_count(type, resource, dataset):
         return 0
 
     return rf_list.get('total', 0)
+
+
+def get_dashboards(limit=5, order_by='created_by asc'):
+    dashboards = Dashboard.search(limit=limit, order_by=order_by).all()
+
+    return dashboards
