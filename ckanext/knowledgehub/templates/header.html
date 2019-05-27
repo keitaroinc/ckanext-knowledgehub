@@ -34,6 +34,7 @@ search  </div>
             ('organizations_index', _('Organizations')),
             ('group_index', _('Groups')),
             ('datarequests_index', _('Data Requests') + h.get_open_datarequests_badge()),
+            ('dashboards.index', _('Dashboards')),
             ('home.about', _('About'))
           ) }}
           {% endblock %}
@@ -62,7 +63,6 @@ search  </div>
         <li><a href="{% url_for 'theme.index' %}">{{ _('Themes') }}</a></li>
         <li><a href="{% url_for 'sub_theme.search' %}">{{ _('Sub-Themes') }}</a></li>
         <li><a href="{% url_for 'research_question.search' %}">{{ _('Research Questions') }}</a></li>
-        <li><a href="{% url_for 'dashboards.index' %}">Dashboards</a></li>
       </ul>
     </div>
   </div>
