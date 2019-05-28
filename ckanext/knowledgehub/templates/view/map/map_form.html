@@ -11,7 +11,7 @@
 {% set filters = [] %}
 {% endif %}
 
-{# snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string #}
+{% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
 
 <div id="map_field" class="item map_field visualization-fields-section">
   <div class="item-wrapper">
@@ -47,6 +47,25 @@
               </div>
             </div>
 
+            {% if map %}
+              {% set map_properties = h.knowledgehub_get_geojson_properties(map.map_resource) %}
+            {% else %}
+              {% set map_properties = [] %}
+            {% endif %}
+            <div class="control-group control-select">
+            <label class="control-label" for="map_key_field">{{ _('Map key field') }}</label>
+            <div class="controls ">
+              <select id="map_key_field" name="map_key_field" required=required>
+              <option value="">&mdash; {{ _('Select map key field') }} &mdash;</option>
+              {% if map_properties %}
+                {% for property in map_properties %}
+                  <option value="{{ property.value }}" {% if map %}{{ 'selected' if property.value == map.map_key_field }}{% endif %} >{{property.text}}</option>
+                {% endfor %}
+              {% endif %}
+              </select>
+            </div>
+          </div>
+
           </div>
         </div>
       </div>
@@ -67,11 +86,13 @@
 <div class="preview-wrapper custom-width">
    {% if map %}
     {% set map_resource=map.map_resource %}
+    {% set map_key_field=map.map_key_field %}
   {% endif %}
   {% set map_config = h.knowledgehub_get_map_config() %}
   {% snippet 'ajax_snippets/map_module.html',
     map_config=map_config,
-    map_resource=map_resource
+    map_resource=map_resource,
+    map_key_field=map_key_field
   %}
 
 </div>

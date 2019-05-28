@@ -610,6 +610,30 @@ def get_map_data(geojson_url):
     return map_data
 
 
+def get_geojson_properties(url):
+    # TODO handle if no url
+    # TODO handle topojson format
+    resp = requests.get(url)
+    geojson = resp.json()
+
+    result = []
+    exclude_keys = [
+        'marker-symbol',
+        'marker-color',
+        'marker-size',
+        'stroke',
+        'stroke-width',
+        'stroke-opacity',
+        'fill',
+        'fill-opacity'
+    ]
+
+    for k, v in geojson.get('features')[0].get('properties').iteritems():
+        if k not in exclude_keys:
+            result.append({'value': k, 'text': k})
+    return result
+
+
 # Returns the total number of feedbacks for given type
 def resource_feedback_count(type, resource, dataset):
     context = _get_context()

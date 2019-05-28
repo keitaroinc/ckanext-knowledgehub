@@ -44,7 +44,15 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
       this.initLeaflet.call(this);
       this.mapResource = this.el.parent().parent().find('#map_resource');
+      this.mapKeyField = this.el.parent().parent().find('#map_key_field');
+      this.dataKeyField = this.el.parent().parent().find('#data_key_field');
+      this.dataValueField = this.el.parent().parent().find('#data_value_field');
+
+
       this.mapResource.change(this.onResourceChange.bind(this));
+      this.mapKeyField.change(this.onPropertyChange.bind(this));
+      this.dataKeyField.change(this.onPropertyChange.bind(this));
+      this.dataValueField.change(this.onPropertyChange.bind(this));
 
       $('.leaflet-control-zoom-in').css({
         'color': '#0072bc'
@@ -56,8 +64,57 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
     onResourceChange: function() {
 
+      this.options.map_key_field = this.mapKeyField.val();
+      this.options.data_key_field = this.dataKeyField.val();
+      this.options.data_value_field = this.dataValueField.val();
+
       if (this.options.map_resource != this.mapResource.val() && this.mapResource.val() != '') {
+        this.options.map_resource = this.mapResource.val();
+
+        api.get('knowledgehub_get_geojson_properties', {
+            map_resource: this.options.map_resource
+          })
+          .done(function(data) {
+            if (data.success) {
+
+              this.mapKeyField.find('option').not(':first').remove();
+
+              $.each(data.result, function(idx, elem) {
+                this.mapKeyField.append(new Option(elem.text, elem.value));
+              }.bind(this));
+
+              this.resetMap.call(this);
+            } else {
+              this.resetMap.call(this);
+            }
+          }.bind(this))
+          .fail(function(error) {
+            ckan.notify(this._('An error occurred! Failed to load map information.'));
+            this.resetMap.call(this);
+          }.bind(this));
+      } else {
         this.resetMap.call(this);
+      }
+    },
+
+    onPropertyChange: function() {
+
+      this.options.map_resource = this.mapResource.val();
+      this.options.map_key_field = this.mapKeyField.val();
+      this.options.data_key_field = this.dataKeyField.val();
+      this.options.data_value_field = this.dataValueField.val();
+
+      if (this.options.map_key_field && this.options.data_key_field &&
+        this.options.map_resource && this.options.data_value_field) {
+
+        if (this.legend) {
+          this.map.removeControl(this.legend);
+        }
+        this.map.eachLayer(function(layer) {
+          if (layer != this.osm) {
+            this.map.removeLayer(layer);
+          }
+        }.bind(this));
         this.initializeMarkers.call(this, this.options.map_resource);
       } else {
         this.resetMap.call(this);
