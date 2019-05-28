@@ -488,17 +488,17 @@ ckan.module('chart', function () {
 
             // Generate chart
             var chart = c3.generate(options);
-            var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-            svgimg.setAttributeNS(null, 'height', '70');
-            svgimg.setAttributeNS(null, 'width', '270');
-            svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
-            svgimg.setAttributeNS(null, 'x', '0');
-            svgimg.setAttributeNS(null, 'y', '0');
-            svgimg.setAttributeNS(null, 'visibility', 'visible');
-           
-            var svgElement = $('.item-content').find('svg')[0];
-            $(svgElement).append(svgimg);
-
+            if(window.location.pathname !== "/dataset"){
+                var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                svgimg.setAttributeNS(null, 'height', '70');
+                svgimg.setAttributeNS(null, 'width', '270');
+                svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
+                svgimg.setAttributeNS(null, 'x', '0');
+                svgimg.setAttributeNS(null, 'y', '0');
+                svgimg.setAttributeNS(null, 'visibility', 'visible');
+                var svgElement = $('.item-content').find('svg')[0];
+                $(svgElement).append(svgimg);
+            }
         },
         // Get the values from dropdowns and rerender the chart.
         updateChart: function () {
@@ -606,6 +606,7 @@ ckan.module('chart', function () {
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
+            if(window.location.pathname !== "/dataset"){
             var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             svgimg.setAttributeNS(null, 'height', '70');
             svgimg.setAttributeNS(null, 'width', '270');
@@ -613,9 +614,9 @@ ckan.module('chart', function () {
             svgimg.setAttributeNS(null, 'x', '0');
             svgimg.setAttributeNS(null, 'y', '0');
             svgimg.setAttributeNS(null, 'visibility', 'visible');
-           
             var svgElement = $('.item-content').find('svg')[0];
             $(svgElement).append(svgimg);
+            }
         },
 
         // Delete the current chart
