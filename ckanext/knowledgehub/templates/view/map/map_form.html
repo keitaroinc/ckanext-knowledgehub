@@ -66,6 +66,31 @@
             </div>
           </div>
 
+          {% set columns = h.get_resource_columns(res['id'], []) %}
+          <div class="control-group control-select">
+            <label class="control-label" for="data_key_field">{{ _('Data key field') }}</label>
+            <div class="controls ">
+              <select id="data_key_field" name="data_key_field" required=required>
+                <option value="">&mdash; {{ _('Select data key field') }} &mdash;</option>
+                {% for column in columns %}
+                <option value="{{column}}"{% if map %}{{ 'selected' if column == map.data_key_field }}{% endif %}>{{column}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="control-group control-select">
+            <label class="control-label" for="data_value_field">{{ _('Data value field') }}</label>
+            <div class="controls ">
+              <select id="data_value_field" name="data_value_field" required=required>
+                <option value="">&mdash; {{ _('Select data value field') }} &mdash;</option>
+                {% for column in columns %}
+                <option value="{{column}}"{% if map %}{{ 'selected' if column == map.data_value_field }}{% endif %}>{{column}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
           </div>
         </div>
       </div>
@@ -87,12 +112,18 @@
    {% if map %}
     {% set map_resource=map.map_resource %}
     {% set map_key_field=map.map_key_field %}
+    {% set data_key_field=map.data_key_field %}
+    {% set data_value_field=map.data_value_field %}
+    {% set sql_string=map.sql_string %}
   {% endif %}
   {% set map_config = h.knowledgehub_get_map_config() %}
   {% snippet 'ajax_snippets/map_module.html',
     map_config=map_config,
     map_resource=map_resource,
-    map_key_field=map_key_field
+    map_key_field=map_key_field,
+    data_key_field=data_key_field,
+    data_value_field=data_value_field,
+    sql_string=sql_string
   %}
 
 </div>

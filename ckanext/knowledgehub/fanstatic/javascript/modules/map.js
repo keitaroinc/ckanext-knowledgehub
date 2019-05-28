@@ -64,6 +64,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
     onResourceChange: function() {
 
+      this.mapKeyField.find('option').not(':first').remove();
       this.options.map_key_field = this.mapKeyField.val();
       this.options.data_key_field = this.dataKeyField.val();
       this.options.data_value_field = this.dataValueField.val();
@@ -76,8 +77,6 @@ ckan.module('knowledgehub-map', function(jQuery) {
           })
           .done(function(data) {
             if (data.success) {
-
-              this.mapKeyField.find('option').not(':first').remove();
 
               $.each(data.result, function(idx, elem) {
                 this.mapKeyField.append(new Option(elem.text, elem.value));
