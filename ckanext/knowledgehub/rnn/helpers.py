@@ -4,7 +4,6 @@ import os
 import heapq
 import numpy as np
 import tensorflow as tf
-from keras import backend as K
 from keras.models import load_model
 
 from ckan.plugins import toolkit
@@ -115,6 +114,3 @@ def predict_completions(text):
     except Exception as e:
         log.debug('Error while prediction: %s' % str(e))
         return []
-    finally:
-        # always clean previous session
-        K.clear_session()
