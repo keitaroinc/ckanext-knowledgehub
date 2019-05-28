@@ -26,16 +26,16 @@ Options:
 
 */
 'use strict';
-ckan.module('chart', function() {
+ckan.module('chart', function () {
     var api = {
-        get: function(action, params) {
+        get: function (action, params) {
             var api_ver = 3;
             var base_url = ckan.sandbox().client.endpoint;
             params = $.param(params);
             var url = base_url + '/api/' + api_ver + '/action/' + action + '?' + params;
             return $.getJSON(url);
         },
-        post: function(action, data) {
+        post: function (action, data) {
             var api_ver = 3;
             var base_url = ckan.sandbox().client.endpoint;
             var url = base_url + '/api/' + api_ver + '/action/' + action;
@@ -44,7 +44,7 @@ ckan.module('chart', function() {
     };
 
     return {
-        initialize: function() {
+        initialize: function () {
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
@@ -65,20 +65,20 @@ ckan.module('chart', function() {
             this.sandbox.subscribe('querytool:updateCharts', this.updateChart.bind(this));
         },
         // Enhance the SQL query with grouping and only select 2 columns.
-        create_sql: function() {
+        create_sql: function () {
             var sqlString = $('#sql-string').val() ? $('#sql-string').val() : this.options.sql_string;
 
             var parsedSqlString = sqlString.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
             // We need to encode some characters, eg, '+' sign:
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
-            
+
             var sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
 
             return sql
         },
         // Get the data from Datastore.
-        get_resource_datа: function(sql) {
+        get_resource_datа: function (sql) {
             var category = (this.options.category_name === true) ? '' : this.options.category_name;
             var x_axis = (this.options.x_axis === true) ? '' : this.options.x_axis;
             var y_axis = (this.options.y_axis === true) ? '' : this.options.y_axis;
@@ -101,59 +101,59 @@ ckan.module('chart', function() {
                         resource_id: resource_id,
                         filters: JSON.stringify(filters)
                     })
-                    .done(function(data) {
-                        if (data.success) {
-                            this.fetched_data = data.result;
+                        .done(function (data) {
+                            if (data.success) {
+                                this.fetched_data = data.result;
 
-                            // Reset all metrics
-                            this.y_axis_max = null;
-                            this.y_axis_avg = null;
-                            this.y_axis_min = null;
-                            this.dynamic_reference_value = null;
+                                // Reset all metrics
+                                this.y_axis_max = null;
+                                this.y_axis_avg = null;
+                                this.y_axis_min = null;
+                                this.dynamic_reference_value = null;
 
-                            // Get max/avg/min
-                            if (category) {
-                                this.y_axis_max = this.fetched_data.y_axis_max;
-                                this.y_axis_avg = this.fetched_data.y_axis_avg;
-                                this.y_axis_min = this.fetched_data.y_axis_min;
-                                delete this.fetched_data.y_axis_max;
-                                delete this.fetched_data.y_axis_avg;
-                                delete this.fetched_data.y_axis_min;
+                                // Get max/avg/min
+                                if (category) {
+                                    this.y_axis_max = this.fetched_data.y_axis_max;
+                                    this.y_axis_avg = this.fetched_data.y_axis_avg;
+                                    this.y_axis_min = this.fetched_data.y_axis_min;
+                                    delete this.fetched_data.y_axis_max;
+                                    delete this.fetched_data.y_axis_avg;
+                                    delete this.fetched_data.y_axis_min;
+                                } else {
+                                    var values = [];
+                                    for (var row of this.fetched_data) {
+                                        // Values from server are strings..
+                                        values.push(+row[y_axis.toString().toLowerCase()]);
+                                    }
+                                    this.y_axis_max = Math.max.apply(null, values);
+                                    this.y_axis_avg = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
+                                    this.y_axis_min = Math.min.apply(null, values);
+                                }
+
+                                // Dynamic reference
+                                if (dynamic_reference_type) {
+                                    if (dynamic_reference_type === 'Maximum') {
+                                        this.dynamic_reference_value = this.y_axis_max;
+                                    } else if (dynamic_reference_type === 'Average') {
+                                        this.dynamic_reference_value = this.y_axis_avg;
+                                    } else if (dynamic_reference_type === 'Minimum') {
+                                        this.dynamic_reference_value = this.y_axis_min;
+                                    }
+                                    if (dynamic_reference_factor !== '') {
+                                        this.dynamic_reference_value = this.dynamic_reference_value * dynamic_reference_factor;
+                                    }
+                                }
+                                this.createChart(this.fetched_data);
                             } else {
-                                var values = [];
-                                for (var row of this.fetched_data) {
-                                    // Values from server are strings..
-                                    values.push(+row[y_axis.toString().toLowerCase()]);
-                                }
-                                this.y_axis_max = Math.max.apply(null, values);
-                                this.y_axis_avg = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
-                                this.y_axis_min = Math.min.apply(null, values);
+                                this.el.text(this._('Chart could not be created!'));
                             }
-
-                            // Dynamic reference
-                            if (dynamic_reference_type) {
-                                if (dynamic_reference_type === 'Maximum') {
-                                    this.dynamic_reference_value = this.y_axis_max;
-                                } else if (dynamic_reference_type === 'Average') {
-                                    this.dynamic_reference_value = this.y_axis_avg;
-                                } else if (dynamic_reference_type === 'Minimum') {
-                                    this.dynamic_reference_value = this.y_axis_min;
-                                }
-                                if (dynamic_reference_factor !== '') {
-                                    this.dynamic_reference_value = this.dynamic_reference_value * dynamic_reference_factor;
-                                }
-                            }
-                            this.createChart(this.fetched_data);
-                        } else {
-                            this.el.text(this._('Chart could not be created!'));
-                        }
-                    }.bind(this));
+                        }.bind(this));
                 }
             } else {
                 this.el.text(this._('Please choose X and Y axis dimensions and press Update!'));
             }
         },
-        createChart: function(data) {
+        createChart: function (data) {
             var x_axis = this.options.x_axis.toString().toLowerCase();
             var y_axis = this.options.y_axis.toString().toLowerCase();
             var records = data;
@@ -172,7 +172,7 @@ ckan.module('chart', function() {
             var dynamic_reference_label = (this.options.dynamic_reference_label === true) ? '' : this.options.dynamic_reference_label;
             var values;
             var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
-            
+
             // Base options
             var options = {
                 bindto: this.el[0],
@@ -181,14 +181,14 @@ ckan.module('chart', function() {
                 },
                 padding: {
                     right: 50,
-                    bottom:14
+                    bottom: 14
                 }
             };
 
             // Title
             var titleVal = (this.options.title === true) ? '' : this.options.title;
             titleVal = this.renderChartTitle(titleVal, {
-                measure: {name: y_axis, alias: measure_label},
+                measure: { name: y_axis, alias: measure_label },
                 filters: [],
                 optionalFilter: undefined,
             });
@@ -199,7 +199,7 @@ ckan.module('chart', function() {
                     left: 0,
                     right: 0,
                     bottom: 15,
-                    top:0
+                    top: 40
                 }
             }
             options.legend = {
@@ -214,23 +214,23 @@ ckan.module('chart', function() {
 
             // Sort data
             var sBarOrder = data_sort;
-            if((this.options.chart_type !== 'sbar' ||
-              this.options.chart_type !== 'shbar') && !additionalCategory){
-              this.sortData(data_sort, records, y_axis, x_axis);
+            if ((this.options.chart_type !== 'sbar' ||
+                this.options.chart_type !== 'shbar') && !additionalCategory) {
+                this.sortData(data_sort, records, y_axis, x_axis);
             }
 
             // Legend/tooltip
-            options.legend = {show: show_legend}
-            options.tooltip = {format: {}}
+            options.legend = { show: show_legend }
+            options.tooltip = { format: {} }
             if (tooltip_name !== true && tooltip_name !== '') {
-                options.tooltip.format['title'] = function(d) {
+                options.tooltip.format['title'] = function (d) {
                     if (options.data.type === 'donut' || options.data.type === 'pie') {
                         return tooltip_name;
                     }
                     return tooltip_name + ' ' + d;
                 }
             }
-            options.tooltip.format['value'] = function(value, ratio, id) {
+            options.tooltip.format['value'] = function (value, ratio, id) {
                 var dataf = this.sortFormatData(data_format, value);
                 return dataf;
             }.bind(this);
@@ -238,7 +238,7 @@ ckan.module('chart', function() {
             // Chart types
             if (this.options.chart_type === 'donut' ||
                 this.options.chart_type === 'pie') {
-                values = records.map(function(item) {
+                values = records.map(function (item) {
                     return [item[x_axis], item[y_axis]]
                 });
                 options.data = {
@@ -254,7 +254,7 @@ ckan.module('chart', function() {
                     // On horizontal bar the x axis is now actually the y axis
                     yrotate = x_text_rotate;
                 }
-                values = records.map(function(item) {
+                values = records.map(function (item) {
                     return [item[x_axis], item[y_axis]]
                 });
                 options.data = {
@@ -262,7 +262,7 @@ ckan.module('chart', function() {
                     type: 'bar',
                     order: sBarOrder
                 };
-                var groups = values.map(function(item) {
+                var groups = values.map(function (item) {
                     return item[0];
                 });
                 options.data.groups = [groups];
@@ -272,7 +272,7 @@ ckan.module('chart', function() {
                     y: {
                         tick: {
                             count: tick_count,
-                            format: function(value) {
+                            format: function (value) {
                                 var dataf = this.sortFormatData(y_tick_format, value);
                                 return dataf;
                             }.bind(this),
@@ -302,10 +302,10 @@ ckan.module('chart', function() {
                     yrotate = x_text_rotate;
 
                     //Resolving bug of bars with 2 columns
-                    if(records.length==2){
+                    if (records.length == 2) {
                         options.padding = {
-                        left:110
-                      }
+                            left: 110
+                        }
                     }
                 }
                 if (this.options.chart_type === 'bscatter') {
@@ -313,7 +313,7 @@ ckan.module('chart', function() {
                     var rs = d3.scale.log().base(10).domain([1, 1000]).range([0, 10]);
                     ctype = 'scatter';
                     options.point = {
-                        r: function(d) {
+                        r: function (d) {
                             var num = d.value;
                             return rs(num)
                         },
@@ -331,7 +331,7 @@ ckan.module('chart', function() {
                 if (additionalCategory) {
 
                     var orderedRecords = {};
-                    Object.keys(records).sort().forEach(function(key) {
+                    Object.keys(records).sort().forEach(function (key) {
                         orderedRecords[key] = records[key];
                     });
 
@@ -346,11 +346,11 @@ ckan.module('chart', function() {
                         labels: show_labels
                     };
                 } else {
-                    columns = records.map(function(item) {
+                    columns = records.map(function (item) {
                         return Number(item[y_axis]);
                     });
 
-                    var categories = records.map(function(item) {
+                    var categories = records.map(function (item) {
                         return item[x_axis];
                     });
 
@@ -366,7 +366,7 @@ ckan.module('chart', function() {
 
                 if (show_labels) {
                     options.data['labels'] = {
-                        format: function(value) {
+                        format: function (value) {
                             var dataf = this.sortFormatData(data_format, value);
                             return dataf;
                         }.bind(this),
@@ -379,7 +379,7 @@ ckan.module('chart', function() {
                         y: {
                             tick: {
                                 count: tick_count,
-                                format: function(value) {
+                                format: function (value) {
                                     var dataf = this.sortFormatData(y_tick_format, value);
                                     return dataf;
                                 }.bind(this),
@@ -390,8 +390,8 @@ ckan.module('chart', function() {
                                 bottom: 50,
                             },
                             label: {
-                              text: y_label_text,
-                              position: 'outer-middle',
+                                text: y_label_text,
+                                position: 'outer-middle',
                             }
                         },
                         x: {
@@ -407,47 +407,47 @@ ckan.module('chart', function() {
                         rotated: rotate,
                     };
                 } else {
-                  //no Tick count on x-axis for bar
-                  options.axis = {
-                      y: {
-                          tick: {
-                              count: tick_count,
-                              format: function(value) {
-                                  var dataf = this.sortFormatData(y_tick_format, value);
-                                  return dataf;
-                              }.bind(this),
-                              rotate: yrotate
-                          },
-                          padding: {
-                              top: 50,
-                              bottom: 50,
-                          },
-                          label: {
-                            text: y_label_text,
-                            position: 'outer-middle',
-                          }
-                      },
-                      x: {
-                          type: 'category',
-                          categories: categories,
-                          tick: {
-                              rotate: x_text_rotate,
-                              multiline: x_text_multiline,
-                              multilineMax: 3
-                          }
-                      },
-                      rotated: rotate,
-                  };
+                    //no Tick count on x-axis for bar
+                    options.axis = {
+                        y: {
+                            tick: {
+                                count: tick_count,
+                                format: function (value) {
+                                    var dataf = this.sortFormatData(y_tick_format, value);
+                                    return dataf;
+                                }.bind(this),
+                                rotate: yrotate
+                            },
+                            padding: {
+                                top: 50,
+                                bottom: 40,
+                            },
+                            label: {
+                                text: y_label_text,
+                                position: 'outer-middle',
+                            }
+                        },
+                        x: {
+                            type: 'category',
+                            categories: categories,
+                            tick: {
+                                rotate: x_text_rotate,
+                                multiline: x_text_multiline,
+                                multilineMax: 3
+                            }
+                        },
+                        rotated: rotate,
+                    };
 
                 }
                 options.point = {
-                  r: 3,
+                    r: 3,
                 }
             }
 
             // Reference lines
             if (!['sbar', 'shbar', 'donut', 'pie'].includes(this.options.chart_type)) {
-                options.grid = {y: {lines: []}};
+                options.grid = { y: { lines: [] } };
 
                 // Dynamic
                 if (this.dynamic_reference_value) {
@@ -468,9 +468,9 @@ ckan.module('chart', function() {
 
                 // Y axis range
                 if (this.dynamic_reference_value) {
-                    options.axis.y.min = Math.min.apply(null, [this.dynamic_reference_value, this.y_axis_min].filter(function (value) {return !isNaN(value);}));
-                    options.axis.y.max = Math.max.apply(null, [this.dynamic_reference_value, this.y_axis_max].filter(function (value) {return !isNaN(value);}));
-                    options.axis.y.padding = {bottom: 50, top: 50};
+                    options.axis.y.min = Math.min.apply(null, [this.dynamic_reference_value, this.y_axis_min].filter(function (value) { return !isNaN(value); }));
+                    options.axis.y.max = Math.max.apply(null, [this.dynamic_reference_value, this.y_axis_max].filter(function (value) { return !isNaN(value); }));
+                    options.axis.y.padding = { bottom: 50, top: 50 };
                     if (['bar', 'hbar'].includes(this.options.chart_type)) {
                         options.axis.y.padding.bottom = 0;
                     }
@@ -479,18 +479,29 @@ ckan.module('chart', function() {
 
             // Y-axis from zero
             if (['line', 'area', 'area-spline', 'spline', 'scatter', 'bscatter'].includes(this.options.chart_type)) {
-              if (y_from_zero) {
-                options.axis.y.min = 0;
-                options.axis.y.padding = options.axis.y.padding || {};
-                options.axis.y.padding.bottom = 0;
-              }
+                if (y_from_zero) {
+                    options.axis.y.min = 0;
+                    options.axis.y.padding = options.axis.y.padding || {};
+                    options.axis.y.padding.bottom = 0;
+                }
             }
 
             // Generate chart
             var chart = c3.generate(options);
+            var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+            svgimg.setAttributeNS(null, 'height', '70');
+            svgimg.setAttributeNS(null, 'width', '270');
+            svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
+            svgimg.setAttributeNS(null, 'x', '0');
+            svgimg.setAttributeNS(null, 'y', '0');
+            svgimg.setAttributeNS(null, 'visibility', 'visible');
+           
+            var svgElement = $('.item-content').find('svg')[0];
+            $(svgElement).append(svgimg);
+
         },
         // Get the values from dropdowns and rerender the chart.
-        updateChart: function() {
+        updateChart: function () {
             var chartField = $('.chart_field');
 
             var chartTypeSelect = chartField.find('[name*=chart_field_type]');
@@ -507,9 +518,9 @@ ckan.module('chart', function() {
 
             var axisXSelect = chartField.find('[name*=chart_field_x_axis_column]');
             var axisXValue = axisXSelect.val();
-           
+
             var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
-            var axisYValue = axisYSelect.val();            
+            var axisYValue = axisYSelect.val();
 
             var categoryName = chartField.find('[name*=chart_field_category_name]');
             var categoryNameVal = categoryName.val();
@@ -549,7 +560,7 @@ ckan.module('chart', function() {
 
             var dataLabels = chartField.find('input[name*=chart_field_labels]');
             var dataLabelsVal = dataLabels.is(':checked');
-            
+
             var yLabbel = chartField.find('input[name*=chart_field_y_label]');
             var yLabbelVal = yLabbel.val();
 
@@ -564,14 +575,14 @@ ckan.module('chart', function() {
 
             var dynamicReferenceLabel = chartField.find('input[name*=chart_field_dynamic_reference_label]');
             var dynamicReferenceLabelVal = dynamicReferenceLabel.val();
-            
+
             var measureLabelVal = $('#chart_field_y_axis_column option:selected').text();
-            
+
             this.options.colors = colorValue;
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
             this.options.y_axis = axisYValue;
-            this.options.title = chartTitleVal;
+            //this.options.title = chartTitleVal;
             this.options.show_legend = legendVal;
             this.options.x_text_rotate = xTextRotateVal;
             this.options.x_text_multiline = xTextMultilineVal;
@@ -595,51 +606,62 @@ ckan.module('chart', function() {
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
+            var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+            svgimg.setAttributeNS(null, 'height', '70');
+            svgimg.setAttributeNS(null, 'width', '270');
+            svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
+            svgimg.setAttributeNS(null, 'x', '0');
+            svgimg.setAttributeNS(null, 'y', '0');
+            svgimg.setAttributeNS(null, 'visibility', 'visible');
+           
+            var svgElement = $('.item-content').find('svg')[0];
+            $(svgElement).append(svgimg);
         },
 
         // Delete the current chart
-        deleteChart: function() {
+        deleteChart: function () {
             $('.chart_field').remove();
         },
 
-        teardown: function() {
+        teardown: function () {
             // We must always unsubscribe on teardown to prevent memory leaks.
             this.sandbox.unsubscribe('querytool:updateCharts', this.updateChart.bind(this));
         },
 
-        getFilters: function() {
+        getFilters: function () {
             var filter_items = $('#data-transformation-module').find('.filter_item');
             var filters = [];
             var operator = '';
             var name = '';
             var value = '';
 
-            $.each(filter_items, function(idx, elem) {
+            $.each(filter_items, function (idx, elem) {
 
-              operator = $(elem).find('input[name*=data_filter_operator_]:checked').val();
-              name = $(elem).find('[id*=data_filter_name_]').select2('val');
-              value = $(elem).find('[id*=data_filter_value_]').select2('val');
-              filters.push({
-                'operator': operator,
-                'name': name,
-                'value': value
-              });
+                operator = $(elem).find('input[name*=data_filter_operator_]:checked').val();
+                name = $(elem).find('[id*=data_filter_name_]').select2('val');
+                value = $(elem).find('[id*=data_filter_value_]').select2('val');
+                filters.push({
+                    'operator': operator,
+                    'name': name,
+                    'value': value
+                });
             });
+
             return filters;
         },
 
-        sortData: function(data_sort, records, y_axis, x_axis) {
+        sortData: function (data_sort, records, y_axis, x_axis) {
             if (data_sort === 'asc') {
-                records.sort(function(a, b) {
+                records.sort(function (a, b) {
                     return a[y_axis] - b[y_axis]
                 });
             } else if (data_sort === 'desc') {
-                records.sort(function(a, b) {
+                records.sort(function (a, b) {
                     return a[y_axis] - b[y_axis]
                 });
                 records.reverse();
             } else {
-                records.sort(function(a, b) {
+                records.sort(function (a, b) {
                     var x = a[x_axis];
                     var y = b[x_axis];
                     if (!isNaN(x)) {
@@ -656,7 +678,7 @@ ckan.module('chart', function() {
         },
 
         // Format number
-        sortFormatData: function(dataf, val) {
+        sortFormatData: function (dataf, val) {
             var digits = 0;
             var format = '';
             // Currency
@@ -665,12 +687,12 @@ ckan.module('chart', function() {
                 // $ 2,512.34 instead of $2512.3456
                 digits = this.countDecimals(val, 2);
                 format = d3.format('$,.' + digits + 'f');
-            // Rounded
+                // Rounded
             } else if (dataf === 's') {
                 // Limit the number of decimals to one: 2.5K instead of 2.5123456K
-                val = Math.round(val*10) / 10;
+                val = Math.round(val * 10) / 10;
                 format = d3.format(dataf);
-            // Others
+                // Others
             } else {
                 format = d3.format(dataf);
             }
@@ -679,25 +701,25 @@ ckan.module('chart', function() {
 
         // Count format decimals limited by "max"
         countDecimals: function (val, max) {
-            return Math.min(val*10 % 1 ? 2 : val % 1 ? 1 : 0, max);
+            return Math.min(val * 10 % 1 ? 2 : val % 1 ? 1 : 0, max);
         },
 
         // Render dynamic chart titles
         renderChartTitle: function (title, options) {
 
             // Configure nunjucks
-            var env = nunjucks.configure({tags: {variableStart: '{', variableEnd: '}'}});
+            var env = nunjucks.configure({ tags: { variableStart: '{', variableEnd: '}' } });
 
             // Prepare data
-            var data = {measure: options.measure.alias};
+            var data = { measure: options.measure.alias };
             for (let filter of options.filters) data[filter.slug] = filter.value;
             if (options.optionalFilter) data.optional_filter = options.optionalFilter.value;
 
             // Render and return
             try {
-                    return env.renderString(title, data);
+                return env.renderString(title, data);
             } catch (error) {
-                    return title;
+                return title;
             }
         },
     }
