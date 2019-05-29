@@ -79,13 +79,14 @@
             </div>
           </div>
 
+          {% set value_fields = h.get_resource_numeric_columns(res['id']) %}
           <div class="control-group control-select">
             <label class="control-label" for="data_value_field">{{ _('Data value field') }}</label>
             <div class="controls ">
               <select id="data_value_field" name="data_value_field" required=required>
                 <option value="">&mdash; {{ _('Select data value field') }} &mdash;</option>
-                {% for column in columns %}
-                <option value="{{column}}"{% if map %}{{ 'selected' if column == map.data_value_field }}{% endif %}>{{column}}</option>
+                {% for field in value_fields %}
+                <option value="{{field}}"{% if map %}{{ 'selected' if field == map.data_value_field }}{% endif %}>{{field}}</option>
                 {% endfor %}
               </select>
             </div>
