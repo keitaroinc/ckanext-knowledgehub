@@ -649,8 +649,3 @@ def get_kwh_data():
             corpus += ' %s' % entry.get('content')
 
     return corpus
-
-
-def predict_completions(text):
-    print text
-    print rnn_helpers.predict_completions(text)
