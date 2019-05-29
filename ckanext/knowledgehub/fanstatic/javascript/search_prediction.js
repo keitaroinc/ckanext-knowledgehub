@@ -61,7 +61,6 @@
                     // detect that user has stopped typing for a while
                     timer = setTimeout(function() {
                         var text = $('#field-giant-search').val();
-                        console.log('User input: ' + text)
 
                         if (text !== '') {
                             api.get('get_predictions', {
@@ -75,7 +74,7 @@
                                     a = document.createElement("DIV");
                                     a.setAttribute("id", "autocomplete-list");
                                     a.setAttribute("class", "autocomplete-items");
-                                    $('#field-giant-search').append(a);
+                                    $('#field-giant-search').after(a);
 
                                     var results = data.result;
                                     results.forEach(function (r) {
@@ -103,7 +102,6 @@
     });
 
     $('#field-giant-search').on('keydown', function (e) {
-        console.log(e.keyCode)
         var x = document.getElementById("autocomplete-list");
         if (x) x = x.getElementsByTagName("div");
         if (e.keyCode == 40) {
