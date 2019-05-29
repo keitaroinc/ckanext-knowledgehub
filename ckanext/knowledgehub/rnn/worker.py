@@ -42,7 +42,7 @@ def learn():
         return
 
     sequence_length = int(
-        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 15)
+        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10)
     )
     if len(data) <= sequence_length:
         return

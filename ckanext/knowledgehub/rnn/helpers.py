@@ -24,7 +24,7 @@ def prepare_rnn_corpus(corpus):
 
 def prepare_input(text, unique_chars, char_indices):
     sequence_length = int(
-        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 15)
+        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10)
     )
     x = np.zeros((1, sequence_length, len(unique_chars)))
     for t, char in enumerate(text):
@@ -77,7 +77,7 @@ def predict_completions(text):
         return []
 
     sequence_length = int(
-        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 15)
+        config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10)
     )
     if sequence_length > len(text):
         return []
