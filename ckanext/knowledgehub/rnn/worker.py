@@ -1,6 +1,7 @@
 import os
 import logging
 import pickle
+import time
 
 import numpy as np
 import tensorflow as tf
@@ -40,12 +41,18 @@ def learn():
         config.get(u'ckanext.knowledgehub.rnn.min_length_corpus', 300)
     )
     if min_length_corpus > len(data):
+        log.info(
+            'The minimum length of the corpus is %s, current corpus has %d'
+            % (min_length_corpus, len(data)))
         return
 
     sequence_length = int(
         config.get(u'ckanext.knowledgehub.rnn.sequence_length', 10)
     )
     if len(data) <= sequence_length:
+        log.info(
+            'The length of the RNN sequence %d, given %d'
+            % (sequence_length, len(data)))
         return
 
     step = int(config.get(u'ckanext.knowledgehub.rnn.sentence_step', 3))
