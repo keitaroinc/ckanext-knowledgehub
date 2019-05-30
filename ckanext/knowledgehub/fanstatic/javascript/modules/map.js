@@ -21,6 +21,10 @@ ckan.module('knowledgehub-map', function(jQuery) {
   //  L.topoJson = function(data, options) {
   //    return new L.TopoJSON(data, options);
   //  };
+  String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.split(search).join(replacement);
+  };
 
   var api = {
     get: function(action, params) {
@@ -228,27 +232,27 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
       this.legend.addTo(this.map);
     },
-//    createInfo: function() {
-//      var options = this.options;
-//      var self = this;
-//
-//      this.info = L.control();
-//
-//      this.info.onAdd = function(map) {
-//        this._div = L.DomUtil.create('div', 'map-info'); // create a information div
-//        this.update();
-//        return this._div;
-//      };
-//
-//      // method that we will use to update the control based on feature properties passed
-//      this.info.update = function(infoData) {
-//        this._div.innerHTML = '<h4></h4>' + (infoData ?
-//          options.map_title_field + ': ' + '<b>' + infoData.title + '</b><br/>' +
-//          options.measure_label + ': ' + '<b>' + infoData.measure + '</b>' : '');
-//      };
-//
-//      this.info.addTo(this.map);
-//    },
+    //    createInfo: function() {
+    //      var options = this.options;
+    //      var self = this;
+    //
+    //      this.info = L.control();
+    //
+    //      this.info.onAdd = function(map) {
+    //        this._div = L.DomUtil.create('div', 'map-info'); // create a information div
+    //        this.update();
+    //        return this._div;
+    //      };
+    //
+    //      // method that we will use to update the control based on feature properties passed
+    //      this.info.update = function(infoData) {
+    //        this._div.innerHTML = '<h4></h4>' + (infoData ?
+    //          options.map_title_field + ': ' + '<b>' + infoData.title + '</b><br/>' +
+    //          options.measure_label + ': ' + '<b>' + infoData.measure + '</b>' : '');
+    //      };
+    //
+    //      this.info.addTo(this.map);
+    //    },
 
 
     initializeMarkers: function(mapURL) {
@@ -256,8 +260,14 @@ ckan.module('knowledgehub-map', function(jQuery) {
       var sqlString = $('#sql-string').val() ? $('#sql-string').val() : this.options.sql_string;
       var parsedSqlString = sqlString.split('*');
       var sqlStringExceptSelect = parsedSqlString[1];
-      // We need to encode some characters, eg, '+' sign:
-      sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
+      // We need to encode some characters, eg, '=' sign:
+      sqlStringExceptSelect = sqlStringExceptSelect.replaceAll('=', '%3D');
+
+      console.log(mapURL);
+      console.log(this.options.map_key_field);
+      console.log(this.options.data_key_field);
+      console.log(this.options.data_value_field);
+      console.log(sqlStringExceptSelect);
 
       api.post('knowledgehub_get_map_data', {
           geojson_url: mapURL,
@@ -265,7 +275,6 @@ ckan.module('knowledgehub-map', function(jQuery) {
           data_key_field: this.options.data_key_field,
           data_value_field: this.options.data_value_field,
           from_where_clause: sqlStringExceptSelect
-
         })
         .done(function(data) {
           if (data.success) {
@@ -273,7 +282,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
             var geoJSON = data.result['geojson_data'];
             this.featuresValues = data.result['features_values'];
 
-//          Workaround for generating color if data for only one region
+            //          Workaround for generating color if data for only one region
             var valuesKeys = Object.keys(this.featuresValues)
             var valuesLength = valuesKeys.length;
             var scale;
@@ -289,8 +298,8 @@ ckan.module('knowledgehub-map', function(jQuery) {
             } else {
               scale = this.createScale(this.featuresValues);
             }
-//             Create the info window
-//            this.createInfo.call(this);
+            //             Create the info window
+            //            this.createInfo.call(this);
             this.geoL = L.geoJSON(geoJSON, {
               style: function(feature) {
 
@@ -299,53 +308,53 @@ ckan.module('knowledgehub-map', function(jQuery) {
                   color = (value) ? scale(value) : '#737373';
 
                 return {
-                    fillColor: color,
-                    weight: 1,
-                    opacity: 1,
-                    color: color,
-                    dashArray: '3',
-                    fillOpacity: 0.7
+                  fillColor: color,
+                  weight: 1,
+                  opacity: 1,
+                  color: color,
+                  dashArray: '3',
+                  fillOpacity: 0.7
                 };
               }.bind(this),
-//              pointToLayer: function(fauture, latlng) {
-//                return L.marker(latlng, {
-//                  icon: smallIcon
-//                });
-//              },
-//              onEachFeature: function(feature, layer) {
-//                var elementData = this.featuresValues[feature.properties[this.options.map_key_field]];
-//
-//                if (elementData) {
-//
-//                  layer.on({
-//                    mouseover: function highlightFeature(e) {
-//                      var layer = e.target;
-//
-//                      layer.setStyle({
-//                        weight: 3,
-//                        color: '#737373',
-//                        dashArray: '3',
-//                        fillOpacity: 0.7
-//                      });
-//
-//                      if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-//                        layer.bringToFront();
-//                      }
-//
-//                      var infoData = {
-//                        title: feature.properties[this.options.map_title_field],
-//                        measure: this.formatNumber(parseFloat(elementData['value']))
-//                      };
-//
-//                      this.info.update(infoData);
-//                    }.bind(this),
-//                    mouseout: function resetHighlight(e) {
-//                      this.geoL.resetStyle(e.target);
-//                      this.info.update();
-//                    }.bind(this)
-//                  });
-//                }
-//              }.bind(this)
+              //              pointToLayer: function(fauture, latlng) {
+              //                return L.marker(latlng, {
+              //                  icon: smallIcon
+              //                });
+              //              },
+              //              onEachFeature: function(feature, layer) {
+              //                var elementData = this.featuresValues[feature.properties[this.options.map_key_field]];
+              //
+              //                if (elementData) {
+              //
+              //                  layer.on({
+              //                    mouseover: function highlightFeature(e) {
+              //                      var layer = e.target;
+              //
+              //                      layer.setStyle({
+              //                        weight: 3,
+              //                        color: '#737373',
+              //                        dashArray: '3',
+              //                        fillOpacity: 0.7
+              //                      });
+              //
+              //                      if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+              //                        layer.bringToFront();
+              //                      }
+              //
+              //                      var infoData = {
+              //                        title: feature.properties[this.options.map_title_field],
+              //                        measure: this.formatNumber(parseFloat(elementData['value']))
+              //                      };
+              //
+              //                      this.info.update(infoData);
+              //                    }.bind(this),
+              //                    mouseout: function resetHighlight(e) {
+              //                      this.geoL.resetStyle(e.target);
+              //                      this.info.update();
+              //                    }.bind(this)
+              //                  });
+              //                }
+              //              }.bind(this)
             }).addTo(this.map);
             // Create the legend
             this.createLegend.call(this);
@@ -363,81 +372,81 @@ ckan.module('knowledgehub-map', function(jQuery) {
     },
 
     //    initializeMarkers: function(mapURL) {
-//
-//          api.post('knowledgehub_get_map_data', {
-//              geojson_url: mapURL
-//            })
-//            .done(function(data) {
-//              if (data.success) {
-//                var geoJSON = data.result['geojson_data'];
-//
-//                // Create the info window
-//                this.createInfo.call(this);
-//
-//                this.geoL = L.topoJson(geoJSON, {
-//
-//                  style: function(feature) {
-//                    return {
-//                      color: '#EF4A60',
-//                      opacity: 0.5,
-//                      weight: 0.3,
-//                      fillColor: '#F37788',
-//                      fillOpacity: 0.5
-//                    }
-//                  },
-//                  onEachFeature: function(feature, layer) {
-//
-//                    if (feature.geometry.type === 'Point') {
-//
-//                      // Here we create the popups for the "Point" features
-//                      this._infoDiv = L.DomUtil.create('div', 'feature-properties');
-//
-//
-//                      this._infoDiv.innerHTML = '<h4></h4>';
-//                      $.each(feature.properties, function(idx, elem) {
-//                        this._infoDiv.innerHTML += '<b>' + idx + ': </b>' + elem + '<br/>';
-//                      }.bind(this));
-//
-//                      layer.bindPopup(this._infoDiv)
-//
-//                    } else {
-//                      // Here we create the style and info window for "Polygon" features
-//                      layer.on({
-//                        mouseover: function highlightFeature(e) {
-//                          var layer = e.target;
-//
-//                          layer.setStyle({
-//                            weight: 1.5,
-//                            color: '#404040',
-//                            dashArray: '3',
-//                            fillOpacity: 1
-//                          });
-//
-//                          if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-//                            layer.bringToFront();
-//                          }
-//                          this.info.update(feature.properties);
-//                        }.bind(this),
-//
-//                        mouseout: function resetHighlight(e) {
-//                          this.geoL.resetStyle(e.target);
-//                          this.info.update();
-//
-//                        }.bind(this)
-//                      });
-//                    }
-//                  }.bind(this)
-//                }).addTo(this.map);
-//                // Properly zoom the map to fit all markers/polygons
-//                this.map.fitBounds(this.geoL.getBounds());
-//              } else {
-//                this.resetMap.call(this);
-//              }
-//            }.bind(this))
-//            .fail(function(error) {
-//              ckan.notify(this._('An error occurred! Failed to load map information.'));
-//              this.resetMap.call(this);
-//            }.bind(this));
-//        }
+    //
+    //          api.post('knowledgehub_get_map_data', {
+    //              geojson_url: mapURL
+    //            })
+    //            .done(function(data) {
+    //              if (data.success) {
+    //                var geoJSON = data.result['geojson_data'];
+    //
+    //                // Create the info window
+    //                this.createInfo.call(this);
+    //
+    //                this.geoL = L.topoJson(geoJSON, {
+    //
+    //                  style: function(feature) {
+    //                    return {
+    //                      color: '#EF4A60',
+    //                      opacity: 0.5,
+    //                      weight: 0.3,
+    //                      fillColor: '#F37788',
+    //                      fillOpacity: 0.5
+    //                    }
+    //                  },
+    //                  onEachFeature: function(feature, layer) {
+    //
+    //                    if (feature.geometry.type === 'Point') {
+    //
+    //                      // Here we create the popups for the "Point" features
+    //                      this._infoDiv = L.DomUtil.create('div', 'feature-properties');
+    //
+    //
+    //                      this._infoDiv.innerHTML = '<h4></h4>';
+    //                      $.each(feature.properties, function(idx, elem) {
+    //                        this._infoDiv.innerHTML += '<b>' + idx + ': </b>' + elem + '<br/>';
+    //                      }.bind(this));
+    //
+    //                      layer.bindPopup(this._infoDiv)
+    //
+    //                    } else {
+    //                      // Here we create the style and info window for "Polygon" features
+    //                      layer.on({
+    //                        mouseover: function highlightFeature(e) {
+    //                          var layer = e.target;
+    //
+    //                          layer.setStyle({
+    //                            weight: 1.5,
+    //                            color: '#404040',
+    //                            dashArray: '3',
+    //                            fillOpacity: 1
+    //                          });
+    //
+    //                          if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+    //                            layer.bringToFront();
+    //                          }
+    //                          this.info.update(feature.properties);
+    //                        }.bind(this),
+    //
+    //                        mouseout: function resetHighlight(e) {
+    //                          this.geoL.resetStyle(e.target);
+    //                          this.info.update();
+    //
+    //                        }.bind(this)
+    //                      });
+    //                    }
+    //                  }.bind(this)
+    //                }).addTo(this.map);
+    //                // Properly zoom the map to fit all markers/polygons
+    //                this.map.fitBounds(this.geoL.getBounds());
+    //              } else {
+    //                this.resetMap.call(this);
+    //              }
+    //            }.bind(this))
+    //            .fail(function(error) {
+    //              ckan.notify(this._('An error occurred! Failed to load map information.'));
+    //              this.resetMap.call(this);
+    //            }.bind(this));
+    //        }
   };
 });
