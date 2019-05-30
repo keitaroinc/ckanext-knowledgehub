@@ -263,12 +263,6 @@ ckan.module('knowledgehub-map', function(jQuery) {
       // We need to encode some characters, eg, '=' sign:
       sqlStringExceptSelect = sqlStringExceptSelect.replaceAll('=', '%3D');
 
-      console.log(mapURL);
-      console.log(this.options.map_key_field);
-      console.log(this.options.data_key_field);
-      console.log(this.options.data_value_field);
-      console.log(sqlStringExceptSelect);
-
       api.post('knowledgehub_get_map_data', {
           geojson_url: mapURL,
           map_key_field: this.options.map_key_field,
