@@ -152,7 +152,7 @@ def learn():
 
         lock_model_path = '%s.lock' % model_path
         lock = FileLock(lock_model_path)
-        with lock.acquire(timeout=10):
+        with lock.acquire(timeout=1000):
             if os.path.exists(model_path):
                 os.remove(model_path)
             os.rename(train_module_path, model_path)
