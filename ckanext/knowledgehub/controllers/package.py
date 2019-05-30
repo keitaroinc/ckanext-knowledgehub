@@ -5,6 +5,7 @@ from six import string_types
 from paste.deploy.converters import asbool
 
 from ckan.controllers.package import PackageController
+from ckan.controllers.admin import get_sysadmins
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import c, request, OrderedDict, _
@@ -49,12 +50,17 @@ class KWHPackageController(PackageController):
         # Store search query in KWH data
         try:
             if q:
+                sysadmin = get_sysadmins()[0].name
+                kwh_data_context = {
+                    'user': sysadmin,
+                    'ignore_auth': True
+                }
                 kwh_data = {
                     'type': 'search',
                     'content': q
                 }
                 logic.get_action(u'kwh_data_create')(
-                    context, kwh_data
+                    kwh_data_context, kwh_data
                 )
         except Exception as e:
             log.debug('Error while storing KWH data: %s' % str(e))

@@ -414,7 +414,7 @@ def kwh_data_create(context, data_dict):
         :param type
         :param content
     '''
-    # check_access('kwh_data', context, data_dict)
+    check_access('kwh_data', context, data_dict)
 
     session = context['session']
 
