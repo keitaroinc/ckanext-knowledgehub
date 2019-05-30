@@ -52,10 +52,16 @@ pip install ckanext-knowledgehub
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
 
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
+5. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
 
 ```
 sudo service apache2 reload
+```
+
+6. Run the background job for predictive search periodically( daily or weekly is recommended ):
+
+```
+paster --plugin=ckan jobs worker predictive-search -c /etc/ckan/default/production.ini
 ```
 
 ### Config Settings
@@ -78,9 +84,9 @@ ckanext.knowledgehub.sub_themes_per_page = 20
 ckanext.knowledgehub.dashboards_per_page = 20
 ```
 4. Predictive Search
-     - Length of the seuqunce after which the model can start predict
+     - Length of the seuqunce after which the model can start predict, recommended at least 15 chars long
      ```
-     # (optional, default: 15)
+     # (optional, default: 10)
      ckanext.knowledgehub.rnn.sequence_length = 12
      ```
      - Number of chars to be skipped in generation of next sentence
