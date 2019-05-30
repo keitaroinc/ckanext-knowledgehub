@@ -4,6 +4,7 @@ import pickle
 
 import numpy as np
 import tensorflow as tf
+from filelock import FileLock
 
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Activation
@@ -85,7 +86,11 @@ def learn():
             u'ckanext.knowledgehub.rnn.model',
             './keras_model.h5'
         )
+
         model_dir = os.path.dirname(model_path)
+        train_module_path = os.path.join(
+            model_dir, 'keras_module_%s.h5' % time.time()
+        )
         if not os.path.exists(model_dir):
             try:
                 os.makedirs(model_dir)
@@ -102,7 +107,7 @@ def learn():
             mode='min'
         )
         mcp_save = ModelCheckpoint(
-            model_path,
+            train_module_path,
             save_best_only=True,
             monitor='val_loss',
             mode='min'
@@ -137,6 +142,13 @@ def learn():
         toolkit.get_action('corpus_create')({}, {
             'corpus': original_data
         })
+
+        lock_model_path = '%s.lock' % model_path
+        lock = FileLock(lock_model_path)
+        with lock.acquire(timeout=10):
+            if os.path.exists(model_path):
+                os.remove(model_path)
+            os.rename(train_module_path, model_path)
     except Exception as e:
         log.debug('Error while saving RNN model: %s' % str(e))
         return

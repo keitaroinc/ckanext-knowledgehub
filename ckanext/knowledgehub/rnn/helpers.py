@@ -5,6 +5,7 @@ import heapq
 import numpy as np
 import tensorflow as tf
 from keras.models import load_model
+from filelock import FileLock
 
 from ckan.plugins import toolkit
 from ckan import logic
@@ -93,24 +94,29 @@ def predict_completions(text):
         return []
 
     try:
-        n = int(config.get(u'ckanext.knowledgehub.rnn.number_prediction', 3))
-        graph = tf.Graph()
-        with graph.as_default():
-            session = tf.Session()
-            with session.as_default():
-                model = load_model(model_path)
-                x = prepare_input(text, unique_chars, char_indices)
-                preds = model.predict(x, verbose=0)[0]
-                next_indices = sample(preds, n)
-                return [
-                    indices_char[idx] +
-                    predict_completion(
-                        model,
-                        text[1:] + indices_char[idx],
-                        unique_chars,
-                        char_indices,
-                        indices_char
-                    ) for idx in next_indices]
+        lock_model_path = '%s.lock' % model_path
+        lock = FileLock(lock_model_path)
+        with lock.acquire(timeout=1):
+            n = int(
+                config.get(u'ckanext.knowledgehub.rnn.number_prediction', 3)
+            )
+            graph = tf.Graph()
+            with graph.as_default():
+                session = tf.Session()
+                with session.as_default():
+                    model = load_model(model_path)
+                    x = prepare_input(text, unique_chars, char_indices)
+                    preds = model.predict(x, verbose=0)[0]
+                    next_indices = sample(preds, n)
+                    return [
+                        indices_char[idx] +
+                        predict_completion(
+                            model,
+                            text[1:] + indices_char[idx],
+                            unique_chars,
+                            char_indices,
+                            indices_char
+                        ) for idx in next_indices]
     except Exception as e:
         log.debug('Error while prediction: %s' % str(e))
         return []
