@@ -21,6 +21,7 @@ ckan.module('knowledgehub-dashboard-remove-viz-btn', function ($) {
                 item.find('.internal-dashboard-viz-container-item-header').text((i + 1) + '.')
                 item.find('label[for*=research_question]').attr('for', 'research_question_' + (i + 1))
                 item.find('label[for*=visualization]').attr('for', 'visualization_' + (i + 1))
+                item.find('label[for*=size]').attr('for', 'size_' + (i + 1))
 
                 var rqSelect = item.find('select[id*=research_question]')
                 rqSelect.attr('id', 'research_question_' + (i + 1))
@@ -31,6 +32,11 @@ ckan.module('knowledgehub-dashboard-remove-viz-btn', function ($) {
                 vizSelect.attr('id', 'visualization_' + (i + 1))
                 vizSelect.attr('name', 'visualization_' + (i + 1))
                 vizSelect.attr('data-module-position', i + 1)
+
+                var sizeSelect = item.find('select[id*=size]')
+                sizeSelect.attr('id', 'size_' + (i + 1))
+                sizeSelect.attr('name', 'size_' + (i + 1))
+                sizeSelect.attr('data-module-position', i + 1)
             })
 
             this.sandbox.publish('knowledgehub:remove-viz');

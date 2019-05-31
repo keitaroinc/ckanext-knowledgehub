@@ -2,7 +2,7 @@
 80 %} {% set title = dashboard.title or dashboard.name %} {% set notes =
 h.markdown_extract(dashboard.description, extract_length=truncate) %} {% block
 dashboard_item %}
-<li class="component-item" style="width: 340px;">
+<li class="component-item" style="width: 340px; max-width: 340px;">
   {% block content %}
   <div class="component-content">
     {% block heading %}

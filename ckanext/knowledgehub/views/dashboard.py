@@ -191,6 +191,7 @@ class CreateView(MethodView):
                         item['order'] = int(id)
                         item['research_question'] = data_dict['research_question_{}'.format(id)]
                         item['resource_view_id'] = data_dict['visualization_{}'.format(id)]
+                        item['size'] = data_dict['size_{}'.format(id)]
 
                         indicators.append(item)
 
@@ -321,6 +322,7 @@ class EditView(MethodView):
                         item['order'] = int(id)
                         item['research_question'] = data_dict['research_question_{}'.format(id)]
                         item['resource_view_id'] = data_dict['visualization_{}'.format(id)]
+                        item['size'] = data_dict['size_{}'.format(id)]
 
                         indicators.append(item)
 

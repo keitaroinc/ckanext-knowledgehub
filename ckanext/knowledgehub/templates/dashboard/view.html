@@ -8,7 +8,7 @@
     {% if dashboard.type == 'internal' %}
         <div class="row" style="width: 100%; height: 100%; background-color: white;">
             {% for indicator in dashboard.indicators %}
-                <div class="col-lg-4">
+                <div class="">
                     {% set resource_view = indicator.resource_view %}
                     {% if resource_view.view_type == 'chart' %}
                         {% if resource_view and resource_view.__extras %}
