@@ -586,8 +586,10 @@ def get_dataset_url_path(url):
     return '/dataset%s' % parts[1]
 
 
-def get_map_data(geojson_url):
+def get_map_data(geojson_url, map_key_field, data_key_field,
+                 data_value_field, from_where_clause):
 
+    geojson_keys = []
     resp = requests.get(geojson_url)
     try:
         geojson_data = resp.json()
@@ -596,10 +598,67 @@ def get_map_data(geojson_url):
         raise ValueError('Invalid JSON syntax: %s' %
                          (e))
 
+    for feature in geojson_data['features']:
+        geojson_keys.append(feature['properties'][map_key_field])
+
+    sql = u'SELECT ' + u'"' + data_key_field + \
+          u'", MAX("' + data_value_field + u'") as ' + \
+          u'"' + data_value_field + u'"' + from_where_clause + \
+          u' GROUP BY "' + data_key_field + u'"'
+
+    response = toolkit.get_action('datastore_search_sql')(
+        {}, {'sql': sql}
+    )
+    records_to_lower = []
+    for record in response['records']:
+        records_to_lower.append({k.lower(): v for k, v in record.items()})
+    response['records'] = records_to_lower
+
+    mapping = {}
+
+    for record in records_to_lower:
+
+        key = record[data_key_field.lower()]
+        value = record[data_value_field.lower()]
+
+        if key not in geojson_keys:
+            continue
+
+        mapping[key] = {
+            'key': key,
+            'value': value
+        }
+
     map_data = {
-        'geojson_data': geojson_data
+        'geojson_data': geojson_data,
+        'features_values': mapping
     }
+
     return map_data
+
+
+def get_geojson_properties(url):
+    # TODO handle if no url
+    # TODO handle topojson format
+    resp = requests.get(url)
+    geojson = resp.json()
+
+    result = []
+    exclude_keys = [
+        'marker-symbol',
+        'marker-color',
+        'marker-size',
+        'stroke',
+        'stroke-width',
+        'stroke-opacity',
+        'fill',
+        'fill-opacity'
+    ]
+
+    for k, v in geojson.get('features')[0].get('properties').iteritems():
+        if k not in exclude_keys:
+            result.append({'value': k, 'text': k})
+    return result
 
 
 # Returns the total number of feedbacks for given type

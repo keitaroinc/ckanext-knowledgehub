@@ -466,7 +466,20 @@ def dashboard_list(context, data_dict):
 def knowledgehub_get_map_data(context, data_dict):
 
     geojson_url = data_dict.get('geojson_url')
-    return kh_helpers.get_map_data(geojson_url)
+    map_key_field = data_dict.get('map_key_field')
+    data_key_field = data_dict.get('data_key_field')
+    data_value_field = data_dict.get('data_value_field')
+    from_where_clause = data_dict.get('from_where_clause')
+
+    return kh_helpers.get_map_data(geojson_url, map_key_field, data_key_field,
+                                   data_value_field, from_where_clause)
+
+
+@toolkit.side_effect_free
+def knowledgehub_get_geojson_properties(context, data_dict):
+    map_resource_url = data_dict.get('map_resource')
+
+    return kh_helpers.get_geojson_properties(map_resource_url)
 
 
 @toolkit.side_effect_free
