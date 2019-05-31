@@ -53,13 +53,14 @@
         {% endblock %}
     </div>
     <div class="container-fluid">
+        <div class="row">
         <div class="col-lg-10 col-lg-offset-1">
             <div class="row">
                 <div class="col-lg-3 group-list secondary dashboards">
                     <h4>DASHBOARDS</h4>
                     <hr>
                     <ul class="list-unstyled nav nav-simple">
-                        {% for dashboard in h.get_dashboards(limit=5, order_by='created_at desc') %}
+                        {% for dashboard in h.get_dashboards(limit=4, order_by='created_at desc') %}
                         <li class="nav-item">
                             <a class="dashboard-link" href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
                                 <div>
@@ -109,6 +110,7 @@
             </div>
         </div>
     </div>
+</div>
 
     {% block page_pagination %}
     {{ c.page.pager(q=c.q) }}
@@ -124,7 +126,7 @@
             <hr>
         </div>
         <div class="col-lg-12 visualizations">
-            <div class="row visualization-wrapper">
+            <div class="visualization-wrapper">
                 <div class="resource-view">
                     {% set vis = h.get_last_visuals() %}
                     {% for resource_view in vis %}
