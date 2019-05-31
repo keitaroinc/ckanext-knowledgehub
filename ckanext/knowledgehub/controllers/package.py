@@ -29,6 +29,19 @@ def _encode_params(params):
             for k, v in params]
 
 
+def url_with_params(url, params):
+    params = _encode_params(params)
+    return url + u'?' + urlencode(params)
+
+
+def search_url(params, package_type=None):
+    if not package_type or package_type == 'dataset':
+        url = h.url_for(controller='package', action='search')
+    else:
+        url = h.url_for('{0}_search'.format(package_type))
+    return url_with_params(url, params)
+
+
 class KWHPackageController(PackageController):
     """Overrides CKAN's PackageController to store searched data
     """
