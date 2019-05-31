@@ -268,9 +268,9 @@ ckan.module('table', function () {
             // we need the first column as a pivot column
             // see comments inside this.render_data_table_with_category
             if (category_name) {
-                return 'SELECT ' + '"' + category_name + '", "' + main_value + '", SUM("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + category_name + '", "' + main_value + '"';
+                return 'SELECT ' + '"' + category_name + '", "' + main_value + '", MAX("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + category_name + '", "' + main_value + '"';
             } else {
-                return 'SELECT ' + '"' + main_value + '", SUM("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
+                return 'SELECT ' + '"' + main_value + '", MAX("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
             }
 
         },
