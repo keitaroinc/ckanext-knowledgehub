@@ -489,7 +489,6 @@ ckan.module('chart', function () {
             // Generate chart
             var chart = c3.generate(options);
             var path = window.location.pathname.split("/")
-            console.log(path.length)
             if( path.length < 3 || path[1] === "dashboards"){
                 return;
             }else{
