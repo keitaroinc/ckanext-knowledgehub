@@ -293,6 +293,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
                     var elementData = this.featuresValues[feature.properties[this.options.map_key_field]],
                     value = elementData && elementData.value,
                     color = (value) ? scale(value) : '#E5E5E5',
+//                    TODO calculate radius appropriate
                     radius = (value) ? Math.sqrt(value / Math.PI) : 20,
                     style = {};
 
