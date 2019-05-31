@@ -73,7 +73,7 @@ ckan.module('chart', function () {
             // We need to encode some characters, eg, '+' sign:
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
 
-            var sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            var sql = 'SELECT ' + '"' + this.options.x_axis + '", MAX("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
 
             return sql
         },
@@ -610,7 +610,7 @@ ckan.module('chart', function () {
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
-        
+
             var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             svgimg.setAttributeNS(null, 'height', '70');
             svgimg.setAttributeNS(null, 'width', '270');
@@ -620,7 +620,7 @@ ckan.module('chart', function () {
             svgimg.setAttributeNS(null, 'visibility', 'visible');
             var svgElement = $('.item-content').find('svg')[0];
             $(svgElement).append(svgimg);
-           
+
         },
 
         // Delete the current chart

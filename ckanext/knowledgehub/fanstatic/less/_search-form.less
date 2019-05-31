@@ -47,3 +47,31 @@
     }
   }
 }
+.search-input-group{
+  position:relative;
+}
+.autocomplete-items{
+  position: absolute;
+  top:70px;
+  left: 0;
+  background-color: @white;
+  width: 100%;
+  
+  z-index: 200;
+  border-bottom: 1px solid @gray-lighter;
+  border-right: 1px solid @gray-lighter;
+  border-left: 1px solid @gray-lighter;
+  .autocomplete-active{
+    background-color: @brand-primary;
+    color: @white;
+  }
+  &>*:not(:last-child){
+    border-bottom: 1px solid @gray-lighter;
+  }
+  &>*{
+    padding: 1rem @grid-gutter-width + 5;
+  }
+  strong{
+    pointer-events: none;
+  }
+}
