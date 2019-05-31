@@ -3,8 +3,6 @@ from ckanext.knowledgehub.model.sub_theme import SubThemes
 from ckanext.knowledgehub.model.research_question import ResearchQuestion
 from ckanext.knowledgehub.model.dashboard import Dashboard
 from ckanext.knowledgehub.model.resource_feedback import ResourceFeedbacks
-from ckanext.knowledgehub.model.kwh_data import KWHData
-from ckanext.knowledgehub.model.rnn_corpus import RNNCorpus
 
 
 __all__ = [
@@ -12,7 +10,5 @@ __all__ = [
     'SubThemes',
     'ResearchQuestion',
     'Dashboard',
-    'ResourceFeedbacks',
-    'KWHData',
-    'RNNCorpus'
+    'ResourceFeedbacks'
 ]
