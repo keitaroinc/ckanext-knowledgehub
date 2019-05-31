@@ -1,11 +1,16 @@
+from routes.mapper import SubMapper
+
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm
 
 import ckanext.knowledgehub.helpers as h
+from ckanext.knowledgehub.rnn import worker as kwh_data_worker
 
 from ckanext.knowledgehub.helpers import _register_blueprints
+
+toolkit.enqueue_job(kwh_data_worker.learn, title=u'Predictive search', queue=u'predictive-search')
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
@@ -166,6 +171,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def before_map(self, map):
         map.redirect('/', '/dataset',
                      _redirect_code='301 Moved Permanently')
+        # Override the package search action.
+        with SubMapper(
+            map,
+            controller='ckanext.knowledgehub.controllers:KWHPackageController'
+        ) as m:
+            m.connect('search', '/dataset', action='search')
+
         return map
 
     # IPackageController

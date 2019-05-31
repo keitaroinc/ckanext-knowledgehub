@@ -23,7 +23,9 @@ from ckan import logic
 from ckan.model import ResourceView, Resource
 from ckan import lib
 
+from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.model import Dashboard
+
 
 log = logging.getLogger(__name__)
 model_dictize = lib.dictization.model_dictize
@@ -621,3 +623,19 @@ def get_dashboards(limit=5, order_by='created_by asc'):
     dashboards = Dashboard.search(limit=limit, order_by=order_by).all()
 
     return dashboards
+
+
+def get_kwh_data():
+    corpus = ''
+    try:
+        kwh_data = toolkit.get_action('kwh_data_list')({}, {})
+    except Exception as e:
+        log.debug('Error while loading KnowledgeHub data: %s' % str(e))
+        return corpus
+
+    if kwh_data.get('total'):
+        data = kwh_data.get('data', [])
+        for entry in data:
+            corpus += ' %s' % entry.get('content')
+
+    return corpus

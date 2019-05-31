@@ -1,8 +1,43 @@
 //Dashboard
-.dashboard-manage-icon {
-  position: absolute;
-  right: 8px;
-  bottom: 70px;
+.dashboards{
+  >ul{
+    &>*:first-child{
+      padding-top: 0;
+      .dashboard-link{
+        padding-top: 0;
+      }
+    }
+  }
+}
+.nav>li{
+  >.dashboard-link{
+    padding: 1.5rem 0;
+    &:hover{
+      background-color: inherit;
+    }
+  }
+}
+.dashboard-title-box{
+  .flex;
+  .justify-content-between;
+  .align-items-center;
+  .dashboard-manage-icon {
+    padding: 1rem;
+    font-size: @font-size-base + 2;
+    &:hover{
+      color: @brand-primary-dark;
+    }
+   }
+   .dashboard-created{
+    font-weight: 700;
+    font-size: @font-size-base - 2;
+    i{
+      font-weight: 700;
+      color: @gray-base;
+      font-size: @font-size-base;
+      padding-right: .5rem;
+    }
+  }
 }
 
 .dashboard-view-iframe {
@@ -41,10 +76,11 @@
 .dashboard-thumbnail-container {
   width: calc(1440px * 0.235);
   height: calc(900px * 0.235);
-  display: inline-block;
+  display: block;
+  margin-left: -15px;
   overflow: hidden;
   position: relative;
-  margin-left: -20px;
+ 
 }
 
 

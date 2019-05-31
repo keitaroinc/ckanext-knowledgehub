@@ -8,24 +8,28 @@ dashboard_item %}
     {% block heading %}
     <div class="dashboard-thumbnail-container">
       <div class="dashboard-thumbnail">
-       <iframe src="{{ h.url_for('dashboards.view', name=dashboard.name) }}" frameborder="0"></iframe>
+        <iframe src="{{ h.url_for('dashboards.view', name=dashboard.name) }}" frameborder="0"></iframe>
       </div>
     </div>
-    <h3 class="component-heading">
-      {% block heading_title %}
-      {{ h.link_to(h.truncate(title, truncate_title), h.url_for('dashboards.view', name=dashboard.name)) }}
-      {% endblock %}
-    </h3>
+    <div class="dashboard-title-box">
+      <h3 class="component-heading">
+        {% block heading_title %}
+        {{ h.link_to(h.truncate(title, truncate_title), h.url_for('dashboards.view', name=dashboard.name)) }}
+        {% endblock %}
+      </h3>
+      {% if h.check_access('dashboard_update') %}
+      <a href="{{ h.url_for('dashboards.edit', name=dashboard.name) }}" title="{{ _('Manage') }}"
+        class="dashboard-manage-icon">
+        <i class="fa fa-wrench" aria-hidden="true"></i>
+      </a>
+      {% endif %}
+    </div>
     {% endblock %} {% block notes %} {% if notes %}
     <div>{{ notes | urlize }}</div>
     {% else %}
     <p class="empty">{{ _('This dashboard has no description') }}</p>
     {% endif %} {% endblock %}
-    {% if h.check_access('dashboard_update') %}
-        <a href="{{ h.url_for('dashboards.edit', name=dashboard.name) }}" title="{{ _('Manage') }}" class="dashboard-manage-icon">
-            <i class="fa fa-wrench" aria-hidden="true"></i>
-        </a>
-    {% endif %}
+
   </div>
   {% endblock %}
 </li>

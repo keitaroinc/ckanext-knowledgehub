@@ -1,3 +1,4 @@
+from ckan.logic.auth.update import package_update as ckan_package_update
 
 def theme_update(context, data_dict):
     '''
@@ -33,3 +34,9 @@ def dashboard_update(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def package_update(context, data_dict=None):
+    # This auth function must be overriden like this, otherwise an error is
+    # thrown in a dataset page for a regular user.
+    return ckan_package_update(context, data_dict)
