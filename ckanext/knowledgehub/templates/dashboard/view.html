@@ -6,9 +6,19 @@
 
 {% block content %}
     {% if dashboard.type == 'internal' %}
-        <div class="row" style="width: 100%; height: 100%; background-color: white;">
+        <div class="row" style="width: 100%; height: 100%; background-color: white; margin-left: 0; margin-right: 0;">
             {% for indicator in dashboard.indicators %}
-                <div class="">
+                {% if indicator.size == 'small' %}
+                    {% set width = '450px;' %}
+                    {% set height = '450px;' %}
+                {% elif indicator.size == 'medium' %}
+                    {% set width = '900px;' %}
+                    {% set height = '450px;' %}
+                {% elif indicator.size == 'large' %}
+                    {% set width = '900px;' %}
+                    {% set height = '900px;' %}
+                {% endif %}
+                <div class="viz-view-item" style="width: {{ width or 'initial' }}; height: {{ height or 'initial' }};">
                     {% set resource_view = indicator.resource_view %}
                     {% if resource_view.view_type == 'chart' %}
                         {% if resource_view and resource_view.__extras %}
@@ -67,7 +77,9 @@
                             measure_label=measure_label,
                             dynamic_reference_type=dynamic_reference_type,
                             dynamic_reference_factor=dynamic_reference_factor,
-                            dynamic_reference_label=dynamic_reference_label %}
+                            dynamic_reference_label=dynamic_reference_label,
+                            width=width,
+                            height=height %}
 
                     {% elif resource_view.view_type == 'table'  %}
 
@@ -94,13 +106,15 @@
                             table_title = table_title %}
 
                     {% elif resource_view.view_type == 'map'  %}
-
+                        {% set map_config = h.knowledgehub_get_map_config() %}
                         {% if resource_view and resource_view.__extras %}
                             {% set map_resource=resource_view.__extras.map_resource %}
                         {% endif %}
                             {% snippet 'ajax_snippets/map_module.html',
                             map_config=map_config,
-                            map_resource=map_resource %}
+                            map_resource=map_resource,
+                            width=width,
+                            height=height %}
                     {% endif %}
                 </div>
             {% endfor %}

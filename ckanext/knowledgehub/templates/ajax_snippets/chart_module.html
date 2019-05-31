@@ -1,4 +1,4 @@
-<div class="chart-{{ chart_id }}">      
+<div class="chart-{{ chart_id }}">
     <div class="item-content" data-module="chart"
         data-module-type="{{ type }}"
         data-module-colors="{{ colors }}"
@@ -29,10 +29,11 @@
         data-module-dynamic_reference_factor="{{ dynamic_reference_factor }}"
         data-module-dynamic_reference_label="{{ dynamic_reference_label }}"
         data-module-data_type="{{ data_type }}"
+        style="width: {{ width or 'initial' }}; height: {{ height or 'initial' }};"
         >
         Loading...
     </div>
     <a class="btn-chart-download" data-module="chart-to-png" data-module-id="chart-{{chart_id}}" data-module-type="{{ data_type }}">
         <i class="fa fa-download fa-lg" aria-hidden="true" title="{{ _('Download image') }}" data-name="{{ title }}"></i>
-    </a>  
+    </a>
 </div>
