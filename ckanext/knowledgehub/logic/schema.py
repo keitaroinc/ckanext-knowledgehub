@@ -106,27 +106,3 @@ def resource_feedback_schema():
         'dataset': [not_empty, package_id_or_name_exists],
         'resource': [not_empty, resource_id_exists]
     }
-
-
-def kwh_data_schema():
-    return {
-        'type': [not_empty, validators.kwh_data_type_validator],
-        'content': [not_empty, unicode],
-        'theme': [ignore_missing, unicode],
-        'sub_theme': [ignore_missing, unicode],
-        'rq': [ignore_missing, unicode]
-    }
-
-
-def kwh_data_schema_update():
-    return {
-        'type': [not_empty, validators.kwh_data_type_validator],
-        'old_content': [not_empty, unicode],
-        'new_content': [not_empty, unicode]
-    }
-
-
-def corpus_create():
-    return {
-        'corpus': [not_empty, unicode]
-    }
