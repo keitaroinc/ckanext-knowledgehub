@@ -26,6 +26,7 @@ ckan.module('knowledgehub-dashboard-viz-rq', function ($) {
             this.vizContainerItem = $('div[data-viz-position=' + this.options.position + ']').find('.internal-dashboard-viz-container-item-view');
             this.vizDropdown = $('div[data-viz-position=' + this.options.position + ']').find('.internal-dashboard-viz-dropdown')
             this.vizDropdownSelect = this.vizDropdown.find('select');
+            this.sizeDropdown = $('div[data-viz-position=' + this.options.position + ']').find('.internal-dashboard-size-dropdown');
 
             if (this.options.position !== 1) {
                 window.ckan.module.initializeElement(this.vizDropdownSelect[0]);
@@ -38,6 +39,7 @@ ckan.module('knowledgehub-dashboard-viz-rq', function ($) {
 
             if (!this.el.val()) {
                 this.vizDropdown.css({ display: 'none' });
+                this.sizeDropdown.css({ display: 'none' });
                 return;
             }
 
