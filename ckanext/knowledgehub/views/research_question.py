@@ -265,6 +265,18 @@ class CreateView(MethodView):
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
 
+        try:
+            kwh_data = {
+                'type': 'rq',
+                'content': research_question.get('title'),
+                'rq': research_question.get('id')
+            }
+            logic.get_action(u'kwh_data_create')(
+                context, kwh_data
+            )
+        except Exception as e:
+            log.debug('Error while storing KWH data: %s' % str(e))
+
         return h.redirect_to(
             u'research_question.read',
             name=research_question.get(u'name'))
@@ -422,6 +434,19 @@ class EditView(MethodView):
             errors = e.error_dict
             error_summary = e.error_summary
             return self.get(name, data_dict, errors, error_summary)
+
+        try:
+            old_rq = context['research_question']
+            kwh_data = {
+                'type': 'rq',
+                'old_content': old_rq.get('title'),
+                'new_content': research_question.get('title')
+            }
+            logic.get_action(u'kwh_data_update')(
+                context, kwh_data
+            )
+        except Exception as e:
+            log.debug('Error while storing KWH data: %s' % str(e))
 
         return h.redirect_to(u'research_question.read',
                              name=research_question.get(u'name'))

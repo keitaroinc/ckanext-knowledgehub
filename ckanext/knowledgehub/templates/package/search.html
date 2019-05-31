@@ -53,18 +53,31 @@
         {% endblock %}
     </div>
     <div class="container-fluid">
+        <div class="row">
         <div class="col-lg-10 col-lg-offset-1">
             <div class="row">
                 <div class="col-lg-3 group-list secondary dashboards">
                     <h4>DASHBOARDS</h4>
+                    <hr>
                     <ul class="list-unstyled nav nav-simple">
-                        {% for dashboard in h.get_dashboards(limit=5, order_by='created_at desc') %}
-                            <li class="nav-item">
-                                {{ h.link_to(dashboard.title, h.url_for('dashboards.view', name=dashboard.name)) }}
-                            </li>
+                        {% for dashboard in h.get_dashboards(limit=4, order_by='created_at desc') %}
+                        <li class="nav-item">
+                            <a class="dashboard-link" href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
+                                <div>
+                                    <h4 >{{dashboard.title}}</h4>
+                                    {% set truncate = truncate or 180 %}
+                                    {% set truncate_description = truncate_description or 150 %}
+                                    {% set description = dashboard['description'] %}
+                                    <p class="text-muted"><small>{{ h.truncate(description, truncate_description) }}</small></p>
+                                    <div class="dashboard-created">
+                                        <i class="fa fa-table"></i>
+                                        {{ dashboard.created_at.strftime('%Y-%m-%d')  }}
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
                         {% endfor %}
                     </ul>
-                    <hr>
                     {% block secondary_content %}
                     <div class="filters">
                         <div>
@@ -97,6 +110,7 @@
             </div>
         </div>
     </div>
+</div>
 
     {% block page_pagination %}
     {{ c.page.pager(q=c.q) }}
@@ -112,41 +126,41 @@
             <hr>
         </div>
         <div class="col-lg-12 visualizations">
-            <div class="row visualization-wrapper">
+            <div class="visualization-wrapper">
                 <div class="resource-view">
                     {% set vis = h.get_last_visuals() %}
-                        {% for resource_view in vis %}
-                            {% if resource_view.view_type == 'chart' %}
-                                {% set chart_id = resource_view.id %}
-                                {% if resource_view.__extras %}
-                                    {% set colors = resource_view.__extras.color %}
-                                    {% set x_axis = resource_view.__extras.x_axis %}
-                                    {% set y_axis = resource_view.__extras.y_axis %}
-                                    {% set chart_type = resource_view.__extras.type %}
-                                    {% set title = resource_view.__extras.title %}
-                                    {% set show_legend = resource_view.__extras.show_legend %}
-                                    {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
-                                    {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
-                                    {% set tooltip_name = resource_view.__extras.tooltip_name %}
-                                    {% set data_format = resource_view.__extras.data_format %}
-                                    {% set y_tick_format = resource_view.__extras.y_tick_format %}
-                                    {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
-                                    {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
-                                    {% set padding_bottom = resource_view.__extras.padding_bottom %}
-                                    {% set padding_top = resource_view.__extras.padding_top %}
-                                    {% set tick_count = resource_view.__extras.tick_count %}
-                                    {% set show_labels = resource_view.__extras.show_labels %}
-                                    {% set y_label = resource_view.__extras.y_label %}
-                                    {% set y_from_zero = resource_view.__extras.y_from_zero %}
-                                    {% set data_sort = resource_view.__extras.sort %}
-                                    {% set filters = resource_view.__extras.filters %}
-                                    {% set category_name = resource_view.__extras.category_name %}
-                                    {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
-                                    {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
-                                    {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
-                                    {% set sql_string = resource_view.__extras.sql_string %}
-                                {% endif %}
-                                {% snippet 'ajax_snippets/chart_module.html',
+                    {% for resource_view in vis %}
+                    {% if resource_view.view_type == 'chart' %}
+                    {% set chart_id = resource_view.id %}
+                    {% if resource_view.__extras %}
+                    {% set colors = resource_view.__extras.color %}
+                    {% set x_axis = resource_view.__extras.x_axis %}
+                    {% set y_axis = resource_view.__extras.y_axis %}
+                    {% set chart_type = resource_view.__extras.type %}
+                    {% set title = resource_view.__extras.title %}
+                    {% set show_legend = resource_view.__extras.show_legend %}
+                    {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
+                    {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
+                    {% set tooltip_name = resource_view.__extras.tooltip_name %}
+                    {% set data_format = resource_view.__extras.data_format %}
+                    {% set y_tick_format = resource_view.__extras.y_tick_format %}
+                    {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
+                    {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
+                    {% set padding_bottom = resource_view.__extras.padding_bottom %}
+                    {% set padding_top = resource_view.__extras.padding_top %}
+                    {% set tick_count = resource_view.__extras.tick_count %}
+                    {% set show_labels = resource_view.__extras.show_labels %}
+                    {% set y_label = resource_view.__extras.y_label %}
+                    {% set y_from_zero = resource_view.__extras.y_from_zero %}
+                    {% set data_sort = resource_view.__extras.sort %}
+                    {% set filters = resource_view.__extras.filters %}
+                    {% set category_name = resource_view.__extras.category_name %}
+                    {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
+                    {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
+                    {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
+                    {% set sql_string = resource_view.__extras.sql_string %}
+                    {% endif %}
+                    {% snippet 'ajax_snippets/chart_module.html',
                                     type='chart',
                                     chart_id = chart_id,
                                     colors=colors,
@@ -177,12 +191,12 @@
                                     dynamic_reference_factor=dynamic_reference_factor,
                                     dynamic_reference_label=dynamic_reference_label
                                 %}
-                            {% endif %}
-                        {% endfor %}
+                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
         </div>
-        </div>
     </div>
+</div>
 </div>
 {% endblock %}
