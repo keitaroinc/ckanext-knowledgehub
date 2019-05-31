@@ -31,36 +31,21 @@
 
 {% if package.tags %}
 <div class="row flex flex-wrap dataset-tag-wrapper">
-    {% for tag in package.tags%}
-    <div class="dataset-tag mr-2">{{tag.name}}</div>
+    {% for tag in package.tags %}
+    <div class="dataset-tag mr-2">{{ tag.name }}</div>
     {% endfor %}
 </div>
-<div>
+{% endif %}
+{% if package.research_question %}
+<div> 
     <div class="data-content border-bottom">
-        <h5 class="text-ellipsis">Theme: <span class="text-muted">Displacement
-                Trends</span></h5>
-        <!-- {% if package.theme %}
-        <h5 style="text-overflow: ellipsis;">Theme: <span
-                class="text-muted">{{package.theme}}</span></h5>
-        {% endif %} -->
-        <h5>Sub-theme: <span class="text-muted">Refugees</span></h5>
-        <!-- {% if package.sub_theme %}
-        <h5>Sub-theme: <span class="text-muted">{{package.sub_theme}}</span></h5>
-        {%endif%} -->
-        <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
-            </span><span class="text-muted">Are there any persons in the RST pipeline that are
-                not likely to return?</span></h5>
-        <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
-            </span><span class="text-muted">Do the returning families have family members/relatives
-                in Syria?</span></h5>
-        <!-- {%if package.research_question%}
         {% set questions = h.pg_array_to_py_list(package.research_question) %}
         {% for question in questions %}
+        {% set r_question = h.get_single_rq(question) %}
+        <a href="{% url_for 'research_question.read', name=r_question.get('name') %}">
         <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
-            </span><span class="text-muted">{{question}}</span></h5>
-        {%endfor%}
-        {%endif%} -->
-
+            </span><span class="text-muted">{{r_question.title}}</span></h5></a>
+        {% endfor %}
     </div>
 </div>
 {% endif %}
