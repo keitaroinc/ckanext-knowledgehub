@@ -277,7 +277,6 @@ ckan.module('knowledgehub-map', function(jQuery) {
                 var elementData = this.featuresValues[feature.properties[this.options.map_key_field]],
                   value = elementData && elementData.value,
                   color = (value) ? scale(value) : '#E5E5E5';
-                  console.log(value);
 
                 return {
                   fillColor: color,
@@ -290,6 +289,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
               }.bind(this),
               pointToLayer: function(feature, latlng) {
+
                     var elementData = this.featuresValues[feature.properties[this.options.map_key_field]],
                     value = elementData && elementData.value,
                     color = (value) ? scale(value) : '#E5E5E5',
@@ -298,7 +298,6 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
                     style.radius = radius;
                     style.color = color;
-
                     // Create the circleMarker object
                     return L.circleMarker(latlng, style);
 
