@@ -602,7 +602,7 @@ def get_map_data(geojson_url, map_key_field, data_key_field,
         geojson_keys.append(feature['properties'][map_key_field])
 
     sql = u'SELECT ' + u'"' + data_key_field + \
-          u'", SUM("' + data_value_field + u'") as ' + \
+          u'", MAX("' + data_value_field + u'") as ' + \
           u'"' + data_value_field + u'"' + from_where_clause + \
           u' GROUP BY "' + data_key_field + u'"'
 

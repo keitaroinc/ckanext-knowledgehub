@@ -144,6 +144,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
     //  Initializes empty map with given default tile
     initLeaflet: function() {
+      this.colors = '#F9B7BF,#F592A0,#F26E80,#EF4A60,#B33848'.split(',');
       // geo layer
       var mapURL = (this.options.map_resource === true) ? '' : this.options.map_resource;
 
@@ -178,8 +179,6 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
     createScale: function(featuresValues) {
 
-      var colors = '#F9B7BF,#F592A0,#F26E80,#EF4A60,#B33848'.split(',');
-
       var values = $.map(featuresValues, function(feature, key) {
           return feature.value;
         }).sort(function(a, b) {
@@ -190,7 +189,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
       return d3.scale.quantize()
         .domain([min, max])
-        .range(colors);
+        .range(this.colors);
     },
     formatNumber: function(num) {
       return (num % 1 ? num.toFixed(2) : num);
@@ -224,7 +223,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
             (grades[i + 1] ? '&ndash;' + this.formatNumber(grades[i + 1]) + '</li>' : '+</li></ul>');
         }
         ul.innerHTML +=
-          '<li><span style="background:' + '#bdbdbd' + '; opacity: ' + opacity + '"></span> ' +
+          '<li><span style="background:' + '#E5E5E5' + '; opacity: ' + opacity + '"></span> ' +
           noDataLabel + '</li>';
 
         return div;
@@ -259,11 +258,9 @@ ckan.module('knowledgehub-map', function(jQuery) {
             var valuesLength = valuesKeys.length;
             var scale;
             if (valuesLength === 1) {
-
               scale = function(value) {
                 if (value == this.featuresValues[valuesKeys[0]].value) {
-                  var colors = '#F9B7BF,#F592A0,#F26E80,#EF4A60,#B33848'.split(',');
-                  return colors[colors.length - 1];
+                  return this.colors[this.colors.length - 1];
                 }
               }.bind(this)
 
@@ -279,7 +276,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
                   color = (value) ? scale(value) : '#E5E5E5';
 
                 return {
-                  fillColor: color,
+                  fillColor: (color) ? color : this.colors[this.colors.length - 1],
                   weight: 1,
                   opacity: 1,
                   color: color,
