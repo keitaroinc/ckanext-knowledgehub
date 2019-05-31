@@ -24,6 +24,7 @@ ckan.module('knowledgehub-dashboard-viz-select', function ($) {
         initialize: function () {
             this.el.on('change', this._selectViz.bind(this));
             this.vizContainerItem = $('div[data-viz-position=' + this.options.position + ']').find('.internal-dashboard-viz-container-item-view');
+            this.sizeDropdown = $('div[data-viz-position=' + this.options.position + ']').find('.internal-dashboard-size-dropdown');
             $.each(this.el.find('option'), function(i, el) {
                 el = $(el);
                 res_view_id = el.attr('value');
@@ -39,6 +40,7 @@ ckan.module('knowledgehub-dashboard-viz-select', function ($) {
             this.vizContainerItem.html('')
 
             if (!this.el.val()) {
+                this.sizeDropdown.css({display: 'none'})
                 return;
             }
 
@@ -46,6 +48,7 @@ ckan.module('knowledgehub-dashboard-viz-select', function ($) {
             var resView = currentOption.attr('data-resource-view')
 
             if (resView) {
+                this.sizeDropdown.css({ display: 'block' })
                 var position = this.el.attr('data-module-position')
                 var snippetName;
                 resView = JSON.parse(window.decodeURIComponent(resView))
