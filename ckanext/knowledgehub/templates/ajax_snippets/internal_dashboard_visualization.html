@@ -16,6 +16,12 @@
         {% set viz_form_name = 'visualization_' ~ position %}
         {{ form.select(viz_form_name, label=_('Visualization'), options=viz_options, selected=selected_viz, is_required=true, attrs=viz_attrs) }}
     </div>
+    <div class="internal-dashboard-size-dropdown" {% if selected_size %} style="display: block" {% endif %}>
+        {% set sizes = h.get_visualization_size() %}
+        {% set size_form_name = 'size_' ~ position %}
+        {% set size_attrs = {'data-module': 'knowledgehub-dashboard-size-select', 'data-module-position': position, 'class': 'form-control', 'required': ''} %}
+        {{ form.select(size_form_name, label=_('Size'), options=sizes, selected=selected_size or sizes[0].value, is_required=true, attrs=size_attrs) }}
+    </div>
     {% set map_config = h.knowledgehub_get_map_config() %}
     <div data-map-config="{{ map_config }}"></div>
     <div class="internal-dashboard-viz-container-item-view">
