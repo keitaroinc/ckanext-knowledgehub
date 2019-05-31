@@ -59,10 +59,10 @@ ckan.module('knowledgehub-map', function(jQuery) {
       this.dataValueField.change(this.onPropertyChange.bind(this));
 
       $('.leaflet-control-zoom-in').css({
-        'color': '#0072bc'
+        'color': '#0072BC'
       });
       $('.leaflet-control-zoom-out').css({
-        'color': '#0072bc'
+        'color': '#0072BC'
       });
     },
 
@@ -276,7 +276,8 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
                 var elementData = this.featuresValues[feature.properties[this.options.map_key_field]],
                   value = elementData && elementData.value,
-                  color = (value) ? scale(value) : '#737373';
+                  color = (value) ? scale(value) : '#E5E5E5';
+                  console.log(value);
 
                 return {
                   fillColor: color,
@@ -286,8 +287,22 @@ ckan.module('knowledgehub-map', function(jQuery) {
                   dashArray: '3',
                   fillOpacity: 0.7
                 };
-                
+
               }.bind(this),
+              pointToLayer: function(feature, latlng) {
+                    var elementData = this.featuresValues[feature.properties[this.options.map_key_field]],
+                    value = elementData && elementData.value,
+                    color = (value) ? scale(value) : '#E5E5E5',
+                    radius = (value) ? Math.sqrt(value / Math.PI) : 20,
+                    style = {};
+
+                    style.radius = radius;
+                    style.color = color;
+
+                    // Create the circleMarker object
+                    return L.circleMarker(latlng, style);
+
+                }.bind(this),
             }).addTo(this.map);
             // Create the legend
             this.createLegend.call(this);
