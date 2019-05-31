@@ -4,6 +4,7 @@
     var timer = null;
     var currentFocus;
     var searchInput = $('#field-giant-search');
+    var input = document.getElementById('field-giant-search');
     var autocompleteItems = $('#autocomplete-list').find('div');
 
     var api = {
@@ -100,7 +101,7 @@
     });
 
     $('.search-input-group').on("mouseover", autocompleteItems, function(e){
-        var input = document.getElementById('field-giant-search');
+        
         var activeItem = document.getElementsByClassName('autocomplete-active')[0];
         activeItem ? activeItem.classList.remove('autocomplete-active') : null;
         event.target !== input ? event.target.classList.add('autocomplete-active') : null;
