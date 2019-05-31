@@ -81,7 +81,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_rq_ids': h.get_rq_ids,
             'get_rq_titles_from_res': h.get_rq_titles_from_res,
             'get_dashboards': h.get_dashboards,
-            'knowledgehub_get_geojson_properties': h.get_geojson_properties
+            'knowledgehub_get_geojson_properties': h.get_geojson_properties,
+            'get_single_rq' : h.get_single_rq,
         }
 
     # IDatasetForm
