@@ -37,14 +37,16 @@
 </div>
 {% endif %}
 {% if package.research_question %}
-<div> 
+<div>
     <div class="data-content border-bottom">
         {% set questions = h.pg_array_to_py_list(package.research_question) %}
         {% for question in questions %}
-        {% set r_question = h.get_single_rq(question) %}
-        <a href="{% url_for 'research_question.read', name=r_question.get('name') %}">
-        <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
-            </span><span class="text-muted">{{r_question.title}}</span></h5></a>
+            {% set r_question = h.get_single_rq(question) %}
+            {% if r_question %}
+                <a href="{% url_for 'research_question.read', name=r_question.get('name') %}">
+                <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Research Question:
+                </span><span class="text-muted">{{r_question.title}}</span></h5></a>
+            {% endif %}
         {% endfor %}
     </div>
 </div>
