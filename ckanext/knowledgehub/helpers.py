@@ -550,11 +550,18 @@ def knowledgehub_get_map_config():
     }
     return json.dumps(map_config)
 
+
 def get_single_rq(rq_id):
     context = _get_context()
-    rq = toolkit.get_action(
-        'research_question_show')(context, {'id': rq_id})
+    try:
+        rq = toolkit.get_action(
+            'research_question_show')(context, {'id': rq_id})
+    except Exception as e:
+        log.debug('Error get_single_rq: %s' % str(e))
+        return {}
+
     return rq
+
 
 def rq_ids_to_titles(rq_ids):
     rqs = []
