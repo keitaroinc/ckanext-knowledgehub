@@ -1,0 +1,35 @@
+.legend {
+  font: 14px/16px Arial, Helvetica, sans-serif;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  list-style: none;
+  &>*:not(:last-child){
+    padding-bottom: .5rem;
+  }
+}
+
+.legend span {
+  width: 16px;
+  height: 16px;
+  float: left;
+  margin-right: 8px;
+  border: 1px solid #969696;
+}
+
+#logoContainer{
+  width: 120%; 
+  padding: 2rem; 
+  background-color: @white; 
+  position: relative; 
+  z-index: 100000000;
+}
+#saveMap{
+  margin-top: 1.5rem;
+  margin-left: 1.5rem;
+  cursor: pointer;
+}
+.leaflet-top.leaflet-left{
+  transform: translateY(70px)
+}
