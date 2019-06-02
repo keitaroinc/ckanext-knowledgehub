@@ -51,7 +51,7 @@ ckan.module('chart', function () {
 
             var chartField = $('.chart_field');
 
-
+            
             // The Update chart button is only in the admin area. In the public
             // updating of viz items will be applied with a reload of the page.
             if (chartField.length > 0) {
@@ -609,7 +609,7 @@ ckan.module('chart', function () {
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
-
+          
             var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             svgimg.setAttributeNS(null, 'height', '70');
             svgimg.setAttributeNS(null, 'width', '270');
