@@ -197,6 +197,7 @@ ckan.module('data-transformation', function($) {
             _handleFilterItemsOrder();
             var filters = _getFilters();
             var sql = generateSql(resource_id, filters);
+            ckan.sandbox().publish('knowledgehub:updateMap');
           });
 
           handleRenderedFilter(self, total_items, resource_id, fields, filter);
@@ -347,11 +348,13 @@ ckan.module('data-transformation', function($) {
 
       var filters = _getFilters();
       var sql = generateSql(resource_id, filters);
+      ckan.sandbox().publish('knowledgehub:updateMap');
     });
 
     filter_operator.change(function() {
       var filters = _getFilters();
       var sql = generateSql(resource_id, filters);
+      ckan.sandbox().publish('knowledgehub:updateMap');
     });
   }
 
