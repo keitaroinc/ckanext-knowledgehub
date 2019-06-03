@@ -66,6 +66,12 @@ ckan.module('knowledgehub-map', function(jQuery) {
       $('.leaflet-control-zoom-out').css({
         'color': '#0072BC'
       });
+      this.sandbox.subscribe('knowledgehub:updateMap', this.onPropertyChange.bind(this));
+    },
+
+    teardown: function() {
+      // We must always unsubscribe on teardown to prevent memory leaks.
+      this.sandbox.unsubscribe('knowledgehub:updateMap', this.onPropertyChange.bind(this));
     },
 
     onResourceChange: function() {
