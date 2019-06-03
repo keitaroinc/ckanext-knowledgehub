@@ -1,11 +1,11 @@
 {% ckan_extends %} {% block header_wrapper %} {% block header_account %}
-<header class="account-masthead">
+<header class="account-masthead html2canvas-ignore ">
   <div class="container-fluid">
     {% block header_account_container_content %} {{ super() }} {% endblock %}
   </div>
 </header>
 {% endblock %}
-<header class="navbar navbar-static-top masthead">
+<header class="navbar navbar-static-top masthead html2canvas-ignore">
   {% block header_debug %} {% if g.debug and not g.debug_supress_header %}
   <div class="debug">
     Controller : {{ c.controller }}<br />Action : {{ c.action }}
@@ -43,7 +43,7 @@ search  </div>
       {% endblock %} {% block header_site_search %} <!-- removed search box at the main menu --> {% endblock %}
     </div>
 </header>
-<header>
+<header class="html2canvas-ignore">
 <nav class="navbar navbar-default">
   <div class="container-fluid">
     <div class="navbar-header">
