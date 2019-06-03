@@ -25,7 +25,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
     var target = this;
     return target.split(search).join(replacement);
   };
-
+  
   var api = {
     get: function(action, params) {
       var api_ver = 3;
@@ -51,12 +51,14 @@ ckan.module('knowledgehub-map', function(jQuery) {
       this.mapKeyField = this.el.parent().parent().find('#map_key_field');
       this.dataKeyField = this.el.parent().parent().find('#data_key_field');
       this.dataValueField = this.el.parent().parent().find('#data_value_field');
-
+      this.mapSaveAsImage = this.el.parent().find("#saveMap")
+     
 
       this.mapResource.change(this.onResourceChange.bind(this));
       this.mapKeyField.change(this.onPropertyChange.bind(this));
       this.dataKeyField.change(this.onPropertyChange.bind(this));
       this.dataValueField.change(this.onPropertyChange.bind(this));
+      this.mapSaveAsImage.click(this.onSaveAsPhoto.bind(this));
 
       $('.leaflet-control-zoom-in').css({
         'color': '#0072BC'
@@ -99,7 +101,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
         this.resetMap.call(this);
       }
     },
-
+    
     onPropertyChange: function() {
 
       this.options.map_resource = this.mapResource.val();
@@ -168,7 +170,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
         maxZoom: 18,
         attribution: osmAttrib
       });
-
+     
       this.map.addLayer(this.osm);
 
       if (mapURL) {
@@ -177,6 +179,15 @@ ckan.module('knowledgehub-map', function(jQuery) {
       }
     },
 
+    onSaveAsPhoto: function() {
+      this.printer = L.easyPrint({
+        sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
+        filename: 'myMap',
+        exportOnly: true,
+        hideControlContainer: true
+    }).addTo(this.map);
+    this.printer.printMap('CurrentSize', 'MyManualPrint')
+    },
     createScale: function(featuresValues) {
 
       var values = $.map(featuresValues, function(feature, key) {

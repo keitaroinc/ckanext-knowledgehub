@@ -1,25 +1,16 @@
-<style>
-     .legend {font: 14px/16px Arial, Helvetica, sans-serif;
-         background: white;
-         background: rgba(255,255,255,0.8);
-         box-shadow: 0 0 15px rgba(0,0,0,0.2);
-         border-radius: 5px;
-       list-style: none;
-     }
-     .legend span {
-       width: 16px;
-       height: 16px;
-       float: left;
-       margin-right: 8px;
-       border: 1px solid #969696;
-     }
-</style>
-<div id="knowledge_hub_map_module" class="item-content" style="min-height: 500px; width: {{ width or 'initial' }}; height: {{ height or 'initial' }};" data-module="knowledgehub-map"
+<a id="saveMap">
+<i class="fa fa-download fa-lg" aria-hidden="true" title="{{ _('Download image') }}"
+data-name="{{ title }}"></i>
+</a>
+<div id="knowledge_hub_map_module" class="item-content" style="min-height: 500px; width: 100%; height: 600px" data-module="knowledgehub-map"
      data-module-map_config="{{ map_config }}"
      data-module-map_resource="{{ map_resource }}"
      data-module-map_key_field="{{ map_key_field }}"
      data-module-data_key_field="{{ data_key_field }}"
      data-module-data_value_field="{{ data_value_field }}"
      data-module-sql_string="{{ sql_string }}">
+     <div id="logoContainer" >
+      <img src="/base/images/unhck-kh.svg" width="300">{{map_title}}
+    </div>
      Loading...
 </div>
