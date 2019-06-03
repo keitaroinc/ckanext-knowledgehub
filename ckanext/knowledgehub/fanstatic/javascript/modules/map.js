@@ -153,7 +153,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
 
     //  Initializes empty map with given default tile
     initLeaflet: function() {
-      this.colors = '#F9B7BF,#F592A0,#F26E80,#EF4A60,#B33848'.split(',');
+      this.colors = '#FCDBDF,#F9B7BF,#F592A0,#F26E80,#EF4A60'.split(',');
       // geo layer
       var mapURL = (this.options.map_resource === true) ? '' : this.options.map_resource;
 
@@ -413,3 +413,4 @@ ckan.module('knowledgehub-map', function(jQuery) {
     //        }
   };
 });
+

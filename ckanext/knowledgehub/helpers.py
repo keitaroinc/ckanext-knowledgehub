@@ -240,23 +240,21 @@ def get_color_scheme():
     Get color schemes for displaying the charts
     :return:
     '''
-    colors = [{'value': '#59a14f',
+    colors = [{'value': '#00B398',
                'text': _('Green')},
-              {'value': '#4e79a7',
+              {'value': '#0072BC',
                'text': _('Blue')},
-              {'value': '#499894',
-               'text': _('Teal')},
-              {'value': '#b6992d',
-               'text': _('Golden')},
-              {'value': '#ffa600',
+              {'value': '#18375F',
+               'text': _('Navy Blue')},
+              {'value': '#338EC9',
+               'text': _('Light Blue')},
+              {'value': '#F5C205',
                'text': _('Yellow')},
-              {'value': '#d87c26',
-               'text': _('Orange')},
-              {'value': '#9d7660',
-               'text': _('Brown')},
-              {'value': '#78549a',
-               'text': _('Purple')},
-              {'value': '#b2182b',
+              {'value': '#CCCCCC',
+               'text': _('Gray')},
+              {'value': '#00000',
+               'text': _('Black')},
+              {'value': '#EF4A60',
                'text': _('Red')}
               ]
 
@@ -270,24 +268,28 @@ def get_map_color_scheme():
     '''
     colors = [
         {
-            'value': '#feedde,#fdbe85,#fd8d3c,#e6550d,#a63603',
-            'text': _('Sequential')
+            'value': '#CCE3F2,#99C7E4,#66AAD7,#338EC9,#0072BC',
+            'text': _('Blue')
+        },
+         {
+            'value': '#FDF3CD,#FBE79B,#F9DA69,#F7CE37,#F5C205',
+            'text': _('Yellow')
         },
         {
-            'value': '#7b3294,#c2a5cf,#f7f7f7,#a6dba0,#008837',
-            'text': _('Green-Purple')
+            'value': '#CCF0EA,#99E1D6,#66D1C1,#33C2AD,#00B398',
+            'text': _('Green')
         },
         {
-            'value': '#d7191c,#fdae61,#ffffbf,#abdda4,#2b83ba',
-            'text': _('Blue-Red')
+            'value': '#D1D7DF,#A3AFBF,#74879F,#465F7F,#18375F',
+            'text': _('Navy Blue')
         },
         {
-            'value': '#a6611a,#dfc27d,#f5f5f5,#80cdc1,#018571',
-            'text': _('Teal-Brown')
+            'value': '#E5E5E5,#CCCCCC,#999999,#666666,#333333',
+            'text': _('Gray')
         },
         {
-            'value': '#e66101,#fdb863,#f7f7f7,#b2abd2,#5e3c99',
-            'text': _('Purple-Orange')
+            'value': '#FCDBDF,#F9B7BF,#F592A0,#F26E80,#EF4A60',
+            'text': _('Red')
         }
     ]
 
