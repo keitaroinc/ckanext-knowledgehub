@@ -47,6 +47,7 @@ ckan.module('knowledgehub-map', function(jQuery) {
     initialize: function() {
 
       this.initLeaflet.call(this);
+      this.mapTitleField = this.el.parent().parent().find('#map_title');
       this.mapResource = this.el.parent().parent().find('#map_resource');
       this.mapKeyField = this.el.parent().parent().find('#map_key_field');
       this.dataKeyField = this.el.parent().parent().find('#data_key_field');

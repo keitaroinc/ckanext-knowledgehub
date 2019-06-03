@@ -163,10 +163,11 @@
                 {% set data_value_field=resource_view.__extras.data_value_field %}
                 {% set sql_string=resource_view.__extras.sql_string %}
                 {% set resource_id = resource_view.resource_id %}
-                {% set title = resource_view.title %}
+                {% set map_title = resource_view.title %}
               {% endif %}
                 {% set map_config = h.knowledgehub_get_map_config() %}
                 {% snippet 'ajax_snippets/map_module.html',
+                  map_title=map_title,
                   map_config=map_config,
                   map_key_field=map_key_field,
                   data_key_field=data_key_field,
@@ -175,7 +176,7 @@
                   map_resource=map_resource %}
 
                 {% snippet 'ajax_snippets/visual_info_module.html',
-                  title = title,
+                  title = map_title,
                   resource_id = resource_id %}
 
           {% else %}

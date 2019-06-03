@@ -117,8 +117,10 @@
                   {% set data_key_field=resource_view.__extras.data_key_field %}
                   {% set data_value_field=resource_view.__extras.data_value_field %}
                   {% set sql_string=resource_view.__extras.sql_string %}
+                  {% set map_title = resource_view.title %}
                 {% endif %}
                   {% snippet 'ajax_snippets/map_module.html',
+                    map_title=map_title,
                     map_config=map_config,
                     map_resource=map_resource,
                     map_key_field=map_key_field,
