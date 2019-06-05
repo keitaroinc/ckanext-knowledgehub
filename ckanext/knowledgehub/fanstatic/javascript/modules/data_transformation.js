@@ -366,7 +366,7 @@ ckan.module('data-transformation', function($) {
 
     self.el.find("#add-filter-button").click(function() {
       addFilter(self, resource_id, fields).then(function(result) {
-        console.log('New' + result);
+//        console.log('New' + result);
       });
     });
     if (filters.length) {
