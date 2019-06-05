@@ -250,12 +250,7 @@ ckan.module('table', function () {
                     });
 
                     // Set title value
-                    var path = window.location.pathname.split("/")
-                    if( path[1] === "dashboards"){
-                        $("div.dt-header").html(title);
-                    }else{
-                        $("div.dt-header").html(`<img class="visualization-logo" src="/base/images/unhck-kh.svg"/> ${title}`);
-                    }
+                        $("div.dt-header").html(title); 
                 } else {
                     this.el.text(this._('Table could not be created!'));
                 }
