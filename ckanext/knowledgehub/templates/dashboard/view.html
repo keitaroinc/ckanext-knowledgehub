@@ -1,6 +1,9 @@
 {% resource 'knowledgehub/chart' %}
 {% resource 'knowledgehub/table' %}
 {% resource 'knowledgehub/map' %}
+{% resource 'knowledgehub/javascript/modules/download_dashboard_as_image.js' %}
+{% resource 'knowledgehub/vendor/canvas2image.js' %}
+{% resource 'knowledgehub/vendor/html2canvas.js' %}
 
 {% extends 'page.html' %}
 
@@ -128,6 +131,9 @@
                     {% endif %}
                 </div>
             {% endfor %}
+            <button class="btn btn-default download-dashboard-btn html2canvas-ignore" data-module="download-dashboard-as-image">
+                <span class="fa fa-download"></span>{{ _('Download screenshot') }}
+            </button>
         </div>
     {% elif dashboard.type == 'external' %}
         <iframe src="{{ dashboard.source }}" frameborder="0" class="dashboard-view-iframe"></iframe>
