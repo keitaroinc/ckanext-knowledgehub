@@ -22,7 +22,9 @@
     padding: 0 @grid-gutter-width * 2 @grid-gutter-width * 2 @grid-gutter-width * 2;
   }
 }
-
+.resource-view{
+  position:relative;
+}
 .module-content,
 .visualization-wrapper {
 
@@ -34,18 +36,11 @@
       margin-top: 20px;
       margin-right: 20px;
     }
-
-    &>.dataTables_wrapper {
-      flex: 1 0 calc(100% - 2rem);
-    }
-
     &>div {
       flex: 1;
-      .flex;
-      .flex-column;
-      .btn-chart-download {
-        margin-left: auto;
       }
+    &>.dataTables_wrapper {
+      flex: 1 0 calc(100% - 2rem);
     }
   }
 }
