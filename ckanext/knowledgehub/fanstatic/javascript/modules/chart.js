@@ -488,20 +488,17 @@ ckan.module('chart', function () {
 
             // Generate chart
             var chart = c3.generate(options);
-            var path = window.location.pathname.split("/")
-            if( path.length < 3 || path[1] === "dashboards"){
-                return;
-            }else{
+         
                 var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
                 svgimg.setAttributeNS(null, 'height', '70');
                 svgimg.setAttributeNS(null, 'width', '270');
                 svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
                 svgimg.setAttributeNS(null, 'x', '0');
                 svgimg.setAttributeNS(null, 'y', '0');
-                svgimg.setAttributeNS(null, 'visibility', 'visible');
+                svgimg.setAttributeNS(null, 'visibility', 'hidden');
                 var svgElement = $('.item-content').find('svg')[0];
                 $(svgElement).append(svgimg);
-           }
+           
         },
         // Get the values from dropdowns and rerender the chart.
         updateChart: function () {
