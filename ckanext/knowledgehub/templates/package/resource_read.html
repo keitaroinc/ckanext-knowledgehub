@@ -157,6 +157,8 @@
           {% elif current_resource_view.view_type == 'map'  %}
 
               {% if resource_view and resource_view.__extras %}
+                {% set map_subtitle=resource_view.__extras.map_subtitle %}
+                {% set map_description=resource_view.__extras.map_description %}
                 {% set map_resource=resource_view.__extras.map_resource %}
                 {% set map_key_field=resource_view.__extras.map_key_field %}
                 {% set data_key_field=resource_view.__extras.data_key_field %}
@@ -168,6 +170,8 @@
                 {% set map_config = h.knowledgehub_get_map_config() %}
                 {% snippet 'ajax_snippets/map_module.html',
                   map_title=map_title,
+                  map_subtitle=map_subtitle,
+                  map_description=map_description,
                   map_config=map_config,
                   map_key_field=map_key_field,
                   data_key_field=data_key_field,
