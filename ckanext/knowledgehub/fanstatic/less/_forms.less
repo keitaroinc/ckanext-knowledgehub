@@ -75,3 +75,34 @@
     pointer-events: none;
   }
 }
+
+.control-order-by{
+  display: inline-block;
+  margin-left: 0;
+  position: relative;
+  select{
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  &:after {
+    content: "";
+    width: 0;
+    height: 0;
+    position: absolute;
+    right: 16px;
+    border-style: solid;
+    background: @white;
+    border-color: transparent @gray-base;
+    pointer-events: none;
+    transform: rotate(90deg)
+  }
+  &:after {
+    top: 60%;
+    margin-top: -8px;
+    border-width: 4px 0 5px 5px;
+  }
+  & select{
+    padding-right: 4rem;
+  }
+}

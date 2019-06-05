@@ -54,7 +54,6 @@ ckan.module('knowledgehub-map', function(jQuery) {
       this.dataValueField = this.el.parent().parent().find('#data_value_field');
       this.mapSaveAsImage = this.el.parent().find("#saveMap")
      
-
       this.mapResource.change(this.onResourceChange.bind(this));
       this.mapKeyField.change(this.onPropertyChange.bind(this));
       this.dataKeyField.change(this.onPropertyChange.bind(this));
