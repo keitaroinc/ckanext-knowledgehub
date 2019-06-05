@@ -204,6 +204,18 @@ class CreateView(MethodView):
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
 
+        try:
+            kwh_data = {
+                'type': 'sub-theme',
+                'content': sub_theme.get('title'),
+                'sub_theme': sub_theme.get('id')
+            }
+            logic.get_action(u'kwh_data_create')(
+                context, kwh_data
+            )
+        except Exception as e:
+            log.debug('Error while storing KWH data: %s' % str(e))
+
         return h.redirect_to(u'sub_theme.read', name=sub_theme.get(u'name'))
 
 
@@ -290,6 +302,18 @@ class EditView(MethodView):
             errors = e.error_dict
             error_summary = e.error_summary
             return self.get(name, data_dict, errors, error_summary)
+
+        try:
+            kwh_data = {
+                'type': 'sub-theme',
+                'old_content': sub_theme.get('title'),
+                'new_content': st.get('title')
+            }
+            logic.get_action(u'kwh_data_update')(
+                context, kwh_data
+            )
+        except Exception as e:
+            log.debug('Error while storing KWH data: %s' % str(e))
 
         return h.redirect_to(u'sub_theme.read', name=sub_theme.get(u'name'))
 
