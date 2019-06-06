@@ -61,6 +61,10 @@ def _process_post_data(data, resource_id):
             data['chart_field_type']
         config['title'] = \
             data['chart_field_title']
+        config['chart_subtitle'] = \
+            data['chart_field_subtitle']
+        config['chart_description'] = \
+            data['chart_field_description']
         config['x_axis'] = \
             data['chart_field_x_axis_column']
         config['y_axis'] = \

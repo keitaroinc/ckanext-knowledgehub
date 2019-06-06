@@ -42,6 +42,20 @@
               </div>
             </div>
 
+            <div class="control-group title">
+              <label class="control-label" for="chart_field_subtitle">{{ _('Subtitle') }}</label>
+              <div class="controls input-controls">
+                  <input id="chart_field_subtitle" type="text" name="chart_field_subtitle" value="{{ chart.chart_subtitle }}" placeholder="{{ _('Chart subtitle') }}" maxlength="100" required="required">
+              </div>
+            </div>
+
+            <div class="control-group title">
+              <label class="control-label" for="chart_field_description">{{ _('Description') }}</label>
+              <div class="controls input-controls">
+                  <input id="chart_field_description" type="text" name="chart_field_description" value="{{ chart.chart_description }}" placeholder="{{ _('Chart description') }}" maxlength="100" required="required">
+              </div>
+            </div>
+
             {# Type #}
             {% if chart %}
             {% set selected_chart_type = chart.type %}
@@ -432,7 +446,9 @@
     {% set x_axis = chart.x_axis %}
     {% set y_axis = chart.y_axis %}
     {% set chart_type = chart.type %}
-    {% set title = chart.title %}
+    {% set title = data.title %}
+    {% set chart_subtitle = chart.chart_subtitle %}
+    {% set chart_description = chart.chart_description %}
     {% set show_legend = chart.show_legend %}
     {% set x_text_rotate = chart.x_text_rotate %}
     {% set x_text_multiline = chart.x_text_multiline %}
@@ -458,17 +474,19 @@
   {% endif %}
 <div class="preview-wrapper custom-width">
   {% snippet 'ajax_snippets/chart_module.html',
-          type='chart',
+          type = 'chart',
           chart_id = chart_id,
-          colors=colors,
-          x_axis=x_axis,
-          y_axis=y_axis,
-          chart_type=chart_type,
-          sql_string=sql_string,
-          title= title,
+          colors = colors,
+          x_axis = x_axis,
+          y_axis = y_axis,
+          chart_type = chart_type,
+          sql_string = sql_string,
+          title = title,
+          chart_subtitle = chart_subtitle,
+          chart_description = chart_description,
           show_legend = show_legend,
-          x_text_rotate= x_text_rotate,
-          x_text_multiline= x_text_multiline,
+          x_text_rotate = x_text_rotate,
+          x_text_multiline = x_text_multiline,
           tooltip_name = tooltip_name,
           data_format = data_format,
           y_tick_format = y_tick_format,
@@ -482,10 +500,10 @@
           y_from_zero = y_from_zero,
           data_sort = data_sort,
           filters = filters,
-          category_name=category_name,
+          category_name = category_name,
           measure_label=measure_label,
-          dynamic_reference_type=dynamic_reference_type,
-          dynamic_reference_factor=dynamic_reference_factor,
-          dynamic_reference_label=dynamic_reference_label,
+          dynamic_reference_type = dynamic_reference_type,
+          dynamic_reference_factor = dynamic_reference_factor,
+          dynamic_reference_label = dynamic_reference_label,
           data_type = data_type %}
 </div>
