@@ -51,7 +51,7 @@ ckan.module('chart', function () {
 
             var chartField = $('.chart_field');
 
-            
+
             // The Update chart button is only in the admin area. In the public
             // updating of viz items will be applied with a reload of the page.
             if (chartField.length > 0) {
@@ -194,10 +194,10 @@ ckan.module('chart', function () {
             });
             options.title = {
                 text: titleVal,
-                position: "upper-left",
+                position: "upper-right",
                 padding: {
                     left: 0,
-                    right: 0,
+                    right: 60,
                     bottom: 15,
                     top: 40
                 }
@@ -488,20 +488,17 @@ ckan.module('chart', function () {
 
             // Generate chart
             var chart = c3.generate(options);
-            var path = window.location.pathname.split("/")
-            if( path.length < 3 || path[1] === "dashboards"){
-                return;
-            }else{
-                var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-                svgimg.setAttributeNS(null, 'height', '70');
-                svgimg.setAttributeNS(null, 'width', '270');
-                svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
-                svgimg.setAttributeNS(null, 'x', '0');
-                svgimg.setAttributeNS(null, 'y', '0');
-                svgimg.setAttributeNS(null, 'visibility', 'visible');
-                var svgElement = $('.item-content').find('svg')[0];
-                $(svgElement).append(svgimg);
-           }
+
+            var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+            svgimg.setAttributeNS(null, 'height', '70');
+            svgimg.setAttributeNS(null, 'width', '270');
+            svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
+            svgimg.setAttributeNS(null, 'x', '0');
+            svgimg.setAttributeNS(null, 'y', '0');
+            svgimg.setAttributeNS(null, 'visibility', 'hidden');
+            var svgElement = $('.item-content').find('svg')[0];
+            $(svgElement).append(svgimg);
+
         },
         // Get the values from dropdowns and rerender the chart.
         updateChart: function () {
@@ -585,7 +582,7 @@ ckan.module('chart', function () {
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
             this.options.y_axis = axisYValue;
-            //this.options.title = chartTitleVal;
+            this.options.title = chartTitleVal;
             this.options.show_legend = legendVal;
             this.options.x_text_rotate = xTextRotateVal;
             this.options.x_text_multiline = xTextMultilineVal;
@@ -609,14 +606,14 @@ ckan.module('chart', function () {
             var newSql = this.create_sql();
 
             this.get_resource_datа(newSql);
-          
+
             var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             svgimg.setAttributeNS(null, 'height', '70');
             svgimg.setAttributeNS(null, 'width', '270');
             svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
             svgimg.setAttributeNS(null, 'x', '0');
             svgimg.setAttributeNS(null, 'y', '0');
-            svgimg.setAttributeNS(null, 'visibility', 'visible');
+            svgimg.setAttributeNS(null, 'visibility', 'hidden');
             var svgElement = $('.item-content').find('svg')[0];
             $(svgElement).append(svgimg);
 

@@ -1,30 +1,21 @@
-FROM keitaro/ckan:2.8.2-clean
+FROM keitaro/ckan:2.8.2-bionic
 
 MAINTAINER Keitaro <info@keitaro.com>
 
 USER root
 
-RUN apk add --update-cache \
-    --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
-    --allow-untrusted \
-    geos \
-    geos-dev
-RUN apk add \
-    bash \
+RUN apt-get update && apt-get install -y \
+    libgeos-dev \
     g++ \
     gcc \
     libffi-dev \
-    libstdc++ \
-    libxml2 \
     libxml2-dev \
-    libxslt \
-    libxslt-dev \
+    libxslt1.1 \
+    libxslt1-dev \
     make \
     musl-dev \
-    pcre \
-    python2-dev \
-    openssl-dev \
-    py-lxml \
+    libpcre3 \
+    python-dev \
     unixodbc-dev \
     freetds-dev
 
@@ -70,5 +61,8 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.disqus_ur
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
+
+RUN chown -R ckan:ckan /srv/app/src/ckan/
+USER ckan
 
 CMD ["/srv/app/start_ckan.sh"]

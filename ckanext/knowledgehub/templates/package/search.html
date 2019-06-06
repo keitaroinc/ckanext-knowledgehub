@@ -11,7 +11,7 @@
 {% block content %}
 {% set rqs = h.get_rq(6, 'modified_at  desc').get('data', []) %}
 <div class="container-fluid rq-section">
-    <div class="row flex">
+    <div class="row flex flex-wrap">
         {% for rq in rqs %}
         <div class="col-lg-2 rq-box rq-item"
             style="flex: 1;background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">

@@ -1,4 +1,5 @@
 ckan.module('chart-to-png', function($) {
+    
     return {
         initialize: function(){
             var id = this.options.id;
@@ -9,6 +10,7 @@ ckan.module('chart-to-png', function($) {
         },
         exportChartToPng: function(className){
             //fix weird back fill
+            $("."+ className).find('image').css("visibility", 'visible');
             d3.select('.' + className).selectAll("path").attr("fill", "none");
             //fix no axes
             d3.select('.' + className).selectAll("path.domain").attr("stroke", "black");
@@ -18,6 +20,10 @@ ckan.module('chart-to-png', function($) {
             d3.select('.' + className).selectAll(".c3-ygrid-line.active").attr("display", "none");
             var svgElement = $('.' + className).find('svg')[0];
             saveSvgAsPng(svgElement, className + '.png', {backgroundColor: 'white'});
+            setTimeout(()=>{
+                $("."+ className).find('image').css("visibility", 'hidden');
+            },500)
+            
         }
     }
 });
