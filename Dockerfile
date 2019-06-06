@@ -62,6 +62,6 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.disqus_ur
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
 
-RUN chown -R ckan:ckan /srv/app/
+RUN chown -R ckan:ckan /srv/app/src/ckan/
 
 CMD ["/srv/app/start_ckan.sh"]
