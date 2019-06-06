@@ -55,6 +55,10 @@ def _process_post_data(data, resource_id):
             data['table_main_value']
         config['title'] = \
             data['table_field_title']
+        config['table_subtitle'] = \
+            data['table_field_subtitle']
+        config['table_description'] = \
+            data['table_field_description']
         config['data_format'] = \
             data['table_data_format']
         config['y_axis'] = \

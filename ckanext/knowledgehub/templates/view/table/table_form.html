@@ -40,6 +40,20 @@
               </div>
             </div>
 
+            <div class="control-group title">
+              <label class="control-label" for="table_field_subtitle">{{ _('Subtitle') }}</label>
+              <div class="controls input-controls">
+                  <input id="table_field_subtitle" type="text" name="table_field_subtitle" value="{{ table.table_subtitle }}" placeholder="{{ _('Table subtitle') }}" maxlength="100" required="required">
+              </div>
+            </div>
+
+            <div class="control-group title">
+              <label class="control-label" for="table_field_description">{{ _('Description') }}</label>
+              <div class="controls input-controls">
+                  <input id="table_field_description" type="text" name="table_field_description" value="{{ table.table_description }}" placeholder="{{ _('Table description') }}" maxlength="100" required="required">
+              </div>
+            </div>
+
             {# Measure, Y values #}
             {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
             <div class="control-group control-select">
@@ -110,6 +124,8 @@
     {% set category_name = table.category_name %}
     {% set data_format = table.data_format %}
     {% set table_title = data.title %}
+    {% set table_subtitle = table.table_subtitle %}
+    {% set table_description = table.table_description %}
     {% endif %}
     <div class="preview-wrapper">
       {% snippet 'ajax_snippets/table_module.html',
@@ -120,7 +136,9 @@
       main_value = main_value,
       category_name = category_name,
       data_format = data_format,
-      table_title = table_title %}
+      table_title = table_title,
+      table_subtitle = table_subtitle,
+      table_description = table_description %}
     </div>
     <ul class="inline text-right table-actions">
       <li class="list-unstyled"><a class="btn  btn-default update-table-btn"><span class="fa fa-refresh"

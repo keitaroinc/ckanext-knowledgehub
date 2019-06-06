@@ -63,6 +63,10 @@ def _process_post_data(data, resource_id):
             data['sql_string']
         config['title'] = \
             data['map_field_title']
+        config['map_subtitle'] = \
+            data['map_field_subtitle']
+        config['map_description'] = \
+            data['map_field_description']
 
     config['filters'] = json.dumps(filters)
 

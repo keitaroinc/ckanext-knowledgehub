@@ -33,6 +33,20 @@
               </div>
             </div>
 
+            <div class="control-group title">
+              <label class="control-label" for="map_field_subtitle">{{ _('Subtitle') }}</label>
+              <div class="controls input-controls">
+                  <input id="map_field_subtitle" type="text" name="map_field_subtitle" value="{{ map.map_subtitle }}" placeholder="{{ _('Map subtitle') }}" maxlength="100" required="required">
+              </div>
+            </div>
+
+            <div class="control-group title">
+              <label class="control-label" for="map_field_description">{{ _('Description') }}</label>
+              <div class="controls input-controls">
+                  <input id="map_field_description" type="text" name="map_field_description" value="{{ map.map_description }}" placeholder="{{ _('Map description') }}" maxlength="100" required="required">
+              </div>
+            </div>
+
             {% set resources = h.knowledgehub_get_geojson_resources() %}
             <div class="control-group control-select">
               <label class="control-label" for="map_resource">{{ _('Map resource') }}</label>
@@ -112,6 +126,8 @@
 <div class="preview-wrapper custom-width">
    {% if map %}
     {% set map_title=data.title %}
+    {% set map_subtitle=map.map_subtitle %}
+    {% set map_description=map.map_description %}
     {% set map_resource=map.map_resource %}
     {% set map_key_field=map.map_key_field %}
     {% set data_key_field=map.data_key_field %}
@@ -121,6 +137,8 @@
   {% set map_config = h.knowledgehub_get_map_config() %}
   {% snippet 'ajax_snippets/map_module.html',
     map_title=map_title,
+    map_subtitle=map_subtitle,
+    map_description=map_description,
     map_config=map_config,
     map_resource=map_resource,
     map_key_field=map_key_field,

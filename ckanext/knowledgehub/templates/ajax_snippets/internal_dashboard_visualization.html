@@ -32,7 +32,9 @@
                 {% set x_axis = resource_view.__extras.x_axis %}
                 {% set y_axis = resource_view.__extras.y_axis %}
                 {% set chart_type = resource_view.__extras.type %}
-                {% set title = resource_view.__extras.title %}
+                {% set title = resource_view.title %}
+                {% set chart_subtitle = resource_view.__extras.chart_subtitle %}
+                {% set chart_description = resource_view.__extras.chart_description %}
                 {% set show_legend = resource_view.__extras.show_legend %}
                 {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
                 {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
@@ -62,7 +64,9 @@
                   y_axis=y_axis,
                   chart_type=chart_type,
                   sql_string=sql_string,
-                  title= title,
+                  title=title,
+                  chart_subtitle=chart_subtitle,
+                  chart_description=chart_description,
                   show_legend = show_legend,
                   x_text_rotate= x_text_rotate,
                   x_text_multiline= x_text_multiline,
@@ -95,6 +99,8 @@
                   {% set data_format = resource_view.__extras.data_format %}
                   {% set data_type = resource_view.__extras.data_type %}
                   {% set table_title = resource_view.title %}
+                  {% set table_subtitle = resource_view.__extras.table_subtitle %}
+                  {% set table_description = resource_view.__extras.table_description %}
                   {% set resource_name = resource_view.__extras.resource_name %}
                   {% set resource_id = resource_view.id %}
                 {% endif %}
@@ -107,11 +113,15 @@
                     category_name = category_name,
                     data_format = data_format,
                     data_type = data_type,
+                    table_subtitle = table_subtitle,
+                    table_description = table_description,
                     table_title = table_title %}
 
             {% elif resource_view.view_type == 'map'  %}
 
                 {% if resource_view and resource_view.__extras %}
+                  {% set map_subtitle=resource_view.__extras.map_subtitle %}
+                  {% set map_description=resource_view.__extras.map_description %}
                   {% set map_resource=resource_view.__extras.map_resource %}
                   {% set map_key_field=resource_view.__extras.map_key_field %}
                   {% set data_key_field=resource_view.__extras.data_key_field %}
@@ -121,6 +131,8 @@
                 {% endif %}
                   {% snippet 'ajax_snippets/map_module.html',
                     map_title=map_title,
+                    map_subtitle=map_subtitle,
+                    map_description=map_description,
                     map_config=map_config,
                     map_resource=map_resource,
                     map_key_field=map_key_field,
