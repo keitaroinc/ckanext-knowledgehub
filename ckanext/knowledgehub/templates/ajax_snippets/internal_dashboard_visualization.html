@@ -99,6 +99,8 @@
                   {% set data_format = resource_view.__extras.data_format %}
                   {% set data_type = resource_view.__extras.data_type %}
                   {% set table_title = resource_view.title %}
+                  {% set table_subtitle = resource_view.__extras.table_subtitle %}
+                  {% set table_description = resource_view.__extras.table_description %}
                   {% set resource_name = resource_view.__extras.resource_name %}
                   {% set resource_id = resource_view.id %}
                 {% endif %}
@@ -111,6 +113,8 @@
                     category_name = category_name,
                     data_format = data_format,
                     data_type = data_type,
+                    table_subtitle = table_subtitle,
+                    table_description = table_description,
                     table_title = table_title %}
 
             {% elif resource_view.view_type == 'map'  %}
