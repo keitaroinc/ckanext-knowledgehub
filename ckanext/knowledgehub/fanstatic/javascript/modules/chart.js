@@ -194,10 +194,10 @@ ckan.module('chart', function () {
             });
             options.title = {
                 text: titleVal,
-                position: "upper-left",
+                position: "upper-right",
                 padding: {
                     left: 0,
-                    right: 0,
+                    right: 60,
                     bottom: 15,
                     top: 40
                 }
@@ -582,7 +582,7 @@ ckan.module('chart', function () {
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
             this.options.y_axis = axisYValue;
-            //this.options.title = chartTitleVal;
+            this.options.title = chartTitleVal;
             this.options.show_legend = legendVal;
             this.options.x_text_rotate = xTextRotateVal;
             this.options.x_text_multiline = xTextMultilineVal;
