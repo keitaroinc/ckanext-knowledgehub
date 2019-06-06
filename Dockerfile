@@ -63,5 +63,6 @@ COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
 
 RUN chown -R ckan:ckan /srv/app/src/ckan/
+USER ckan
 
 CMD ["/srv/app/start_ckan.sh"]
