@@ -198,7 +198,9 @@ ckan.module('table', function () {
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
             var subtitle = (this.options.table_subtitle === true) ? '' : this.options.table_subtitle;
+            subtitle.length > 30 ? subtitle = subtitle.substring(0,30) + "..." : null;
             var description = (this.options.table_description === true) ? '' : this.options.table_description;
+            description.length > 50 ? description = description.substring(0,50) + "..." : null;
             var filename_export = (title === '') ? this.options.resource_name : title;
 
             filename_export = filename_export.split('.').slice(0, 1).join('.');
