@@ -192,14 +192,15 @@ ckan.module('chart', function () {
                 filters: [],
                 optionalFilter: undefined,
             });
+   
             options.title = {
                 text: titleVal,
                 position: "upper-right",
                 padding: {
                     left: 0,
-                    right: 60,
+                    right: 150,
                     bottom: 15,
-                    top: 40
+                    top: 15
                 }
             }
             options.legend = {
@@ -488,7 +489,11 @@ ckan.module('chart', function () {
 
             // Generate chart
             var chart = c3.generate(options);
-
+            var subtitle = (this.options.chart_subtitle === true) ? '' : this.options.chart_subtitle;
+            var chartDescription = (this.options.chart_description === true) ? '' : this.options.chart_description;
+            
+            var info = [subtitle, chartDescription];
+            //Create Image Logo and append
             var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             svgimg.setAttributeNS(null, 'height', '70');
             svgimg.setAttributeNS(null, 'width', '270');
@@ -499,6 +504,15 @@ ckan.module('chart', function () {
             var svgElement = $('.item-content').find('svg')[0];
             $(svgElement).append(svgimg);
 
+            info.map(val => {
+                var x = $(".c3-title").attr('x');
+                var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                val.length > 30 ? val = val.substring(0,30) + "...": null;
+                element.textContent = val;
+                element.setAttributeNS(null, 'dy', '1.2em');
+                element.setAttributeNS(null, 'x', x);
+                $('.c3-title').append(element)
+            });
         },
         // Get the values from dropdowns and rerender the chart.
         updateChart: function () {
