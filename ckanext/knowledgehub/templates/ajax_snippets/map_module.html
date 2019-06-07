@@ -17,8 +17,8 @@ data-name="{{ title }}"></i>
       <img style="opacity: 0" class="visualization-logo" src="/base/images/unhck-kh.svg">
       <div>
         {{map_title}}
-        <p class="text-muted">{{map_subtitle}}</p>
-        <p class="text-muted">{{map_description}}aaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+        <p class="text-muted">{{map_subtitle|truncate(30,true,"...")}}</p>
+        <p class="text-muted">{{map_description|truncate(50,true,"...")}}</p>
       </div>
       
     </div>
