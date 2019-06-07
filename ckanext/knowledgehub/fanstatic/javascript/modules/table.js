@@ -197,6 +197,8 @@ ckan.module('table', function () {
             if (fromUpdate) main_value = xVal;
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
+            var subtitle = (this.options.table_subtitle === true) ? '' : this.options.table_subtitle;
+            var description = (this.options.table_description === true) ? '' : this.options.table_description;
             var filename_export = (title === '') ? this.options.resource_name : title;
 
             filename_export = filename_export.split('.').slice(0, 1).join('.');
@@ -250,7 +252,7 @@ ckan.module('table', function () {
                     });
 
                     // Set title value
-                        $("div.dt-header").html(title); 
+                        $("div.dt-header").html(`<div></div><div>${title} <p>${subtitle}</p> <p>${description}</p><div>`); 
                 } else {
                     this.el.text(this._('Table could not be created!'));
                 }
