@@ -21,19 +21,33 @@
   border: 1px solid #969696;
 }
 
-.logoContainer{
+.logoContainer,
+.dt-header{
   width: 100%; 
-  padding: 1.5rem 2rem; 
   background-color: @white; 
   position: relative; 
   z-index:1000;
-  font-family: @font-family-sans-serif;
-  font-weight: 700;
-  font-size: @font-size-base;
   .flex;
   .justify-content-between;
   .align-items-center;  
+  img{
+    padding: 1.5rem 2rem; 
+  }
+  div{
+    font-family: @font-family-sans-serif;
+    font-weight: 700;
+    font-size: @font-size-base + 2;
+    padding: .5rem;
+    p{
+      font-size: 12px;
+      font-weight: 400;
+      margin-bottom:0;
+      white-space: nowrap;
+    }
+  }
+  
 }
+
 #saveMap{
   margin-top: 1.5rem;
   margin-left: 1.5rem;
@@ -50,4 +64,8 @@
 .c3-title{
   font-weight: 700;
   font-family: @font-family-sans-serif;
+  tspan{
+    font-size: 12px;
+    font-weight: 400;
+  }
 }

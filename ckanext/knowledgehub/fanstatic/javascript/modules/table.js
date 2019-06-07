@@ -197,6 +197,10 @@ ckan.module('table', function () {
             if (fromUpdate) main_value = xVal;
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
+            var subtitle = (this.options.table_subtitle === true) ? '' : this.options.table_subtitle;
+            subtitle.length > 30 ? subtitle = subtitle.substring(0,30) + "..." : null;
+            var description = (this.options.table_description === true) ? '' : this.options.table_description;
+            description.length > 50 ? description = description.substring(0,50) + "..." : null;
             var filename_export = (title === '') ? this.options.resource_name : title;
 
             filename_export = filename_export.split('.').slice(0, 1).join('.');
@@ -250,7 +254,7 @@ ckan.module('table', function () {
                     });
 
                     // Set title value
-                        $("div.dt-header").html(title); 
+                        $("div.dt-header").html(`<div></div><div>${title} <p>${subtitle}</p> <p>${description}</p><div>`); 
                 } else {
                     this.el.text(this._('Table could not be created!'));
                 }
@@ -428,10 +432,10 @@ ckan.module('table', function () {
 
         updateTable: function () {
             var yVal = $('[name=table_field_y_axis_column]').val();
-            var xVal = this.el.parent().parent().find('[id*=table_main_value]').val();
-            this.options.category_name = this.el.parent().parent().find('[id*=table_category_name]').val();
-            this.options.data_format = this.el.parent().parent().find('[id*=table_data_format]').val();
-            this.options.table_title = this.el.parent().parent().find('[id*=table_field_title]').val();
+            var xVal = this.el.parent().parent().parent().find('[id*=table_main_value]').val();
+            this.options.category_name = this.el.parent().parent().parent().find('[id*=table_category_name]').val();
+            this.options.data_format = this.el.parent().parent().parent().find('[id*=table_data_format]').val();
+            this.options.table_title = this.el.parent().parent().parent().find('[id*=table_field_title]').val();
 
             this.createTable(yVal, xVal, true);
         },
