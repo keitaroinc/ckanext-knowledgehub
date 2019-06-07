@@ -432,10 +432,10 @@ ckan.module('table', function () {
 
         updateTable: function () {
             var yVal = $('[name=table_field_y_axis_column]').val();
-            var xVal = this.el.parent().parent().find('[id*=table_main_value]').val();
-            this.options.category_name = this.el.parent().parent().find('[id*=table_category_name]').val();
-            this.options.data_format = this.el.parent().parent().find('[id*=table_data_format]').val();
-            this.options.table_title = this.el.parent().parent().find('[id*=table_field_title]').val();
+            var xVal = this.el.parent().parent().parent().find('[id*=table_main_value]').val();
+            this.options.category_name = this.el.parent().parent().parent().find('[id*=table_category_name]').val();
+            this.options.data_format = this.el.parent().parent().parent().find('[id*=table_data_format]').val();
+            this.options.table_title = this.el.parent().parent().parent().find('[id*=table_field_title]').val();
 
             this.createTable(yVal, xVal, true);
         },
