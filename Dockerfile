@@ -1,21 +1,30 @@
-FROM keitaro/ckan:2.8.2-bionic
+FROM keitaro/ckan:2.8.2-clean
 
 MAINTAINER Keitaro <info@keitaro.com>
 
 USER root
 
-RUN apt-get update && apt-get install -y \ 
-    libgeos-dev \
+RUN apk add --update-cache \
+    --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
+    --allow-untrusted \
+    geos \
+    geos-dev
+RUN apk add \
+    bash \
     g++ \
     gcc \
     libffi-dev \
+    libstdc++ \
+    libxml2 \
     libxml2-dev \
-    libxslt1.1 \
-    libxslt1-dev \
+    libxslt \
+    libxslt-dev \
     make \
     musl-dev \
-    libpcre3 \
-    python-dev \
+    pcre \
+    python2-dev \
+    openssl-dev \
+    py-lxml \
     unixodbc-dev \
     freetds-dev
 
