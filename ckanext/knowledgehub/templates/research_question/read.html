@@ -20,6 +20,20 @@
       {% endblock %}
     </h1>
 
+    {% block random %}
+    <h4>DASHBOARDS</h4>
+      {% if h.get_rqs_dashboards(rq['title']) %}
+        {% for viz in h.get_rqs_dashboards(rq['title']) %}
+         <li>
+            {{ h.link_to(viz['title'], h.url_for('dashboards.view', name=h.remove_space_for_url(viz['name'].lower()))) }}
+         </li>
+         
+        {% endfor %}
+      {% else %}
+      <div> There are no dashboards connected to this research question. </div>
+      {% endif %}
+      
+    {% endblock %}
     {% block research_question_description %}
       {% if rq.description %}
         <div class="notes embedded-content">

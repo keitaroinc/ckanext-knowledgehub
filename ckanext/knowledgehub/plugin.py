@@ -80,6 +80,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_dashboards': h.get_dashboards,
             'knowledgehub_get_geojson_properties': h.get_geojson_properties,
             'get_single_rq' : h.get_single_rq,
+            'get_rqs_dashboards': h.get_rqs_dashboards,
+            'remove_space_for_url': h.remove_space_for_url
         }
 
     # IDatasetForm
