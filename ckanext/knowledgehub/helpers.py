@@ -417,6 +417,14 @@ def get_last_visuals():
     data_dict_format = model_dictize\
         .resource_view_list_dictize(res_views, _get_context())
     return data_dict_format
+    
+def get_rqs_dashboards(rq_tit):
+
+    visualizations = toolkit.get_action('dashboards_for_rq')(_get_context(), {
+                        'research_question': rq_tit
+                    })
+                
+    return(visualizations)
 
 
 def get_filter_values(resource_id, filter_name, previous_filters=[]):
@@ -697,6 +705,8 @@ def get_dashboards(limit=5, order_by='created_by asc'):
 
     return dashboards
 
+def remove_space_for_url(str):
+    return str.replace(" ","-")
 
 def get_kwh_data():
     corpus = ''

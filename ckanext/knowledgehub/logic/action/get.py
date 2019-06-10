@@ -201,7 +201,6 @@ def research_question_show(context, data_dict):
 
     if not rq:
         raise NotFound(_(u'Research question'))
-
     return rq.as_dict()
 
 
@@ -520,6 +519,27 @@ def visualizations_for_rq(context, data_dict):
 
     return resource_views
 
+def dashboards_for_rq(context, data_dict):
+    research_question = data_dict.get('research_question')
+
+    if not research_question:
+        raise toolkit.ValidationError(
+            'Query parameter `research_question` is required')
+
+    views = []
+
+    datasets = toolkit.get_action('package_search')(context, {
+        'fq': '+extras_research_question:{0}'.format(research_question)
+    })
+
+    for dataset in datasets.get('results'):
+        for resource in dataset.get('resources'):
+            dash_list = toolkit.get_action('dashboard_list')(
+                context, {'id': resource.get('id')})
+            for res_view in dash_list['data']:
+                views.append(res_view)
+
+    return views
 
 @toolkit.side_effect_free
 def resource_user_feedback(context, data_dict):
