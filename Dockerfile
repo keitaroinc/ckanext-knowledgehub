@@ -4,6 +4,9 @@ MAINTAINER Keitaro <info@keitaro.com>
 
 USER root
 
+ENV TZ=Europe/Skopje
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 RUN apt-get update && apt-get install -y \ 
     libgeos-dev \
     g++ \
@@ -18,7 +21,10 @@ RUN apt-get update && apt-get install -y \
     python-dev \
     unixodbc-dev \
     freetds-dev \
-    sudo
+    sudo \
+    tzdata
+
+RUN dpkg-reconfigure -f noninteractive tzdata
 
 # Install Cython needed for pymssql
 RUN pip install cython && \
