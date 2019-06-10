@@ -1,32 +1,24 @@
-FROM keitaro/ckan:2.8.2-clean
+FROM keitaro/ckan:2.8.2-bionic
 
 MAINTAINER Keitaro <info@keitaro.com>
 
 USER root
 
-RUN apk add --update-cache \
-    --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
-    --allow-untrusted \
-    geos \
-    geos-dev
-RUN apk add \
-    bash \
+RUN apt-get update && apt-get install -y \ 
+    libgeos-dev \
     g++ \
     gcc \
     libffi-dev \
-    libstdc++ \
-    libxml2 \
     libxml2-dev \
-    libxslt \
-    libxslt-dev \
+    libxslt1.1 \
+    libxslt1-dev \
     make \
     musl-dev \
-    pcre \
-    python2-dev \
-    openssl-dev \
-    py-lxml \
+    libpcre3 \
+    python-dev \
     unixodbc-dev \
-    freetds-dev
+    freetds-dev \
+    sudo
 
 # Install Cython needed for pymssql
 RUN pip install cython && \
