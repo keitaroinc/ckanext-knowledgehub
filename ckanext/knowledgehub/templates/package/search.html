@@ -54,63 +54,65 @@
     </div>
     <div class="container-fluid">
         <div class="row">
-        <div class="col-lg-10 col-lg-offset-1">
-            <div class="row">
-                <div class="col-lg-3 group-list secondary dashboards">
-                    <h4>DASHBOARDS</h4>
-                    <hr>
-                    <ul class="list-unstyled nav nav-simple">
-                        {% for dashboard in h.get_dashboards(limit=4, order_by='created_at desc') %}
-                        <li class="nav-item">
-                            <a class="dashboard-link" href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
-                                <div>
-                                    <h4 >{{dashboard.title}}</h4>
-                                    {% set truncate = truncate or 180 %}
-                                    {% set truncate_description = truncate_description or 150 %}
-                                    {% set description = dashboard['description'] %}
-                                    <p class="text-muted"><small>{{ h.truncate(description, truncate_description) }}</small></p>
-                                    <div class="dashboard-created">
-                                        <i class="fa fa-table"></i>
-                                        {{ dashboard.created_at.strftime('%Y-%m-%d')  }}
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% block secondary_content %}
-                    <div class="filters">
-                        <div>
-                            {% for facet in c.facet_titles %}
-                            {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
-                            {% endfor %}
-                        </div>
-                        <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
-                                class="text">close</span></a>
-                    </div>
-                    {% endblock %}
-                </div>
-                <div class="col-lg-9 group-list indicators">
-                    <div class="group-list-items">
-                        <h4>DATASETS</h4>
+            <div class="col-lg-10 col-lg-offset-1">
+                <div class="row">
+                    <div class="col-lg-3 group-list secondary dashboards">
+                        <h4>DASHBOARDS</h4>
                         <hr>
-                        {% block page_primary_action %}
-                        {% if h.check_access('package_create') %}
-                        <div class="page_primary_action">
-                            {{ h.snippet ('snippets/add_dataset.html', dataset_type=dataset_type) }}
+                        <ul class="list-unstyled nav nav-simple">
+                            {% for dashboard in h.get_dashboards(limit=4, order_by='created_at desc') %}
+                            <li class="nav-item">
+                                <a class="dashboard-link"
+                                    href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
+                                    <div>
+                                        <h4>{{dashboard.title}}</h4>
+                                        {% set truncate = truncate or 180 %}
+                                        {% set truncate_description = truncate_description or 150 %}
+                                        {% set description = dashboard['description'] %}
+                                        <p class="text-muted">
+                                            <small>{{ h.truncate(description, truncate_description) }}</small></p>
+                                        <div class="dashboard-created">
+                                            <i class="fa fa-table"></i>
+                                            {{ dashboard.created_at.strftime('%Y-%m-%d')  }}
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% block secondary_content %}
+                        <div class="filters">
+                            <div>
+                                {% for facet in c.facet_titles %}
+                                {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
+                                {% endfor %}
+                            </div>
+                            <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
+                                    class="text">close</span></a>
                         </div>
-                        {% endif %}
                         {% endblock %}
                     </div>
-                    {% block package_search_results_list %}
+                    <div class="col-lg-9 group-list indicators">
+                        <div class="group-list-items">
+                            <h4>DATASETS</h4>
+                            <hr>
+                            {% block page_primary_action %}
+                            {% if h.check_access('package_create') %}
+                            <div class="page_primary_action">
+                                {{ h.snippet ('snippets/add_dataset.html', dataset_type=dataset_type) }}
+                            </div>
+                            {% endif %}
+                            {% endblock %}
+                        </div>
+                        {% block package_search_results_list %}
 
-                    {{ h.snippet('snippets/package_list.html', packages=c.page.items) }}
-                    {% endblock %}
+                        {{ h.snippet('snippets/package_list.html', packages=c.page.items) }}
+                        {% endblock %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
     {% block page_pagination %}
     {{ c.page.pager(q=c.q) }}
@@ -125,10 +127,10 @@
             <h4>VISUALIZATIONS</h4>
             <hr>
         </div>
+        {% if h.get_last_visuals() %}
         <div class="col-lg-12 visualizations">
             <div class="visualization-wrapper">
                 <div class="resource-view">
-                    {% if h.get_last_visuals() %}
                     {% set vis = h.get_last_visuals() %}
                     {% for resource_view in vis %}
                     {% if resource_view.view_type == 'chart' %}
@@ -198,13 +200,19 @@
                                 %}
                     {% endif %}
                     {% endfor %}
-                    {% else %}
-                    <div> There are no visualizations created yet.</div>
-                    {% endif %}
                 </div>
             </div>
         </div>
+        {% else %}
+            <div class="col-lg-10 col-lg-offset-1">
+                <div class="visualization-wrapper">
+                    <div class="resource-view">
+                        <div class="no-items"> There are no visualizations created yet.</div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+   
     </div>
-</div>
 </div>
 {% endblock %}
