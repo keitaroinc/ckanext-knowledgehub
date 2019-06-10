@@ -20,6 +20,7 @@ from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
+from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -345,3 +346,42 @@ def package_update(context, data_dict):
                     break
 
     return ckan_package_update(context, data_dict)
+
+
+def kwh_data_update(context, data_dict):
+    '''
+    Store Knowledge Hub data
+        :param type
+        :param old_content
+        :param new_content
+    '''
+    check_access('kwh_data', context, data_dict)
+
+    session = context['session']
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.kwh_data_schema_update(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    data['user'] = model.User.by_name(user.decode('utf8')).id
+
+    kwh_data = KWHData.get(
+        user=data['user'],
+        content=data['old_content'],
+        type=data['type']
+    ).first()
+
+    if kwh_data:
+        update_data = _table_dictize(kwh_data, context)
+        update_data.pop('id')
+        update_data.pop('created_at')
+        update_data['content'] = data['new_content']
+
+        filter = {'id': kwh_data.id}
+        data = KWHData.update(filter, update_data)
+
+        return data.as_dict()

@@ -6,12 +6,14 @@ from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm
 
 import ckanext.knowledgehub.helpers as h
+from ckanext.knowledgehub.rnn import worker as kwh_data_worker
 
 from ckanext.knowledgehub.helpers import _register_blueprints
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
+    plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
@@ -19,6 +21,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
+
+    # IConfigurable
+
+    def configure(self, config):
+        toolkit.enqueue_job(kwh_data_worker.learn,
+                            title=u'Predictive search',
+                            queue=u'predictive-search')
 
     # IConfigurer
     def update_config(self, config_):
@@ -79,7 +88,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_rq_titles_from_res': h.get_rq_titles_from_res,
             'get_dashboards': h.get_dashboards,
             'knowledgehub_get_geojson_properties': h.get_geojson_properties,
-            'get_single_rq' : h.get_single_rq,
+            'get_single_rq': h.get_single_rq,
         }
 
     # IDatasetForm
@@ -170,6 +179,12 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     def before_map(self, map):
         map.redirect('/', '/dataset',
                      _redirect_code='301 Moved Permanently')
+        # Override the package search action.
+        with SubMapper(
+            map,
+            controller='ckanext.knowledgehub.controllers:KWHPackageController'
+        ) as m:
+            m.connect('search', '/dataset', action='search')
 
         return map
 
