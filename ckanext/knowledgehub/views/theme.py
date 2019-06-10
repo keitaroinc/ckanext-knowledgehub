@@ -189,6 +189,18 @@ class CreateView(MethodView):
                             errors,
                             error_summary)
 
+        try:
+            kwh_data = {
+                'type': 'theme',
+                'content': theme.get('title'),
+                'theme': theme.get('id')
+            }
+            logic.get_action(u'kwh_data_create')(
+                context, kwh_data
+            )
+        except Exception as e:
+            log.debug('Error while storing KWH data: %s' % str(e))
+
         return h.redirect_to(u'theme.read',
                              name=theme['name'])
 
@@ -260,6 +272,19 @@ class EditView(MethodView):
             error_summary = e.error_summary
             return self.get(name, data_dict,
                             errors, error_summary)
+
+        try:
+            old_theme = context.get('old_theme')
+            kwh_data = {
+                'type': 'theme',
+                'old_content': old_theme.get('title'),
+                'new_content': theme.get('title')
+            }
+            logic.get_action(u'kwh_data_update')(
+                context, kwh_data
+            )
+        except Exception as e:
+            log.debug('Error while storing KWH data: %s' % str(e))
 
         return h.redirect_to(u'theme.read', name=theme['name'])
 

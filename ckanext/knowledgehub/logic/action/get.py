@@ -13,7 +13,10 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
+from ckanext.knowledgehub.model import KWHData
+from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub import helpers as kh_helpers
+from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckan.lib import helpers as h
 
 from ckanext.knowledgehub.backend.factory import get_backend
@@ -638,3 +641,103 @@ def resource_feedback_list(context, data_dict):
 def get_rq_url(context, data_dict):
 
     return h.url_for('research_question.read', name=data_dict['name'])
+
+
+@toolkit.side_effect_free
+def kwh_data_list(context, data_dict):
+    ''' List KnowledgeHub data
+    :param type: origin of the data, one of theme, sub-theme,
+        rq and search
+    :type type: string
+    :param content: the actual data
+    :type content: string
+    :param user: the user ID
+    :type user: string
+    :param theme: the theme ID
+    :type theme: string
+    :param sub_theme: the sub-theme ID
+    :type sub_theme: string
+    :param rq: the research question ID
+    :type rq: string
+    :returns: a dictionary including total items,
+     page number, items per page and data(KnowledgeHub data)
+    :rtype: dictionary
+    '''
+    data_type = data_dict.get('type', '')
+    content = data_dict.get('content', '')
+    user = data_dict.get('user', '')
+    theme = data_dict.get('theme', '')
+    sub_theme = data_dict.get('sub_theme', '')
+    rq = data_dict.get('rq', '')
+
+    q = data_dict.get('q', '')
+    page_size = int(data_dict.get('pageSize', 1000000))
+    page = int(data_dict.get('page', 1))
+    order_by = data_dict.get('order_by', None)
+    offset = (page - 1) * page_size
+
+    kwargs = {}
+
+    if data_type:
+        kwargs['type'] = data_type
+    if content:
+        kwargs['content'] = content
+    if user:
+        kwargs['user'] = user
+    if theme:
+        kwargs['theme'] = theme
+    if sub_theme:
+        kwargs['sub_theme'] = sub_theme
+    if rq:
+        kwargs['rq'] = rq
+
+    kwargs['q'] = q
+    kwargs['limit'] = page_size
+    kwargs['offset'] = offset
+    kwargs['order_by'] = order_by
+
+    kwh_data = []
+
+    try:
+        db_data = KWHData.get(**kwargs).all()
+    except Exception:
+        return {'total': 0, 'page': page,
+                'pageSize': page_size, 'data': []}
+
+    for entry in db_data:
+        kwh_data.append(_table_dictize(entry, context))
+
+    total = len(kwh_data)
+
+    return {'total': total, 'page': page,
+            'pageSize': page_size, 'data': kwh_data}
+
+
+@toolkit.side_effect_free
+def get_last_rnn_corpus(context, data_dict):
+    ''' Returns last RNN corpus
+    :returns: a RNN corpus
+    :rtype: string
+    '''
+
+    c = RNNCorpus.get(order_by='created_at desc', limit=1).first()
+    if not c:
+        raise NotFound(_(u'There is not corpus stored yet!'))
+    else:
+        return c.corpus
+
+
+@toolkit.side_effect_free
+def get_predictions(context, data_dict):
+    ''' Returns a list of predictions
+    :param text: the text for which predictions have to be made
+    :type text: string
+    :returns: predictions
+    :rtype: list
+    '''
+
+    text = data_dict.get('text')
+    if not text:
+        raise ValidationError({'text': _('Missing value')})
+
+    return rnn_helpers.predict_completions(text)
