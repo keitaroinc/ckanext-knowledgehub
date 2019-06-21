@@ -58,10 +58,17 @@ pip install ckanext-knowledgehub
 sudo service apache2 reload
 ```
 
-6. Run the background job for predictive search periodically( daily or weekly is recommended ):
+6. Run the command for predictive search periodically( daily or weekly is recommended ).
+This command will start training the model:
 
 ```
-paster --plugin=ckan jobs worker predictive-search -c /etc/ckan/default/production.ini
+knowledgehub  -c /etc/ckan/default/production.ini predictive_search train
+```
+
+There is a action that can run CLI commands for Knowledge Hub.
+This example shows how to run the above command through the API action:
+```
+curl -v 'http://hostname/api/3/action/run_command' -H'Authorization: API-KEY' -d '{"command": "predictive_search train"}'
 ```
 
 ### Config Settings

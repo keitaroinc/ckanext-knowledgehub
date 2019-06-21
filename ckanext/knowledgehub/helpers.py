@@ -417,13 +417,14 @@ def get_last_visuals():
     data_dict_format = model_dictize\
         .resource_view_list_dictize(res_views, _get_context())
     return data_dict_format
-    
+
+
 def get_rqs_dashboards(rq_tit):
 
     visualizations = toolkit.get_action('dashboards_for_rq')(_get_context(), {
                         'research_question': rq_tit
                     })
-                
+
     return(visualizations)
 
 
@@ -705,20 +706,6 @@ def get_dashboards(limit=5, order_by='created_by asc'):
 
     return dashboards
 
+
 def remove_space_for_url(str):
-    return str.replace(" ","-")
-
-def get_kwh_data():
-    corpus = ''
-    try:
-        kwh_data = toolkit.get_action('kwh_data_list')({}, {})
-    except Exception as e:
-        log.debug('Error while loading KnowledgeHub data: %s' % str(e))
-        return corpus
-
-    if kwh_data.get('total'):
-        data = kwh_data.get('data', [])
-        for entry in data:
-            corpus += ' %s' % entry.get('content')
-
-    return corpus
+    return str.replace(" ", "-")

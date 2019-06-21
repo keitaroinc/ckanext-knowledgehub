@@ -120,3 +120,19 @@ def predict_completions(text):
     except Exception as e:
         log.debug('Error while prediction: %s' % str(e))
         return []
+
+
+def get_kwh_data():
+    corpus = ''
+    try:
+        kwh_data = toolkit.get_action('kwh_data_list')({}, {})
+    except Exception as e:
+        log.debug('Error while loading KnowledgeHub data: %s' % str(e))
+        return corpus
+
+    if kwh_data.get('total'):
+        data = kwh_data.get('data', [])
+        for entry in data:
+            corpus += ' %s' % entry.get('content')
+
+    return corpus

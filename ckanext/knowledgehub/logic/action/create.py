@@ -1,6 +1,7 @@
 import logging
 import datetime
 import os
+import subprocess
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
@@ -460,3 +461,33 @@ def corpus_create(context, data_dict):
     corpus = RNNCorpus(**data)
     corpus.save()
     return corpus.as_dict()
+
+
+def run_command(context, data_dict):
+    '''
+        This action is only intendet to be used for running scripts as
+        cron jobs.
+
+        :param command: the command the will be executed such a `db int`
+        :type title: string
+
+        :returns: OK
+        :rtype: string
+    '''
+
+    check_access('run_command', context, data_dict)
+
+    command = _get_or_bust(data_dict, 'command')
+
+    try:
+        ckan_ini = os.environ.get('CKAN_INI', '/srv/app/production.ini')
+        cmd_args = command.split(' ')
+        cmd = ['knowledgehub', '-c', ckan_ini]
+        for c in cmd_args:
+            cmd.append(c)
+
+        subprocess.call(cmd)
+    except Exception as e:
+        return 'Error: %s' % str(e)
+
+    return 'Successfully run command: %s' % ' '.join(cmd)

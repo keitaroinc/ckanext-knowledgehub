@@ -17,9 +17,9 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
 from ckan.common import config
 from ckan.plugins import toolkit
+from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.rnn import helpers as rnn_h
-from ckanext.knowledgehub import helpers as h
 
 
 np.random.seed(42)
@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 
 def learn():
     try:
-        original_data = h.get_kwh_data()
+        original_data = rnn_h.get_kwh_data()
         data = original_data.lower()
     except Exception as e:
         log.debug('Error while training the model: %s' % str(e))
@@ -145,8 +145,10 @@ def learn():
         return
 
     try:
+        sysadmin = get_sysadmins()[0].name
+        context = {'user': sysadmin, 'ignore_auth': True}
         # model.save(model_path)
-        toolkit.get_action('corpus_create')({}, {
+        toolkit.get_action('corpus_create')(context, {
             'corpus': original_data
         })
 
