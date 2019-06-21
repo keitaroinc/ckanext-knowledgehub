@@ -10,6 +10,7 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, config, g, request
+from ckan.controllers.admin import get_sysadmins
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
@@ -93,6 +94,10 @@ def view(name):
 
     context = _get_context()
 
+    # show dashboard for all users
+    sysadmin = get_sysadmins()[0].name
+    context = {'user': sysadmin, 'ignore_auth': True}
+
     try:
         check_access(u'dashboard_show', context)
     except NotAuthorized:
@@ -112,7 +117,7 @@ def view(name):
 
         for ind in dashboard_dict['indicators']:
             res_view_id = ind.get('resource_view_id')
-            res_view = get_action('resource_view_show')(_get_context(), {
+            res_view = get_action('resource_view_show')(context, {
                 'id': res_view_id
             })
             ind['resource_view'] = res_view

@@ -22,6 +22,7 @@ from ckan.common import g, _
 from ckan import logic
 from ckan.model import ResourceView, Resource
 from ckan import lib
+from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
@@ -367,8 +368,12 @@ def get_resource_data(sql_string):
 
     - sql_string: the SQL query that will be used for datastore_search_sql
     '''
+
+    sysadmin = get_sysadmins()[0].name
+    context = {'user': sysadmin, 'ignore_auth': True}
+
     response = toolkit.get_action('datastore_search_sql')(
-        {}, {'sql': sql_string}
+        context, {'sql': sql_string}
     )
     records_to_lower = []
     for record in response['records']:
@@ -431,7 +436,11 @@ def get_rqs_dashboards(rq_tit):
 def get_filter_values(resource_id, filter_name, previous_filters=[]):
     '''Returns resource field values with no duplicates.'''
 
-    resource = toolkit.get_action('resource_show')({}, {'id': resource_id})
+    sysadmin = get_sysadmins()[0].name
+    context = {'user': sysadmin, 'ignore_auth': True}
+
+    resource = toolkit.get_action('resource_show')(context,
+                                                   {'id': resource_id})
 
     if not resource.get('datastore_active'):
         return []
@@ -440,7 +449,7 @@ def get_filter_values(resource_id, filter_name, previous_filters=[]):
         'resource_id': resource['id'],
         'limit': 0
     }
-    result = toolkit.get_action('datastore_search')({}, data)
+    result = toolkit.get_action('datastore_search')(context, data)
 
     where_clause = _create_where_clause(previous_filters)
 
@@ -457,7 +466,7 @@ def get_filter_values(resource_id, filter_name, previous_filters=[]):
         )
 
         result = toolkit.get_action('datastore_search_sql')(
-            {}, {'sql': sql_string}
+            context, {'sql': sql_string}
         )
         values = [field[filter_name] for field in result.get('records', [])]
 
