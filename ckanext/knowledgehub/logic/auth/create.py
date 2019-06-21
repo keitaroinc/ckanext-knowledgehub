@@ -64,3 +64,11 @@ def corpus_create(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def run_command(context, data_dict):
+    '''
+        Authorization check for running commands
+    '''
+    # sysadmins only
+    return {'success': False}
