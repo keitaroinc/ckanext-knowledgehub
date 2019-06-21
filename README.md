@@ -65,6 +65,12 @@ This command will start training the model:
 knowledgehub  -c /etc/ckan/default/production.ini predictive_search train
 ```
 
+There is a action that can run CLI commands for Knowledge Hub.
+This example shows how to run the above command through the API action:
+```
+curl -v 'http://hostname/api/3/action/run_command' -H'Authorization: API-KEY' -d '{"command": "predictive_search train"}'
+```
+
 ### Config Settings
 
 These are the required configuration options used by the extension:
