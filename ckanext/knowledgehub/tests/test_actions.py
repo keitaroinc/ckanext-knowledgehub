@@ -26,9 +26,14 @@ assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
 
 
+class User(object):
+    def __init__(self, id):
+        self.id = id
+
+
 class ActionsBase(helpers.FunctionalTestBase):
     def setup(self):
-        # helpers.reset_db()
+        helpers.reset_db()
         theme_db_setup()
         sub_theme_db_setup()
         rq_db_setup()
@@ -47,13 +52,13 @@ class TestKWHCreateActions(ActionsBase):
             'ignore_auth': True
         }
         data_dict = {
-            'name': 'test-name',
+            'name': 'theme-name',
             'title': 'Test title',
             'description': 'Test description'
         }
         theme = create_actions.theme_create(context, data_dict)
 
-        assert_equals(theme.get('name'), 'test-name')
+        assert_equals(theme.get('name'), 'theme-name')
 
     def test_sub_theme_create(self):
         user = factories.Sysadmin()
@@ -61,8 +66,9 @@ class TestKWHCreateActions(ActionsBase):
             'user': user.get('name'),
             'ignore_auth': True
         }
+
         data_dict = {
-            'name': 'test-sub-theme',
+            'name': 'theme-name',
             'title': 'Test title',
             'description': 'Test description'
         }
@@ -77,3 +83,37 @@ class TestKWHCreateActions(ActionsBase):
         sub_theme = create_actions.sub_theme_create(context, data_dict)
 
         assert_equals(sub_theme.get('name'), 'sub-theme-name')
+
+    def test_research_question_create(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq = create_actions.research_question_create(context, data_dict)
+
+        assert_equals(rq.get('name'), 'rq-name')
