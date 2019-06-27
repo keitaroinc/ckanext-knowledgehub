@@ -1,7 +1,6 @@
 """Tests for actions.py."""
 
 import os
-import uuid
 import mock
 import nose.tools
 
@@ -23,34 +22,15 @@ from ckanext.knowledgehub.model.kwh_data import (
     setup as kwh_data_setup
 )
 from ckanext.knowledgehub.logic.action import create as create_actions
+from ckanext.knowledgehub.logic.action import get as get_actions
+from ckanext.knowledgehub.logic.action import delete as delete_actions
+from ckanext.knowledgehub.tests.helpers import (User,
+                                                create_dataset,
+                                                mock_pylons)
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
-
-
-class User(object):
-    def __init__(self, id):
-        self.id = id
-
-
-def create_dataset(**kwargs):
-    sysadmin = factories.Sysadmin()
-    user = User(sysadmin.get('id'))
-
-    context = {
-        'auth_user_obj': user,
-        'user': sysadmin.get('name')
-    }
-
-    data_dict = {
-        'name': str(uuid.uuid4()),
-        'title': 'title',
-        'notes': 'notes',
-        'maintainer': 'John'
-    }
-    data_dict.update(kwargs)
-    return toolkit.get_action('package_create')(context, data_dict)
 
 
 class ActionsBase(helpers.FunctionalTestBase):
@@ -273,3 +253,417 @@ class TestKWHCreateActions(ActionsBase):
             'Successfully run command: knowledgehub -c %s %s'
             % (os.environ.get('CKAN_INI'), data_dict.get('command'))
         )
+
+
+class TestKWHGetActions(ActionsBase):
+
+    def test_theme_show_list(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        theme_show = get_actions.theme_show(context, {'id': theme.get('id')})
+
+        assert_equals(theme_show.get('name'), data_dict.get('name'))
+
+        theme_list = get_actions.theme_list(context, {})
+
+        assert_equals(theme_list.get('total'), 1)
+
+    def test_sub_theme_show_list(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        sub_theme_show = get_actions.sub_theme_show(
+            context,
+            {'id': sub_theme.get('id')}
+        )
+
+        assert_equals(sub_theme_show.get('name'), data_dict.get('name'))
+
+        sub_theme_list = get_actions.sub_theme_list(context, {})
+
+        assert_equals(sub_theme_list.get('total'), 1)
+
+    def test_research_question_show_list(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq = create_actions.research_question_create(context, data_dict)
+
+        rq_show = get_actions.research_question_show(
+            context,
+            {'id': rq.get('id')}
+        )
+
+        assert_equals(rq_show.get('name'), data_dict.get('name'))
+
+        rq_list = get_actions.research_question_list(context, {})
+
+        assert_equals(rq_list.get('total'), 1)
+
+    def test_resource_view_list(self):
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'description': 'Visualization description',
+            'view_type': 'chart',
+            'config': {
+                "color": "#59a14f",
+                "y_label": "Usage",
+                "show_legend": "Yes"
+            }
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict)
+
+        rsc_view_list = get_actions.resource_view_list(
+            context,
+            {'id': resource.get('id')}
+        )
+
+        assert_equals(
+            rsc_view_list[0].get('view_type'),
+            data_dict.get('view_type')
+        )
+        assert_equals(
+            rsc_view_list[0].get('title'),
+            data_dict.get('title')
+        )
+
+    def test_dashboard_show_list(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard',
+            'description': 'Dashboard description',
+            'type': 'internal'
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+
+        dashboard_show = get_actions.dashboard_show(
+            context,
+            {'id': dashboard.get('id')}
+        )
+
+        assert_equals(dashboard.get('name'), data_dict.get('name'))
+
+        dashboard_list = get_actions.dashboard_list(context, {})
+
+        assert_equals(dashboard_list.get('total'), 1)
+
+    def test_resource_user_feedback_show_list(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'type': 'useful',
+            'dataset': dataset.get('id'),
+            'resource': resource.get('id')
+        }
+        rf = create_actions.resource_feedback(context, data_dict)
+
+        rf_show = get_actions.resource_user_feedback(
+            context,
+            {'resource': resource.get('id')}
+        )
+
+        assert_equals(rf_show[0].get('type'), data_dict.get('type'))
+
+        rf_list = get_actions.resource_feedback_list(
+            context,
+            {
+                'type': data_dict.get('type'),
+                'dataset': dataset.get('id'),
+                'resource': resource.get('id')
+            }
+        )
+
+        assert_equals(rf_list.get('total'), 1)
+
+    def test_get_rq_url(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq = create_actions.research_question_create(context, data_dict)
+
+        rq_url = get_actions.get_rq_url(context, {'name': rq.get('name')})
+
+        assert_not_equals(rq_url, '')
+
+    def test_kwh_data_list(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'type': 'theme',
+            'content': 'Refugees in Syria'
+        }
+        kwh_data = create_actions.kwh_data_create(context, data_dict)
+
+        kwh_data_list = get_actions.kwh_data_list(context, {})
+
+        assert_equals(kwh_data_list.get('total'), 1)
+
+    def test_get_last_rnn_corpus(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'corpus': 'KHW corpus'
+        }
+        kwh_corpus = create_actions.corpus_create(context, data_dict)
+
+        last_rnn_corpus = get_actions.get_last_rnn_corpus(context, {})
+
+        assert_equals(last_rnn_corpus, data_dict.get('corpus'))
+
+
+class TestKWHDeleteActions(ActionsBase):
+
+    def test_theme_delete(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        result = delete_actions.theme_delete(context, {'id': theme.get('id')})
+
+        assert_equals(result.get('message'), 'Theme deleted.')
+
+    def test_sub_theme_delete(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'ignore_auth': True
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        result = delete_actions.sub_theme_delete(
+            context,
+            {'id': sub_theme.get('id')}
+        )
+
+        assert_equals(result, 'OK')
+
+    def test_research_question_delete(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq = create_actions.research_question_create(context, data_dict)
+
+        result = delete_actions.research_question_delete(
+            context,
+            {'id': rq.get('id')}
+        )
+
+        assert_equals(result, None)
+
+    def test_dashboard_delete(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard',
+            'description': 'Dashboard description',
+            'type': 'internal'
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+
+        result = delete_actions.dashboard_delete(
+            context,
+            {'id': dashboard.get('id')}
+        )
+
+        assert_equals(result.get('message'), 'Dashboard deleted.')
