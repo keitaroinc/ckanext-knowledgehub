@@ -24,6 +24,7 @@ from ckanext.knowledgehub.model.kwh_data import (
 from ckanext.knowledgehub.logic.action import create as create_actions
 from ckanext.knowledgehub.logic.action import get as get_actions
 from ckanext.knowledgehub.logic.action import delete as delete_actions
+from ckanext.knowledgehub.logic.action import update as update_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons)
@@ -667,3 +668,224 @@ class TestKWHDeleteActions(ActionsBase):
         )
 
         assert_equals(result.get('message'), 'Dashboard deleted.')
+
+
+class TestKWHUpdateActions(ActionsBase):
+
+    def test_theme_update(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict['title'] = 'Test title updated'
+        updated_theme = update_actions.theme_update(context, data_dict)
+
+        assert_equals(updated_theme.get('title'), data_dict.get('title'))
+
+    def test_sub_theme_update(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'ignore_auth': True
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict['id'] = sub_theme.get('id')
+        data_dict['title'] = 'Test title updated'
+        sub_theme_updated = update_actions.sub_theme_update(context, data_dict)
+
+        assert_equals(sub_theme_updated.get('title'), data_dict.get('title'))
+
+    def test_research_question_update(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq = create_actions.research_question_create(context, data_dict)
+
+        data_dict['id'] = rq.get('id')
+        data_dict['title'] = 'Research question updated'
+        rq_updated = update_actions.research_question_update(
+            context,
+            data_dict
+        )
+
+        assert_equals(rq_updated.get('title'), data_dict.get('title'))
+
+    def test_resource_update(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'id': resource.get('id'),
+            'name': 'Name updated',
+            'schema': '',
+            'validation_options': '',
+            'db_type': None
+        }
+
+        rsc_updated = update_actions.resource_update(context, data_dict)
+
+        assert_equals(rsc_updated, None)
+
+    def test_resource_view_update(self):
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'description': 'Visualization description',
+            'view_type': 'chart',
+            'config': {
+                "color": "#59a14f",
+                "y_label": "Usage",
+                "show_legend": "Yes"
+            }
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict)
+
+        data_dict['id'] = rsc_view.get('id')
+        data_dict['title'] = 'Visualization title updated'
+        rsc_view_updated = update_actions.resource_view_update(
+            context,
+            data_dict
+        )
+
+        assert_equals(
+            rsc_view_updated.get('title'),
+            data_dict.get('title')
+        )
+
+    def test_dashboard_update(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard',
+            'description': 'Dashboard description',
+            'type': 'internal'
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+
+        data_dict['id'] = dashboard.get('id')
+        data_dict['title'] = 'Internal Dashboard Updated'
+        dashboard_updated = update_actions.dashboard_update(
+            context,
+            data_dict
+        )
+
+        assert_equals(dashboard_updated.get('title'), data_dict.get('title'))
+
+    def test_kwh_data_update(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'type': 'theme',
+            'content': 'Refugees in Syria'
+        }
+        kwh_data = create_actions.kwh_data_create(context, data_dict)
+
+        data_dict = {
+            'type': 'theme',
+            'old_content': 'Refugees in Syria',
+            'new_content': 'Refugees in Syria updated'
+        }
+
+        kwh_data_updated = update_actions.kwh_data_update(
+            context,
+            data_dict
+        )
+
+        assert_equals(
+            kwh_data_updated.get('content'),
+            data_dict.get('new_content')
+        )
