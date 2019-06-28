@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/keitaroinc/ckanext-knowledgehub.svg?branch=master)](https://travis-ci.com/keitaroinc/ckanext-knowledgehub)
+[![Coverage Status](https://coveralls.io/repos/github/keitaroinc/ckanext-knowledgehub/badge.svg?branch=master)](https://coveralls.io/github/keitaroinc/ckanext-knowledgehub?branch=master)
 
 # ckanext-knowledgehub
 
