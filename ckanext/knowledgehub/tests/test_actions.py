@@ -44,7 +44,7 @@ class ActionsBase(helpers.FunctionalTestBase):
         resource_feedback_setup()
         kwh_data_setup()
         rnn_corpus_setup()
-        os.environ["CKAN_INI"] = 'subdir/test.ini'
+        os.environ["CKAN_INI"] = 'test.ini'
 
 
 class TestKWHCreateActions(ActionsBase):
