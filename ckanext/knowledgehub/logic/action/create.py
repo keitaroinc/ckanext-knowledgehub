@@ -236,7 +236,7 @@ def resource_create(context, data_dict):
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
-    ckan_rsc_create(context, data_dict)
+    return ckan_rsc_create(context, data_dict)
 
 
 # Overwrite of the original 'resource_view_create'
