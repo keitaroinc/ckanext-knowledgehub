@@ -7,7 +7,7 @@ USER root
 ENV TZ=Europe/Skopje
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update && apt-get install -y \ 
+RUN apt-get update && apt-get install -y \
     libgeos-dev \
     g++ \
     gcc \
@@ -65,6 +65,8 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.datarequest
 # Set up Disqus
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.name = knowledgehub-ckan"
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.disqus_url = knowledgehub-staging.keitaro.app"
+# Set max resource size to 100MB
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.max_resource_size = 100"
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
