@@ -18,6 +18,7 @@ from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckan.lib import helpers as h
+from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -501,6 +502,9 @@ def visualizations_for_rq(context, data_dict):
             'Query parameter `research_question` is required')
 
     resource_views = []
+
+    sysadmin = get_sysadmins()[0].name
+    context = {'user': sysadmin, 'ignore_auth': True}
 
     datasets = toolkit.get_action('package_search')(context, {
         'fq': '+extras_research_question:{0}'.format(research_question)
