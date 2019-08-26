@@ -745,10 +745,3 @@ def get_predictions(context, data_dict):
         raise ValidationError({'text': _('Missing value')})
 
     return rnn_helpers.predict_completions(text)
-
-
-@toolkit.side_effect_free
-def organization_list(context, data_dict):
-    print data_dict
-
-    return []
