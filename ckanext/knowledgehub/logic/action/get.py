@@ -501,9 +501,6 @@ def visualizations_for_rq(context, data_dict):
 
     resource_views = []
 
-    # sysadmin = get_sysadmins()[0].name
-    # context = {'user': sysadmin, 'ignore_auth': True}
-
     datasets = toolkit.get_action('package_search')(context, {
         'fq': '+extras_research_question:{0}'.format(research_question),
         'include_private': True
