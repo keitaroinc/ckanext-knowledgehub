@@ -40,8 +40,8 @@ pip install -r dev-requirements.txt
 echo "Setup database tables for ckanext-knowledgehub"
 knowledgehub -c ckan/test-core.ini db init
 
-echo "Moving test.ini into a subdir..."
+echo "Moving test-travis.ini into a subdir..."
 mkdir subdir
-mv travis-test.ini subdir
+mv test-travis.ini subdir
 
 echo "travis-build.bash is done."
