@@ -42,6 +42,6 @@ knowledgehub -c ckan/test-core.ini db init
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
-mv test.ini subdir
+mv travis-test.ini subdir
 
 echo "travis-build.bash is done."
