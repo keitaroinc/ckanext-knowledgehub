@@ -494,27 +494,25 @@ def visualizations_for_rq(context, data_dict):
     :returns: list of dictionaries, where each dictionary is a resource view
     :rtype: list
     '''
-
     research_question = data_dict.get('research_question')
-
     if not research_question:
         raise toolkit.ValidationError(
             'Query parameter `research_question` is required')
 
     resource_views = []
 
-    sysadmin = get_sysadmins()[0].name
-    context = {'user': sysadmin, 'ignore_auth': True}
+    # sysadmin = get_sysadmins()[0].name
+    # context = {'user': sysadmin, 'ignore_auth': True}
 
     datasets = toolkit.get_action('package_search')(context, {
-        'fq': '+extras_research_question:{0}'.format(research_question)
+        'fq': '+extras_research_question:{0}'.format(research_question),
+        'include_private': True
     })
 
     for dataset in datasets.get('results'):
         for resource in dataset.get('resources'):
             resource_view_list = toolkit.get_action('resource_view_list')(
                 context, {'id': resource.get('id')})
-
             for resource_view in resource_view_list:
                 if resource_view.get('view_type') == 'chart' or \
                    resource_view.get('view_type') == 'map' or \
