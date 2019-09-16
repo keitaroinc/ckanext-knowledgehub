@@ -85,7 +85,7 @@ def research_question_title_characters_validator(key, data, errors, context):
     '''Return the given value if it's a valid research question,
      otherwise return appropriate error.
     '''
-    title_match = re.compile("[a-zA-Z0-9_\-. ]*$")
+    title_match = re.compile("[a-zA-Z0-9_\-. ?]*$")
     if not isinstance(data[key], string_types):
         errors[key].append(
             p.toolkit._('Research question must be strings'))
@@ -109,7 +109,7 @@ def research_question_title_characters_validator(key, data, errors, context):
     if not title_match.match(data[key]):
         errors[key].append(
             p.toolkit._('Must be purely lowercase alphanumeric '
-                        '(ascii) characters and these symbols: -_.'))
+                        '(ascii) characters and these symbols: -_.?'))
 
 
 def check_sub_theme_parent(key, data, errors, context):
