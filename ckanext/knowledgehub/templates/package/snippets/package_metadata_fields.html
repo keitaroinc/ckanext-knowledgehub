@@ -50,8 +50,7 @@
     {% set rq_options = h.get_rq_options() %}
 
     {% if data.research_question %}
-      {% set selected_rq = h.pg_array_to_py_list(data.research_question) %}
-      {% set selected_rq = h.rq_ids_to_titles(selected_rq) %}
+      {% set selected_rq = h.rq_ids_to_titles(data.research_question) %}
     {% endif %}
 
     {{ form.selectmulti('research_question', label=_('Research question'), options=rq_options, selected=selected_rq, id='field-research_question', error=errors.research_question, attrs={"multiple": "multiple", "data-module": "autocomplete"}, classes=['control-medium']) }}
