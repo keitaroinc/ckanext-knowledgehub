@@ -585,6 +585,8 @@ def get_single_rq(rq_id):
 
 
 def rq_ids_to_titles(rq_ids):
+    if not isinstance(rq_ids, list):
+        rq_ids = pg_array_to_py_list(rq_ids)
     rqs = []
     context = _get_context()
 
