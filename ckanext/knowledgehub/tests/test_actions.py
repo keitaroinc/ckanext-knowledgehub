@@ -33,6 +33,7 @@ assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
 
+# za datastore testovi od actions 
 
 class ActionsBase(helpers.FunctionalTestBase):
     def setup(self):
@@ -44,8 +45,17 @@ class ActionsBase(helpers.FunctionalTestBase):
         resource_feedback_setup()
         kwh_data_setup()
         rnn_corpus_setup()
-        os.environ["CKAN_INI"] = 'subdir/test.ini'
-
+        os.environ["CKAN_INI"] = './test.ini' # pateka do test ini
+        if not plugins.plugin_loaded('datastore'):
+            plugins.load('datastore')
+        if not plugins.plugin_loaded('datapusher'):
+            plugins.load('datapusher')
+    @classmethod
+    def teardown_class(self):
+        if not plugins.plugin_loaded('datastore'):
+            plugins.unload('datastore')
+        if not plugins.plugin_loaded('datapusher'):
+            plugins.unload('datapusher')
 
 class TestKWHCreateActions(ActionsBase):
 
@@ -889,3 +899,45 @@ class TestKWHUpdateActions(ActionsBase):
             kwh_data_updated.get('content'),
             data_dict.get('new_content')
         )
+
+
+    # def test_get_chart_data(self):
+
+    #     user = factories.Sysadmin()
+    #     context = {
+    #         'user': user.get('name'),
+    #         'auth_user_obj': User(user.get('id')),
+    #         'ignore_auth': True,
+    #         'model': model,
+    #         'session': model.Session
+    #     }
+    #     dataset = create_dataset()
+    #     resource = factories.Resource(
+    #         package_id=dataset['id']
+    #     )
+    #     sql_s = "SELECT * FROM \"" + resource.get('id') + "GROUP BY value"
+    #     filts = []
+    #     data_dict = {
+    #         'resource_id': resource.get('id'),
+    #         'title': 'Visualization title',
+    #         'description': 'Visualization description',
+    #         'view_type': 'chart',
+    #         'config': {
+    #             "color": "#59a14f",
+    #             "y_label": "Usage",
+    #             "show_legend": "Yes"
+    #         }
+    #     }
+    #     rsc_view = create_actions.resource_view_create(context, data_dict)
+    #     data_dict = {
+    #         'resource_id': resource.get('id'),
+    #         'sql_string': sql_s,
+    #         'filters': "[]",
+    #         # 'x_axis': "Name",
+    #         'y_axis': "value"
+    #     }
+        
+    #     lala = get_actions.get_chart_data(context, data_dict)
+
+    #     assert_equals(lala, "")
+        

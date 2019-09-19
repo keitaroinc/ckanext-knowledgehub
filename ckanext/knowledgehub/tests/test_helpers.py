@@ -7,7 +7,7 @@ import nose.tools
 from ckan.tests import factories
 from ckan import plugins
 from ckan.tests import helpers
-from ckan.plugins import toolkit
+from ckan.plugins import toolkit as toolkit
 from ckan import model
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
@@ -23,9 +23,12 @@ from ckanext.knowledgehub.model.kwh_data import (
 )
 from ckanext.knowledgehub import helpers as kwh_helpers
 from ckanext.knowledgehub.logic.action import create as create_actions
+from ckanext.knowledgehub.logic.action import get as get_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons)
+from ckanext.datastore.logic.action import datastore_create
+from ckanext.datastore.logic.action import datastore_search
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
@@ -46,11 +49,20 @@ class ActionsBase(helpers.FunctionalTestBase):
 
         if not plugins.plugin_loaded('knowledgehub'):
             plugins.load('knowledgehub')
+        if not plugins.plugin_loaded('datastore'):
+            plugins.load('datastore')
+        if not plugins.plugin_loaded('datapusher'):
+            plugins.load('datapusher')
 
     @classmethod
     def teardown_class(self):
         if plugins.plugin_loaded('knowledgehub'):
             plugins.unload('knowledgehub')
+        if not plugins.plugin_loaded('datastore'):
+            plugins.unload('datastore')
+        if not plugins.plugin_loaded('datapusher'):
+            plugins.unload('datapusher')
+
 
 
 class TestKWHHelpers(ActionsBase):
@@ -395,3 +407,64 @@ class TestKWHHelpers(ActionsBase):
 
         new_url = kwh_helpers.remove_space_for_url(url)
         assert_equals(new_url, 'http://host:port/lang/data-set')
+
+
+    def test_get_rq_options(self):
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test theme',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test sub-theme',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq = create_actions.research_question_create(context, data_dict)
+        titles = kwh_helpers.get_rq_options(True)
+
+        assert_equals(len(titles), 1)
+
+    def test_get_rq_ids(self):
+        dataset = create_dataset()
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+        rqs = kwh_helpers.get_rq_ids(resource['id'])
+        assert_equals(rqs, "")
+
+   
+    def test_get_geojson_resources(self):
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            format='geojson'
+        )
+        resources = kwh_helpers.get_geojson_resources()
+        assert_equals(len(resources), 1)
