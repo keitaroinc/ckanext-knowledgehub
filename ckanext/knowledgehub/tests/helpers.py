@@ -21,7 +21,8 @@ def create_dataset(**kwargs):
         'name': str(uuid.uuid4()),
         'title': 'title',
         'notes': 'notes',
-        'maintainer': 'John'
+        'maintainer': 'John',
+        'research_question': ['rq', 'rq1']
     }
     data_dict.update(kwargs)
     return toolkit.get_action('package_create')(context, data_dict)

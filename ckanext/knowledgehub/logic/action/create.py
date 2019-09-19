@@ -201,41 +201,6 @@ def resource_create(context, data_dict):
     :param validation_options: options to be used for validation
     :type validation_options: string
     '''
-
-    if (data_dict['schema'] == ''):
-        del data_dict['schema']
-
-    if (data_dict['validation_options'] == ''):
-        del data_dict['validation_options']
-
-    if data_dict.get('db_type') is not None:
-        if data_dict.get('db_type') == '':
-            raise logic.ValidationError({
-                'db_type': [_('Please select the DB Type')]
-            })
-
-        backend = get_backend(data_dict)
-        backend.configure(data_dict)
-        data = backend.search_sql(data_dict)
-
-        if data.get('records', []):
-            writer = WriterService()
-            stream = writer.csv_writer(data.get('fields'),
-                                       data.get('records'),
-                                       ',')
-
-            print('FIELDS: %s' % data.get('fields'))
-            filename = '{}_{}.{}'.format(
-                data_dict.get('db_type'),
-                str(datetime.datetime.utcnow()),
-                'csv'
-            )
-
-            if not data_dict.get('name'):
-                data_dict['name'] = filename
-
-            data_dict['upload'] = FlaskFileStorage(stream, filename)
-
     return ckan_rsc_create(context, data_dict)
 
 
@@ -341,6 +306,7 @@ def dashboard_create(context, data_dict):
 
 
 def package_create(context, data_dict):
+    print(context)
     research_questions = data_dict.get('research_question')
     rq_options = plugin_helpers.get_rq_options()
     rq_ids = []

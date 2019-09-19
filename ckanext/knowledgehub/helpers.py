@@ -165,10 +165,7 @@ def get_resource_columns(res_id, escape_columns=[]):
         'limit': 0
     }
 
-    try:
-        result = toolkit.get_action('datastore_search')({}, data)
-    except Exception:
-        return []
+    result = toolkit.get_action('datastore_search')({}, data)
 
     fields = [field['id'] for field in result.get('fields', [])
               if field['id'] not in escape_columns and _isnt_id(field)]
