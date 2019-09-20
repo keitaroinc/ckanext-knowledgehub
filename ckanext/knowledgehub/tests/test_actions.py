@@ -33,7 +33,6 @@ assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
 
-# za datastore testovi od actions 
 
 class ActionsBase(helpers.FunctionalTestBase):
     def setup(self):
@@ -45,7 +44,7 @@ class ActionsBase(helpers.FunctionalTestBase):
         resource_feedback_setup()
         kwh_data_setup()
         rnn_corpus_setup()
-        os.environ["CKAN_INI"] = './test.ini' # pateka do test ini
+        os.environ["CKAN_INI"] = './test.ini'
         if not plugins.plugin_loaded('datastore'):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):

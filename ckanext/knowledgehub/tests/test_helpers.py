@@ -468,3 +468,51 @@ class TestKWHHelpers(ActionsBase):
         )
         resources = kwh_helpers.get_geojson_resources()
         assert_equals(len(resources), 1)
+
+    def test_get_rq_titles_from_res(self):
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test theme',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test sub-theme',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+
+        rq1 = create_actions.research_question_create(context, data_dict)
+        dataset = create_dataset(
+            research_question = rq1['id']
+            
+        )
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+
+        )
+
+        titles = kwh_helpers.get_rq_titles_from_res(resource['id'])
+        assert_equals(len(titles), 1)

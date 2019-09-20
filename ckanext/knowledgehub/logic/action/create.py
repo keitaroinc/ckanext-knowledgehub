@@ -306,7 +306,7 @@ def dashboard_create(context, data_dict):
 
 
 def package_create(context, data_dict):
-    print(context)
+    
     research_questions = data_dict.get('research_question')
     rq_options = plugin_helpers.get_rq_options()
     rq_ids = []
