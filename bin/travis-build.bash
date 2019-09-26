@@ -53,6 +53,4 @@ cd datapusher
 pip install -r requirements-dev.txt
 cd -
 
-cd knowledgehub
-
 echo "travis-build.bash is done."
