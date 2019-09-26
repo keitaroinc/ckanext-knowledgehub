@@ -44,4 +44,13 @@ echo "Moving test.ini into a subdir..."
 mkdir subdir
 mv test.ini subdir
 
+cd ..
+echo "Installing ckanext-datapusher and it's requirements... "
+git clone https://github.com/ckan/datapusher.git
+cd datapusher
+pip install -r requirements-dev.txt
+cd -
+
+cd knowledgehub
+
 echo "travis-build.bash is done."
