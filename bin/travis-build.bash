@@ -56,4 +56,6 @@ cd -
 pip install SQLAlchemy==1.1.11
 pip install vdm==0.14
 
+paster datastore set-permissions -c test-core.ini | sudo -u postgres psql
+
 echo "travis-build.bash is done."
