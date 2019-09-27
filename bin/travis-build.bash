@@ -46,8 +46,6 @@ echo "Moving test.ini into a subdir..."
 mkdir subdir
 mv test.ini subdir
 
-paster knowledgehub initdb -c subdir/test.ini
-
 cd ..
 echo "Installing ckanext-datapusher and it's requirements... "
 git clone https://github.com/ckan/datapusher.git
