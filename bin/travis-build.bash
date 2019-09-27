@@ -53,4 +53,7 @@ cd datapusher
 pip install -r requirements.txt
 cd -
 
+pip install SQLAlchemy==1.1.11
+pip install vdm==0.14
+
 echo "travis-build.bash is done."
