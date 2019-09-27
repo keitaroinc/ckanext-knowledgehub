@@ -545,91 +545,91 @@ class TestKWHHelpers(ActionsBase):
         assert_equals(len(fields), 2)
 
 
-    # def test_get_filter_values(self):
-    #     dataset = create_dataset()
-    #     data = {
-    #        "fields": [{"id": "value", "type": "numeric"}],
-    #         "records": [
-    #             {"value": 0},
-    #             {"value": 1},
-    #             {"value": 2},
-    #             {"value": 3},
-    #             {"value": 5},
-    #             {"value": 6},
-    #             {"value": 7},
-    #         ],
-    #         "force": True
-    #     }
+    def test_get_filter_values(self):
+        dataset = create_dataset()
+        data = {
+           "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
         
-    #     resource = factories.Resource(
-    #         schema='',
-    #         validation_options='',
-    #         package_id=dataset['id'],
-    #         datastore_active=True,
-    #     )
-    #     data['resource_id'] = resource['id']
-    #     helpers.call_action('datastore_create', **data)
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
 
-    #     fil_vals = kwh_helpers.get_filter_values(resource['id'], "value", [])
-    #     assert_equals(len(fil_vals), 7)
+        fil_vals = kwh_helpers.get_filter_values(resource['id'], "value", [])
+        assert_equals(len(fil_vals), 7)
 
-    # def test_get_resource_columns(self):
-    #     dataset = create_dataset()
-    #     data = {
-    #        "fields": [{"id": "value", "type": "numeric"}],
-    #         "records": [
-    #             {"value": 0},
-    #             {"value": 1},
-    #             {"value": 2},
-    #             {"value": 3},
-    #             {"value": 5},
-    #             {"value": 6},
-    #             {"value": 7},
-    #         ],
-    #         "force": True
-    #     }
+    def test_get_resource_columns(self):
+        dataset = create_dataset()
+        data = {
+           "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
         
-    #     resource = factories.Resource(
-    #         schema='',
-    #         validation_options='',
-    #         package_id=dataset['id'],
-    #         datastore_active=True,
-    #     )
-    #     data['resource_id'] = resource['id']
-    #     helpers.call_action('datastore_create', **data)
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
 
-    #     columns = kwh_helpers.get_resource_columns(resource.get('id'))
-    #     assert_equals(len(columns), 1)
+        columns = kwh_helpers.get_resource_columns(resource.get('id'))
+        assert_equals(len(columns), 1)
 
-    # def test_get_resource_data(self):
-    #     dataset = create_dataset()
-    #     data = {
-    #        "fields": [{"id": "value", "type": "numeric"}],
-    #         "records": [
-    #             {"value": 0},
-    #             {"value": 1},
-    #             {"value": 2},
-    #             {"value": 3},
-    #             {"value": 5},
-    #             {"value": 6},
-    #             {"value": 7},
-    #         ],
-    #         "force": True
-    #     }
+    def test_get_resource_data(self):
+        dataset = create_dataset()
+        data = {
+           "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
         
-    #     resource = factories.Resource(
-    #         schema='',
-    #         validation_options='',
-    #         package_id=dataset['id'],
-    #         datastore_active=True,
-    #     )
-    #     data['resource_id'] = resource['id']
-    #     helpers.call_action('datastore_create', **data)
-    #     sql_str = u'''SELECT DISTINCT "{column}"
-    #      FROM "{resource}" '''.format(
-    #         column="value",
-    #         resource=resource['id']
-    #     )
-    #     res_data = kwh_helpers.get_resource_data(sql_str)
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+        sql_str = u'''SELECT DISTINCT "{column}"
+         FROM "{resource}" '''.format(
+            column="value",
+            resource=resource['id']
+        )
+        res_data = kwh_helpers.get_resource_data(sql_str)
         
-    #     assert_equals(len(res_data), 7)
+        assert_equals(len(res_data), 7)
