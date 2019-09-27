@@ -46,6 +46,8 @@ echo "Moving test.ini into a subdir..."
 mkdir subdir
 mv test.ini subdir
 
+paster knowledgehub initdb -c subdir/test.ini
+
 cd ..
 echo "Installing ckanext-datapusher and it's requirements... "
 git clone https://github.com/ckan/datapusher.git
@@ -57,6 +59,9 @@ pip install SQLAlchemy==1.1.11
 pip install vdm==0.14
 pip install flask==0.12
 pip install flask-login
+
+sudo -u postgres psql datastore_default -f ../ckanext-xloader/full_text_function.sql
+sudo -u postgres psql datastore_test -f ../ckanext-xloader/full_text_function.sql
 
 paster datastore set-permissions -c test-core.ini | sudo -u postgres psql
 
