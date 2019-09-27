@@ -18,6 +18,6 @@ nosetests --ckan \
           --cover-package=ckanext.knowledgehub \
           --cover-inclusive \
           --cover-erase \
-          --cover-tests 
+          --cover-tests \
           -w ckanext/knowledgehub/tests
 
