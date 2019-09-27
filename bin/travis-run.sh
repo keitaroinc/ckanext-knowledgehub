@@ -19,5 +19,5 @@ nosetests --ckan \
           --cover-inclusive \
           --cover-erase \
           --cover-tests 
-         # -w ckanext/knowledgehub/tests
+        #   -w ckanext/knowledgehub/tests
 
