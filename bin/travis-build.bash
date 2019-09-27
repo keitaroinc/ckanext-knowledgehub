@@ -58,7 +58,7 @@ pip install vdm==0.14
 pip install flask==0.12
 pip install flask-login
 
-sudo -u postgres psql datastore_default -f ../ckanext-xloader/full_text_function.sql
+#sudo -u postgres psql datastore_default -f ../ckanext-xloader/full_text_function.sql
 sudo -u postgres psql datastore_test -f ../ckanext-xloader/full_text_function.sql
 
 paster datastore set-permissions -c test-core.ini | sudo -u postgres psql
