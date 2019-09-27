@@ -50,7 +50,7 @@ cd ..
 echo "Installing ckanext-datapusher and it's requirements... "
 git clone https://github.com/ckan/datapusher.git
 cd datapusher
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 cd -
 
 echo "travis-build.bash is done."
