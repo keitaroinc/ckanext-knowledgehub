@@ -6,7 +6,7 @@ sudo service jetty8 restart
 cd ..
 cd datapusher
 pip list
-sudo python datapusher/main.py deployment/datapusher_settings.py &
+#python datapusher/main.py deployment/datapusher_settings.py &
 
 cd -  
 cd ckanext-knowledgehub
