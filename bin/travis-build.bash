@@ -21,8 +21,8 @@ cd -
 echo "Creating the PostgreSQL user and database..."
 sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
 sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
-sudo -u postgres psql -c "CREATE USER datastore_default WITH PASSWORD 'ckan_default';"
-sudo -u postgres psql -c 'CREATE DATABASE datastore_test WITH OWNER datastore_default;'
+#sudo -u postgres psql -c "CREATE USER datastore_default WITH PASSWORD 'ckan_default';"
+#sudo -u postgres psql -c 'CREATE DATABASE datastore_test WITH OWNER datastore_default;'
 
 echo "SOLR config..."
 # Solr is multicore for tests on ckan master, but it's easier to run tests on
@@ -46,14 +46,14 @@ echo "Moving test.ini into a subdir..."
 mkdir subdir
 mv test.ini subdir
 
-cd ..
-echo "Installing ckanext-datapusher and it's requirements... "
-git clone https://github.com/ckan/datapusher.git
-cd datapusher
-pip install -r requirements.txt
-cd -
+# cd ..
+# echo "Installing ckanext-datapusher and it's requirements... "
+# git clone https://github.com/ckan/datapusher.git
+# cd datapusher
+# pip install -r requirements.txt
+# cd -
 
-pip install SQLAlchemy==1.1.11
-pip install vdm==0.14
+# pip install SQLAlchemy==1.1.11
+# pip install vdm==0.14
 
 echo "travis-build.bash is done."
