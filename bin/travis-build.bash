@@ -55,7 +55,5 @@ cd -
 
 pip install SQLAlchemy==1.1.11
 pip install vdm==0.14
-pip install --upgrade Flask<1.0
-
 
 echo "travis-build.bash is done."
