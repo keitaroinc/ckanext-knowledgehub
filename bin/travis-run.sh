@@ -8,6 +8,7 @@ cd datapusher
 pip list
 sudo python datapusher/main.py deployment/datapusher_settings.py &
 cd -
+cd ckanext-knowledgehub
 
 nosetests --ckan \
           --nologcapture \
