@@ -169,7 +169,11 @@ ckan.module('chart', function () {
             var tooltip_name = this.options.tooltip_name;
             var data_format = this.options.data_format;
             var y_tick_format = this.options.y_tick_format;
+<<<<<<< HEAD
             var y_operation = this.options.y_operation;
+=======
+            var y_operation = this.options.y_operation
+>>>>>>> * Added SUM option in chart
             var tick_count = (this.options.tick_count === true) ? '' : this.options.tick_count;
             var show_labels = this.options.show_labels;
             var y_label = (this.options.y_label === true) ? null : this.options.y_label;
