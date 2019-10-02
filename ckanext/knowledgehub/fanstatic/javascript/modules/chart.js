@@ -75,10 +75,12 @@ ckan.module('chart', function () {
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
             var y_operation_selected = chartField.find('[name*=chart_field_y_operation]');
             var y_operation_val = y_operation_selected.val();
-            if(y_operation_val == "MAX")
+            if(y_operation_val == "MAX") {
                 var sql = 'SELECT ' + '"' + this.options.x_axis + '", MAX("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
-            else
+            }
+            else {
                 var sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            }
             return sql
         },
         // Get the data from Datastore.
