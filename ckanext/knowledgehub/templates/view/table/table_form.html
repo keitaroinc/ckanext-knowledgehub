@@ -111,6 +111,16 @@
                 </select>
               </div>
             </div>
+             {# Y operation #}
+            <div class="control-group control-select">
+              <label class="control-label" for="table_y_axis_operation">{{ _('Y Axis Operation') }}</label>
+              <div class="controls input-controls">
+                <select id="table_y_axis_operation" name="table_y_axis_operation">
+                  <option value="MAX"> MAX </option>
+                  <option value="SUM"> SUM </option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -123,6 +133,7 @@
     {% set y_axis = table.y_axis %}
     {% set category_name = table.category_name %}
     {% set data_format = table.data_format %}
+    {% set y_operation = table.y_operation %}
     {% set table_title = data.title %}
     {% set table_subtitle = table.table_subtitle %}
     {% set table_description = table.table_description %}
@@ -136,6 +147,7 @@
       main_value = main_value,
       category_name = category_name,
       data_format = data_format,
+      y_operation = y_operation,
       table_title = table_title,
       table_subtitle = table_subtitle,
       table_description = table_description %}

@@ -267,14 +267,25 @@ ckan.module('table', function () {
             var sqlString = $('#sql-string').val() ? $('#sql-string').val() : this.options.sql_string;
             var parsedSqlString = sqlString.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
+            var tableField = this.el.closest('.table_item');
+
+            var y_operation_selected = tableField.find('[name*=table_y_axis_operation]'); 
+            var y_operation_value = y_operation_selected.val();
 
             // If category is set
             // we need the first column as a pivot column
             // see comments inside this.render_data_table_with_category
             if (category_name) {
-                return 'SELECT ' + '"' + category_name + '", "' + main_value + '", MAX("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + category_name + '", "' + main_value + '"';
+                if(y_operation_value == "MAX")
+                    return 'SELECT ' + '"' + category_name + '", "' + main_value + '", MAX("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + category_name + '", "' + main_value + '"';
+                else 
+                    return 'SELECT ' + '"' + category_name + '", "' + main_value + '", SUM("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + category_name + '", "' + main_value + '"';
             } else {
-                return 'SELECT ' + '"' + main_value + '", MAX("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
+                if(y_operation_value == "MAX")
+                    return 'SELECT ' + '"' + main_value + '", MAX("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
+                else
+                    return 'SELECT ' + '"' + main_value + '", SUM("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
+
             }
 
         },
