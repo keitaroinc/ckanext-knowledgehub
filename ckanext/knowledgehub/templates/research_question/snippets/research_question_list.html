@@ -6,7 +6,7 @@ Display a grid of research question items.
  {% snippet "research_question/snippets/research_question_list.html" %}
 
  #}
-<ul class="component-list list-unstyled">
+<ul>
   {% for rq in research_question_list %}
     {% snippet "research_question/snippets/research_question_item.html", rq=rq %}
   {% endfor %}
