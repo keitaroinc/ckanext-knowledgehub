@@ -899,7 +899,6 @@ class TestKWHUpdateActions(ActionsBase):
             kwh_data_updated.get('content'),
             data_dict.get('new_content')
         )
-
     def test_knowledgehub_get_geojson_properties(self):
         user = factories.Sysadmin()
         context = {
@@ -941,7 +940,6 @@ class TestKWHUpdateActions(ActionsBase):
             ],
             "force": True
         }
-
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -990,7 +988,6 @@ class TestKWHUpdateActions(ActionsBase):
     #         "filters": {"value" : 0},
     #         "force": True
     #     }
-
     #     resource = factories.Resource(
     #         schema='',
     #         validation_options='',
