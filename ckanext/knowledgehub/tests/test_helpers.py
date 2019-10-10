@@ -3,6 +3,7 @@
 import os
 import mock
 import nose.tools
+import json
 
 from ckan.tests import factories
 from ckan import plugins
@@ -551,14 +552,14 @@ class TestKWHHelpers(ActionsBase):
            "fields": [{"id": "value", "type": "numeric"}],
             "records": [
                 {"value": 0},
-                {"value": 1},
+                {"value": 1}, 
                 {"value": 2},
                 {"value": 3},
                 {"value": 5},
                 {"value": 6},
                 {"value": 7},
             ],
-            "force": True
+            "force": True            
         }
         
         resource = factories.Resource(
@@ -569,7 +570,6 @@ class TestKWHHelpers(ActionsBase):
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
-
         fil_vals = kwh_helpers.get_filter_values(resource['id'], "value", [])
         assert_equals(len(fil_vals), 7)
 
@@ -633,3 +633,36 @@ class TestKWHHelpers(ActionsBase):
         res_data = kwh_helpers.get_resource_data(sql_str)
         
         assert_equals(len(res_data), 7)
+
+
+    def test_get_geojson_properties(self):
+
+        url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
+        res = kwh_helpers.get_geojson_properties(url)
+        assert_equals(len(res), 26)
+
+    # def test_get_map_data(self):
+    #     dataset = create_dataset()
+    #     data = {
+    #         "url" : "https://www.grandconcourse.ca/map/data/GCPoints.geojson",
+    #         "force": True
+    #     }
+    #     resource = factories.Resource(
+    #         schema='',
+    #         validation_options='',
+    #         package_id=dataset['id'],
+    #         datastore_active=True,
+    #         format='geojson'
+
+    #     )
+    #     data['resource_id'] = resource['id']
+
+    #     map_key_field = "Name"
+    #     data_key_field = "features"
+    #     data_value_field = "20"
+    #     from_where = ""
+    #     url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
+
+    #     helpers.call_action('datastore_create', **data)
+    #     res = kwh_helpers.get_map_data(url, map_key_field, data_key_field, data_value_field, from_where)
+    #     assert_equals(res, "")

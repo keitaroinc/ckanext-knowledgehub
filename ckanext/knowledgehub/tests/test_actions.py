@@ -28,6 +28,7 @@ from ckanext.knowledgehub.logic.action import update as update_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons)
+from ckanext.datastore.logic.action import datastore_create
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
@@ -899,3 +900,200 @@ class TestKWHUpdateActions(ActionsBase):
             data_dict.get('new_content')
         )
         
+    def test_knowledgehub_get_geojson_properties(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'map_resource':"https://www.grandconcourse.ca/map/data/GCPoints.geojson"
+
+        }
+        res = get_actions.knowledgehub_get_geojson_properties(context, data_dict)
+        assert_equals(len(res), 26)
+
+    def test_get_resource_data(self):
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        dataset = create_dataset()
+        data = {
+           "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+        sql_str = u'''SELECT DISTINCT "{column}"
+         FROM "{resource}" '''.format(
+            column="value",
+            resource=resource['id']
+        )
+        data_dict = {
+            'sql_string' : sql_str
+        }
+        res_data = get_actions.get_resource_data(context, data_dict)
+
+        assert_equals(len(res_data), 7)
+
+    #TODO: the next two tests give error when we add filters, the end result
+    #       is written for printing errors only
+
+    # def test_get_chart_data(self):
+
+    #     user = factories.Sysadmin()
+    #     context = {
+    #         'user': user.get('name'),
+    #         'auth_user_obj': User(user.get('id')),
+    #         'ignore_auth': True,
+    #         'model': model,
+    #         'session': model.Session
+    #     }
+    #     dataset = create_dataset()
+    #     data = {
+    #        "fields": [{"id": "value", "type": "numeric"}],
+    #         "records": [
+    #             {"value": 0},
+    #             {"value": 1},
+    #             {"value": 2},
+    #             {"value": 3},
+    #             {"value": 5},
+    #             {"value": 6},
+    #             {"value": 7},
+    #         ],
+    #         "filters": {"value" : 0},
+    #         "force": True
+    #     }
+        
+    #     resource = factories.Resource(
+    #         schema='',
+    #         validation_options='',
+    #         package_id=dataset['id'],
+    #         datastore_active=True,
+    #     )
+    #     data['resource_id'] = resource['id']
+    #     helpers.call_action('datastore_create', **data)
+    #     sql_str = u'''SELECT DISTINCT "{column}"
+    #     FROM "{resource}" GROUP BY "{column}"'''.format(
+    #         column="value",
+    #         resource=resource['id']
+    #     )
+    #     data_dict = {
+    #         'resource_id': resource['id'],
+    #         'category': "records",
+    #         'sql_string': sql_str,
+    #         'filters': { "value": 0 },
+    #         'x_axis': "value",
+    #         'y_axis': "value"
+
+    #     }
+    #     chart_data = get_actions.get_chart_data(context, data_dict)
+    #     assert_equals(chart_data, "")
+
+    # def test_visualizations_for_rq(self):
+
+    #     user = factories.Sysadmin()
+    #     context = {
+    #         'user': user.get('name'),
+    #         'auth_user_obj': User(user.get('id')),
+    #         'ignore_auth': True,
+    #         'model': model,
+    #         'session': model.Session
+    #     }
+
+    #     data_dict = {
+    #         'name': 'theme-name',
+    #         'title': 'Test theme',
+    #         'description': 'Test description'
+    #     }
+    #     theme = create_actions.theme_create(context, data_dict)
+
+    #     data_dict = {
+    #         'name': 'sub-theme-name',
+    #         'title': 'Test sub-theme',
+    #         'description': 'Test description',
+    #         'theme': theme.get('id')
+    #     }
+    #     sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+    #     data_dict = {
+    #         'name': 'rq',
+    #         'title': 'rq',
+    #         'content': 'random',
+    #         'theme': theme.get('id'),
+    #         'sub_theme': sub_theme.get('id')
+    #     }
+
+    #     rq = create_actions.research_question_create(context, data_dict)
+    #     dataset = create_dataset(
+    #         extras= [{"research_question": "Random"}]
+    #     )
+    #     print(dataset)
+    #     resource = factories.Resource(
+    #         schema='',
+    #         validation_options='',
+    #         package_id=dataset['id'],
+    #     )
+    #     data = {
+    #        "fields": [{"id": "value", "type": "numeric"}],
+    #         "records": [
+    #             {"value": 0},
+    #             {"value": 1},
+    #             {"value": 2},
+    #             {"value": 3},
+    #             {"value": 5},
+    #             {"value": 6},
+    #             {"value": 7},
+    #         ],
+    #         "force": True,
+    #         "resource_id": resource.get('id'),
+    #         "research_question": "random"
+    #     }
+
+    #     data_dict = {
+    #             'resource_id': resource.get('id'),
+    #             'title': 'Visualization title',
+    #             'description': 'Visualization description',
+    #             'view_type': 'chart',
+    #             'config': {
+    #                 "color": "#59a14f",
+    #                 "y_label": "Usage",
+    #                 "show_legend": "Yes"
+    #             }
+    #         }
+    #     data['resource_id'] = resource.get('id')
+    #     helpers.call_action('datastore_create', **data)
+    #     rsc_view = create_actions.resource_view_create(context, data_dict)
+    #     #print(rsc_view)
+    #     data_dict_rq = {
+    #         'research_question': "random"
+    #     }
+
+    #     res = get_actions.visualizations_for_rq(context, data_dict_rq)
+    #     assert_equals(res, "")
