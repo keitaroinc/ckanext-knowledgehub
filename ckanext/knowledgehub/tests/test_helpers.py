@@ -552,14 +552,14 @@ class TestKWHHelpers(ActionsBase):
            "fields": [{"id": "value", "type": "numeric"}],
             "records": [
                 {"value": 0},
-                {"value": 1},
+                {"value": 1}, 
                 {"value": 2},
                 {"value": 3},
                 {"value": 5},
                 {"value": 6},
                 {"value": 7},
             ],
-            "force": True
+            "force": True            
         }
         
         resource = factories.Resource(
@@ -570,7 +570,6 @@ class TestKWHHelpers(ActionsBase):
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
-
         fil_vals = kwh_helpers.get_filter_values(resource['id'], "value", [])
         assert_equals(len(fil_vals), 7)
 

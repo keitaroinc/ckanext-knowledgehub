@@ -165,7 +165,6 @@ def get_resource_columns(res_id, escape_columns=[]):
         'limit': 0
     }
     try:
-
         result = toolkit.get_action('datastore_search')({}, data)
     except Exception:
         return []
