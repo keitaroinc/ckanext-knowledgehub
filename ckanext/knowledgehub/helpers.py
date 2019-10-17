@@ -210,6 +210,7 @@ def get_chart_types():
         {'text': _('Horizontal bar'), 'value': 'hbar'},
         {'text': _('Stacked bar'), 'value': 'sbar'},
         {'text': _('Stacked horizontal bar'), 'value': 'shbar'},
+        {'text': _('Butterfly'), 'value': 'buttchart'},
         {'text': _('Area'), 'value': 'area'},
         {'text': _('Stacked area'), 'value': 'area-spline'},
         {'text': _('Spline'), 'value': 'spline'},
