@@ -37,3 +37,38 @@
     font-weight: 600
   }
 }
+.component-list-rq {
+  
+  margin-left: -1%;
+  margin-right: -1%;
+
+  .component-item-rq {
+    ul {
+      padding-left: @grid-gutter-width - 10;
+      padding-bottom: @grid-gutter-width - 10;
+    }
+    background-color: @white;
+    margin: 1%;
+    border: 1px solid @gray-line;
+    .shadow;
+    &:hover{
+      .hover-primary;
+    }
+    .component-content-rq {
+      padding: 0 @grid-gutter-width / 2 @grid-gutter-width / 2 @grid-gutter-width / 2;
+
+      .component-heading-rq {
+        a {
+          font-size: @font-size-base + 7;
+          text-decoration: none;
+          color: initial;
+
+          &:hover {
+            color: @brand-primary;
+            
+          }
+        }
+      }
+    }
+  }
+}
