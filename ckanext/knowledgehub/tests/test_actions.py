@@ -28,6 +28,7 @@ from ckanext.knowledgehub.logic.action import update as update_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons)
+from ckanext.datastore.logic.action import datastore_create
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
