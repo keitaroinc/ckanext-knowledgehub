@@ -12,6 +12,7 @@
 {% endif %}
 
 {% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
+<script src="https://d3js.org/d3.v3.min.js"></script>
 
 <div id="chart_field" class="item chart_field visualization-fields-section">
   {% set chart_types = h.get_chart_types() %}
