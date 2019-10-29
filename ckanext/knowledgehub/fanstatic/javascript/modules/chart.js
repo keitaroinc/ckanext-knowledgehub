@@ -76,7 +76,7 @@ ckan.module('chart', function () {
 
             var sql = "";
             if(this.options.chart_type === "buttchart"){
-                sql = 'SELECT ' + '"' + this.options.x_axis + '", "' + this.options.x_axis_positive + '", "' + this.options.x_axis_negative + '"' + sqlStringExceptSelect + 'GROUP BY "' + this.options.x_axis + '", "' + this.options.x_axis_positive +'", "' + this.options.x_axis_negative +'" ORDER BY "' + this.options.x_axis + '"';
+                sql = 'SELECT ' + '"' + this.options.x_axis + '", "' + this.options.x_axis_negative + '", "' + this.options.x_axis_positive + '"' + sqlStringExceptSelect + 'GROUP BY "' + this.options.x_axis + '", "' + this.options.x_axis_negative +'", "' + this.options.x_axis_positive +'" ORDER BY "' + this.options.x_axis + '"';
             }
             else {
 
@@ -495,7 +495,7 @@ ckan.module('chart', function () {
                     options.axis.y.min = Math.min.apply(null, [this.dynamic_reference_value, this.y_axis_min].filter(function (value) { return !isNaN(value); }));
                     options.axis.y.max = Math.max.apply(null, [this.dynamic_reference_value, this.y_axis_max].filter(function (value) { return !isNaN(value); }));
                     options.axis.y.padding = { bottom: 50, top: 50 };
-                    if (['bar', 'hbar', 'buttchart'].includes(this.options.chart_type)) {
+                    if (['bar', 'hbar'].includes(this.options.chart_type)) {
                         options.axis.y.padding.bottom = 0;
                     }
                 }
@@ -523,7 +523,7 @@ ckan.module('chart', function () {
                 {"age":"45-54","gender":"male","interactions":5700},{"age":"45-54","gender":"female","interactions":-2400},
                 {"age":"55-64","gender":"male","interactions":2500},{"age":"55-64","gender":"female","interactions":-1100},
                 {"age":"65+","gender":"male","interactions":1600},{"age":"65+","gender":"female","interactions":-600}]
-                var chart = this.tornadoChart(data, x_axis, x_axis_positive, x_axis_negative);
+                var chart = this.tornadoChart(x_axis, x_axis_negative);
                 d3.select("svg").datum(data).call(chart);
             }
             else {
@@ -792,7 +792,7 @@ ckan.module('chart', function () {
             }
         },
 
-        tornadoChart: function(data, x_axis, x_axis_positive, x_axis_negative)
+        tornadoChart: function(x_axis, x_axis_negative)
         {
                 var margin = {top: 20, right: 30, bottom: 40, left: 100},
                 width = 550 - margin.left - margin.right,
@@ -821,37 +821,37 @@ ckan.module('chart', function () {
             
                 function chart(selection) {
                 selection.each(function(data) {
-                // , x_axis, x_axis_positive, x_axis_negative) {
-                        console.log(data);
+                        // console.log(data);
+                        // console.log(x_axis);
                     x.domain(d3.extent(data, function(d) { 
-                        console.log(d);
-                        return d.xAxis; })).nice(); //interr
+                        // console.log(d[x_axis]);
+                        return d[x_axis]; })).nice(); //interr
                     y.domain(data.map(function(d) { 
-                        console.log("u y")
-                        return d.x_axis_negative; })); // age
+                        // console.log("u y")
+                        return d[x_axis_negative]; })); // age
             
-                    var minInteractions = Math.min.apply(Math, data.map(function(o){return o.x_axis;}))
+                    var minInteractions = Math.min.apply(Math, data.map(function(o){return o[x_axis];}))
                     yAxis.tickPadding(Math.abs(x(minInteractions) - x(0)) + 10);
             
                     var bar = svg.selectAll(".bar")
                         .data(data)
                         bar.enter().append("rect")
-                        .attr("class", function(d) { return "bar bar--" + (d.x_axis < 0 ? "negative" : "positive"); })
-                        .attr("x", function(d) { return x(Math.min(0, d.x_axis)); })
-                        .attr("y", function(d) { return y(d.x_axis_negative); })
-                        .attr("width", function(d) { return Math.abs(x(d.x_axis) - x(0)); })
+                        .attr("class", function(d) { return "bar bar--" + (d[x_axis] < 0 ? "negative" : "positive"); })
+                        .attr("x", function(d) { return x(Math.min(0, d[x_axis])); })
+                        .attr("y", function(d) { return y(d[x_axis_negative]); })
+                        .attr("width", function(d) { return Math.abs(x(d[x_axis]) - x(0)); })
                         .attr("height", y.rangeBand())
             
                     bar.enter().append('text')
                         .attr("text-anchor", "middle")
-                        .attr("x", function(d,i) {
-                            return x(Math.min(0, d.x_axis)) + (Math.abs(x(d.x_axis) - x(0)) / 2);
+                        .attr("x", function(d) {
+                            return x(Math.min(0, d[x_axis])) + (Math.abs(x(d[x_axis]) - x(0)) / 2);
                         })
-                        .attr("y", function(d,i) {
-                            return y(d.x_axis_negative) + (y.rangeBand() / 2);
+                        .attr("y", function(d) {
+                            return y(d[x_axis_negative]) + (y.rangeBand() / 2);
                         })
                         .attr("dy", ".35em")
-                        .text(function (d) { return d.x_axis; })
+                        .text(function (d) { return d[x_axis]; })
             
                     svg.append("g")
                         .attr("class", "x axis")
