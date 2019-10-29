@@ -1,8 +1,13 @@
 {% ckan_extends %}
 
+{% block package_metadata_fields %}
+{% block package_metadata_author %}
+    {{ form.input('author', label=_('Author'), id='field-author', placeholder=_('Joe Bloggs'), value=data.author, error=errors.author, classes=['control-medium']) }}
+  {% endblock %}
+
 {% block custom_fields %}
 
-  {% block basic_fields_unit_supported %}
+  <!-- {% block basic_fields_unit_supported %}
 	{{ form.input('unit_supported', id='field-unit-supported', label=_('Unit Supported'), placeholder=_('e.g. Protection'), value=data.unit_supported, error=errors.unit_supported, classes=['control-full'], is_required=False) }}
   {% endblock %}
 
@@ -44,7 +49,7 @@
 
   {% block basic_fields_indicator_type %}
 	{{ form.input('indicator_type', id='field-ind-type', label=_('Indicator Type'), placeholder=_('e.g. Quantitative'), value=data.indicator_type, error=errors.indicator_type, classes=['control-full'], is_required=False) }}
-  {% endblock %}
+  {% endblock %} -->
 
   {# Research question start #}
     {% set rq_options = h.get_rq_options() %}
@@ -57,5 +62,6 @@
 
   {# Research question end #}
 
-  {{ super() }}
+  {% endblock %}
+
 {% endblock %}
