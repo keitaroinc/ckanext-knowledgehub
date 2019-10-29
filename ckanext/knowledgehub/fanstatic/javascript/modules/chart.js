@@ -73,15 +73,26 @@ ckan.module('chart', function () {
             // We need to encode some characters, eg, '+' sign:
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
 
-            var sql = 'SELECT ' + '"' + this.options.x_axis + '", MAX("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            var sql = "";
+            if(this.options.chart_type === "buttchart"){
+                sql = 'SELECT ' + '"' + this.options.x_axis + '", "' + this.options.x_axis_positive + '", "' + this.options.x_axis_negative + '"' + sqlStringExceptSelect + 'GROUP BY "' + this.options.x_axis + '", "' + this.options.x_axis_positive +'", "' + this.options.x_axis_negative +'" ORDER BY "' + this.options.x_axis + '"';
+            }
+            else {
+                sql = 'SELECT ' + '"' + this.options.x_axis + '", MAX("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
 
+            }
+            console.log(sql)
             return sql
-        },
+        }, 
         // Get the data from Datastore.
         get_resource_datа: function (sql) {
             var category = (this.options.category_name === true) ? '' : this.options.category_name;
             var x_axis = (this.options.x_axis === true) ? '' : this.options.x_axis;
             var y_axis = (this.options.y_axis === true) ? '' : this.options.y_axis;
+            // var y_axis2 = (this.options.y_axis2 == true) ? '' : this.options.y_axis2;
+            var x_axis_positive = (this.options.x_axis_positive === true) ? '' : this.options.x_axis_positive;
+            var x_axis_negative = (this.options.x_axis_negative === true) ? '' : this.options.x_axis_negative;
+
             var resource_id = sql.split('FROM')[1].split('WHERE')[0].split('"')[1];
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
             var dynamic_reference_factor = (this.options.dynamic_reference_factor === true) ? '' : this.options.dynamic_reference_factor;
@@ -98,12 +109,15 @@ ckan.module('chart', function () {
                         category: category,
                         x_axis: x_axis,
                         y_axis: y_axis,
+                        x_axis_positive: x_axis_positive,
+                        x_axis_negative: x_axis_negative,
                         resource_id: resource_id,
                         filters: JSON.stringify(filters)
                     })
-                        .done(function (data) {
+                        .done(function (data) { 
+                            console.log(data)
                             if (data.success) {
-                                this.fetched_data = data.result;
+                                this.fetched_data = data.result;    
 
                                 // Reset all metrics
                                 this.y_axis_max = null;
@@ -148,7 +162,7 @@ ckan.module('chart', function () {
                                 this.el.text(this._('Chart could not be created!'));
                             }
                         }.bind(this));
-                }
+               }
             } else {
                 this.el.text(this._('Please choose X and Y axis dimensions and press Update!'));
             }
@@ -156,6 +170,8 @@ ckan.module('chart', function () {
         createChart: function (data) {
             var x_axis = this.options.x_axis.toString().toLowerCase();
             var y_axis = this.options.y_axis.toString().toLowerCase();
+            var x_axis_positive = this.options.x_axis_positive.toString().toLowerCase();
+            var x_axis_negative = this.options.x_axis_negative.toString().toLowerCase();
             var records = data;
             var show_legend = this.options.show_legend;
             var x_text_rotate = this.options.x_text_rotate;
@@ -249,7 +265,6 @@ ckan.module('chart', function () {
             } else if (this.options.chart_type === 'sbar' ||
                 this.options.chart_type === 'shbar') {
                 var horizontal = (this.options.chart_type === 'shbar') ? true : false
-
                 var yrotate = 0;
                 if (horizontal) {
                     // On horizontal bar the x axis is now actually the y axis
@@ -309,72 +324,6 @@ ckan.module('chart', function () {
                         }
                     }
                 }
-                if(this.options.chart_type === 'buttchart') {
-                    var margin = {top: 20, right: 30, bottom: 40, left: 100},
-                    width = 550 - margin.left - margin.right,
-                    height = 200 - margin.top - margin.bottom;
-                
-                  var x = d3.scale.linear()
-                      .range([0, width]);
-                
-                  var y = d3.scale.ordinal()
-                      .rangeRoundBands([0, height], 0.1);
-                
-                  var xAxis = d3.svg.axis()
-                      .scale(x)
-                      .orient("bottom")
-                      .ticks(7)
-                
-                  var yAxis = d3.svg.axis()
-                      .scale(y)
-                      .orient("left")
-                      .tickSize(0)
-                
-                  var svg = d3.select("body").append("svg")
-                      .attr("width", width + margin.left + margin.right)
-                      .attr("height", height + margin.top + margin.bottom)
-                    .append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-                    console.log("tuka sme")
-                   
-                    console.log("chart selection")
-                    x.domain(d3.extent(data, function(d) { return d.interactions; })).nice();
-                    y.domain(data.map(function(d) { return d.age; }));
-            
-                    var minInteractions = Math.min.apply(Math, data.map(function(o){return o.interactions;}))
-                    yAxis.tickPadding(Math.abs(x(minInteractions) - x(0)) + 10);
-            
-                    var bar = svg.selectAll(".bar")
-                        .data(data)
-            
-                    bar.enter().append("rect")
-                        .attr("class", function(d) { return "bar bar--" + (d.interactions < 0 ? "negative" : "positive"); })
-                        .attr("x", function(d) { return x(Math.min(0, d.interactions)); })
-                        .attr("y", function(d) { return y(d.age); })
-                        .attr("width", function(d) { return Math.abs(x(d.interactions) - x(0)); })
-                        .attr("height", y.rangeBand())
-            
-                    bar.enter().append('text')
-                        .attr("text-anchor", "middle").attr("x", function(d,i) {
-                            return x(Math.min(0, d.interactions)) + (Math.abs(x(d.interactions) - x(0)) / 2);
-                        })
-                        .attr("y", function(d,i) {
-                            return y(d.age) + (y.rangeBand() / 2);
-                        })
-                        .attr("dy", ".35em")
-                        .text(function (d) { return d.interactions; })
-            
-                    svg.append("g")
-                        .attr("class", "x axis")
-                        .attr("transform", "translate(0," + height + ")")
-                        .call(xAxis);
-            
-                    svg.append("g")
-                        .attr("class", "y axis")
-                        .attr("transform", "translate(" + x(0) + ",0)")
-                        .call(yAxis);
-                }
-
                 if (this.options.chart_type === 'bscatter') {
                     //workaround for bubble charts, scale log base 10 because of large values
                     var rs = d3.scale.log().base(10).domain([1, 1000]).range([0, 10]);
@@ -538,7 +487,7 @@ ckan.module('chart', function () {
                     options.axis.y.min = Math.min.apply(null, [this.dynamic_reference_value, this.y_axis_min].filter(function (value) { return !isNaN(value); }));
                     options.axis.y.max = Math.max.apply(null, [this.dynamic_reference_value, this.y_axis_max].filter(function (value) { return !isNaN(value); }));
                     options.axis.y.padding = { bottom: 50, top: 50 };
-                    if (['bar', 'hbar'].includes(this.options.chart_type)) {
+                    if (['bar', 'hbar', 'buttchart'].includes(this.options.chart_type)) {
                         options.axis.y.padding.bottom = 0;
                     }
                 }
@@ -554,7 +503,24 @@ ckan.module('chart', function () {
             }
 
             // Generate chart
+            if (this.options.chart_type === 'buttchart') {
+                
+                console.log(data);
+                console.log(x_axis);
+                console.log(y_axis);
+
+                var test_data = [{"age":"18-24","gender":"male","interactions":21600},{"age":"18-24","gender":"female","interactions":-5500},
+                {"age":"25-34","gender":"male","interactions":19500},{"age":"25-34","gender":"female","interactions":-5000},
+                {"age":"35-44","gender":"male","interactions":10700},{"age":"35-44","gender":"female","interactions":-3500},
+                {"age":"45-54","gender":"male","interactions":5700},{"age":"45-54","gender":"female","interactions":-2400},
+                {"age":"55-64","gender":"male","interactions":2500},{"age":"55-64","gender":"female","interactions":-1100},
+                {"age":"65+","gender":"male","interactions":1600},{"age":"65+","gender":"female","interactions":-600}]
+                var chart = this.tornadoChart(data, x_axis, x_axis_positive, x_axis_negative);
+                d3.select("svg").datum(data).call(chart);
+            }
+            else {
             var chart = c3.generate(options);
+            
             var subtitle = (this.options.chart_subtitle === true) ? '' : this.options.chart_subtitle;
             var chartDescription = (this.options.chart_description === true) ? '' : this.options.chart_description;
             
@@ -567,9 +533,10 @@ ckan.module('chart', function () {
             svgimg.setAttributeNS(null, 'x', '0');
             svgimg.setAttributeNS(null, 'y', '0');
             svgimg.setAttributeNS(null, 'visibility', 'hidden');
-            var svgElement = $('.item-content').find('svg')[0];
-            $(svgElement).append(svgimg);
 
+            var svgElement = $('.item-content').find('svg')[0];
+            $(svgElement).append(svgimg); 
+            
             info.map(val => {
                 var x = $(".c3-title").attr('x');
                 var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
@@ -578,8 +545,10 @@ ckan.module('chart', function () {
                 element.setAttributeNS(null, 'dy', '1.2em');
                 element.setAttributeNS(null, 'x', x);
                 $('.c3-title').append(element)
-            });
-        },
+                });
+            } 
+        }  
+        ,
         // Get the values from dropdowns and rerender the chart.
         updateChart: function () {
             var chartField = $('.chart_field');
@@ -601,6 +570,12 @@ ckan.module('chart', function () {
 
             var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
             var axisYValue = axisYSelect.val();
+
+            var axisXSelectPositive = chartField.find('[name*=chart_field_x_axis_column_positive]');
+            var axisXValuePositive = axisXSelectPositive.val();
+
+            var axisXSelectNegative = chartField.find('[name*=chart_field_x_axis_column_negative]');
+            var axisXValueNegative = axisXSelectNegative.val();
 
             var categoryName = chartField.find('[name*=chart_field_category_name]');
             var categoryNameVal = categoryName.val();
@@ -662,6 +637,8 @@ ckan.module('chart', function () {
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
             this.options.y_axis = axisYValue;
+            this.options.x_axis_positive = axisXValuePositive;
+            this.options.x_axis_negative = axisXValueNegative
             this.options.title = chartTitleVal;
             this.options.show_legend = legendVal;
             this.options.x_text_rotate = xTextRotateVal;
@@ -698,7 +675,6 @@ ckan.module('chart', function () {
             $(svgElement).append(svgimg);
 
         },
-
         // Delete the current chart
         deleteChart: function () {
             $('.chart_field').remove();
@@ -803,5 +779,103 @@ ckan.module('chart', function () {
                 return title;
             }
         },
+
+        tornadoChart: function(data, x_axis, x_axis_positive, x_axis_negative)
+        {
+                var margin = {top: 20, right: 30, bottom: 40, left: 100},
+                width = 550 - margin.left - margin.right,
+                height = 200 - margin.top - margin.bottom;
+            
+                var x = d3.scale.linear()
+                    .range([0, width]);
+                var y = d3.scale.ordinal()
+                    .rangeRoundBands([0, height], 0.1);
+            
+                var xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient("bottom")
+                    .ticks(7)
+            
+                var yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient("left")
+                    .tickSize(0)
+            
+                var svg = d3.select(".item-content").append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            
+                function chart(selection) {
+                selection.each(function(data) {
+                // , x_axis, x_axis_positive, x_axis_negative) {
+                        console.log(data);
+                    x.domain(d3.extent(data, function(d) { 
+                        console.log(d);
+                        return d.xAxis; })).nice(); //interr
+                    y.domain(data.map(function(d) { 
+                        console.log("u y")
+                        return d.x_axis_negative; })); // age
+            
+                    var minInteractions = Math.min.apply(Math, data.map(function(o){return o.x_axis;}))
+                    yAxis.tickPadding(Math.abs(x(minInteractions) - x(0)) + 10);
+            
+                    var bar = svg.selectAll(".bar")
+                        .data(data)
+                        bar.enter().append("rect")
+                        .attr("class", function(d) { return "bar bar--" + (d.x_axis < 0 ? "negative" : "positive"); })
+                        .attr("x", function(d) { return x(Math.min(0, d.x_axis)); })
+                        .attr("y", function(d) { return y(d.x_axis_negative); })
+                        .attr("width", function(d) { return Math.abs(x(d.x_axis) - x(0)); })
+                        .attr("height", y.rangeBand())
+            
+                    bar.enter().append('text')
+                        .attr("text-anchor", "middle")
+                        .attr("x", function(d,i) {
+                            return x(Math.min(0, d.x_axis)) + (Math.abs(x(d.x_axis) - x(0)) / 2);
+                        })
+                        .attr("y", function(d,i) {
+                            return y(d.x_axis_negative) + (y.rangeBand() / 2);
+                        })
+                        .attr("dy", ".35em")
+                        .text(function (d) { return d.x_axis; })
+            
+                    svg.append("g")
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(0," + height + ")")
+                        .call(xAxis);
+            
+                    svg.append("g")
+                        .attr("class", "y axis")
+                        .attr("transform", "translate(" + x(0) + ",0)")
+                        .call(yAxis);
+                    var style = document.createElement('style');
+                    style.innerHTML = `
+                    .bar--positive {
+                        fill: #9BCCF5;
+                        }
+                        
+                        .bar--negative {
+                        fill: pink;
+                        }
+                        
+                        text {
+                        font: 10px sans-serif;
+                        }
+                        
+                        .axis path,
+                        .axis line {
+                        fill: none;
+                        stroke: #000;
+                        shape-rendering: crispEdges;
+                        }
+                        `;
+                    document.head.appendChild(style);
+                });
+                }
+            
+                return chart;
+    },
     }
 });
