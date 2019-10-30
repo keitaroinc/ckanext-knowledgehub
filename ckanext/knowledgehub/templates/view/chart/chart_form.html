@@ -268,6 +268,15 @@
               </div>
             </div>
 
+            <div class="control-group control-select">
+              <label class="control-label" for="chart_field_y_operation">{{ _('Y axis operation') }}</label>
+              <div class="controls input-controls">
+                <select id="chart_field_y_operation" name="chart_field_y_operation">
+                  <option value="MAX">MAX</option>
+                  <option value="SUM">SUM</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -472,6 +481,7 @@
     {% set x_text_multiline = chart.x_text_multiline %}
     {% set tooltip_name = chart.tooltip_name %}
     {% set data_format = chart.data_format %}
+    {% set y_operation = chart.y_operation %}
     {% set y_tick_format = chart.y_tick_format %}
     {% set chart_padding_left = chart.chart_padding_left %}
     {% set chart_padding_bottom = chart.chart_padding_bottom %}
@@ -509,6 +519,7 @@
           tooltip_name = tooltip_name,
           data_format = data_format,
           y_tick_format = y_tick_format,
+          y_operation = y_operation,
           chart_padding_left = chart_padding_left,
           chart_padding_bottom = chart_padding_bottom,
           padding_bottom = padding_bottom,

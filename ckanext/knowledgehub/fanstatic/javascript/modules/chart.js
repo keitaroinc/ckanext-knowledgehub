@@ -67,6 +67,8 @@ ckan.module('chart', function () {
         // Enhance the SQL query with grouping and only select 2 columns.
         create_sql: function () {
             var sqlString = $('#sql-string').val() ? $('#sql-string').val() : this.options.sql_string;
+            var chartField = $('.chart_field');
+
             var parsedSqlString = sqlString.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
             // We need to encode some characters, eg, '+' sign:
@@ -77,8 +79,15 @@ ckan.module('chart', function () {
                 sql = 'SELECT ' + '"' + this.options.y_axis + '", "' + this.options.additional_tornado_value + '", "' + this.options.x_axis + '"' + sqlStringExceptSelect + 'GROUP BY "' + this.options.y_axis + '", "' + this.options.x_axis +'", "' + this.options.additional_tornado_value + '"';
             }
             else {
-                sql = 'SELECT ' + '"' + this.options.x_axis + '", MAX("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
-
+              
+              var y_operation_selected = chartField.find('[name*=chart_field_y_operation]');
+              var y_operation_val = y_operation_selected.val();
+              if(y_operation_val == "MAX") {
+                var sql = 'SELECT ' + '"' + this.options.x_axis + '", MAX("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            }
+            else {
+                var sql = 'SELECT ' + '"' + this.options.x_axis + '", SUM("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
+            }
             }
             return sql
         }, 
@@ -172,6 +181,7 @@ ckan.module('chart', function () {
             var tooltip_name = this.options.tooltip_name;
             var data_format = this.options.data_format;
             var y_tick_format = this.options.y_tick_format;
+            var y_operation = this.options.y_operation;
             var tick_count = (this.options.tick_count === true) ? '' : this.options.tick_count;
             var show_labels = this.options.show_labels;
             var y_label = (this.options.y_label === true) ? null : this.options.y_label;
@@ -582,6 +592,9 @@ ckan.module('chart', function () {
             var yTickFormat = chartField.find('[name*=chart_field_y_ticks_format]');
             var yTickFormatVal = yTickFormat.val();
 
+            var yOperation = chartField.find('[name*=chart_field_y_operation]');
+            var yOperationVal = yOperation.val();
+
             var paddingTop = chartField.find('input[name*=chart_field_padding_top]');
             var paddingTopVal = paddingTop.val();
 
@@ -626,6 +639,7 @@ ckan.module('chart', function () {
             this.options.tooltip_name = tooltipNameVal;
             this.options.data_format = dataFormatVal;
             this.options.y_tick_format = yTickFormatVal;
+            this.options.y_operation = yOperationVal;
             this.options.chart_padding_left = chartPaddingLeftVal;
             this.options.chart_padding_bottom = chartPaddingBottomVal;
             this.options.padding_top = paddingTopVal;

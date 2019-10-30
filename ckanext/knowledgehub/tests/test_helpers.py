@@ -634,7 +634,6 @@ class TestKWHHelpers(ActionsBase):
         
         assert_equals(len(res_data), 7)
 
-
     def test_get_geojson_properties(self):
 
         url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
@@ -665,4 +664,5 @@ class TestKWHHelpers(ActionsBase):
 
     #     helpers.call_action('datastore_create', **data)
     #     res = kwh_helpers.get_map_data(url, map_key_field, data_key_field, data_value_field, from_where)
+
     #     assert_equals(res, "")

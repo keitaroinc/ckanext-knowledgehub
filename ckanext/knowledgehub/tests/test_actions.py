@@ -59,7 +59,7 @@ class ActionsBase(helpers.FunctionalTestBase):
 
 class TestKWHCreateActions(ActionsBase):
 
-    def test_theme_create(self):
+    def test_theme_create(self
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -144,7 +144,7 @@ class TestKWHCreateActions(ActionsBase):
             'user': user.get('name'),
             'auth_user_obj': User(user.get('id')),
             'ignore_auth': True,
-            'model': model,
+            '': model,
             'session': model.Session
         }
 
@@ -990,7 +990,7 @@ class TestKWHUpdateActions(ActionsBase):
     #         "filters": {"value" : 0},
     #         "force": True
     #     }
-        
+
     #     resource = factories.Resource(
     #         schema='',
     #         validation_options='',
@@ -1096,4 +1096,5 @@ class TestKWHUpdateActions(ActionsBase):
     #     }
 
     #     res = get_actions.visualizations_for_rq(context, data_dict_rq)
-    #     assert_equals(res, "")
+    #     assert_equals(res, "") 
+        
