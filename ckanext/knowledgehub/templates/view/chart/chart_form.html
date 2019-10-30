@@ -135,30 +135,15 @@
               </div>
             </div>
 
-
-            {# Measure, X positive value #}
-            {% set x_axis_positive_values = h.get_resource_columns(res['id'], []) %}
+            {# Measure, Additional Tornado Values #}
+            {% set additional_tornado_value = h.get_resource_columns(res['id'], []) %}
             <div class="control-group control-select">
-              <label class="control-label" for="chart_field_x_axis_column_positive">{{ _('Y axis dimension') }}</label>
+              <label class="control-label" for="chart_field_additional_tornado_value">{{ _('Additional Tornado Value') }}</label>
               <div class="controls input-controls">
-                <select id="chart_field_x_axis_column_positive" name="chart_field_x_axis_column_positive">
-                  {% for x_value in x_axis_positive_values %}
-                  <option value="{{x_value}}" {% if chart %}{{ 'selected' if x_value == chart.x_axis_positive }}{% endif %}>
-                    {{x_value}}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-
-            {# Measure, X negative value #}
-            {% set x_axis_negative_values = h.get_resource_columns(res['id'], []) %}
-            <div class="control-group control-select">
-              <label class="control-label" for="chart_field_x_axis_column_negative">{{ _('The column with two types') }}</label>
-              <div class="controls input-controls">
-                <select id="chart_field_x_axis_column_negative" name="chart_field_x_axis_column_negative">
-                  {% for x_value in x_axis_negative_values %}
-                  <option value="{{x_value}}" {% if chart %}{{ 'selected' if x_value == chart.x_axis_negative }}{% endif %}>
-                    {{x_value}}</option>
+                <select id="chart_field_additional_tornado_value" name="chart_field_additional_tornado_value">
+                  {% for value in additional_tornado_value %}
+                  <option value="{{value}}" {% if chart %}{{ 'selected' if value == chart.additional_tornado_value }}{% endif %}>
+                    {{value}}</option>
                   {% endfor %}
                 </select>
               </div>
@@ -486,8 +471,7 @@
     {% set colors = chart.color %}
     {% set x_axis = chart.x_axis %}
     {% set y_axis = chart.y_axis %}
-    {% set x_axis_positive = chart.x_axis_positive %}
-    {% set x_axis_negative = chart.x_axis_negative %}
+    {% set additional_tornado_value = chart.additional_tornado_value %}
     {% set chart_type = chart.type %}
     {% set title = data.title %}
     {% set chart_subtitle = chart.chart_subtitle %}
@@ -523,8 +507,7 @@
           colors = colors,
           x_axis = x_axis,
           y_axis = y_axis,
-          x_axis_positive = x_axis_positive,
-          x_axis_negative = x_axis_negative,
+          additional_tornado_value = additional_tornado_value,
           chart_type = chart_type,
           sql_string = sql_string,
           title = title,
