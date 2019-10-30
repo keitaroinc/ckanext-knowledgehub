@@ -67,7 +67,6 @@ ckan.module('chart', function () {
         // Enhance the SQL query with grouping and only select 2 columns.
         create_sql: function () {
             var sqlString = $('#sql-string').val() ? $('#sql-string').val() : this.options.sql_string;
-
             var parsedSqlString = sqlString.split('*');
             var sqlStringExceptSelect = parsedSqlString[1];
             // We need to encode some characters, eg, '+' sign:
@@ -75,13 +74,12 @@ ckan.module('chart', function () {
 
             var sql = "";
             if(this.options.chart_type === "buttchart"){
-                sql = 'SELECT ' + '"' + this.options.x_axis + '", "' + this.options.x_axis_negative + '", "' + this.options.x_axis_positive + '"' + sqlStringExceptSelect + 'GROUP BY "' + this.options.x_axis + '", "' + this.options.x_axis_negative +'", "' + this.options.x_axis_positive +'" ORDER BY "' + this.options.x_axis + '"';
+                sql = 'SELECT ' + '"' + this.options.y_axis + '", "' + this.options.additional_tornado_value + '", "' + this.options.x_axis + '"' + sqlStringExceptSelect + 'GROUP BY "' + this.options.y_axis + '", "' + this.options.x_axis +'", "' + this.options.additional_tornado_value + '"';
             }
             else {
                 sql = 'SELECT ' + '"' + this.options.x_axis + '", MAX("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
 
             }
-            console.log(sql)
             return sql
         }, 
         // Get the data from Datastore.
@@ -89,9 +87,7 @@ ckan.module('chart', function () {
             var category = (this.options.category_name === true) ? '' : this.options.category_name;
             var x_axis = (this.options.x_axis === true) ? '' : this.options.x_axis;
             var y_axis = (this.options.y_axis === true) ? '' : this.options.y_axis;
-            // var y_axis2 = (this.options.y_axis2 == true) ? '' : this.options.y_axis2;
-            var x_axis_positive = (this.options.x_axis_positive === true) ? '' : this.options.x_axis_positive;
-            var x_axis_negative = (this.options.x_axis_negative === true) ? '' : this.options.x_axis_negative;
+            var additional_tornado_value = (this.options.additional_tornado_value === true) ? '' : this.options.additional_tornado_value;
 
             var resource_id = sql.split('FROM')[1].split('WHERE')[0].split('"')[1];
             var dynamic_reference_type = (this.options.dynamic_reference_type === true) ? '' : this.options.dynamic_reference_type;
@@ -109,13 +105,11 @@ ckan.module('chart', function () {
                         category: category,
                         x_axis: x_axis,
                         y_axis: y_axis,
-                        x_axis_positive: x_axis_positive,
-                        x_axis_negative: x_axis_negative,
+                        additional_tornado_value: additional_tornado_value,
                         resource_id: resource_id,
                         filters: JSON.stringify(filters)
                     })
                         .done(function (data) { 
-                            console.log(data)
                             if (data.success) {
                                 this.fetched_data = data.result;    
 
@@ -170,8 +164,7 @@ ckan.module('chart', function () {
         createChart: function (data) {
             var x_axis = this.options.x_axis.toString().toLowerCase();
             var y_axis = this.options.y_axis.toString().toLowerCase();
-            var x_axis_positive = this.options.x_axis_positive.toString().toLowerCase();
-            var x_axis_negative = this.options.x_axis_negative.toString().toLowerCase();
+            var additional_tornado_value = this.options.additional_tornado_value.toString().toLowerCase();
             var records = data;
             var show_legend = this.options.show_legend;
             var x_text_rotate = this.options.x_text_rotate;
@@ -188,7 +181,6 @@ ckan.module('chart', function () {
             var dynamic_reference_label = (this.options.dynamic_reference_label === true) ? '' : this.options.dynamic_reference_label;
             var values;
             var measure_label = (this.options.measure_label === true) ? '' : this.options.measure_label;
-
             // Base options
             var options = {
                 bindto: this.el[0],
@@ -505,18 +497,9 @@ ckan.module('chart', function () {
             // Generate chart
             if (this.options.chart_type === 'buttchart') {
                 
-                console.log(data);
-                console.log(x_axis);
-                console.log(y_axis);
-
-                var test_data = [{"age":"18-24","gender":"male","interactions":21600},{"age":"18-24","gender":"female","interactions":-5500},
-                {"age":"25-34","gender":"male","interactions":19500},{"age":"25-34","gender":"female","interactions":-5000},
-                {"age":"35-44","gender":"male","interactions":10700},{"age":"35-44","gender":"female","interactions":-3500},
-                {"age":"45-54","gender":"male","interactions":5700},{"age":"45-54","gender":"female","interactions":-2400},
-                {"age":"55-64","gender":"male","interactions":2500},{"age":"55-64","gender":"female","interactions":-1100},
-                {"age":"65+","gender":"male","interactions":1600},{"age":"65+","gender":"female","interactions":-600}]
-                var chart = this.tornadoChart(x_axis, x_axis_negative);
-                d3.select("svg").datum(data).call(chart);
+                var sorted_data = this.sortButtData(data, x_axis, additional_tornado_value, y_axis);
+                var chart = this.tornadoChart(x_axis, y_axis);
+                d3.select("svg").datum(sorted_data).call(chart);
             }
             else {
             var chart = c3.generate(options);
@@ -551,6 +534,7 @@ ckan.module('chart', function () {
         ,
         // Get the values from dropdowns and rerender the chart.
         updateChart: function () {
+            d3.select("svg").remove();
             var chartField = $('.chart_field');
 
             var chartTypeSelect = chartField.find('[name*=chart_field_type]');
@@ -571,11 +555,8 @@ ckan.module('chart', function () {
             var axisYSelect = chartField.find('[name*=chart_field_y_axis_column]');
             var axisYValue = axisYSelect.val();
 
-            var axisXSelectPositive = chartField.find('[name*=chart_field_x_axis_column_positive]');
-            var axisXValuePositive = axisXSelectPositive.val();
-
-            var axisXSelectNegative = chartField.find('[name*=chart_field_x_axis_column_negative]');
-            var axisXValueNegative = axisXSelectNegative.val();
+            var additionalTornadoValue = chartField.find('[name*=chart_field_additional_tornado_value]');
+            var tornadoValue = additionalTornadoValue.val();
 
             var categoryName = chartField.find('[name*=chart_field_category_name]');
             var categoryNameVal = categoryName.val();
@@ -637,8 +618,7 @@ ckan.module('chart', function () {
             this.options.chart_type = chartTypeValue;
             this.options.x_axis = axisXValue;
             this.options.y_axis = axisYValue;
-            this.options.x_axis_positive = axisXValuePositive;
-            this.options.x_axis_negative = axisXValueNegative
+            this.options.additional_tornado_value = tornadoValue;
             this.options.title = chartTitleVal;
             this.options.show_legend = legendVal;
             this.options.x_text_rotate = xTextRotateVal;
@@ -779,8 +759,24 @@ ckan.module('chart', function () {
                 return title;
             }
         },
+        sortButtData: function(data, x_axis, additional_tornado_value, y_axis)
+        {
+            var sorteddata = [];
+            for(var j = 0; j < data.length; ++j)
+            {
+                sorteddata.push({});
+            }
+            for(var i = 0; i < data.length; ++i) {
+                sorteddata[i][y_axis] = data[i][y_axis];
+                sorteddata[i][additional_tornado_value] = data[i][additional_tornado_value];
+                sorteddata[i][x_axis] = parseInt(data[i][x_axis], 10);
+            }
+            sorteddata.sort((a, b) => (Math.abs(a[x_axis]) > Math.abs(b[x_axis])) ? -1 : (a[x_axis] === b[x_axis]) ? ((a[x_axis] > b[x_axis]) ? 1 : -1) : 1);
+            return sorteddata;
 
-        tornadoChart: function(x_axis, x_axis_negative)
+        },
+
+        tornadoChart: function(x_axis, y_axis)
         {
                 var margin = {top: 20, right: 30, bottom: 40, left: 100},
                 width = 550 - margin.left - margin.right,
@@ -809,16 +805,14 @@ ckan.module('chart', function () {
             
                 function chart(selection) {
                 selection.each(function(data) {
-                        // console.log(data);
-                        // console.log(x_axis);
+
                     x.domain(d3.extent(data, function(d) { 
-                        // console.log(d[x_axis]);
-                        return d[x_axis]; })).nice(); //interr
+                        return d[x_axis]; })).nice();
+
                     y.domain(data.map(function(d) { 
-                        // console.log("u y")
-                        return d[x_axis_negative]; })); // age
+                        return d[y_axis]; }));
             
-                    var minInteractions = Math.min.apply(Math, data.map(function(o){return o[x_axis];}))
+                    var minInteractions = Math.min.apply(Math, data.map(function(o) {return o[x_axis];}))
                     yAxis.tickPadding(Math.abs(x(minInteractions) - x(0)) + 10);
             
                     var bar = svg.selectAll(".bar")
@@ -826,7 +820,7 @@ ckan.module('chart', function () {
                         bar.enter().append("rect")
                         .attr("class", function(d) { return "bar bar--" + (d[x_axis] < 0 ? "negative" : "positive"); })
                         .attr("x", function(d) { return x(Math.min(0, d[x_axis])); })
-                        .attr("y", function(d) { return y(d[x_axis_negative]); })
+                        .attr("y", function(d) { return y(d[y_axis]); })
                         .attr("width", function(d) { return Math.abs(x(d[x_axis]) - x(0)); })
                         .attr("height", y.rangeBand())
             
@@ -836,7 +830,7 @@ ckan.module('chart', function () {
                             return x(Math.min(0, d[x_axis])) + (Math.abs(x(d[x_axis]) - x(0)) / 2);
                         })
                         .attr("y", function(d) {
-                            return y(d[x_axis_negative]) + (y.rangeBand() / 2);
+                            return y(d[y_axis]) + (y.rangeBand() / 2);
                         })
                         .attr("dy", ".35em")
                         .text(function (d) { return d[x_axis]; })
