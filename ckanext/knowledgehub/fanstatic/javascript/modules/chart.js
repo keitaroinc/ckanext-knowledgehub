@@ -75,14 +75,14 @@ ckan.module('chart', function () {
             sqlStringExceptSelect = sqlStringExceptSelect.replace('+', '%2B');
 
             var sql = "";
-            if(this.options.chart_type === "buttchart"){
-                sql = 'SELECT ' + '"' + this.options.y_axis + '", "' + this.options.additional_tornado_value + '", "' + this.options.x_axis + '"' + sqlStringExceptSelect + 'GROUP BY "' + this.options.y_axis + '", "' + this.options.x_axis +'", "' + this.options.additional_tornado_value + '"';
+            if (this.options.chart_type === "buttchart") {
+                sql = 'SELECT ' + '"' + this.options.y_axis + '", "' + this.options.additional_tornado_value + '", "' + this.options.x_axis + '"' + sqlStringExceptSelect + 'GROUP BY "' + this.options.y_axis + '", "' + this.options.x_axis + '", "' + this.options.additional_tornado_value + '"';
             }
             else {
 
                 var y_operation_selected = chartField.find('[name*=chart_field_y_operation]');
                 var y_operation_val = y_operation_selected.val();
-                if(y_operation_val == "MAX") {
+                if (y_operation_val == "MAX") {
                     var sql = 'SELECT ' + '"' + this.options.x_axis + '", MAX("' + this.options.y_axis + '") as ' + '"' + this.options.y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + this.options.x_axis + '"';
                 }
                 else {
@@ -90,7 +90,7 @@ ckan.module('chart', function () {
                 }
             }
             return sql
-        }, 
+        },
         // Get the data from Datastore.
         get_resource_datа: function (sql) {
             var category = (this.options.category_name === true) ? '' : this.options.category_name;
@@ -118,9 +118,9 @@ ckan.module('chart', function () {
                         resource_id: resource_id,
                         filters: JSON.stringify(filters)
                     })
-                        .done(function (data) { 
+                        .done(function (data) {
                             if (data.success) {
-                                this.fetched_data = data.result;    
+                                this.fetched_data = data.result;
 
                                 // Reset all metrics
                                 this.y_axis_max = null;
@@ -165,7 +165,7 @@ ckan.module('chart', function () {
                                 this.el.text(this._('Chart could not be created!'));
                             }
                         }.bind(this));
-               }
+                }
             } else {
                 this.el.text(this._('Please choose X and Y axis dimensions and press Update!'));
             }
@@ -210,7 +210,7 @@ ckan.module('chart', function () {
                 filters: [],
                 optionalFilter: undefined,
             });
-   
+
             options.title = {
                 text: titleVal,
                 position: "upper-right",
@@ -506,41 +506,41 @@ ckan.module('chart', function () {
 
             // Generate chart
             if (this.options.chart_type === 'buttchart') {
-                
+
                 var sorted_data = this.sortButtData(data, x_axis, additional_tornado_value, y_axis);
                 var chart = this.tornadoChart(x_axis, y_axis);
                 d3.select("svg").datum(sorted_data).call(chart);
             }
             else {
-            var chart = c3.generate(options);
-            
-            var subtitle = (this.options.chart_subtitle === true) ? '' : this.options.chart_subtitle;
-            var chartDescription = (this.options.chart_description === true) ? '' : this.options.chart_description;
-            
-            var info = [subtitle, chartDescription];
-            //Create Image Logo and append
-            var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-            svgimg.setAttributeNS(null, 'height', '70');
-            svgimg.setAttributeNS(null, 'width', '270');
-            svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
-            svgimg.setAttributeNS(null, 'x', '0');
-            svgimg.setAttributeNS(null, 'y', '0');
-            svgimg.setAttributeNS(null, 'visibility', 'hidden');
+                var chart = c3.generate(options);
 
-            var svgElement = $('.item-content').find('svg')[0];
-            $(svgElement).append(svgimg); 
-            
-            info.map(val => {
-                var x = $(".c3-title").attr('x');
-                var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                val.length > 30 ? val = val.substring(0,30) + "...": null;
-                element.textContent = val;
-                element.setAttributeNS(null, 'dy', '1.2em');
-                element.setAttributeNS(null, 'x', x);
-                $('.c3-title').append(element)
+                var subtitle = (this.options.chart_subtitle === true) ? '' : this.options.chart_subtitle;
+                var chartDescription = (this.options.chart_description === true) ? '' : this.options.chart_description;
+
+                var info = [subtitle, chartDescription];
+                //Create Image Logo and append
+                var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                svgimg.setAttributeNS(null, 'height', '70');
+                svgimg.setAttributeNS(null, 'width', '270');
+                svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
+                svgimg.setAttributeNS(null, 'x', '0');
+                svgimg.setAttributeNS(null, 'y', '0');
+                svgimg.setAttributeNS(null, 'visibility', 'hidden');
+
+                var svgElement = $('.item-content').find('svg')[0];
+                $(svgElement).append(svgimg);
+
+                info.map(val => {
+                    var x = $(".c3-title").attr('x');
+                    var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    val.length > 30 ? val = val.substring(0, 30) + "..." : null;
+                    element.textContent = val;
+                    element.setAttributeNS(null, 'dy', '1.2em');
+                    element.setAttributeNS(null, 'x', x);
+                    $('.c3-title').append(element)
                 });
-            } 
-        }  
+            }
+        }
         ,
         // Get the values from dropdowns and rerender the chart.
         updateChart: function () {
@@ -773,14 +773,12 @@ ckan.module('chart', function () {
                 return title;
             }
         },
-        sortButtData: function(data, x_axis, additional_tornado_value, y_axis)
-        {
+        sortButtData: function (data, x_axis, additional_tornado_value, y_axis) {
             var sorteddata = [];
-            for(var j = 0; j < data.length; ++j)
-            {
+            for (var j = 0; j < data.length; ++j) {
                 sorteddata.push({});
             }
-            for(var i = 0; i < data.length; ++i) {
+            for (var i = 0; i < data.length; ++i) {
                 sorteddata[i][y_axis] = data[i][y_axis];
                 sorteddata[i][additional_tornado_value] = data[i][additional_tornado_value];
                 sorteddata[i][x_axis] = parseInt(data[i][x_axis], 10);
@@ -790,100 +788,79 @@ ckan.module('chart', function () {
 
         },
 
-        tornadoChart: function(x_axis, y_axis)
-        {
-                var margin = {top: 20, right: 30, bottom: 40, left: 100},
+        tornadoChart: function (x_axis, y_axis) {
+            var margin = { top: 20, right: 30, bottom: 40, left: 100 },
                 width = 550 - margin.left - margin.right,
                 height = 200 - margin.top - margin.bottom;
-            
-                var x = d3.scale.linear()
-                    .range([0, width]);
-                var y = d3.scale.ordinal()
-                    .rangeRoundBands([0, height], 0.1);
-            
-                var xAxis = d3.svg.axis()
-                    .scale(x)
-                    .orient("bottom")
-                    .ticks(7)
-            
-                var yAxis = d3.svg.axis()
-                    .scale(y)
-                    .orient("left")
-                    .tickSize(0)
-            
-                var svg = d3.select(".item-content").append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
+
+            var x = d3.scale.linear()
+                .range([0, width]);
+            var y = d3.scale.ordinal()
+                .rangeRoundBands([0, height], 0.1);
+
+            var xAxis = d3.svg.axis()
+                .scale(x)
+                .orient("bottom")
+                .ticks(7)
+
+            var yAxis = d3.svg.axis()
+                .scale(y)
+                .orient("left")
+                .tickSize(0)
+
+            var svg = d3.select(".item-content").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
                 .append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-            
-                function chart(selection) {
-                selection.each(function(data) {
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                    x.domain(d3.extent(data, function(d) { 
-                        return d[x_axis]; })).nice();
+            function chart(selection) {
+                selection.each(function (data) {
 
-                    y.domain(data.map(function(d) { 
-                        return d[y_axis]; }));
-            
-                    var minInteractions = Math.min.apply(Math, data.map(function(o) {return o[x_axis];}))
+                    x.domain(d3.extent(data, function (d) {
+                        return d[x_axis];
+                    })).nice();
+
+                    y.domain(data.map(function (d) {
+                        return d[y_axis];
+                    }));
+
+                    var minInteractions = Math.min.apply(Math, data.map(function (o) { return o[x_axis]; }))
                     yAxis.tickPadding(Math.abs(x(minInteractions) - x(0)) + 10);
-            
+
                     var bar = svg.selectAll(".bar")
                         .data(data)
-                        bar.enter().append("rect")
-                        .attr("class", function(d) { return "bar bar--" + (d[x_axis] < 0 ? "negative" : "positive"); })
-                        .attr("x", function(d) { return x(Math.min(0, d[x_axis])); })
-                        .attr("y", function(d) { return y(d[y_axis]); })
-                        .attr("width", function(d) { return Math.abs(x(d[x_axis]) - x(0)); })
+                    bar.enter().append("rect")
+                        .attr("class", function (d) { return "bar bar--" + (d[x_axis] < 0 ? "negative" : "positive"); })
+                        .attr("x", function (d) { return x(Math.min(0, d[x_axis])); })
+                        .attr("y", function (d) { return y(d[y_axis]); })
+                        .attr("width", function (d) { return Math.abs(x(d[x_axis]) - x(0)); })
                         .attr("height", y.rangeBand())
-            
+
                     bar.enter().append('text')
                         .attr("text-anchor", "middle")
-                        .attr("x", function(d) {
+                        .attr("x", function (d) {
                             return x(Math.min(0, d[x_axis])) + (Math.abs(x(d[x_axis]) - x(0)) / 2);
                         })
-                        .attr("y", function(d) {
+                        .attr("y", function (d) {
                             return y(d[y_axis]) + (y.rangeBand() / 2);
                         })
                         .attr("dy", ".35em")
                         .text(function (d) { return d[x_axis]; })
-            
+
                     svg.append("g")
                         .attr("class", "x axis")
                         .attr("transform", "translate(0," + height + ")")
                         .call(xAxis);
-            
+
                     svg.append("g")
                         .attr("class", "y axis")
                         .attr("transform", "translate(" + x(0) + ",0)")
                         .call(yAxis);
-                    var style = document.createElement('style');
-                    style.innerHTML = `
-                    .bar--positive {
-                        fill: #9BCCF5;
-                        }
-                        
-                        .bar--negative {
-                        fill: pink;
-                        }
-                        
-                        text {
-                        font: 10px sans-serif;
-                        }
-                        
-                        .axis path,
-                        .axis line {
-                        fill: none;
-                        stroke: #000;
-                        shape-rendering: crispEdges;
-                        }
-                        `;
-                    document.head.appendChild(style);
                 });
-                }
-            
-                return chart;
-    },
+            }
+
+            return chart;
+        },
     }
 });
