@@ -101,7 +101,7 @@ class TestKWHHelpers(ActionsBase):
         mock_pylons()
         chart_types = kwh_helpers.get_chart_types()
 
-        assert_equals(len(chart_types), 12)
+        assert_equals(len(chart_types), 13)
 
     def test_get_uuid(self):
         uid = kwh_helpers.get_uuid()
