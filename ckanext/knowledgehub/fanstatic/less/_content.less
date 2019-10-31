@@ -1,37 +1,45 @@
 //Dashboard
-.dashboards{
-  >ul{
-    &>*:first-child{
+.dashboards {
+  >ul {
+    &>*:first-child {
       padding-top: 0;
-      .dashboard-link{
+
+      .dashboard-link {
         padding-top: 0;
       }
     }
   }
 }
-.nav>li{
-  >.dashboard-link{
+
+.nav>li {
+  >.dashboard-link {
     padding: 1.5rem 0;
-    &:hover{
+
+    &:hover {
       background-color: inherit;
     }
   }
 }
-.dashboard-title-box{
+
+.dashboard-title-box {
   .flex;
   .justify-content-between;
   .align-items-center;
+
   .dashboard-manage-icon {
     padding: 1rem;
     font-size: @font-size-base + 2;
-    &:hover{
+
+    &:hover {
       color: @brand-primary-dark;
     }
-   }
-   .dashboard-created{
+  }
+
+  .dashboard-created {
     font-weight: 700;
     font-size: @font-size-base - 2;
-    i{
+
+    i {
       font-weight: 700;
       color: @gray-base;
       font-size: @font-size-base;
@@ -82,14 +90,15 @@
   position: relative;
 
 }
-.dashboard-section{
-  width: 100%; 
-  height: 100%; 
-  display: flex; 
-  justify-content: center; 
-  min-height: 700px; 
-  background-color: white; 
-  margin-left: 0; 
+
+.dashboard-section {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: 700px;
+  background-color: white;
+  margin-left: 0;
   margin-right: 0;
 }
 
@@ -117,9 +126,10 @@
 }
 
 .nav-item {
-  & >a:hover{
+  &>a:hover {
     color: @brand-primary-dark;
   }
+
   &.active>a {
     background-color: @brand-primary-dark-25;
 
@@ -163,8 +173,28 @@
 }
 
 .viz-view-item {
-    float: left;
-    margin-left: 30px;
-    margin-top: 30px;
-    margin-bottom: 80px;
+  float: left;
+  margin-left: 30px;
+  margin-top: 30px;
+  margin-bottom: 80px;
+}
+
+//Tornado Chart Style
+.bar--positive {
+  fill: #9BCCF5;
+}
+
+.bar--negative {
+  fill: pink;
+}
+
+text {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
 }
