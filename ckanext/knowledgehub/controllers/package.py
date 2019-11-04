@@ -184,7 +184,7 @@ class KWHPackageController(PackageController):
 
             default_facet_titles = {
                 'organization': _('Organizations'),
-                'groups': _('Groups'),
+                'groups': _('Joint Analysis'),
                 'tags': _('Tags'),
                 'res_format': _('Formats'),
                 'license_id': _('Licenses'),
