@@ -69,6 +69,8 @@ def _process_post_data(data, resource_id):
             data['chart_field_x_axis_column']
         config['y_axis'] = \
             data['chart_field_y_axis_column']
+        config['additional_tornado_value'] = \
+            data['chart_field_additional_tornado_value']
         config['category_name'] = \
             data['chart_field_category_name']
         config['color'] = \
