@@ -513,6 +513,16 @@ ckan.module('chart', function () {
             }
             else {
                 var chart = c3.generate(options);
+                info.map(val => {
+                    var x = $(".c3-title").attr('x');
+                    var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    val.length > 30 ? val = val.substring(0, 30) + "..." : null;
+                    element.textContent = val;
+                    element.setAttributeNS(null, 'dy', '1.2em');
+                    element.setAttributeNS(null, 'x', x);
+                    $('.c3-title').append(element)
+                });
+            }
 
                 var subtitle = (this.options.chart_subtitle === true) ? '' : this.options.chart_subtitle;
                 var chartDescription = (this.options.chart_description === true) ? '' : this.options.chart_description;
@@ -530,16 +540,8 @@ ckan.module('chart', function () {
                 var svgElement = $('.item-content').find('svg')[0];
                 $(svgElement).append(svgimg);
 
-                info.map(val => {
-                    var x = $(".c3-title").attr('x');
-                    var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                    val.length > 30 ? val = val.substring(0, 30) + "..." : null;
-                    element.textContent = val;
-                    element.setAttributeNS(null, 'dy', '1.2em');
-                    element.setAttributeNS(null, 'x', x);
-                    $('.c3-title').append(element)
-                });
-            }
+                
+            // }
         }
         ,
         // Get the values from dropdowns and rerender the chart.
@@ -807,6 +809,8 @@ ckan.module('chart', function () {
                 .scale(y)
                 .orient("left")
                 .tickSize(0)
+            // to clear the Loading... part
+            var m = document.getElementById("chart-module-id").innerHTML="";
 
             var svg = d3.select(".item-content").append("svg")
                 .attr("width", width + margin.left + margin.right)

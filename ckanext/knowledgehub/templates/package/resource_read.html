@@ -67,6 +67,7 @@
               {% set chart_id = resource_view.__extras.id %}
               {% set x_axis = resource_view.__extras.x_axis %}
               {% set y_axis = resource_view.__extras.y_axis %}
+              {% set additional_tornado_value = resource_view.__extras.additional_tornado_value %}
               {% set chart_type = resource_view.__extras.type %}
               {% set chart_subtitle = resource_view.__extras.chart_subtitle %}
               {% set chart_description = resource_view.__extras.chart_description %}
@@ -100,6 +101,7 @@
                 chart_id = chart_id,
                 x_axis=x_axis,
                 y_axis=y_axis,
+                additional_tornado_value=additional_tornado_value,
                 chart_type=chart_type,
                 sql_string=sql_string,
                 title=chart_title,
