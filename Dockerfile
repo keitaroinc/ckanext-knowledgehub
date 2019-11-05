@@ -65,8 +65,8 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.datarequest
 # Set up Disqus
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.name = knowledgehub-ckan"
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.disqus_url = knowledgehub-staging.keitaro.app"
-# Set max resource size to 100MB
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.max_resource_size = 100"
+# Set max resource size to 500MB
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.max_resource_size = 500"
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
