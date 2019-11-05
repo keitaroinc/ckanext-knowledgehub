@@ -1,0 +1,9 @@
+{% ckan_extends %}
+
+{{ super() }}
+{% block subtitle %}{{ c.group_dict.display_name }} - {{ _('Functional Units') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{% link_for _('Functional Units'), controller='organization', action='index', named_route=group_type + '_index' %}</li>
+  <li class="active">{% link_for c.group_dict.display_name|truncate(35), controller='organization', action='read', id=c.group_dict.name, named_route=group_type + '_read' %}</li>
+{% endblock %}

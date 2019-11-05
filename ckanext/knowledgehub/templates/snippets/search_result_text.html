@@ -24,10 +24,10 @@
       {% set text_no_query_none = _('No joint analysis found') %}
     
     {% elif type == 'organization' %}
-      {% set text_query = ungettext('{number} organization found for "{query}"', '{number} organizations found for "{query}"', count) %}
-      {% set text_query_none = _('No organizations found for "{query}"') %}
-      {% set text_no_query = ungettext('{number} organization found', '{number} organizations found', count) %}
-      {% set text_no_query_none = _('No organizations found') %}
+      {% set text_query = ungettext('{number} functional unit found for "{query}"', '{number} functional units found for "{query}"', count) %}
+      {% set text_query_none = _('No functional units found for "{query}"') %}
+      {% set text_no_query = ungettext('{number} functional unit found', '{number} functional units found', count) %}
+      {% set text_no_query_none = _('No functional units found') %}
     
     {% else %}
       {% set text_query_singular = '{number} ' + type + ' found for "{query}"' %}

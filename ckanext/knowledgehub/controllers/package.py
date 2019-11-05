@@ -183,7 +183,7 @@ class KWHPackageController(PackageController):
             facets = OrderedDict()
 
             default_facet_titles = {
-                'organization': _('Organizations'),
+                'organization': _('Functional Unit'),
                 'groups': _('Joint Analysis'),
                 'tags': _('Tags'),
                 'res_format': _('Formats'),

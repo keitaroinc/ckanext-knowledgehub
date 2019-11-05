@@ -1,0 +1,12 @@
+{% ckan_extends %}
+ 
+{{ super() }}
+
+{% block save_text %}
+  {%- if action == "edit" -%}
+    {{ _('Update Functional Unit') }}
+  {%- else -%}
+    {{ _('Create Functional Unit') }}
+  {%- endif -%}
+{% endblock %}
+

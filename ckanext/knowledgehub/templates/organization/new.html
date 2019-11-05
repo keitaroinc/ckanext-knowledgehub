@@ -1,0 +1,14 @@
+{% ckan_extends %}
+
+{{ super() }}
+{% block subtitle %}{{ _('Create a Functional Unit') }}{% endblock %}
+
+{% block breadcrumb_link %}{{ h.nav_link(_('Create a Functional Unit'), controller='organization', action='edit', id=c.organization.name) }}{% endblock %}
+
+{% block page_heading %}{{ _('Create a Functional Unit') }}{% endblock %}
+
+
+{% block breadcrumb_content_inner %}
+  <li class="active"><a href="#">{{ _('Create a Functional Unit') }}</a></li>
+{% endblock %}
+
