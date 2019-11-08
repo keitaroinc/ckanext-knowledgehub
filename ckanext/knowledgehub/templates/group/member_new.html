@@ -1,0 +1,19 @@
+{% ckan_extends %}
+{{ super() }}
+
+{% block secondary_content %}
+  {{ super() }}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="fa fa-lg fa-info-circle"></i>
+      {{ _('What are roles?') }}
+    </h2>
+    <div class="module-content">
+      {% trans %}
+         <p><strong>Admin:</strong> Can edit joint analysis information, as well as
+           manage functional unit members.</p>
+         <p><strong>Member:</strong> Can add/remove datasets from joint analysis.</p>
+      {% endtrans %}
+    </div>
+  </div>
+{% endblock %}
