@@ -173,3 +173,39 @@ class KWHOrganizationController(OrganizationController):
 
             self._setup_template_variables(context, {'id': id},
                                         group_type=group_type)
+
+
+    def delete(self, id):
+        group_type = self._ensure_controller_matches_group_type(id)
+
+        if 'cancel' in request.params:
+            h.redirect_to(group_type + '_edit', id=id)
+
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user}
+
+        try:
+            self._check_access('group_delete', context, {'id': id})
+        except NotAuthorized:
+            abort(403, _('Unauthorized to delete group. %s') % '')
+
+        try:
+            if request.method == 'POST':
+                self._action('group_delete')(context, {'id': id})
+                if group_type == 'organization':
+                    h.flash_notice(_('Functional unit has been deleted.'))
+                elif group_type == 'group':
+                    h.flash_notice(_('Joint analysis has been deleted.'))
+                else:
+                    h.flash_notice(_('%s has been deleted.')
+                                   % _(group_type.capitalize()))
+                h.redirect_to(group_type + '_index')
+            c.group_dict = self._action('group_show')(context, {'id': id})
+        except NotAuthorized:
+            abort(403, _('Unauthorized to delete group %s') % '')
+        except NotFound:
+            abort(404, _('Group not found'))
+        except ValidationError as e:
+            h.flash_error(e.error_dict['message'])
+            h.redirect_to(controller='organization', action='read', id=id)
+        return self._render_template('group/confirm_delete.html', group_type)
