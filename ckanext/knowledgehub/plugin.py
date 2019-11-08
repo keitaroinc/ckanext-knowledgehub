@@ -188,6 +188,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         ) as m:
             m.connect('group_list', '/group/list', action='list')
             m.connect('group_new', '/group/new', action='new')
+            m.connect('group_delete' , '/group/delete' + '/{id}', action='delete')
             m.connect('group_read', '/group/{id}', action='read')
 
         with SubMapper(
@@ -195,7 +196,10 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             controller='ckanext.knowledgehub.controllers:KWHOrganizationController'
         ) as m:
             m.connect('organization_new', '/organization/new', action='new')
+            m.connect('organization_delete' , '/organization/delete' + '/{id}', action='delete')
+
             m.connect('organization_read', '/organization/{id}', action='read')
+            m.connect('organization_bulk_process','/organization/bulk_process/{id}', action='bulk_process')
         return map
 
     # IPackageController
