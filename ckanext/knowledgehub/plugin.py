@@ -179,7 +179,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         ) as m:
             m.connect('search', '/dataset', action='search')
 
-        # Override read action with index, for changing the titles in facets
+        # Override read action, for changing the titles in facets and tell CKAN where to look for
+        # new and list actions.
+        # NOTE: List and New actions should be specified before Read action!!
         with SubMapper(
             map,
             controller='ckanext.knowledgehub.controllers:KWHGroupController'
