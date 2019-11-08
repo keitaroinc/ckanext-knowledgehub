@@ -1,0 +1,10 @@
+{% ckan_extends %}
+
+{{ super() }}
+
+{% block subtitle %}{{ c.group_dict.display_name }} - {{ _('Joint Analysis') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{% link_for _('Joint Analysis'), controller='group', action='index', named_route=group_type + '_index' %}</li>
+  <li class="active">{% link_for c.group_dict.display_name|truncate(35), controller='group', action='read', id=c.group_dict.name, named_route=group_type + '_read' %}</li>
+{% endblock %}
