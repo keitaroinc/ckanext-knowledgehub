@@ -179,6 +179,21 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         ) as m:
             m.connect('search', '/dataset', action='search')
 
+        # Override read action with index, for changing the titles in facets
+        with SubMapper(
+            map,
+            controller='ckanext.knowledgehub.controllers:KWHGroupController'
+        ) as m:
+            m.connect('group_list', '/group/list', action='list')
+            m.connect('group_new', '/group/new', action='new')
+            m.connect('group_read', '/group/{id}', action='read')
+
+        with SubMapper(
+            map,
+            controller='ckanext.knowledgehub.controllers:KWHOrganizationController'
+        ) as m:
+            m.connect('organization_new', '/organization/new', action='new')
+            m.connect('organization_read', '/organization/{id}', action='read')
         return map
 
     # IPackageController
