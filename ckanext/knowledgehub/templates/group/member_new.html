@@ -1,9 +1,9 @@
 {% ckan_extends %}
-{{ super() }}
 
 {% block secondary_content %}
-  {{ super() }}
-  <div class="module module-narrow module-shallow">
+
+{% snippet "group/snippets/info.html", group=c.group_dict, show_nums=false %}
+<div class="module module-narrow module-shallow">
     <h2 class="module-heading">
       <i class="fa fa-lg fa-info-circle"></i>
       {{ _('What are roles?') }}
