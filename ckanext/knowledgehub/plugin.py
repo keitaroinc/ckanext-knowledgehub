@@ -105,7 +105,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'indicator_type': package_defaults,
             'theme': package_defaults,
             'sub_theme': package_defaults,
-            'research_question': package_defaults
+            'research_question': package_defaults,
+            'country_code': package_defaults
         })
 
         schema['resources'].update({
@@ -148,7 +149,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'indicator_type': package_defaults,
             'theme': package_defaults,
             'sub_theme': package_defaults,
-            'research_question': package_defaults
+            'research_question': package_defaults,
+            'country_code': package_defaults
         })
 
         schema['resources'].update({

@@ -22,13 +22,8 @@
     {% endblock %}
 </h3>
 {% endblock %}
-{% block notes %}
-{% if notes %}
-<div class="text-wrap">{{ notes|urlize }}</div>
-{% else %}
-<p class="empty">{{ _("This dataset has no description") }}</p>
-{% endif %}
 
+{% block notes %}
 {% if package.tags %}
 <div class="row flex flex-wrap dataset-tag-wrapper">
     {% for tag in package.tags %}
@@ -36,7 +31,7 @@
     {% endfor %}
 </div>
 {% endif %}
-{% if package.research_question %}
+<!-- {% if package.research_question %}
 <div>
     <div class="data-content border-bottom">
         {% set questions = h.pg_array_to_py_list(package.research_question) %}
@@ -50,5 +45,25 @@
         {% endfor %}
     </div>
 </div>
+{% endif %} -->
+{% if package.metadata_created %}
+<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Date created:
+</span><span class="text-muted">{{ package.metadata_created }}</span></h5></a>
 {% endif %}
+
+{% if package.country_code %}
+<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country:
+</span><span class="text-muted">{{ package.country_code }}</span></h5></a>
+{% endif %}
+
+{% if package.organization %}
+<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Functional Unit:
+</span><span class="text-muted">{{ package.organization.title }}</span></h5></a>
+{% endif %}
+
+{% if package.author %}
+<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Author:
+</span><span class="text-muted">{{ package.author }}</span></h5></a>
+{% endif %}
+
 {% endblock %}

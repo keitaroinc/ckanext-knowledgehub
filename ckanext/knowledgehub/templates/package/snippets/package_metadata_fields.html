@@ -7,6 +7,21 @@
 
 {% block custom_fields %}
 
+<!-- TODO: Add the countries in a helper function  -->
+{% block basic_fields_country %}
+{% set country_codes = ['Egypt', 'Iraq', 'Jordan', 'Lebanon', 'Syria', 'Turkey'] %}
+<div class="control-group">
+  <label class="control-label" for="field-country_code">{{ _("Country") }}</label>
+  <div class="controls">
+    <select id="field-country_code" name="country_code" data-module="autocomplete">
+      {% for country_code in country_codes  %}
+        <option value="{{ country_code }}" {% if country_code in data.get('country_code', []) %}selected="selected"{% endif %}>{{ country_code }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+{% endblock %}
+
   <!-- {% block basic_fields_unit_supported %}
 	{{ form.input('unit_supported', id='field-unit-supported', label=_('Unit Supported'), placeholder=_('e.g. Protection'), value=data.unit_supported, error=errors.unit_supported, classes=['control-full'], is_required=False) }}
   {% endblock %}
