@@ -38,7 +38,9 @@ RUN pip install cython && \
     # datarequests
     pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests" && \
     # disqus
-    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus"
+    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus" && \
+    # datapusher
+    pip install --no-cache-dir -e "git+https://github.com/keitaroinc/datapusher.git#egg=ckanext-datapusher"
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
