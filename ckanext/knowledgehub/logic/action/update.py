@@ -198,6 +198,38 @@ def resource_update(context, data_dict):
     :type validation_options: string
     '''
 
+    if (data_dict['schema'] == ''):
+        del data_dict['schema']
+
+    if (data_dict['validation_options'] == ''):
+        del data_dict['validation_options']
+
+    if data_dict.get('db_type') is not None:
+        if data_dict.get('db_type') == '':
+            raise logic.ValidationError({
+                'db_type': [_('Please select the DB Type')]
+            })
+
+        backend = get_backend(data_dict)
+        backend.configure(data_dict)
+        data = backend.search_sql(data_dict)
+
+        if data.get('records', []):
+            writer = WriterService()
+            stream = writer.csv_writer(data.get('fields'),
+                                       data.get('records'),
+                                       ',')
+
+            filename = data_dict.get('url')
+            if not filename:
+                filename = '{}_{}.{}'.format(
+                    data_dict.get('db_type'),
+                    str(datetime.datetime.utcnow()),
+                    'csv'
+                )
+
+            data_dict['upload'] = FlaskFileStorage(stream, filename)
+            
     ckan_rsc_update(context, data_dict)
 
 
