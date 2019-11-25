@@ -91,6 +91,11 @@
                                     class="text">close</span></a>
                         </div>
                         {% endblock %}
+                        {% block dashboards_footer %}
+                        <div class="btn btn-link">
+                            {{ h.nav_link(_('View All Dashboards'), named_route='dashboards.index', icon='angle-double-right') }}
+                        </div>
+                        {% endblock %}
                     </div>
                     <div class="col-lg-9 group-list indicators">
                         <div class="group-list-items">
