@@ -52,13 +52,18 @@
 </span><span class="text-muted">{{ h.format_date(package.metadata_created) }}</span></h5></a>
 {% endif %}
 
-{% if package.country_code %}
-<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country:
-</span><span class="text-muted">{{ package.country_code }}</span></h5></a>
+{% if package.country_code_displacement %}
+<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country of displacement:
+</span><span class="text-muted">{{ package.country_code_displacement }}</span></h5></a>
+{% endif %}
+
+{% if package.country_code_origin %}
+<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country of origin:
+</span><span class="text-muted">{{ package.country_code_origin }}</span></h5></a>
 {% endif %}
 
 {% if package.organization %}
-<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Functional Unit:
+<h5 class="dataset-text-wrap text-muted"><span style="color: #000">Functional unit:
 </span><span class="text-muted">{{ package.organization.title }}</span></h5></a>
 {% endif %}
 

@@ -3,25 +3,40 @@
 
 {% block package_metadata_fields %}
 {% block package_metadata_author %}
-    {{ form.input('author', label=_('Author'), id='field-author', placeholder=_('Joe Bloggs'), value=data.author, error=errors.author, classes=['control-medium']) }}
+    {{ form.input('author', label=_('Author'), id='field-author', placeholder=_('Joe Bloggs'), value=data.author, error=errors.author, classes=['control-medium'], is_required =true)}}
   {% endblock %}
 
 {% block custom_fields %}
 
 <!-- TODO: Add the countries in a helper function  -->
-{% block basic_fields_country %}
+{% block basic_fields_country_of_displacement %}
 {% set country_codes = ['Egypt', 'Iraq', 'Jordan', 'Lebanon', 'Syria', 'Turkey'] %}
 <div class="control-group">
-  <label class="control-label" for="field-country_code">{{ _("Country") }}</label>
+  <label class="control-label" for="field-country_code_displacement">{{ _("Country of Displacement") }}</label>
   <div class="controls">
-    <select id="field-country_code" name="country_code" data-module="autocomplete">
+    <select id="field-country_code_displacement" name="country_code_displacement" data-module="autocomplete">
       {% for country_code in country_codes  %}
-        <option value="{{ country_code }}" {% if country_code in data.get('country_code', []) %}selected="selected"{% endif %}>{{ country_code }}</option>
+        <option value="{{ country_code }}" {% if country_code in data.get('field-country_code_displacement', []) %}selected="selected"{% endif %}>{{ country_code }}</option>
       {% endfor %}
     </select>
   </div>
 </div> 
 {% endblock %}
+
+{% block basic_fields_country_of_origin %}
+{% set country_codes = ['Egypt', 'Iraq', 'Jordan', 'Lebanon', 'Syria', 'Turkey'] %}
+<div class="control-group">
+  <label class="control-label" for="field-country_code_origin">{{ _("Country of Origin") }}</label>
+  <div class="controls">
+    <select id="field-country_code_origin" name="country_code_origin" data-module="autocomplete">
+      {% for country_code in country_codes  %}
+        <option value="{{ country_code }}" {% if country_code in data.get('field-country_code_origin', []) %}selected="selected"{% endif %}>{{ country_code }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+{% endblock %}
+
 
   <!-- {% block basic_fields_unit_supported %}
 	{{ form.input('unit_supported', id='field-unit-supported', label=_('Unit Supported'), placeholder=_('e.g. Protection'), value=data.unit_supported, error=errors.unit_supported, classes=['control-full'], is_required=False) }}
