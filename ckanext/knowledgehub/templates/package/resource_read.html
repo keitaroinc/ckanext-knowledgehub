@@ -11,27 +11,29 @@
       {% if h.check_access('package_update', {'id':pkg.id }) %}
         <li>{% link_for _('Manage'), controller='package', action='resource_edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
 
-        <div class="btn-group">
-          <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
-            <i class="fa fa-bar-chart"></i>
-            {{ _('visualize') }}
-            <span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu">
-            <li>
-              <a href="{% url_for 'chart_view.new_chart', id=pkg.name, resource_id=res.id %}"><i class="fa fa-line-chart"></i>
-                {{ _('Chart') }}</a>
-            </li>
-            <li>
-              <a href="{% url_for 'table_view.new_table', id=pkg.name, resource_id=res.id %}"><i class="fa fa-table"></i>
-                {{ _('Table') }}</a>
-            </li>
-            <li>
-              <a href="{% url_for 'map_view.new_map', id=pkg.name, resource_id=res.id %}"><i class="fa fa-map"></i>
-                {{ _('Map') }}</a>
-            </li>
-          </ul>
-        </div>
+        <li>
+          <div class="btn-group">
+            <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+              <i class="fa fa-bar-chart"></i>
+              {{ _('visualize') }}
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="{% url_for 'chart_view.new_chart', id=pkg.name, resource_id=res.id %}"><i class="fa fa-line-chart"></i>
+                  {{ _('Chart') }}</a>
+              </li>
+              <li>
+                <a href="{% url_for 'table_view.new_table', id=pkg.name, resource_id=res.id %}"><i class="fa fa-table"></i>
+                  {{ _('Table') }}</a>
+              </li>
+              <li>
+                <a href="{% url_for 'map_view.new_map', id=pkg.name, resource_id=res.id %}"><i class="fa fa-map"></i>
+                  {{ _('Map') }}</a>
+              </li>
+            </ul>
+          </div>
+        </li>
       {% endif %}
 
       {% if res.url and h.is_url(res.url) %}
