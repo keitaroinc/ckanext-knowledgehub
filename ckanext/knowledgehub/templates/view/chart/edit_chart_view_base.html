@@ -14,9 +14,8 @@
     {% endif %}
     <li>{% link_for dataset|truncate(30), controller='package', action='read', id=pkg.name %}</li>
     <li>{% link_for h.resource_display_name(res)|truncate(30), controller='package', action='resource_read', id=pkg.name, resource_id=res.id %}</li>
-    {% set edit_url = h.url_for(controller='package', action='resource_edit', id=pkg.name, resource_id=res.id) %}
-    <li><a href="{{ edit_url }}">{{ _('Edit') }}</a></li>
-    <li class="active"><a href="#">{{ _('Edit chart view') }}</a></li>
+    <li>{% link_for _(data.title)|truncate(30), controller='package', action='resource_read', id=pkg.name, resource_id=res.id, view_id=data.id %}</li>
+    <li class="active"><a href="">{{ _('Edit') }}</a></li>
 {% endblock %}
 
 {% block content_action %}
