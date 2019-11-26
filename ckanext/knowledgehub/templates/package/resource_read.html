@@ -48,6 +48,9 @@
                 <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
               {% endif %}
             </a>
+            {% block download_resource_button %}
+              {{ super() }}
+            {% endblock %}
           </div>
         </li>
       {% endif %}
