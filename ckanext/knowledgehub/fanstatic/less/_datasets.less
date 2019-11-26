@@ -38,10 +38,11 @@ header.module-content.page-header {
     border: 1px solid @gray-line;
     padding-bottom: 10px;
     .shadow;
+
     ul {
       padding: 0 0 @grid-gutter-width - 10 @grid-gutter-width - 10;
     }
-  
+
     .dataset-content {
       padding: 0 @grid-gutter-width / 2 @grid-gutter-width / 2 @grid-gutter-width / 2 + 5;
 
@@ -57,16 +58,18 @@ header.module-content.page-header {
             color: @brand-primary;
           }
         }
-        & .label{
+
+        & .label {
           padding: .5rem 1rem;
         }
       }
     }
-    &:hover{
+
+    &:hover {
       .hover-primary;
     }
   }
-  
+
 }
 
 .border-bottom {
@@ -106,6 +109,7 @@ header.module-content.page-header {
   border-radius: 10px;
 
 }
+
 .tag-list {
   background-color: transparent;
   outline: none;
@@ -116,7 +120,12 @@ a.tag {
   background-color: transparent;
   color: @brand-primary;
   border: 1px solid @brand-primary;
+
   &:hover {
     background: @brand-primary;
   }
+}
+
+.filters {
+  padding-top: 65px;
 }
