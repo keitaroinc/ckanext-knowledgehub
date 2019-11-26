@@ -666,3 +666,9 @@ class TestKWHHelpers(ActionsBase):
     #     helpers.call_action('datastore_create', **data)
     #     res = kwh_helpers.get_map_data(url, map_key_field, data_key_field, data_value_field, from_where)
     #     assert_equals(res, "")
+
+
+    def test_format_date(self):
+        date = "2019-11-21T10:09:05.900808"
+        date_formated = kwh_helpers.format_date(date)
+        assert_equals("2019-11-21 at 10:09", date_formated)
