@@ -6,8 +6,62 @@
 {% ckan_extends %}
 
 {% block resource_actions %}
-  {{ super() }}
-  
+  <ul>
+    {% block resource_actions_inner %}
+      {% if h.check_access('package_update', {'id':pkg.id }) %}
+        <li>{% link_for _('Manage'), controller='package', action='resource_edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
+
+        <li>
+          <div class="btn-group">
+            <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+              <i class="fa fa-bar-chart"></i>
+              {{ _('visualize') }}
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="{% url_for 'chart_view.new_chart', id=pkg.name, resource_id=res.id %}"><i class="fa fa-line-chart"></i>
+                  {{ _('Chart') }}</a>
+              </li>
+              <li>
+                <a href="{% url_for 'table_view.new_table', id=pkg.name, resource_id=res.id %}"><i class="fa fa-table"></i>
+                  {{ _('Table') }}</a>
+              </li>
+              <li>
+                <a href="{% url_for 'map_view.new_map', id=pkg.name, resource_id=res.id %}"><i class="fa fa-map"></i>
+                  {{ _('Map') }}</a>
+              </li>
+            </ul>
+          </div>
+        </li>
+      {% endif %}
+
+      {% if res.url and h.is_url(res.url) %}
+        <li>
+          <div class="btn-group">
+            <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
+              {% if res.resource_type in ('listing', 'service') %}
+                <i class="fa fa-eye"></i> {{ _('View') }}
+              {% elif  res.resource_type == 'api' %}
+                <i class="fa fa-key"></i> {{ _('API Endpoint') }}
+              {% elif (not res.has_views or not res.can_be_previewed) and not res.url_type == 'upload' %}
+                <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
+              {% else %}
+                <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
+              {% endif %}
+            </a>
+            {% block download_resource_button %}
+              {{ super() }}
+            {% endblock %}
+          </div>
+        </li>
+      {% endif %}
+
+      {% if res.datastore_active %}
+        <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>
+      {% endif %}
+    {% endblock %}
+  </ul>
 {% endblock %}
 {% block resource_content %}
           {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
@@ -52,7 +106,7 @@
                 <input id="dataset" value="{{ res.package_id }}" type="hidden" />
               </div>
             </div>
-          
+
         {% endblock %}
 
 {% block resource_view_content %}
@@ -215,7 +269,7 @@
           <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
             {{ _('Click here for more information.') }}</a>
         </p>
-       
+
         <div id="data-view-info" class="collapse">
           <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
           <ul>
