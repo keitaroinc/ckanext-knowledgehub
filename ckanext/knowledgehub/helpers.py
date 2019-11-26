@@ -6,7 +6,7 @@ import uuid
 import json
 import functools32
 import requests
-
+from datetime import datetime
 from flask import Blueprint
 
 try:
@@ -720,3 +720,12 @@ def get_dashboards(limit=5, order_by='created_by asc'):
 
 def remove_space_for_url(str):
     return str.replace(" ", "-")
+
+def format_date(str):
+    # split date & time
+    date = str.split('T') # date[0] is the date, date[1] is the time
+    time_basic = date[1].split('.') # time_basic[0] = hh/mm/ss
+    # remove seconds 
+    time_basic[0] = time_basic[0][:-3]
+    display_date = date[0] + ' at ' + time_basic[0]
+    return display_date

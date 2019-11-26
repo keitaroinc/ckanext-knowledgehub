@@ -48,7 +48,7 @@
 {% endif %} -->
 {% if package.metadata_created %}
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Date created:
-</span><span class="text-muted">{{ package.metadata_created }}</span></h5></a>
+</span><span class="text-muted">{{ h.format_date(package.metadata_created) }}</span></h5></a>
 {% endif %}
 
 {% if package.country_code %}
