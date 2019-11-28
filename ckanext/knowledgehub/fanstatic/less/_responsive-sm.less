@@ -1,22 +1,26 @@
 @media only screen and (max-width: @screen-sm) {
-  .logo{
+  .logo {
     max-width: 250px;
     margin-bottom: 0;
     margin-top: 15px;
   }
-  .nav-pills>li{
+
+  .nav-pills>li {
     float: none;
   }
-  .filters{
+
+  .filters {
     display: none;
     position: fixed;
-    top:0;
+    top: 0;
     left: 0;
     right: 0;
-    bottom:0;
+    bottom: 0;
     background: @white;
     z-index: 1000;
+
   }
+
   .toolbar {
     .breadcrumb {
       a {
@@ -24,47 +28,57 @@
       }
     }
   }
-  .dataset-list{
-    .dataset-item{
+
+  .dataset-list {
+    .dataset-item {
       width: 100%;
     }
   }
-  .rq-box{
+
+  .rq-box {
     min-width: 50%;
   }
-  .navbar-default { 
+
+  .navbar-default {
     .navbar-nav li {
       a {
+
         &:hover,
         &:active,
         &:focus {
-          border-bottom: 2.5px solid transparent;   
+          border-bottom: 2.5px solid transparent;
         }
       }
     }
   }
+
   .component-list {
     .component-item {
-        width: 100%;
+      width: 100%;
+    }
+  }
+
+  .module-resource .actions {
+    float: none;
+
+    ul {
+      padding-left: 0;
+
+      li {
+        margin-top: 1rem;
       }
     }
-    .module-resource .actions{
-      float: none;
-      ul{
-        padding-left: 0;
-        li{
-          margin-top: 1rem;
-        }
-      }
-    }
-    .map-wrapper{
-      flex-direction: column;
-    }
+  }
+
+  .map-wrapper {
+    flex-direction: column;
+  }
 }
-@media only screen and (min-width: @screen-sm-max) {
-  .filters{
+
+@media only screen and (max-width: @screen-sm-max) {
+  .filters {
     display: block;
     position: relative;
-    margin-top: 1rem;
+    padding: 0;
   }
 }
