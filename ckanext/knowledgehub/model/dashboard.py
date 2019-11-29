@@ -17,6 +17,7 @@ from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
 import ckan.logic as logic
 from ckan.common import _
+from ckanext.knowledgehub.lib.solr import Indexed, mapped
 
 __all__ = ['Dashboard', 'dashboard_table']
 
@@ -39,7 +40,18 @@ dashboard_table = Table(
 )
 
 
-class Dashboard(DomainObject):
+class Dashboard(DomainObject, Indexed):
+
+    indexed = [
+        mapped('id', 'entity_id'),
+        'name', 
+        'title', 
+        'descrition', 
+        'type',
+        'source',
+        'indicators',
+    ]
+    doctype = 'dashboard'
 
     @classmethod
     def get(cls, reference):
