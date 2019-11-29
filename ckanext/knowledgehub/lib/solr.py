@@ -10,7 +10,7 @@ logger = getLogger(__name__)
 
 
 FIELD_PREFIX = 'khe_'
-COMMON_FIELDS = {'name', 'title', 'description'}
+COMMON_FIELDS = {'name', 'title'}
 CHUNK_SIZE = 1000
 
 
@@ -132,7 +132,7 @@ def to_indexed_doc(data, doctype, fields):
 def indexed_doc_to_data_dict(doc):
     data = {}
 
-    for name, index_field in cls._get_fields_mapping(fields).items():
+    for name, index_field in _get_fields_mapping(fields).items():
         if doc.get(index_field):
             data[name] = doc[index_field]
 
@@ -145,8 +145,8 @@ class Indexed:
     @classmethod
     def _get_indexed_fields(cls):
         if hasattr(cls, 'indexed'):
-            return _get_fields_mapping(cls.indexed)
-        return _get_fields_mapping([field for field in COMMON_FIELDS])
+            return cls.indexed
+        return [field for field in COMMON_FIELDS]
 
     @classmethod
     def _get_doctype(cls):
@@ -164,6 +164,7 @@ class Indexed:
     def rebuild_index(cls):
         fields = cls._get_indexed_fields()
         doctype = cls._get_doctype()
+        error = False
         def _generate_index():
             offset = 0
             def _next_chunk():
@@ -174,6 +175,7 @@ class Indexed:
                     except Exception as e:
                         logger.exception(e)
                         logger.error('Failed to build index for: %s. Error: %s', result, e)
+                        error = True
                     count += 1
                 return count
             
@@ -188,6 +190,8 @@ class Indexed:
         index.remove_all(doctype)
         # now regenerate the index
         _generate_index()
+        if error:
+            logger.error('Rebuilding of index for %s finished with error. Check the log for more details.', doctype)
         logger.info('Rebuilt index for %s.', doctype)
 
     @classmethod

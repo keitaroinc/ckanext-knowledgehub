@@ -46,7 +46,7 @@ class Dashboard(DomainObject, Indexed):
         mapped('id', 'entity_id'),
         'name', 
         'title', 
-        'descrition', 
+        'description', 
         'type',
         'source',
         'indicators',
