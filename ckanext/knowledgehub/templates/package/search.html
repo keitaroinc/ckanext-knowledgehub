@@ -97,20 +97,8 @@
                             {{ h.nav_link(_('View All Dashboards'), named_route='dashboards.index', icon='angle-double-right') }}
                         </div>
                         {% endif %}
-
-                        {% block secondary_content %}
-                        <div class="filters">
-                            <div>
-                                {% for facet in c.facet_titles %}
-                                {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
-                                {% endfor %}
-                            </div>
-                            <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
-                                    class="text">close</span></a>
-                        </div>
-                        {% endblock %}
                     </div>
-                    <div class="col-lg-9 group-list indicators">
+                    <div class="col-lg-7 group-list indicators">
                         <div class="group-list-items">
                             <h4>DATASETS</h4>
                             <hr>
@@ -122,11 +110,23 @@
                             {% endif %}
                             {% endblock %}
                         </div>
+
                         {% block package_search_results_list %}
 
                         {{ h.snippet('snippets/package_list.html', packages=c.page.items) }}
                         {% endblock %}
                     </div>
+                    {% block secondary_content %}
+                    <div class="filters col-lg-2" id="filter">
+                        <div>
+                            {% for facet in c.facet_titles %}
+                            {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
+                            {% endfor %}
+                        </div>
+                        <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
+                                class="text">close</span></a>
+                    </div>
+                    {% endblock %}
                 </div>
             </div>
         </div>
@@ -224,11 +224,11 @@
             </div>
         </div>
         {% else %}
-            <div class="col-lg-10 col-lg-offset-1">
-                <div class="no-items"> There are no visualizations created yet.</div>
-            </div>
+        <div class="col-lg-10 col-lg-offset-1">
+            <div class="no-items"> There are no visualizations created yet.</div>
+        </div>
         {% endif %}
-   
+
     </div>
 </div>
 {% endblock %}
