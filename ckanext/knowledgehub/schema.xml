@@ -159,12 +159,15 @@ schema. In this case the version should be set to the next CKAN version number.
 
     <field name="_version_" type="string" indexed="true" stored="true"/>
 
+    <!-- Knowledge Hub Extended entities (dashboard, research question etc) ID -->
+    <field name="entity_id" type="string" indexed="true" stored="true" multiValued="false"/>
+    
     <dynamicField name="*_date" type="date" indexed="true" stored="true" multiValued="false"/>
 
     <dynamicField name="extras_*" type="text" indexed="true" stored="true" multiValued="false"/>
     <dynamicField name="res_extras_*" type="text" indexed="true" stored="true" multiValued="true"/>
     <dynamicField name="vocab_*" type="string" indexed="true" stored="true" multiValued="true"/>
-    <dynamicField name="khe_*" type="text" indexed="true" stored="true" multiValued="true"/>
+    <dynamicField name="khe_*" type="text" indexed="true" stored="true" multiValued="false"/>
     <dynamicField name="*" type="string" indexed="true"  stored="false"/>
 </fields>
 
@@ -177,6 +180,7 @@ schema. In this case the version should be set to the next CKAN version number.
 <copyField source="extras_*" dest="text"/>
 <copyField source="res_extras_*" dest="text"/>
 <copyField source="vocab_*" dest="text"/>
+<copyField source="khe_*" dest="text"/>
 <copyField source="urls" dest="text"/>
 <copyField source="name" dest="text"/>
 <copyField source="title" dest="text"/>
