@@ -58,9 +58,11 @@
                 <div class="row">
                     <div class="col-lg-3 group-list secondary dashboards">
                         <h4>DASHBOARDS</h4>
+                        {% set found_dashboards = h.get_dashboards(limit=4, order_by='created_at desc') %}
                         <hr>
                         <ul class="list-unstyled nav nav-simple">
-                            {% for dashboard in h.get_dashboards(limit=4, order_by='created_at desc') %}
+                            {% if found_dashboards %}
+                            {% for dashboard in found_dashboards %}
                             <li class="nav-item">
                                 <a class="dashboard-link"
                                     href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
@@ -80,8 +82,22 @@
                                 </a>
                             </li>
                             {% endfor %}
+                            {% else %}
+                            <li class="nav-item">
+                                <div>
+                                    {{_('No Dashboards have been created.')}}
+                                    <span class="btn btn-link">
+                                        {{ h.nav_link(_('Create new Dashboard now'), named_route='dashboards.new', icon='angle-double-right') }}
+                                    </span>
+                                </div>
+                            </li>
+                            {% endif %}
                         </ul>
-
+                        {% if found_dashboards %}
+                        <div class="btn btn-link">
+                            {{ h.nav_link(_('View All Dashboards'), named_route='dashboards.index', icon='angle-double-right') }}
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="col-lg-7 group-list indicators">
                         <div class="group-list-items">
