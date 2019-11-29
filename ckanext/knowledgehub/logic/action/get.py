@@ -740,3 +740,12 @@ def get_predictions(context, data_dict):
         raise ValidationError({'text': _('Missing value')})
 
     return rnn_helpers.predict_completions(text)
+
+
+@toolkit.side_effect_free
+def search_dashboards(context, data_dict):
+    text = data_dict.get('text')
+    if not text:
+        raise ValidationError({'text': _('Missing value')})
+    results = Dashboard.search_index(q='text:' + text)
+    return results

@@ -129,9 +129,8 @@ def to_indexed_doc(data, doctype, fields):
 
     return _add_required_fields(indexed_doc)
 
-def indexed_doc_to_data_dict(doc):
+def indexed_doc_to_data_dict(doc, fields):
     data = {}
-
     for name, index_field in _get_fields_mapping(fields).items():
         if doc.get(index_field):
             data[name] = doc[index_field]
