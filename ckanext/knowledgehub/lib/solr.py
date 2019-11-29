@@ -1,5 +1,9 @@
+import hashlib
+from uuid import uuid4
+from ckan.common import config
 from ckan.lib.search.common import make_connection
 from logging import getLogger
+
 
 
 logger = getLogger(__name__)
@@ -38,7 +42,7 @@ class Index:
         solr_args.update(query)
         solr_args = _prepare_search_query(solr_args)
         solr_args['fq'].append('entity_type:'+doctype)
-        logger.debug('Solr query args: {}', solr_args)
+        logger.debug('Solr query args: %s', solr_args)
         return solr_args
 
     def search(self, doctype, **query):
@@ -54,11 +58,17 @@ class Index:
         pass
 
     def remove(self, doctype, **query):
-        self.get_connection().delete(commit=True, **self._to_solr_args(doctype, query))
+        q = 'entity_type:' + doctype
+        additional_args = []
+        for key,value in query.items():
+            additional_args.append('%s:%s' % (key, value))
+        if additional_args:
+            q += ' AND ' + ' AND '.join(additional_args)
+        logger.debug('Delete documents q=%s', q)
+        self.get_connection().delete(commit=True, q=q)
 
-    def remove_all(self, **query):
-        solr_args = _prepare_search_query(query)
-        self.get_connection().delete(commit=True, **solr_args)
+    def remove_all(self, doctype):
+        self.get_connection().delete(commit=True, q='entity_type:' + doctype)
 
 # Exported
 index = Index()
@@ -88,7 +98,7 @@ def _get_fields_mapping(fields):
         explicit_name = False
         if isinstance(field, dict):
             key = field['field']
-            _as = filter['as']
+            _as = field['as']
             explicit_name = True
         else:
             key, _as = field, field
@@ -98,16 +108,28 @@ def _get_fields_mapping(fields):
         mapping[key] = _as
     return mapping
 
-def to_indexed_doc(data, fields):
-    indexed_doc = {}
+def _add_required_fields(data):
+    if not data.get('id'):
+        data['id'] = str(uuid4())
+    if not data.get('site_id'):
+        data['site_id'] = config.get('ckan.site_id')
+    if not data.get('index_id'):
+        entity_id = data.get('entity_id', data['id'])
+        doctype = data['entity_type']
+        data['index_id'] = hashlib.md5('%s:%s'%(doctype, entity_id)).hexdigest()
+    return data
 
+def to_indexed_doc(data, doctype, fields):
+    indexed_doc = {
+        'entity_type': doctype,
+    }
     for name, index_field in _get_fields_mapping(fields).items():
         if data.get(name):
             indexed_doc[index_field] = data[name]
 
-    return indexed_doc
+    return _add_required_fields(indexed_doc)
 
-def indexed_doc_to_data_dict(doc, fields):
+def indexed_doc_to_data_dict(doc):
     data = {}
 
     for name, index_field in cls._get_fields_mapping(fields).items():
@@ -123,8 +145,8 @@ class Indexed:
     @classmethod
     def _get_indexed_fields(cls):
         if hasattr(cls, 'indexed'):
-            return cls.indexed
-        return [field for field in COMMON_FIELDS]
+            return _get_fields_mapping(cls.indexed)
+        return _get_fields_mapping([field for field in COMMON_FIELDS])
 
     @classmethod
     def _get_doctype(cls):
@@ -148,9 +170,10 @@ class Indexed:
                 count = 0
                 for result in cls._get_session().query(cls).offset(offset).limit(CHUNK_SIZE).all():
                     try:
-                        index.add(doctype, to_indexed_doc(doctype, result.__dict__))
+                        index.add(doctype, to_indexed_doc(result.__dict__, doctype, fields))
                     except Exception as e:
-                        logger.error('Failed to build index for: {}. Error: {}', result, e)
+                        logger.exception(e)
+                        logger.error('Failed to build index for: %s. Error: %s', result, e)
                     count += 1
                 return count
             
@@ -162,15 +185,16 @@ class Indexed:
             
         
         # clear all documents of this type from the index
-        index.remove(doctype, q='*:*')
+        index.remove_all(doctype)
         # now regenerate the index
         _generate_index()
-        logger.info('Rebuilt index for {}.', doctype)
+        logger.info('Rebuilt index for %s.', doctype)
 
     @classmethod
     def add_to_index(cls, data):
-        data = to_indexed_doc(data, cls._get_indexed_fields())
-        index.add(cls._get_doctype(), to_indexed_doc(data, fields))
+        doctype = cls._get_doctype()
+        data = to_indexed_doc(data, doctype, cls._get_indexed_fields())
+        index.add(cls._get_doctype(), to_indexed_doc(data, doctype, fields))
     
     @classmethod
     def update_index_doc(cls, data):
@@ -183,8 +207,8 @@ class Indexed:
             doc = d
             break
         if doc:
-            index.remove(cls._get_doctype(), q={'id': doc['id']})
-        index.add(cls._get_doctype(), to_indexed_doc(data, fields))
+            index.remove(cls._get_doctype(), id=doc['id'])
+        index.add(cls._get_doctype(), to_indexed_doc(data, cls._get_doctype(), fields))
 
     @classmethod
     def search_index(cls, **query):
