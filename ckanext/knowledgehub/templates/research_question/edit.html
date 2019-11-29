@@ -4,7 +4,7 @@
 <li>{{ h.nav_link(_('Research questions'), named_route='research_question.search') }}</li>
 <li>{{ h.nav_link(rq.title|truncate(30), named_route='research_question.read', name=rq.name) }}</li>
 
-<li class="active">{{ h.nav_link(_('Manage'), named_route='research_question.edit', name=rq.name) }}</li>
+<li class="active">{{ h.nav_link(_('Edit'), named_route='research_question.edit', name=rq.name) }}</li>
 {% endblock %}
 
 {% block page_header %}{% endblock %}
