@@ -58,9 +58,11 @@
                 <div class="row">
                     <div class="col-lg-3 group-list secondary dashboards">
                         <h4>DASHBOARDS</h4>
+                        {% set found_dashboards = h.get_dashboards(limit=4, order_by='created_at desc') %}
                         <hr>
                         <ul class="list-unstyled nav nav-simple">
-                            {% for dashboard in h.get_dashboards(limit=4, order_by='created_at desc') %}
+                            {% if found_dashboards %}
+                            {% for dashboard in found_dashboards %}
                             <li class="nav-item">
                                 <a class="dashboard-link"
                                     href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
@@ -79,20 +81,24 @@
                                 </a>
                             </li>
                             {% endfor %}
+                            {% else %}
+                            <li class="nav-item">
+                                <div>
+                                    {{_('No Dashboards have been created.')}}
+                                    <span class="btn btn-link">
+                                        {{ h.nav_link(_('Create new Dashboard now'), named_route='dashboards.new', icon='angle-double-right') }}
+                                    </span>
+                                </div>
+                            </li>
+                            {% endif %}
                         </ul>
-                        {% block secondary_content %}
-                        <div class="filters">
-                            <div>
-                                {% for facet in c.facet_titles %}
-                                {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
-                                {% endfor %}
-                            </div>
-                            <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
-                                    class="text">close</span></a>
+                        {% if found_dashboards %}
+                        <div class="btn btn-link">
+                            {{ h.nav_link(_('View All Dashboards'), named_route='dashboards.index', icon='angle-double-right') }}
                         </div>
-                        {% endblock %}
+                        {% endif %}
                     </div>
-                    <div class="col-lg-9 group-list indicators">
+                    <div class="col-lg-7 group-list indicators">
                         <div class="group-list-items">
                             <h4>DATASETS</h4>
                             <hr>
@@ -104,11 +110,23 @@
                             {% endif %}
                             {% endblock %}
                         </div>
+
                         {% block package_search_results_list %}
 
                         {{ h.snippet('snippets/package_list.html', packages=c.page.items) }}
                         {% endblock %}
                     </div>
+                    {% block secondary_content %}
+                    <div class="filters col-lg-2" id="filter">
+                        <div>
+                            {% for facet in c.facet_titles %}
+                            {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
+                            {% endfor %}
+                        </div>
+                        <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
+                                class="text">close</span></a>
+                    </div>
+                    {% endblock %}
                 </div>
             </div>
         </div>
@@ -206,11 +224,11 @@
             </div>
         </div>
         {% else %}
-            <div class="col-lg-10 col-lg-offset-1">
-                <div class="no-items"> There are no visualizations created yet.</div>
-            </div>
+        <div class="col-lg-10 col-lg-offset-1">
+            <div class="no-items"> There are no visualizations created yet.</div>
+        </div>
         {% endif %}
-   
+
     </div>
 </div>
 {% endblock %}
