@@ -196,14 +196,16 @@ class Indexed:
     @classmethod
     def add_to_index(cls, data):
         doctype = cls._get_doctype()
-        data = to_indexed_doc(data, doctype, cls._get_indexed_fields())
-        index.add(cls._get_doctype(), to_indexed_doc(data, doctype, fields))
+        fields  =cls._get_indexed_fields()
+        doc = to_indexed_doc(data, doctype, fields)
+        index.add(cls._get_doctype(), doc)
     
     @classmethod
     def update_index_doc(cls, data):
         fields = cls._get_indexed_fields()
+        fields_mapping = _get_fields_mapping(fields)
         entity_id = data['id']
-        id_key = fields.get('id', 'id')
+        id_key = fields_mapping.get('id', 'id')
         indexed = index.search(cls._get_doctype(), q='%s:%s' % (id_key, entity_id))
         doc = None
         for d in indexed:
@@ -223,3 +225,17 @@ class Indexed:
             results.append(indexed_doc_to_data_dict(result, fields))
 
         return results
+    
+    @classmethod
+    def delete_from_index(cls, data):
+        doc_id = None
+        if isinstance(data, str) or isinstance(data, unicode):
+            doc_id = data
+        else:
+            doc_id = data['id']
+        doctype = cls._get_doctype()
+        fields_mapping = _get_fields_mapping(cls._get_indexed_fields())
+        id_key = fields_mapping.get('id', 'id')
+        args = {}
+        args[id_key] = doc_id
+        index.remove(doctype, **args)

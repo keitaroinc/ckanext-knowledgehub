@@ -108,4 +108,7 @@ def dashboard_delete(context, data_dict):
 
     Dashboard.delete({'id': data_dict['id']})
 
+    # Delete from index
+    Dashboard.delete_from_index({'id': data_dict['id']})
+
     return {"message": _('Dashboard deleted.')}

@@ -323,7 +323,12 @@ def dashboard_update(context, data_dict):
     session.add(dashboard)
     session.commit()
 
-    return _table_dictize(dashboard, context)
+    dashboard_data = _table_dictize(dashboard, context)
+
+    # Update index
+    Dashboard.update_index_doc(dashboard_data)
+
+    return dashboard_data
 
 
 def package_update(context, data_dict):
