@@ -299,7 +299,6 @@ def resource_view_create(context, data_dict):
 
     # Add to index
     Visualization.add_to_index(rv_data)
-    
 
     return rv_data
 
