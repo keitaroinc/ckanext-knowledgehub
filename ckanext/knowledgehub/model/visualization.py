@@ -6,7 +6,7 @@ from ckanext.knowledgehub.lib.solr import Indexed, mapped
 class Visualization(ResourceView, Indexed):
     
     indexed = [
-        'id',
+        mapped('id', 'entity_id'),
         'resource_id',
         'title',
         'description',
