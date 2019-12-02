@@ -300,7 +300,6 @@ def dashboard_create(context, data_dict):
         :param indicators
     '''
     check_access('dashboard_create', context)
-
     session = context['session']
 
     data, errors = _df.validate(data_dict,
@@ -337,7 +336,12 @@ def dashboard_create(context, data_dict):
     session.add(dashboard)
     session.commit()
 
-    return _table_dictize(dashboard, context)
+    dashboard_data = _table_dictize(dashboard, context)
+    
+    # Add to index
+    Dashboard.add_to_index(dashboard_data)
+
+    return dashboard_data
 
 
 def package_create(context, data_dict):
