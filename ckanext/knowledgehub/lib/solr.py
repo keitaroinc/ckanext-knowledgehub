@@ -160,6 +160,14 @@ class Indexed:
         raise Exception('Session not defined for this model repository.')
 
     @classmethod
+    def _get_before_index(cls):
+        if hasattr(cls, 'before_index'):
+            return cls.before_index
+        def _noop(data):
+            return data
+        return _noop
+
+    @classmethod
     def rebuild_index(cls):
         fields = cls._get_indexed_fields()
         doctype = cls._get_doctype()
@@ -170,7 +178,8 @@ class Indexed:
                 count = 0
                 for result in cls._get_session().query(cls).offset(offset).limit(CHUNK_SIZE).all():
                     try:
-                        index.add(doctype, to_indexed_doc(result.__dict__, doctype, fields))
+                        data = cls._get_before_index()(result.__dict__)
+                        index.add(doctype, to_indexed_doc(data, doctype, fields))
                     except Exception as e:
                         logger.exception(e)
                         logger.error('Failed to build index for: %s. Error: %s', result, e)
@@ -197,7 +206,7 @@ class Indexed:
     def add_to_index(cls, data):
         doctype = cls._get_doctype()
         fields  =cls._get_indexed_fields()
-        doc = to_indexed_doc(data, doctype, fields)
+        doc = to_indexed_doc(cls._get_before_index()(data), doctype, fields)
         index.add(cls._get_doctype(), doc)
     
     @classmethod
@@ -213,7 +222,7 @@ class Indexed:
             break
         if doc:
             index.remove(cls._get_doctype(), id=doc['id'])
-        index.add(cls._get_doctype(), to_indexed_doc(data, cls._get_doctype(), fields))
+        index.add(cls._get_doctype(), to_indexed_doc(cls._get_before_index()(data), cls._get_doctype(), fields))
 
     @classmethod
     def search_index(cls, **query):

@@ -3,6 +3,9 @@ from ckan.model.meta import metadata, mapper, Session, engine
 from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
 
+from ckanext.knowledgehub.lib.solr import Indexed, mapped
+from ckanext.knowledgehub.model import Theme, SubThemes
+
 from sqlalchemy import types, ForeignKey, Column, Table, or_
 import datetime
 import logging
@@ -49,7 +52,22 @@ research_question = Table(
     )
 
 
-class ResearchQuestion(DomainObject):
+class ResearchQuestion(DomainObject, Indexed):
+
+    doctype = 'research_question'
+    indexed = [
+        mapped('id', 'entity_id'),
+        'name',
+        'title',
+        'author',
+        'theme_id',
+        'theme_name',
+        'theme_title',
+        'sub_theme_id',
+        'sub_theme_name',
+        'sub_theme_title',
+        'image_url',
+    ]
 
     @classmethod
     def get(cls, id_or_name=None, **kwargs):
@@ -114,6 +132,20 @@ class ResearchQuestion(DomainObject):
             raise toolkit.ObjectNotFound
         Session.delete(obj)
         Session.commit()
+
+    @staticmethod
+    def before_index(data):
+        if data.get('theme'):
+            theme = Theme.get(data['theme'])
+            data['theme_id'] = theme.id
+            data['theme_name'] = theme.name
+            data['theme_title'] = theme.title
+        if data.get('sub_theme'):
+            sub_theme = SubThemes.get(data['sub_theme']).first()
+            data['sub_theme_id'] = sub_theme.id
+            data['sub_theme_name'] = sub_theme.name
+            data['sub_theme_title'] = sub_theme.title
+        return data
 
     def __repr__(self):
         return '<ResearchQuestion %s>' % self.title

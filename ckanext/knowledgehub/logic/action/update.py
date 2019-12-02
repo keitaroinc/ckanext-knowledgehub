@@ -169,7 +169,12 @@ def research_question_update(context, data_dict):
     filter = {'id': id}
     data.pop('__extras', None)
     rq = ResearchQuestion.update(filter, data)
-    return rq.as_dict()
+    rq_data = rq.as_dict()
+
+    # Update index
+    ResearchQuestion.update_index_doc(rq_data)
+
+    return rq_data
 
 
 def resource_update(context, data_dict):
