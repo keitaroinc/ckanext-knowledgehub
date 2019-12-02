@@ -5,6 +5,7 @@ from ckanext.knowledgehub.model import (
     ResearchQuestion,
     Theme,
     SubThemes,
+    Visualization,
 )
 
 logger = getLogger(__name__)
@@ -12,8 +13,7 @@ logger = getLogger(__name__)
 INDEX_EXECUTORS = {
     'dashboard': Dashboard,
     'research-question': ResearchQuestion,
-    'theme': Theme,
-    'sub-theme': SubThemes,
+    'visualization': Visualization,
 }
 
 
