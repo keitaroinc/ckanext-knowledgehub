@@ -21,6 +21,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import KWHData
+from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -278,7 +279,12 @@ def resource_view_update(context, data_dict):
     resource_view = model_save.resource_view_dict_save(data, context)
     if not context.get('defer_commit'):
         model.repo.commit()
-    return model_dictize.resource_view_dictize(resource_view, context)
+    resource_view_data = model_dictize.resource_view_dictize(resource_view, context)
+
+    # Update index
+    Visualization.update_index_doc(resource_view_data)
+
+    return resource_view_data
 
 
 def dashboard_update(context, data_dict):

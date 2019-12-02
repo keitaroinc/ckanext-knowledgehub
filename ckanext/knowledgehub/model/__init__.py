@@ -5,6 +5,7 @@ from ckanext.knowledgehub.model.dashboard import Dashboard
 from ckanext.knowledgehub.model.resource_feedback import ResourceFeedbacks
 from ckanext.knowledgehub.model.kwh_data import KWHData
 from ckanext.knowledgehub.model.rnn_corpus import RNNCorpus
+from ckanext.knowledgehub.model.visualization import Visualization
 
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     'Dashboard',
     'ResourceFeedbacks'
     'KWHData',
-    'RNNCorpus'
+    'RNNCorpus',
+    'Visualization'
 ]

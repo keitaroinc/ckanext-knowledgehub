@@ -26,6 +26,7 @@ from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
+from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -294,7 +295,13 @@ def resource_view_create(context, data_dict):
     resource_view = model_save.resource_view_dict_save(data, context)
     if not context.get('defer_commit'):
         model.repo.commit()
-    return model_dictize.resource_view_dictize(resource_view, context)
+    rv_data = model_dictize.resource_view_dictize(resource_view, context)
+
+    # Add to index
+    Visualization.add_to_index(rv_data)
+    
+
+    return rv_data
 
 
 def dashboard_create(context, data_dict):

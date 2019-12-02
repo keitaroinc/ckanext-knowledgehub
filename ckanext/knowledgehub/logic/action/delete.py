@@ -6,10 +6,11 @@ import ckan.logic as logic
 from ckan.plugins import toolkit
 from ckan.common import _
 
+from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
-from ckanext.knowledgehub.model import Dashboard
+from ckanext.knowledgehub.model import Visualization
 
 
 log = logging.getLogger(__name__)
@@ -115,3 +116,5 @@ def dashboard_delete(context, data_dict):
     Dashboard.delete_from_index({'id': data_dict['id']})
 
     return {"message": _('Dashboard deleted.')}
+
+# TODO: Override resource_view_delete
