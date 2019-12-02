@@ -93,6 +93,9 @@ def research_question_delete(context, data_dict):
         raise ValidationError({'id': 'Missing parameter'})
 
     ResearchQuestion.delete(id=id)
+
+    # Delete from index
+    ResearchQuestion.delete_from_index({'id': id})
     log.info("Research question id \'{}\' deleted successfully".format(id))
 
 

@@ -171,9 +171,18 @@ def research_question_create(context, data_dict):
         state=state,
         modified_at=modified_at
     )
+
     research_question.save()
 
-    return _table_dictize(research_question, context)
+    research_question_data = _table_dictize(research_question, context)
+    # Add to index
+    try:
+        ResearchQuestion.add_to_index(research_question_data)
+    except Exception as e:
+        ResearchQuestion.delete(research_question.id)
+        raise e
+
+    return research_question_data
 
 
 def resource_create(context, data_dict):

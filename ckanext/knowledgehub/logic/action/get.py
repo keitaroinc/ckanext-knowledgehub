@@ -749,3 +749,11 @@ def search_dashboards(context, data_dict):
         raise ValidationError({'text': _('Missing value')})
     results = Dashboard.search_index(q='text:' + text)
     return results
+
+@toolkit.side_effect_free
+def search_research_questions(context, data_dict):
+    text = data_dict.get('text')
+    if not text:
+        raise ValidationError({'text': _('Missing value')})
+    results = ResearchQuestion.search_index(q='text:' + text)
+    return results
