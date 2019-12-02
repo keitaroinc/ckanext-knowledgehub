@@ -2,8 +2,8 @@
 
 {% block breadcrumb_content %}
   <li>{{ h.nav_link(_('Sub-Themes'), named_route='sub_theme.search') }}</li>
-  <li>{{ h.nav_link(sub_theme.get('name', ''), named_route='sub_theme.read', name=sub_theme.get('name', '')) }}</li>
-  <li class="active">{{ h.nav_link(_('Manage'), named_route='sub_theme.edit', name=sub_theme.get('name', '')) }}</li>
+  <li>{{ h.nav_link(sub_theme.get('title', sub_theme.get('name', ''))|truncate(35), named_route='sub_theme.read', name=sub_theme.get('name', '')) }}</li>
+  <li class="active">{{ h.nav_link(_('Edit'), named_route='sub_theme.edit', name=sub_theme.get('name', '')) }}</li>
 {% endblock %}
 
 
