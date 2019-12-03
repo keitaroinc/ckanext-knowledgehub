@@ -18,6 +18,7 @@ from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
+from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 
@@ -743,26 +744,22 @@ def get_predictions(context, data_dict):
     return rnn_helpers.predict_completions(text)
 
 
-@toolkit.side_effect_free
-def search_dashboards(context, data_dict):
+
+def _search_entity(index, data_dict):
     text = data_dict.get('text')
     if not text:
         raise ValidationError({'text': _('Missing value')})
-    results = Dashboard.search_index(q='text:' + text)
-    return results
+    args = ckan_params_to_solr_args(data_dict)
+    return index.search_index(**args)
+
+@toolkit.side_effect_free
+def search_dashboards(context, data_dict):
+    return _search_entity(Dashboard, data_dict)
 
 @toolkit.side_effect_free
 def search_research_questions(context, data_dict):
-    text = data_dict.get('text')
-    if not text:
-        raise ValidationError({'text': _('Missing value')})
-    results = ResearchQuestion.search_index(q='text:' + text)
-    return results
+    return _search_entity(ResearchQuestion, data_dict)
 
 @toolkit.side_effect_free
 def search_visualizations(context, data_dict):
-    text = data_dict.get('text')
-    if not text:
-        raise ValidationError({'text': _('Missing value')})
-    results = Visualization.search_index(q='text:' + text)
-    return results
+    return _search_entity(Dashboard, data_dict)

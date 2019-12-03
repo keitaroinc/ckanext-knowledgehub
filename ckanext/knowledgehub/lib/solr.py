@@ -1,7 +1,8 @@
 import hashlib
 from uuid import uuid4
-from ckan.common import config
+from ckan.common import config, _
 from ckan.lib.search.common import make_connection
+from ckan.plugins.toolkit import ValidationError
 from logging import getLogger
 
 
@@ -12,7 +13,8 @@ logger = getLogger(__name__)
 FIELD_PREFIX = 'khe_'
 COMMON_FIELDS = {'name', 'title'}
 CHUNK_SIZE = 1000
-
+MAX_RESULTS = 500
+VALID_SOLR_ARGS = {'q', 'fq', 'rows', 'start', 'sort', 'fl', 'df' }
 
 def _prepare_search_query(query):
     def _to_pysolr_arg(value):
@@ -26,11 +28,39 @@ def _prepare_search_query(query):
                 val.append(str(k) + ':' + str(v))
             return val
         return [str(value)]
+
     if not query.get('fq'):
         query['fq'] = []
     query['fq'] = _to_pysolr_arg(query['fq'])
     
     return query
+
+
+def ckan_params_to_solr_args(data_dict):
+    solr_args = {}
+    provided = {}
+    provided.update(data_dict)
+    for argn in VALID_SOLR_ARGS:
+        if provided.get(argn):
+            solr_args[argn] = provided.pop(argn)
+    q = []
+    if solr_args.get('q'):
+        _q = solr_args.get('q')
+        if isinstance(_q, str) or isinstance(_q, unicode):
+            q.append(_q)
+        elif isinstance(_q, dict):
+            for prop, val in _q.items():
+                q.append('%s:%s' % (str(prop), str(val)))
+        else:
+            raise ValidationError({'q': _('Invalid value type')})
+    
+    for prop, val in provided.items():
+        q.append('%s:%s' % (str(prop), str(val)))
+    
+    solr_args['q'] = ' AND '.join(q)
+
+    return solr_args
+            
 
 class Index:
 
@@ -46,6 +76,10 @@ class Index:
         return solr_args
 
     def search(self, doctype, **query):
+        if not query.get('rows'):
+            query['rows'] = MAX_RESULTS
+        if int(query['rows']) > MAX_RESULTS:
+            query['rows'] = MAX_RESULTS
         return self.get_connection().search(**self._to_solr_args(doctype, query))
 
     def add(self, doctype, data):
@@ -75,7 +109,6 @@ index = Index()
 
 
 # Helpers for models
-
 def mapped(name, _as):
     u'''Map the field name of the model to a specific name in the index.
     '''
@@ -224,8 +257,15 @@ class Indexed:
             index.remove(cls._get_doctype(), id=doc['id'])
         index.add(cls._get_doctype(), to_indexed_doc(cls._get_before_index()(data), cls._get_doctype(), fields))
 
+    @staticmethod
+    def validate_solr_args(args):
+        for argn, _ in args.items():
+            if argn not in VALID_SOLR_ARGS:
+                raise ValidationError({argn: _('Invalid query parameter')})
+
     @classmethod
     def search_index(cls, **query):
+        Indexed.validate_solr_args(query)
         index_results = index.search(cls._get_doctype(), **query)
         results = []
         fields = cls._get_indexed_fields()
