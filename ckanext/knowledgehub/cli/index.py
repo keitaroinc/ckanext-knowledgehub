@@ -1,5 +1,6 @@
 import click
 from logging import getLogger
+from ckan.lib.search import rebuild
 from ckanext.knowledgehub.model import (
     Dashboard,
     ResearchQuestion,
@@ -10,10 +11,18 @@ from ckanext.knowledgehub.model import (
 
 logger = getLogger(__name__)
 
+
+class CkanCoreIndex:
+
+    def rebuild_index(self):
+        rebuild()
+
+
 INDEX_EXECUTORS = {
     'dashboard': Dashboard,
     'research-question': ResearchQuestion,
     'visualization': Visualization,
+    'ckan': CkanCoreIndex(),
 }
 
 
