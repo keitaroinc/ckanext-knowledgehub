@@ -38,6 +38,35 @@ assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
 
 
+class _monkey_patch:
+
+    def __init__(self, obj, prop, patch_with):
+        self.obj = obj
+        self.prop = prop
+        self.patch_with = patch_with
+
+    def __call__(self, method):
+        original_prop = None
+        if hasattr(self.obj, self.prop):
+            original_prop = getattr(self.obj, self.prop)
+
+        def _with_patched(*args, **kwargs):
+            # patch
+            setattr(self.obj, self.prop, self.patch_with)
+            try:
+                return method(*args, **kwargs)
+            finally:
+                # unpatch
+                if original_prop is not None:
+                    setattr(self.obj, self.prop, original_prop)
+                else:
+                    delattr(self.obj, self.prop)
+        _with_patched.__name__ = method.__name__
+        _with_patched.__module__ = method.__module__
+        _with_patched.__doc__ = method.__doc__
+        return _with_patched
+
+
 class ActionsBase(helpers.FunctionalTestBase):
     def setup(self):
         helpers.reset_db()
@@ -101,6 +130,7 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(sub_theme.get('name'), data_dict.get('name'))
 
+    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_research_question_create(self):
         user = factories.Sysadmin()
         context = {
@@ -134,7 +164,9 @@ class TestKWHCreateActions(ActionsBase):
         rq = create_actions.research_question_create(context, data_dict)
 
         assert_equals(rq.get('name'), data_dict.get('name'))
+        ResearchQuestion.add_to_index.assert_called_once()
 
+    @_monkey_patch(Visualization, 'add_to_index', mock.Mock())
     def test_resource_view_create(self):
         dataset = create_dataset()
         resource = factories.Resource(
@@ -165,7 +197,9 @@ class TestKWHCreateActions(ActionsBase):
         rsc_view = create_actions.resource_view_create(context, data_dict)
 
         assert_equals(rsc_view.get('package_id'), dataset.get('id'))
+        Visualization.add_to_index.assert_called_once()
 
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_create(self):
         user = factories.Sysadmin()
         context = {
@@ -185,6 +219,7 @@ class TestKWHCreateActions(ActionsBase):
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         assert_equals(dashboard.get('name'), data_dict.get('name'))
+        Dashboard.add_to_index.assert_called_once()
 
     def test_resource_feedback(self):
         user = factories.Sysadmin()
@@ -618,6 +653,7 @@ class TestKWHDeleteActions(ActionsBase):
 
         assert_equals(result, 'OK')
 
+    @_monkey_patch(ResearchQuestion, 'delete_from_index', mock.Mock())
     def test_research_question_delete(self):
         user = factories.Sysadmin()
         context = {
@@ -656,7 +692,9 @@ class TestKWHDeleteActions(ActionsBase):
         )
 
         assert_equals(result, None)
+        ResearchQuestion.delete_from_index.assert_called_once()
 
+    @_monkey_patch(Dashboard, 'delete_from_index', mock.Mock())
     def test_dashboard_delete(self):
         user = factories.Sysadmin()
         context = {
@@ -681,6 +719,7 @@ class TestKWHDeleteActions(ActionsBase):
         )
 
         assert_equals(result.get('message'), 'Dashboard deleted.')
+        Dashboard.delete_from_index.assert_called_once()
 
 
 class TestKWHUpdateActions(ActionsBase):
@@ -734,6 +773,7 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(sub_theme_updated.get('title'), data_dict.get('title'))
 
+    @_monkey_patch(ResearchQuestion, 'update_index_doc', mock.Mock())
     def test_research_question_update(self):
         user = factories.Sysadmin()
         context = {
@@ -774,6 +814,7 @@ class TestKWHUpdateActions(ActionsBase):
         )
 
         assert_equals(rq_updated.get('title'), data_dict.get('title'))
+        ResearchQuestion.update_index_doc.assert_called_once()
 
     def test_resource_update(self):
         user = factories.Sysadmin()
@@ -803,6 +844,7 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(rsc_updated, None)
 
+    @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     def test_resource_view_update(self):
         dataset = create_dataset()
         resource = factories.Resource(
@@ -843,7 +885,9 @@ class TestKWHUpdateActions(ActionsBase):
             rsc_view_updated.get('title'),
             data_dict.get('title')
         )
+        Visualization.update_index_doc.assert_called_once()
 
+    @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
     def test_dashboard_update(self):
         user = factories.Sysadmin()
         context = {
@@ -870,6 +914,7 @@ class TestKWHUpdateActions(ActionsBase):
         )
 
         assert_equals(dashboard_updated.get('title'), data_dict.get('title'))
+        Dashboard.update_index_doc.assert_called_once()
 
     def test_kwh_data_update(self):
         user = factories.Sysadmin()
@@ -1098,35 +1143,6 @@ class TestKWHUpdateActions(ActionsBase):
     #     res = get_actions.visualizations_for_rq(context, data_dict_rq)
     #     assert_equals(res, "") 
         
-
-class _monkey_patch:
-
-    def __init__(self, obj, prop, patch_with):
-        self.obj = obj
-        self.prop = prop
-        self.patch_with = patch_with
-
-    def __call__(self, method):
-        original_prop = None
-        if hasattr(self.obj, self.prop):
-            original_prop = getattr(self.obj, self.prop)
-
-        def _with_patched(*args, **kwargs):
-            # patch
-            setattr(self.obj, self.prop, self.patch_with)
-            try:
-                return method(*args, **kwargs)
-            finally:
-                # unpatch
-                if original_prop is not None:
-                    setattr(self.obj, self.prop, original_prop)
-                else:
-                    delattr(self.obj, self.prop)
-        _with_patched.__name__ = method.__name__
-        _with_patched.__module__ = method.__module__
-        _with_patched.__doc__ = method.__doc__
-        return _with_patched
-
 
 class SearchIndexActionsTest(helpers.FunctionalTestBase):
 
