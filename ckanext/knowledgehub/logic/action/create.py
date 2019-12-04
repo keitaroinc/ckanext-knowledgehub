@@ -245,7 +245,7 @@ def resource_create(context, data_dict):
                 data_dict['name'] = filename
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
-            
+
     return ckan_rsc_create(context, data_dict)
 
 
@@ -352,7 +352,7 @@ def dashboard_create(context, data_dict):
     session.commit()
 
     dashboard_data = _table_dictize(dashboard, context)
-    
+
     # Add to index
     Dashboard.add_to_index(dashboard_data)
 
@@ -360,7 +360,7 @@ def dashboard_create(context, data_dict):
 
 
 def package_create(context, data_dict):
-    
+
     research_questions = data_dict.get('research_question')
     rq_options = plugin_helpers.get_rq_options()
     rq_ids = []

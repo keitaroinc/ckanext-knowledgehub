@@ -235,7 +235,7 @@ def resource_update(context, data_dict):
                 )
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
-            
+
     ckan_rsc_update(context, data_dict)
 
 
@@ -279,7 +279,8 @@ def resource_view_update(context, data_dict):
     resource_view = model_save.resource_view_dict_save(data, context)
     if not context.get('defer_commit'):
         model.repo.commit()
-    resource_view_data = model_dictize.resource_view_dictize(resource_view, context)
+    resource_view_data = model_dictize.resource_view_dictize(resource_view,
+                                                             context)
 
     # Update index
     Visualization.update_index_doc(resource_view_data)

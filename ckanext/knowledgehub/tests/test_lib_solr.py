@@ -20,6 +20,7 @@ from nose.tools import (
     raises,
 )
 
+
 class TestIndex(helpers.FunctionalTestBase):
 
     def test_search(self):
@@ -78,7 +79,6 @@ class TestIndex(helpers.FunctionalTestBase):
         }
         results = index.search('test_doc', **query)
 
-
         solr_conn_mock.search.assert_called_once_with(**{
             'q': 'id:aaa',
             'fq': ['p1:v1', 'p2:v2', 'entity_type:test_doc'],
@@ -119,8 +119,10 @@ class TestIndex(helpers.FunctionalTestBase):
 
         index.remove('test_doc', p1='v1', p2='v2')
 
-        solr_conn_mock.delete.assert_called_once_with(q='entity_type:test_doc AND p1:v1 AND p2:v2', commit=True)
-    
+        solr_conn_mock.delete.assert_called_once_with(
+            q='entity_type:test_doc AND p1:v1 AND p2:v2',
+            commit=True)
+
     def test_remove_all(self):
         solr_conn_mock = Mock()
         index = Index()
@@ -130,11 +132,13 @@ class TestIndex(helpers.FunctionalTestBase):
 
         index.remove_all('test_doc')
 
-        solr_conn_mock.delete.assert_called_once_with(q='entity_type:test_doc', commit=True)
+        solr_conn_mock.delete.assert_called_once_with(
+            q='entity_type:test_doc',
+            commit=True)
 
 
 class TestHelperMethods(helpers.FunctionalTestBase):
-    
+
     def test_ckan_params_to_solr_args(self):
         args = ckan_params_to_solr_args({
             'q': {
@@ -154,21 +158,21 @@ class TestHelperMethods(helpers.FunctionalTestBase):
                 'f2': 'v2',
             }
         }, args)
-    
+
     def test_mapped(self):
         result = mapped('prop', 'alias_prop')
         assert_equals({
             'field': 'prop',
             'as': 'alias_prop',
         }, result)
-    
+
     def test_unprefixed(self):
         result = unprefixed('prop')
         assert_equals({
             'field': 'prop',
             'as': 'prop',
         }, result)
-    
+
     def test_to_indexed_doc(self):
         from hashlib import md5
         site_id = config.get('ckan.site_id')
@@ -182,7 +186,7 @@ class TestHelperMethods(helpers.FunctionalTestBase):
         }, 'test_doc', [
             {'field': 'id', 'as': 'id'},
             'name',
-            'title', 
+            'title',
             {'field': 'prop', 'as': 'pref_prop'}
         ])
 
@@ -195,7 +199,7 @@ class TestHelperMethods(helpers.FunctionalTestBase):
             'site_id': site_id,
             'index_id': index_id,
         }, result)
-    
+
     def test_indexed_doc_to_data_dict(self):
         data = indexed_doc_to_data_dict({
             'id': 'aaa',
@@ -208,7 +212,7 @@ class TestHelperMethods(helpers.FunctionalTestBase):
         }, [
             {'field': 'id', 'as': 'id'},
             'name',
-            'title', 
+            'title',
             {'field': 'prop', 'as': 'pref_prop'}
         ])
 
@@ -225,23 +229,24 @@ def model(data, model_name='_MockModel'):
     mock_model = namedtuple(model_name, sorted(data))
     return mock_model(**data)
 
+
 class TestIndexedMixin(helpers.FunctionalTestBase):
-    
+
     def _get_mixin_class(self):
+
         class IndexedDataModel(Indexed):
             indexed = ['id', 'title', 'name', 'description', 'property']
             doctype = 'test_doc'
             Session = MagicMock()
             index = MagicMock()
-        
-        return IndexedDataModel
-    
 
-    
+        return IndexedDataModel
+
     def test_rebuild_index(self):
         cls = self._get_mixin_class()
 
         state = {'call': 0}
+
         def _query_db(*args, **kwargs):
             if state['call']:
                 return []
@@ -262,7 +267,7 @@ class TestIndexedMixin(helpers.FunctionalTestBase):
         assert_equals(2, cls.Session.query().offset().limit().all.call_count)
         cls.index.remove_all.assert_called_once_with('test_doc')
         cls.index.add.assert_called_once()
-    
+
     def test_add_to_index(self):
         cls = self._get_mixin_class()
 
@@ -287,7 +292,7 @@ class TestIndexedMixin(helpers.FunctionalTestBase):
         })
 
         cls.index.add.assert_called_once()
-    
+
     def test_update_index_doc(self):
         cls = self._get_mixin_class()
 
@@ -324,7 +329,7 @@ class TestIndexedMixin(helpers.FunctionalTestBase):
         cls.index.search.assert_called_once_with('test_doc', q='khe_id:aaa')
         cls.index.remove.assert_called_once_with('test_doc', khe_id='aaa')
         cls.index.add.assert_called_once()
-    
+
     @raises(toolkit.ValidationError)
     def test_validate_solr_args(self):
         cls = self._get_mixin_class()
@@ -341,7 +346,7 @@ class TestIndexedMixin(helpers.FunctionalTestBase):
             })
         except Exception as e:
             raise Exception('Did not expected this to fail. Error: ' + e)
-        
+
         cls.validate_solr_args({
             'q': 'test',
             'fq': 'test',
@@ -366,16 +371,20 @@ class TestIndexedMixin(helpers.FunctionalTestBase):
             'index_id': '1',
         }]
 
-        results = cls.search_index(q={'p1': 'v1'}, fq={'f1': 'v1'}, rows=10, start=3, sort='test_sort')
+        results = cls.search_index(
+            q={'p1': 'v1'},
+            fq={'f1': 'v1'},
+            rows=10, start=3,
+            sort='test_sort')
         assert_true(results)
         cls.index.search.assert_called_once_with(
             'test_doc',
-            q={'p1': 'v1'}, 
+            q={'p1': 'v1'},
             fq={'f1': 'v1'},
             rows=10,
             start=3,
             sort='test_sort')
-    
+
     def test_delete_from_index(self):
         cls = self._get_mixin_class()
         cls.delete_from_index({

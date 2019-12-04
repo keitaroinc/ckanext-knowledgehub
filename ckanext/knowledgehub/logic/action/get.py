@@ -520,6 +520,7 @@ def visualizations_for_rq(context, data_dict):
 
     return resource_views
 
+
 def dashboards_for_rq(context, data_dict):
     research_question = data_dict.get('research_question')
 
@@ -541,6 +542,7 @@ def dashboards_for_rq(context, data_dict):
                 views.append(res_view)
 
     return views
+
 
 @toolkit.side_effect_free
 def resource_user_feedback(context, data_dict):
@@ -751,14 +753,35 @@ def _search_entity(index, data_dict):
     args = ckan_params_to_solr_args(data_dict)
     return index.search_index(**args)
 
+
 @toolkit.side_effect_free
 def search_dashboards(context, data_dict):
+    u'''Performs a search in the index for dashboards.
+
+    :param data_dict: ``dict``, the query arguments for the search.
+
+    :returns: ``list``, the documents matching the search query from the index.
+    '''
     return _search_entity(Dashboard, data_dict)
+
 
 @toolkit.side_effect_free
 def search_research_questions(context, data_dict):
+    u'''Performs a search in the index for research questions.
+
+    :param data_dict: ``dict``, the query arguments for the search.
+
+    :returns: ``list``, the documents matching the search query from the index.
+    '''
     return _search_entity(ResearchQuestion, data_dict)
+
 
 @toolkit.side_effect_free
 def search_visualizations(context, data_dict):
+    u'''Performs a search in the index for visualizations.
+
+    :param data_dict: ``dict``, the query arguments for the search.
+
+    :returns: ``list``, the documents matching the search query from the index.
+    '''
     return _search_entity(Visualization, data_dict)

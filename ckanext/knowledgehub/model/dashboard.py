@@ -44,9 +44,9 @@ class Dashboard(DomainObject, Indexed):
 
     indexed = [
         mapped('id', 'entity_id'),
-        'name', 
-        'title', 
-        'description', 
+        'name',
+        'title',
+        'description',
         'type',
         'source',
         'indicators',
