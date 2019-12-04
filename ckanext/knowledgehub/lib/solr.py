@@ -1,6 +1,6 @@
 import hashlib
 from uuid import uuid4
-from ckan.common import config, _
+from ckan.common import config, _ as translate
 from ckan.lib.search.common import make_connection
 from ckan.plugins.toolkit import ValidationError
 from logging import getLogger
@@ -21,12 +21,12 @@ def _prepare_search_query(query):
         if isinstance(value, str) or isinstance(value, unicode):
             return [value]
         if isinstance(value, list):
-            return value
+            return sorted(value)
         if isinstance(value, dict):
             val = []
             for k,v in value.items():
                 val.append(str(k) + ':' + str(v))
-            return val
+            return sorted(val)
         return [str(value)]
 
     if not query.get('fq'):
@@ -57,7 +57,7 @@ def ckan_params_to_solr_args(data_dict):
     for prop, val in provided.items():
         q.append('%s:%s' % (str(prop), str(val)))
     
-    solr_args['q'] = ' AND '.join(q)
+    solr_args['q'] = ' AND '.join(sorted(q))
 
     return solr_args
             
@@ -97,7 +97,7 @@ class Index:
         for key,value in query.items():
             additional_args.append('%s:%s' % (key, value))
         if additional_args:
-            q += ' AND ' + ' AND '.join(additional_args)
+            q += ' AND ' + ' AND '.join(sorted(additional_args))
         logger.debug('Delete documents q=%s', q)
         self.get_connection().delete(commit=True, q=q)
 
@@ -175,6 +175,12 @@ def indexed_doc_to_data_dict(doc, fields):
 class Indexed:
 
     @classmethod
+    def get_index(cls):
+        if hasattr(cls, 'index'):
+            return cls.index
+        return index
+
+    @classmethod
     def _get_indexed_fields(cls):
         if hasattr(cls, 'indexed'):
             return cls.indexed
@@ -202,6 +208,7 @@ class Indexed:
 
     @classmethod
     def rebuild_index(cls):
+        index = cls.get_index()
         fields = cls._get_indexed_fields()
         doctype = cls._get_doctype()
         error = False
@@ -240,10 +247,11 @@ class Indexed:
         doctype = cls._get_doctype()
         fields  =cls._get_indexed_fields()
         doc = to_indexed_doc(cls._get_before_index()(data), doctype, fields)
-        index.add(cls._get_doctype(), doc)
+        cls.get_index().add(cls._get_doctype(), doc)
     
     @classmethod
     def update_index_doc(cls, data):
+        index = cls.get_index()
         fields = cls._get_indexed_fields()
         fields_mapping = _get_fields_mapping(fields)
         entity_id = data['id']
@@ -254,19 +262,23 @@ class Indexed:
             doc = d
             break
         if doc:
-            index.remove(cls._get_doctype(), id=doc['id'])
+            idarg={id_key: doc[id_key]}
+            index.remove(cls._get_doctype(), **idarg)
         index.add(cls._get_doctype(), to_indexed_doc(cls._get_before_index()(data), cls._get_doctype(), fields))
 
     @staticmethod
     def validate_solr_args(args):
+        msg = {}
         for argn, _ in args.items():
             if argn not in VALID_SOLR_ARGS:
-                raise ValidationError({argn: _('Invalid query parameter')})
+                msg[argn] = translate('Invalid parameter')
+        if len(msg):
+            raise ValidationError(msg)
 
     @classmethod
     def search_index(cls, **query):
         Indexed.validate_solr_args(query)
-        index_results = index.search(cls._get_doctype(), **query)
+        index_results = cls.get_index().search(cls._get_doctype(), **query)
         results = []
         fields = cls._get_indexed_fields()
 
@@ -287,4 +299,4 @@ class Indexed:
         id_key = fields_mapping.get('id', 'id')
         args = {}
         args[id_key] = doc_id
-        index.remove(doctype, **args)
+        cls.get_index().remove(doctype, **args)
