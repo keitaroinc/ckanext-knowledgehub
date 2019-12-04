@@ -28,6 +28,9 @@ from ckanext.knowledgehub.logic.action import update as update_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons)
+from ckanext.knowledgehub.model import (Dashboard,
+                                        ResearchQuestion,
+                                        Visualization)
 from ckanext.datastore.logic.action import datastore_create
 
 assert_equals = nose.tools.assert_equals
@@ -1095,3 +1098,73 @@ class TestKWHUpdateActions(ActionsBase):
     #     res = get_actions.visualizations_for_rq(context, data_dict_rq)
     #     assert_equals(res, "") 
         
+
+class _monkey_patch:
+
+    def __init__(self, obj, prop, patch_with):
+        self.obj = obj
+        self.prop = prop
+        self.patch_with = patch_with
+
+    def __call__(self, method):
+        original_prop = None
+        if hasattr(self.obj, self.prop):
+            original_prop = getattr(self.obj, self.prop)
+
+        def _with_patched(*args, **kwargs):
+            # patch
+            setattr(self.obj, self.prop, self.patch_with)
+            try:
+                return method(*args, **kwargs)
+            finally:
+                # unpatch
+                if original_prop is not None:
+                    setattr(self.obj, self.prop, original_prop)
+                else:
+                    delattr(self.obj, self.prop)
+        _with_patched.__name__ = method.__name__
+        _with_patched.__module__ = method.__module__
+        _with_patched.__doc__ = method.__doc__
+        return _with_patched
+
+
+class SearchIndexActionsTest(helpers.FunctionalTestBase):
+
+    @_monkey_patch(Dashboard, 'search_index', mock.Mock())
+    def test_search_dashboards(self):
+        Dashboard.search_index.return_value = [{
+            'id': 'aaa',
+            'p1': 'v1',
+            'p2': 'v2',
+        }]
+        results = get_actions.search_dashboards({}, {
+            'text': 'aaa',
+        })
+        assert_equals(1, len(results))
+        Dashboard.search_index.called_once_with(q='text:aaa', rows=500)
+
+    @_monkey_patch(ResearchQuestion, 'search_index', mock.Mock())
+    def test_search_research_questions(self):
+        ResearchQuestion.search_index.return_value = [{
+            'id': 'aaa',
+            'p1': 'v1',
+            'p2': 'v2',
+        }]
+        results = get_actions.search_research_questions({}, {
+            'text': 'aaa',
+        })
+        assert_equals(1, len(results))
+        ResearchQuestion.search_index.called_once_with(q='text:aaa', rows=500)
+
+    @_monkey_patch(Visualization, 'search_index', mock.Mock())
+    def test_search_visualizations(self):
+        Visualization.search_index.return_value = [{
+            'id': 'aaa',
+            'p1': 'v1',
+            'p2': 'v2',
+        }]
+        results = get_actions.search_visualizations({}, {
+            'text': 'aaa',
+        })
+        assert_equals(1, len(results))
+        Visualization.search_index.called_once_with(q='text:aaa', rows=500)

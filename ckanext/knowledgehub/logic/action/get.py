@@ -744,7 +744,6 @@ def get_predictions(context, data_dict):
     return rnn_helpers.predict_completions(text)
 
 
-
 def _search_entity(index, data_dict):
     text = data_dict.get('text')
     if not text:
@@ -762,4 +761,4 @@ def search_research_questions(context, data_dict):
 
 @toolkit.side_effect_free
 def search_visualizations(context, data_dict):
-    return _search_entity(Dashboard, data_dict)
+    return _search_entity(Visualization, data_dict)
