@@ -483,6 +483,54 @@ Return type:
 
 list
 
+
+`search_dashboards`(_context_, _data\_dict_)
+
+Does a search for dashboard in the Solr index.
+
+**Parameters:**
+
+* `text` - `str`, _required_, the text to search for.
+* `rows` - `int`, _optional_, number of rows to return.
+* `start` - `int`, _optional_, offset, start from this result then return `rows`
+            results.
+* `fq` - `string`/`list`, _optional_, additional filter queries as specified in
+         Solr syntax.
+
+> Returns a list of Dashboards matching the search query.
+
+
+`search_research_questions`(_context_, _data\_dict_)
+
+Does a search for Research Question in the Solr index.
+
+**Parameters:**
+
+* `text` - `str`, _required_, the text to search for.
+* `rows` - `int`, _optional_, number of rows to return.
+* `start` - `int`, _optional_, offset, start from this result then return `rows`
+            results.
+* `fq` - `string`/`list`, _optional_, additional filter queries as specified in
+         Solr syntax.
+
+> Returns a list of Research Questions matching the search query.
+
+`search_visualizations`(_context_, _data\_dict_)
+
+Does a search for Visualizations in the Solr index.
+
+**Parameters:**
+
+* `text` - `str`, _required_, the text to search for.
+* `rows` - `int`, _optional_, number of rows to return.
+* `start` - `int`, _optional_, offset, start from this result then return `rows`
+            results.
+* `fq` - `string`/`list`, _optional_, additional filter queries as specified in
+         Solr syntax.
+
+> Returns a list of Visualizations matching the search query.
+
+
 action.update module
 --------------------
 
