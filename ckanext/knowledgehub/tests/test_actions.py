@@ -82,12 +82,14 @@ class ActionsBase(helpers.FunctionalTestBase):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.load('datapusher')
+
     @classmethod
     def teardown_class(self):
         if not plugins.plugin_loaded('datastore'):
             plugins.unload('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.unload('datapusher')
+
 
 class TestKWHCreateActions(ActionsBase):
 
@@ -947,6 +949,7 @@ class TestKWHUpdateActions(ActionsBase):
             kwh_data_updated.get('content'),
             data_dict.get('new_content')
         )
+
     def test_knowledgehub_get_geojson_properties(self):
         user = factories.Sysadmin()
         context = {
@@ -958,10 +961,11 @@ class TestKWHUpdateActions(ActionsBase):
         }
 
         data_dict = {
-            'map_resource':"https://www.grandconcourse.ca/map/data/GCPoints.geojson"
+            'map_resource': "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
 
         }
-        res = get_actions.knowledgehub_get_geojson_properties(context, data_dict)
+        res = get_actions.knowledgehub_get_geojson_properties(context,
+                                                              data_dict)
         assert_equals(len(res), 26)
 
     def test_get_resource_data(self):
@@ -976,7 +980,7 @@ class TestKWHUpdateActions(ActionsBase):
         }
         dataset = create_dataset()
         data = {
-           "fields": [{"id": "value", "type": "numeric"}],
+            "fields": [{"id": "value", "type": "numeric"}],
             "records": [
                 {"value": 0},
                 {"value": 1},
@@ -1002,13 +1006,13 @@ class TestKWHUpdateActions(ActionsBase):
             resource=resource['id']
         )
         data_dict = {
-            'sql_string' : sql_str
+            'sql_string': sql_str
         }
         res_data = get_actions.get_resource_data(context, data_dict)
 
         assert_equals(len(res_data), 7)
 
-    #TODO: the next two tests give error when we add filters, the end result
+    # TODO: the next two tests give error when we add filters, the end result
     #       is written for printing errors only
 
     # def test_get_chart_data(self):
@@ -1141,8 +1145,8 @@ class TestKWHUpdateActions(ActionsBase):
     #     }
 
     #     res = get_actions.visualizations_for_rq(context, data_dict_rq)
-    #     assert_equals(res, "") 
-        
+    #     assert_equals(res, "")
+
 
 class SearchIndexActionsTest(helpers.FunctionalTestBase):
 
