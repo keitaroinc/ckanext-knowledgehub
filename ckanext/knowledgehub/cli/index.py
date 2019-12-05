@@ -15,6 +15,14 @@ logger = getLogger(__name__)
 class CkanCoreIndex:
 
     def rebuild_index(self):
+        # Workaround until the core translation function defaults to the Flask one
+        from paste.registry import Registry
+        from ckan.lib.cli import MockTranslator
+        registry = Registry()
+        registry.prepare()
+        from pylons import translator
+        registry.register(translator, MockTranslator())
+        
         rebuild()
 
 
