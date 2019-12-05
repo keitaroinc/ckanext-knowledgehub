@@ -344,7 +344,7 @@ class EditView(MethodView):
         data = data or research_question
 
         if data:
-            image = data.get('image_url', '')
+            image = data.get('image_url') or ''
             if not (image.startswith('http') or
                     image.startswith('https')):
                 data['image_url'] = image.split('/')[-1]
