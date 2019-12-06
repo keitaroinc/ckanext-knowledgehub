@@ -213,7 +213,7 @@ ckan.module('chart', function () {
 
             options.title = {
                 text: titleVal,
-                position: "upper-right",
+                //position: "upper-right",
                 padding: {
                     left: 0,
                     right: 150,
@@ -525,6 +525,7 @@ ckan.module('chart', function () {
             }
 
                 var subtitle = (this.options.chart_subtitle === true) ? '' : this.options.chart_subtitle;
+                
                 var chartDescription = (this.options.chart_description === true) ? '' : this.options.chart_description;
 
                 var info = [subtitle, chartDescription];
