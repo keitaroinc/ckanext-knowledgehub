@@ -198,10 +198,12 @@ ckan.module('table', function () {
             var category_name = (this.options.category_name === true) ? '' : this.options.category_name;
             var title = (this.options.table_title === true) ? '' : this.options.table_title;
             var subtitle = (this.options.table_subtitle === true) ? '' : this.options.table_subtitle;
-            subtitle.length > 30 ? subtitle = subtitle.substring(0,30) + "..." : null;
+            subtitle.length > 30 ? subtitle = subtitle.substring(0, 30) + "..." : null;
             var description = (this.options.table_description === true) ? '' : this.options.table_description;
-            description.length > 50 ? description = description.substring(0,50) + "..." : null;
+            description.length > 50 ? description = description.substring(0, 50) + "..." : null;
             var filename_export = (title === '') ? this.options.resource_name : title;
+
+
 
             filename_export = filename_export.split('.').slice(0, 1).join('.');
 
@@ -225,7 +227,7 @@ ckan.module('table', function () {
                     } else {
                         html = module.render_data_table(rows, main_value, y_axis);
                     }
-//                    var table = module.el.next('#table-item-' + module.options.resource_id);
+                    //                    var table = module.el.next('#table-item-' + module.options.resource_id);
                     var table = $('#table-item-' + module.options.resource_id);
                     // Enable jquery.datatable
                     if ($.fn.DataTable.isDataTable(table)) table.DataTable().destroy();
@@ -245,7 +247,8 @@ ckan.module('table', function () {
                                 'className': 'btn btn-default',
                                 'title': filename_export
                             },
-                            {   'extend': 'pdf',
+                            {
+                                'extend': 'pdf',
                                 'className': 'btn btn-default',
                                 'title': filename_export
                             },
@@ -254,7 +257,7 @@ ckan.module('table', function () {
                     });
 
                     // Set title value
-                        $("div.dt-header").html(`<div></div><div>${title} <p>${subtitle}</p> <p>${description}</p><div>`); 
+                    $("div.dt-header").html(`<div>${title} <p>${subtitle}</p> <p>${description}</p><div>`);
                 } else {
                     this.el.text(this._('Table could not be created!'));
                 }
@@ -269,21 +272,21 @@ ckan.module('table', function () {
             var sqlStringExceptSelect = parsedSqlString[1];
             var tableField = this.el.closest('.table_item');
 
-            var y_operation_selected = tableField.find('[name*=table_y_axis_operation]'); 
+            var y_operation_selected = tableField.find('[name*=table_y_axis_operation]');
             var y_operation_value = y_operation_selected.val();
 
             // If category is set
             // we need the first column as a pivot column
             // see comments inside this.render_data_table_with_category
             if (category_name) {
-                if(y_operation_value == "MAX") {
+                if (y_operation_value == "MAX") {
                     return 'SELECT ' + '"' + category_name + '", "' + main_value + '", MAX("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + category_name + '", "' + main_value + '"';
                 }
                 else {
                     return 'SELECT ' + '"' + category_name + '", "' + main_value + '", SUM("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + category_name + '", "' + main_value + '"';
                 }
             } else {
-                if(y_operation_value == "MAX") {
+                if (y_operation_value == "MAX") {
                     return 'SELECT ' + '"' + main_value + '", MAX("' + y_axis + '") as ' + '"' + y_axis + '"' + sqlStringExceptSelect + ' GROUP BY "' + main_value + '"';
                 }
                 else {
@@ -296,7 +299,7 @@ ckan.module('table', function () {
 
         // default tables
         render_data_table: function (rows, main_value, y_axis) {
-            main_value = typeof main_value === 'string' ? main_value.toLowerCase(): main_value;
+            main_value = typeof main_value === 'string' ? main_value.toLowerCase() : main_value;
             y_axis = typeof y_axis === 'string' ? y_axis.toLowerCase() : y_axis;
 
             // Prepare data
@@ -455,7 +458,7 @@ ckan.module('table', function () {
             this.createTable(yVal, xVal, true);
         },
 
-        capitalize: function(s) {
+        capitalize: function (s) {
             if (typeof s !== 'string') return s
             return s.charAt(0).toUpperCase() + s.slice(1)
         },
