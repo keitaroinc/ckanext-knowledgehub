@@ -95,13 +95,30 @@
   height: 100%;
   display: flex;
   flex-wrap: wrap;
-  //justify-content: center;
+  justify-content: center;
   min-height: 700px;
   background-color: white;
   margin-left: 0;
   margin-right: 0;
 
 }
+
+.dashboard-wrapper {
+
+  // height: 100%;
+  // display: flex;
+  // align-content: center;
+  // justify-content: center;
+
+  background-color: #fff;
+}
+
+// .dashboard-section {
+//   max-width: 80%;
+//   min-height: 700px;
+//   //background-color: #fff;
+//   margin: auto;
+// }
 
 
 //Create Dataset
@@ -174,11 +191,26 @@
 }
 
 .viz-view-item {
-  margin-left: 30px;
   margin-top: 30px;
   margin-bottom: 80px;
-  flex: 0 0 450px;
+  //flex: 1 0 450px;
+  //flex-grow: 1;
+  flex: 1 0 auto;
+  min-width: 450px;
+
+  @media only screen and (max-width: 465px) {
+    min-width: 300px;
+
+  }
+
 }
+
+// .viz-view-item {
+//   float: left;
+//   margin-left: 30px;
+//   margin-top: 30px;
+//   margin-bottom: 80px;
+// }
 
 //Tornado Chart Style
 .bar--positive {
