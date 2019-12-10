@@ -326,6 +326,9 @@ def dashboard_create(context, data_dict):
 
     dashboard = Dashboard()
 
+    import json
+    print json.dumps(data_dict, indent=2)
+
     items = ['name', 'title', 'description', 'type']
 
     for item in items:

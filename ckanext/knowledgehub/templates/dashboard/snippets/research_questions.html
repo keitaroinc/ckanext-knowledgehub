@@ -1,0 +1,11 @@
+<section id="research-questions">
+        {% for question in questions%}
+        <a href="{{h.url_for('research_question.read', name=question.name)}}"
+               title="{{_('Research Question')}}: {{question.title}}">
+            <div class="research-question-badge btn btn-info">
+                <i class="fa fa-search"></i>
+                {{ question.title | truncate(30) }}
+            </div>
+        </a>
+        {% endfor %}
+</section>

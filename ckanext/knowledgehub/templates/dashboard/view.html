@@ -164,11 +164,21 @@
             {% endif %}
         </div>
         {% endfor %}
-        <div id="screenshot-button">
-            <button class="btn btn-default download-dashboard-btn html2canvas-ignore pull-right"
-                data-module="download-dashboard-as-image">
-                <span class="fa fa-download"></span>{{ _('Download screenshot') }}
-            </button>
+        <div class="row"></div>
+        <div class="col-md-10 col-sm-12">
+                {% set research_questions = h.dashboard_research_questions(dashboard)%}
+                {% if research_questions %}
+                {% snippet 'dashboard/snippets/research_questions.html', questions=research_questions %}
+                {% endif%}
+            </div>
+            <div class="col-md-2 col-sm-12">
+                <div id="screenshot-button">
+                    <button class="btn btn-default download-dashboard-btn html2canvas-ignore pull-right"
+                        data-module="download-dashboard-as-image">
+                        <span class="fa fa-download"></span>{{ _('Download screenshot') }}
+                    </button>
+                </div>
+            </div>
         </div>
 
     </div>
