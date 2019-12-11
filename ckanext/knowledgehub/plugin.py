@@ -182,6 +182,11 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             controller='ckanext.knowledgehub.controllers:KWHPackageController'
         ) as m:
             m.connect('search', '/dataset', action='search')
+            m.connect(
+                'dataset_read',
+                '/dataset/{id}',
+                action='read',
+                ckan_icon='sitemap')
 
         # Override read action, for changing the titles in facets and tell CKAN where to look for
         # new and list actions.
