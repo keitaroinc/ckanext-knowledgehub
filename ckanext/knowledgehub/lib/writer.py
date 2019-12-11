@@ -31,4 +31,8 @@ class WriterService():
         for record in records:
             writer.writerow([record[column] for column in columns])
 
-        return cStringIO.StringIO(output.getvalue())
+        file_content = cStringIO.StringIO(output.getvalue())
+
+        output.close()
+
+        return file_content
