@@ -1,5 +1,7 @@
 # encoding: utf-8
 import logging
+import datetime
+from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
 from flask import Blueprint
 from flask.views import MethodView
@@ -9,6 +11,7 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, config, g, request
+from ckanext.knowledgehub.lib.writer import WriterService
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
@@ -42,6 +45,7 @@ def merge_all_data(id):
     context = _get_context()
     fields = []
     records = []
+    err_msg = ''
 
     package = get_action('package_show')(
         context,
@@ -68,11 +72,39 @@ def merge_all_data(id):
 
             if fields == current_fields:
                 records.extend(result.get('records', []))
-                print records
             else:
-                print "The format of the data resources is different."
+                diff = [f['id'] for f in current_fields if f not in fields]
+                diff.extend(
+                    [f['id'] for f in fields if f not in current_fields]
+                )
+                err_msg = ('The format of the data resources is different. '
+                           'Resource {resource} differs from the rest, '
+                           'fields: {fields}').format(
+                               resource=resource.get('name'),
+                               fields=", ".join(diff)
+                            )
+    if records:
+            writer = WriterService()
+            stream = writer.csv_writer(fields, records, ',')
 
-    return h.redirect_to(controller='package', action='read', id=id)
+            filename = '{}_{}.{}'.format(
+                package.get('name'),
+                str(datetime.datetime.utcnow()),
+                'csv'
+            )
+
+            data_dict = {
+                'package_id': id,
+                'name': filename,
+                'upload':  FlaskFileStorage(stream, filename)
+            }
+
+            rsc = get_action('resource_create')(context, data_dict)
+
+    return h.redirect_to(controller='package',
+                         action='read',
+                         id=id,
+                         error_message=err_msg)
 
 
 kwh_dataset.add_url_rule(u'/merge_all_data/<id>', view_func=merge_all_data)
