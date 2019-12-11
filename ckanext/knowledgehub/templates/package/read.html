@@ -1,6 +1,13 @@
 {% ckan_extends %}
 {{ super() }}
 {% block package_description %}
+  {% if error_message %}
+    <div class="alert alert-danger alert-dismissible">
+      <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+      <strong>Error:</strong> {{ error_message }}
+    </div>
+  {% endif %}
+
   {% if pkg.private %}
     <span class="dataset-private label label-inverse pull-right">
       <i class="fa fa-lock"></i>
