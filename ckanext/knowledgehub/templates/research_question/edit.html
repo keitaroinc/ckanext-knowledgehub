@@ -2,8 +2,13 @@
 
 {% block breadcrumb_content %}
 <li>{{ h.nav_link(_('Research questions'), named_route='research_question.search') }}</li>
+{% if rq.theme_data %}
+  <li>{{ h.nav_link(rq.theme_data.title|truncate(30), named_route='theme.read', name=rq.theme_data.name) }}</li>
+  {% endif%}
+  {% if rq.sub_theme_data %}
+  <li>{{ h.nav_link(rq.sub_theme_data.title|truncate(30), named_route='sub_theme.read', name=rq.sub_theme_data.name) }}</li>
+  {% endif%}
 <li>{{ h.nav_link(rq.title|truncate(30), named_route='research_question.read', name=rq.name) }}</li>
-
 <li class="active">{{ h.nav_link(_('Edit'), named_route='research_question.edit', name=rq.name) }}</li>
 {% endblock %}
 
