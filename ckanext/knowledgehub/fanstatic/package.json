@@ -9,7 +9,7 @@
     "gulp-clean-css": "^3.9.4",
     "gulp-less": "^3.5.0",
     "lato-font": "^3.0.0",
-    "npm": "^6.0.1"
+    "npm": "^6.13.4"
   },
   "devDependencies": {
     "bootstrap": "^3.4.0",
