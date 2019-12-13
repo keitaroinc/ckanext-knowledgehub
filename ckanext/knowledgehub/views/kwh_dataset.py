@@ -44,8 +44,10 @@ def merge_all_data(id):
 
     context = _get_context()
     fields = []
+    field_names = []
     records = []
     err_msg = ''
+    select = ''
 
     package = get_action('package_show')(
         context,
@@ -54,20 +56,49 @@ def merge_all_data(id):
 
     if len(resources):
         for resource in resources:
-            sql = 'SELECT * FROM "{resource}"'.format(
-                resource=resource.get('id'))
+            info = get_action('datapusher_status')(
+                context, {'id': '12162687-fdae-4876-ab4f-7683109065aa'})
+            print info
+            break
+            if resource.get('name').startswith(
+                    '{}_'.format(package.get('name'))):
+                continue
+
+            if not len(fields):
+                data = {
+                    'resource_id': resource.get('id'),
+                    'limit': 0
+                }
+                result = get_action('datastore_search')(context, data)
+                for f in result.get('fields', []):
+                    if f.get('id') in ['_id', '_full_text']:
+                        fields.append(f)
+                        field_names.append(f.get('id'))
+                        if not select:
+                            select = '"' + f.get('id') + '"'
+                        else:
+                            select += ', "' + f.get('id') + '"'
+
+                if not len(fields):
+                    break
+
+            sql = 'SELECT {select} FROM "{resource}"'.format(
+                resource=resource.get('id'),
+                select=select)
+
             try:
                 result = get_action('datastore_search_sql')(
                     context,
                     {'sql': sql})
-                if len(fields) == 0:
+
+                if len(records) == 0:
                     fields = result.get('fields', [])
                     records = result.get('records', [])
                     continue
 
                 current_fields = result.get('fields', [])
             except Exception as e:
-                log.debug(str(e))
+                log.info(str(e))
                 continue
 
             if fields == current_fields:
@@ -89,7 +120,7 @@ def merge_all_data(id):
 
             filename = '{}_{}.{}'.format(
                 package.get('name'),
-                str(datetime.datetime.utcnow()),
+                str(datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')),
                 'csv'
             )
 
