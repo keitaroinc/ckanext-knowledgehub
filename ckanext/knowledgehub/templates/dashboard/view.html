@@ -8,22 +8,23 @@
 {% extends 'page.html' %}
 
 {% block content %}
-    <div role="main">
-        <div class="container-fluid" id="container">
-            <div class="row">
-                <div class="col-lg-10 col-lg-offset-1">
-                    <div class="toolbar">
-                        {% block breadcrumb %}
-                        <ol class="breadcrumb">
+<div role="main">
+    <div class="container-fluid" id="container">
+        <div class="row">
+            <div class="col-lg-10 col-lg-offset-1">
+                <div class="toolbar">
+                    {% block breadcrumb %}
+                    <ol class="breadcrumb">
                         {% snippet 'snippets/home_breadcrumb_item.html' %}
                         <li>{{ h.nav_link(_('Dashboards'), named_route='dashboards.index') }}</li>
-                        <li>{% link_for _(dashboard.title)|truncate(30), named_route='dashboards.view', name=dashboard.name %}</li>
-                        </ol>
-                        {% endblock %}
-                    </div>
+                        <li>{% link_for _(dashboard.title)|truncate(30), named_route='dashboards.view', name=dashboard.name %}
+                        </li>
+                    </ol>
+                    {% endblock %}
                 </div>
             </div>
         </div>
+    </div>
     {% if dashboard.type == 'internal' %}
     <!--Changes here or chart_module  flexbox flex-wrap?-->
     <div class="row dashboard-section">
@@ -163,13 +164,18 @@
             {% endif %}
         </div>
         {% endfor %}
-        <div id="screenshot-button">
-            <button class="btn btn-default download-dashboard-btn html2canvas-ignore pull-right"
-                data-module="download-dashboard-as-image">
-                <span class="fa fa-download"></span>{{ _('Download screenshot') }}
-            </button>
+        <div class="col-md-12 col-sm-12">
+            {% set research_questions = h.dashboard_research_questions(dashboard)%}
+            {% if research_questions %}
+            {% snippet 'dashboard/snippets/research_questions.html', questions=research_questions %}
+            {% endif%}
+            <div id="screenshot-button">
+                <button class="btn btn-default download-dashboard-btn html2canvas-ignore pull-right"
+                    data-module="download-dashboard-as-image">
+                    <span class="fa fa-download"></span>{{ _('Download screenshot') }}
+                </button>
+            </div>
         </div>
-
     </div>
     <div>
 
