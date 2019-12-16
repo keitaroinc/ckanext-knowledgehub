@@ -1,18 +1,23 @@
 [role="main"] {
   padding: 0;
+
   &:nth-child(odd) {
     background: @brand-bg-lightest;
   }
-  .secondary{
+
+  .secondary {
     z-index: 10;
   }
 }
+
 .home-content {
   background-color: @brand-bg-lightest;
 }
+
 a {
   color: @brand-primary;
 }
+
 .homepage .stats ul li {
   a {
     color: @white;
@@ -22,6 +27,7 @@ a {
       color: @brand-accent;
     }
   }
+
   span {
     color: @brand-accent;
     font-size: larger;
@@ -38,4 +44,10 @@ a {
     background-color: @brand-primary;
     border-top: 2px solid @brand-primary;
   }
+}
+
+#navlinks li a:hover {
+  text-decoration: underline;
+  background-color: transparent;
+  cursor: pointer;
 }

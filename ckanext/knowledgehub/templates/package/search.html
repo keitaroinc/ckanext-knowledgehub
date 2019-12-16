@@ -103,23 +103,38 @@
                         {% endif %}
                     </div>
                     <div class="col-lg-7 group-list indicators">
-                        <div class="group-list-items">
-                            <button class="group-list-items" onclick="showSearchResults(event, 'package_list')">DATASETS</button>
-                            <button class="group-list-items" id="search_rq_button" onclick="showSearchResults(event, 'hidden_rqs')">RESEARCH QUESTIONS</button>
-                            
-                            <button class="group-list-items" onclick="showSearchResults(event, 'hidden_dashs')">DASHBOARDS</button>
-                            
-                            <button class="group-list-items" onclick="showSearchResults(event, 'hidden_visuals')"> VISUALIZATIONS</button>
-                            
-                            <hr>
-                            {% block page_primary_action %}
-                            {% if h.check_access('package_create') %}
-                            <div class="page_primary_action">
-                                {{ h.snippet ('snippets/add_dataset.html', dataset_type=dataset_type) }}
-                            </div>
-                            {% endif %}
-                            {% endblock %}
+
+                        <div class="group-list-items" style="display: inline-block">
+
+                            <ul class="nav navbar-nav" id="navlinks">
+                                <li>
+                                    <a class="group-list-items"
+                                        onclick="showSearchResults(event, 'package_list')">DATASETS</a>
+                                </li>
+                                <li>
+                                    <a class="group-list-items" id="search_rq_button"
+                                        onclick="showSearchResults(event, 'hidden_rqs')">RESEARCH QUESTIONS</a>
+                                </li>
+                                <li>
+                                    <a class="group-list-items"
+                                        onclick="showSearchResults(event, 'hidden_dashs')">DASHBOARDS</a>
+                                </li>
+                                <li>
+                                    <a class="group-list-items" onclick="showSearchResults(event, 'hidden_visuals')">
+                                        VISUALIZATIONS</a>
+                                </li>
+                            </ul>
+
+
                         </div>
+                        <hr>
+                        {% block page_primary_action %}
+                        {% if h.check_access('package_create') %}
+                        <div class="page_primary_action">
+                            {{ h.snippet ('snippets/add_dataset.html', dataset_type=dataset_type) }}
+                        </div>
+                        {% endif %}
+                        {% endblock %}
 
                         {% block package_search_results_list %}
                         <div id="package_list" class="tab_content">
@@ -135,9 +150,10 @@
                                     <div class="col-lg-2 rq-box rq-item"
                                         style="flex: 1;background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
                                         <h3 class="rq-heading text-wrap">
-                                            <a href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
+                                            <a
+                                                href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
                                             <small>Research Question</small>
-                                        </h3>                            
+                                        </h3>
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -145,11 +161,11 @@
                             {% else %}
                             {{_('There are no research questions found for the selected query.') }}
                             {% endif %}
-                            
+
                             {% endif %}
                         </div>
 
-                        <div id = "hidden_visuals" style="display: none" class="tab_content">
+                        <div id="hidden_visuals" style="display: none" class="tab_content">
                             {% if c.q %}
                             {% if h.get_searched_visuals(c.q) %}
                             <div class="col-lg-12 visualizations">
@@ -233,27 +249,26 @@
                             {{ "There are no visualizations found for the selected query. "}}
                             {% endif %}
                             {% endif %}
-                            </div>
-                            <div id = "hidden_dashs" style="display: none" class="tab_content">
-                                {% if c.q %}
-                                {% if h.get_searched_dashboards(c.q) %}
-                                {% set dashes = h.get_searched_dashboards(c.q) %}
-                                {% for dashboard in dashes %}
-                                    <a class="dashboard-link"
-                                        href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
-                                        <div>
-                                            <h4>{{dashboard.title}}</h4>
-                                        </div>
-                                    </a>
-                                {% endfor %}
-                                {% else %}
-                                {{_('There are no dashboards found for the selected query.') }}
-                                {% endif %}                             
+                        </div>
+                        <div id="hidden_dashs" style="display: none" class="tab_content">
+                            {% if c.q %}
+                            {% if h.get_searched_dashboards(c.q) %}
+                            {% set dashes = h.get_searched_dashboards(c.q) %}
+                            {% for dashboard in dashes %}
+                            <a class="dashboard-link" href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
+                                <div>
+                                    <h4>{{dashboard.title}}</h4>
+                                </div>
+                            </a>
+                            {% endfor %}
+                            {% else %}
+                            {{_('There are no dashboards found for the selected query.') }}
+                            {% endif %}
 
-                                {% endif %}
-                            </div>
-                    {% endblock %}
-                </div>
+                            {% endif %}
+                        </div>
+                        {% endblock %}
+                    </div>
 
 
 
