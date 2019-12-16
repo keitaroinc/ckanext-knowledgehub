@@ -721,11 +721,12 @@ def get_dashboards(limit=5, order_by='created_by asc'):
 def remove_space_for_url(str):
     return str.replace(" ", "-")
 
+
 def format_date(str):
     # split date & time
-    date = str.split('T') # date[0] is the date, date[1] is the time
-    time_basic = date[1].split('.') # time_basic[0] = hh/mm/ss
-    # remove seconds 
+    date = str.split('T')  # date[0] is the date, date[1] is the time
+    time_basic = date[1].split('.')  # time_basic[0] = hh/mm/ss
+    # remove seconds
     time_basic[0] = time_basic[0][:-3]
     display_date = date[0] + ' at ' + time_basic[0]
     return display_date
@@ -745,3 +746,16 @@ def get_searched_visuals(query):
     context = _get_context()
     list_visuals_searched = toolkit.get_action('search_visualizations')(context, {'text': query})
     return list_visuals_searched
+def dashboard_research_questions(dashboard):
+    questions = []
+    if dashboard.get('indicators'):
+        context = _get_context()
+        research_question_show = logic.get_action('research_question_show')
+        for indicator in dashboard['indicators']:
+            if indicator.get('research_question'):
+                question = research_question_show(context, {
+                    'id': indicator['research_question']
+                })
+                questions.append(question)
+
+    return questions

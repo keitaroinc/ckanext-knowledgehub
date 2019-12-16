@@ -28,6 +28,25 @@
       {% set text_query_none = _('No functional units found for "{query}"') %}
       {% set text_no_query = ungettext('{number} functional unit found', '{number} functional units found', count) %}
       {% set text_no_query_none = _('No functional units found') %}
+
+    {% elif type == 'research_question' %}
+      {% set text_query = ungettext('{number} research questions found for "{query}"', '{number} research questions found for "{query}"', count) %}
+      {% set text_query_none = _('No research questions found for "{query}"') %}
+      {% set text_no_query = ungettext('{number} research question found', '{number} research questions found', count) %}
+      {% set text_no_query_none = _('No research question found') %}
+
+    {% elif type == 'dashboard' %}
+      {% set text_query = ungettext('{number} dashboards found for "{query}"', '{number} dashboards found for "{query}"', count) %}
+      {% set text_query_none = _('No dashboards found for "{query}"') %}
+      {% set text_no_query = ungettext('{number} dashboard found', '{number} dashboards found', count) %}
+      {% set text_no_query_none = _('No dashboard found') %}
+
+    {% elif type == 'visualization' %}
+      {% set text_query = ungettext('{number} visualizations found for "{query}"', '{number} visualizations found for "{query}"', count) %}
+      {% set text_query_none = _('No visualizations found for "{query}"') %}
+      {% set text_no_query = ungettext('{number} visualizations found', '{number} visualizations found', count) %}
+      {% set text_no_query_none = _('No visualization found') %}
+
     
     {% else %}
       {% set text_query_singular = '{number} ' + type + ' found for "{query}"' %}

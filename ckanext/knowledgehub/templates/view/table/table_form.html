@@ -35,7 +35,7 @@
             <div class="control-group ">
               <label class="control-label" for="table_field_title">{{ _('Title') }}</label>
               <div class="controls input-controls">
-                <input id="table_field_title" name="table_field_title" value="{{ table_title }}"
+                <input class="inputs" id="table_field_title" name="table_field_title" value="{{ table_title }}"
                   placeholder="{{ _('Table title') }}" type="text" required>
               </div>
             </div>
@@ -43,14 +43,19 @@
             <div class="control-group title">
               <label class="control-label" for="table_field_subtitle">{{ _('Subtitle') }}</label>
               <div class="controls input-controls">
-                  <input id="table_field_subtitle" type="text" name="table_field_subtitle" value="{{ table.table_subtitle }}" placeholder="{{ _('Table subtitle') }}" maxlength="100" required="required">
+                <input class="inputs" id="table_field_subtitle" type="text" name="table_field_subtitle"
+                  value="{{ table.table_subtitle }}" placeholder="{{ _('Table subtitle') }}" maxlength="100"
+                  required="required">
               </div>
             </div>
 
             <div class="control-group title">
               <label class="control-label" for="table_field_description">{{ _('Description') }}</label>
               <div class="controls input-controls">
-                  <input id="table_field_description" type="text" name="table_field_description" value="{{ table.table_description }}" placeholder="{{ _('Table description') }}" maxlength="100" required="required">
+                <textarea class="inputs" id="table_field_description" type="text" name="table_field_description"
+                  value="{{ table.table_description }}" placeholder="{{ _('Table description') }}" maxlength="100"
+                  required="required"></textarea>
+
               </div>
             </div>
 
@@ -111,7 +116,7 @@
                 </select>
               </div>
             </div>
-             {# Y operation #}
+            {# Y operation #}
             <div class="control-group control-select">
               <label class="control-label" for="table_y_axis_operation">{{ _('Y Axis Operation') }}</label>
               <div class="controls input-controls">

@@ -85,7 +85,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'format_date': h.format_date, 
             'get_searched_rqs': h.get_searched_rqs,
             'get_searched_dashboards': h.get_searched_dashboards,
-            'get_searched_visuals': h.get_searched_visuals
+            'get_searched_visuals': h.get_searched_visuals,
+            'dashboard_research_questions': h.dashboard_research_questions
         }
 
     # IDatasetForm

@@ -34,21 +34,21 @@
         api.get('resource_user_feedback', {
             resource: resource
         })
-        .done(function (data) {
-            if (data.success) {
-                var feedbacks = data.result;
-                feedbacks.forEach(function (feedback) {
-                    var type = feedback.type;
-                    userFeedbacks[type] = type;
+            .done(function (data) {
+                if (data.success) {
+                    var feedbacks = data.result;
+                    feedbacks.forEach(function (feedback) {
+                        var type = feedback.type;
+                        userFeedbacks[type] = type;
 
-                    var activeButton = $("#btn-" + type);
-                    activeButton.attr('disabled', true);
-                });
-            }
-        })
-        .fail(function (error) {
-            console.log("Resource feedback: " + error.statusText);
-        });
+                        var activeButton = $("#btn-" + type);
+                        activeButton.attr('disabled', true);
+                    });
+                }
+            })
+            .fail(function (error) {
+                console.log("Resource feedback: " + error.statusText);
+            });
     };
 
     function resourceFeedback(type, resource, dataset) {
@@ -58,28 +58,28 @@
             resource: resource,
             dataset: dataset
         })
-        .done(function (data) {
-            if (data.success) {
-                var oppositeType = oppositeRF[type];
-                var newUserCount = $("#count-" + type);
-                var userCount = $("#count-" + oppositeType);
+            .done(function (data) {
+                if (data.success) {
+                    var oppositeType = oppositeRF[type];
+                    var newUserCount = $("#count-" + type);
+                    var userCount = $("#count-" + oppositeType);
 
-                if (Object.keys(userFeedbacks).length > 0) {
-                    if (userFeedbacks[oppositeType] !== undefined) {
-                        removeDisabledAttr(oppositeType);
-                        userCount.text(parseInt(userCount.text()) - 1);
+                    if (Object.keys(userFeedbacks).length > 0) {
+                        if (userFeedbacks[oppositeType] !== undefined) {
+                            removeDisabledAttr(oppositeType);
+                            userCount.text(parseInt(userCount.text()) - 1);
+                        }
                     }
-                }
 
-                newUserCount.text(parseInt(newUserCount.text()) + 1);
-                delete userFeedbacks[oppositeType];
-                userFeedbacks[type] = type;
-                btn.attr('disabled', true);
-            }
-        })
-        .fail(function (error) {
-            console.log("Add resource feedback: " + error.statusText);
-        });
+                    newUserCount.text(parseInt(newUserCount.text()) + 1);
+                    delete userFeedbacks[oppositeType];
+                    userFeedbacks[type] = type;
+                    btn.attr('disabled', true);
+                }
+            })
+            .fail(function (error) {
+                console.log("Add resource feedback: " + error.statusText);
+            });
     };
 
     function removeDisabledAttr(type) {

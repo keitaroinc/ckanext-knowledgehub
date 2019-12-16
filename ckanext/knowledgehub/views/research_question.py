@@ -62,6 +62,32 @@ def _get_context():
                 session=model.Session)
 
 
+def _get_question_themes(context, research_question):
+
+    def _call_action_safe(action, context, data_dict):
+        try:
+            return get_action(action)(context, data_dict)
+        except Exception as e:
+            log.debug('Failed to call action %s. Error: %s', action, e)
+        return None
+
+    if research_question.get('theme'):
+        theme = _call_action_safe('theme_show',
+                                  context,
+                                  {'id': research_question['theme']})
+        if theme:
+            research_question['theme_data'] = theme
+
+    if research_question.get('sub_theme'):
+        sub_theme = _call_action_safe('sub_theme_show',
+                                      context,
+                                      {'id': research_question['sub_theme']})
+        if sub_theme:
+            research_question['sub_theme_data'] = sub_theme
+
+    return research_question
+
+
 def search():
 
     q = request.params.get(u'q', u'')
@@ -110,6 +136,7 @@ def read(name):
     try:
         rq = get_action(
             u'research_question_show')(context, data_dict)
+        rq = _get_question_themes(context, rq)
     except (NotFound, NotAuthorized):
         abort(404, _(u'Research question not found'))
 
@@ -296,6 +323,7 @@ class EditView(MethodView):
         except logic.NotFound:
             base.abort(404, _(u'Research question not found'))
 
+        research_question = _get_question_themes(context, research_question)
         context['research_question'] = research_question
 
         try:
