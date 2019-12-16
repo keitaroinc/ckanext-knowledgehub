@@ -108,19 +108,20 @@
 
                             <ul class="nav navbar-nav" id="navlinks">
                                 <li>
-                                    <a class="group-list-items"
-                                        onclick="showSearchResults(event, 'package_list')">DATASETS</a>
+                                    <a class="group-list-items tab"
+                                        onclick="showSearchResults(event, 'package_list', this.id)">DATASETS</a>
                                 </li>
                                 <li>
-                                    <a class="group-list-items" id="search_rq_button"
-                                        onclick="showSearchResults(event, 'hidden_rqs')">RESEARCH QUESTIONS</a>
+                                    <a class="group-list-items tab"
+                                        onclick="showSearchResults(event, 'hidden_rqs', this.id)">RESEARCH QUESTIONS</a>
                                 </li>
                                 <li>
-                                    <a class="group-list-items"
-                                        onclick="showSearchResults(event, 'hidden_dashs')">DASHBOARDS</a>
+                                    <a class="group-list-items tab"
+                                        onclick="showSearchResults(event, 'hidden_dashs', this.id)">DASHBOARDS</a>
                                 </li>
                                 <li>
-                                    <a class="group-list-items" onclick="showSearchResults(event, 'hidden_visuals')">
+                                    <a class="group-list-items tab"
+                                        onclick="showSearchResults(event, 'hidden_visuals', this.id)">
                                         VISUALIZATIONS</a>
                                 </li>
                             </ul>
@@ -148,7 +149,7 @@
                                 <div class="row flex flex-wrap">
                                     {% for rq in rqs %}
                                     <div class="col-lg-2 rq-box rq-item"
-                                        style="flex: 1;background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
+                                        style="flex-grow: 1;margin: 5px;background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
                                         <h3 class="rq-heading text-wrap">
                                             <a
                                                 href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
