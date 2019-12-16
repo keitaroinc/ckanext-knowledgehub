@@ -82,7 +82,10 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_single_rq': h.get_single_rq,
             'get_rqs_dashboards': h.get_rqs_dashboards,
             'remove_space_for_url': h.remove_space_for_url,
-            'format_date': h.format_date
+            'format_date': h.format_date, 
+            'get_searched_rqs': h.get_searched_rqs,
+            'get_searched_dashboards': h.get_searched_dashboards,
+            'get_searched_visuals': h.get_searched_visuals
         }
 
     # IDatasetForm

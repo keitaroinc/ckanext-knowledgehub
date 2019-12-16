@@ -729,3 +729,19 @@ def format_date(str):
     time_basic[0] = time_basic[0][:-3]
     display_date = date[0] + ' at ' + time_basic[0]
     return display_date
+
+
+def get_searched_rqs(query):
+    context = _get_context()
+    list_rqs_searched = toolkit.get_action('search_research_questions')(context, {'text': query})
+    return list_rqs_searched
+
+def get_searched_dashboards(query):
+    context = _get_context()
+    list_dash_searched = toolkit.get_action('search_dashboards')(context, {'text': query})
+    return list_dash_searched
+
+def get_searched_visuals(query):
+    context = _get_context()
+    list_visuals_searched = toolkit.get_action('search_visualizations')(context, {'text': query})
+    return list_visuals_searched
