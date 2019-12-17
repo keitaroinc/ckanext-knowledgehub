@@ -1,4 +1,6 @@
 import logging
+from datetime import timedelta, datetime
+from dateutil import parser
 
 from urllib import urlencode
 from six import string_types
@@ -13,6 +15,8 @@ import ckan.lib.helpers as h
 from ckan.common import config
 import ckan.plugins as p
 import ckan.lib.base as base
+
+from ckanext.knowledgehub import helpers as kwh_h
 
 
 NotFound = logic.NotFound
@@ -309,11 +313,25 @@ class KWHPackageController(PackageController):
         # used by disqus plugin
         c.current_package_id = c.pkg.id
 
+        all_months_resource = {}
+        active_upload = False
         # can the resources be previewed?
         for resource in c.pkg_dict['resources']:
             # Backwards compatibility with preview interface
             resource['can_be_previewed'] = self._resource_preview(
                 {'resource': resource, 'package': c.pkg_dict})
+            # Check if there is data for all months
+            if resource['name'] == '{}_all_months'.format(c.pkg_dict['name']):
+                all_months_resource = resource
+            # Check if some data resource is not uploaded to the Datastore yet
+            day = timedelta(days=1)
+            lm = resource.get('last_modified') or resource.get('created')
+            lm = parser.parse(lm)
+            now = datetime.now()
+            diff = now - lm
+            if diff < day:
+                if (not kwh_h.is_rsc_upload_datastore(resource.get('id'))):
+                    active_upload = True
 
             resource_views = get_action('resource_view_list')(
                 context, {'id': resource['id']})
@@ -329,7 +347,9 @@ class KWHPackageController(PackageController):
             return render(template,
                           extra_vars={
                               'dataset_type': package_type,
-                              'error_message': error_message})
+                              'error_message': error_message,
+                              'all_months_resource': all_months_resource,
+                              'active_upload': active_upload})
         except ckan.lib.render.TemplateNotFound as e:
             msg = _(
                 "Viewing datasets of type \"{package_type}\" is "

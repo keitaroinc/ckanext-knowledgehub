@@ -40,6 +40,8 @@
   <div class="pull-right">
     {% link_for _('Add new resource'), controller='package', action='new_resource', id=pkg.name, class_='btn btn-primary', icon='plus' %}
   </div>
-  {{ super() }}
-  <a class="btn btn-primary pull-right" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}">{{ _('Merge All') }}</a>
+
+  {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, all_months_rsc=all_months_resource %}
+
+  <a class="btn btn-primary pull-right" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}" {{ 'disabled' if active_upload }}>{{ _('Merge All') }}</a>
 {% endblock %}
