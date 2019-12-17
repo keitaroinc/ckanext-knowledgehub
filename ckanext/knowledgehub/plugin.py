@@ -84,6 +84,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'remove_space_for_url': h.remove_space_for_url,
             'format_date': h.format_date,
             'dashboard_research_questions': h.dashboard_research_questions,
+            'is_rsc_upload_datastore': h.is_rsc_upload_datastore
         }
 
     # IDatasetForm

@@ -745,3 +745,14 @@ def dashboard_research_questions(dashboard):
                 questions.append(question)
 
     return questions
+
+
+def is_rsc_upload_datastore(id):
+    u''' Check whether the data resource is uploaded to the Datastore
+
+    The status complete means that data is completely uploaded to Datastore.
+    '''
+    context = _get_context()
+    info = toolkit.get_action('datapusher_status')(context, {'id': id})
+
+    return True if info.get('status') == 'complete' else False
