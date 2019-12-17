@@ -145,19 +145,17 @@
                             {% if c.q %}
                             {% if h.get_searched_rqs(c.q) %}
                             {% set rqs = h.get_searched_rqs(c.q) %}
-                            <div class="container-fluid rq-section">
-                                <div class="row flex flex-wrap">
-                                    {% for rq in rqs %}
-                                    <div class="col-lg-2 rq-box rq-item"
-                                        style="flex-grow: 1;margin: 5px;background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
-                                        <h3 class="rq-heading text-wrap">
-                                            <a
-                                                href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
-                                            <small>Research Question</small>
-                                        </h3>
-                                    </div>
-                                    {% endfor %}
+                            <div class="flex flex-wrap">
+                                {% for rq in rqs %}
+                                <div class="rq-box"
+                                    style="flex: 0 48%; margin-left: 10px;margin-top:10px; background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
+                                    <h3 class="rq-heading text-wrap">
+                                        <a
+                                            href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
+                                        <small>Research Question</small>
+                                    </h3>
                                 </div>
+                                {% endfor %}
                             </div>
                             {% else %}
                             {{_('There are no research questions found for the selected query.') }}
