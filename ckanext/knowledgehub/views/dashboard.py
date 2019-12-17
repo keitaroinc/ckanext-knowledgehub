@@ -117,10 +117,11 @@ def view(name):
 
         for ind in dashboard_dict['indicators']:
             res_view_id = ind.get('resource_view_id')
-            res_view = get_action('resource_view_show')(context, {
-                'id': res_view_id
-            })
-            ind['resource_view'] = res_view
+            if res_view_id:
+                res_view = get_action('resource_view_show')(context, {
+                    'id': res_view_id
+                })
+                ind['resource_view'] = res_view
 
     extra_vars['dashboard'] = dashboard_dict
 
@@ -279,10 +280,11 @@ class EditView(MethodView):
 
             for ind in data['indicators']:
                 res_view_id = ind.get('resource_view_id')
-                res_view = get_action('resource_view_show')(_get_context(), {
-                    'id': res_view_id
-                })
-                ind['resource_view'] = res_view
+                if res_view_id:
+                    res_view = get_action('resource_view_show')(_get_context(), {
+                        'id': res_view_id
+                    })
+                    ind['resource_view'] = res_view
 
                 rq = get_action('research_question_show')(_get_context(), {
                     'id': ind['research_question']
