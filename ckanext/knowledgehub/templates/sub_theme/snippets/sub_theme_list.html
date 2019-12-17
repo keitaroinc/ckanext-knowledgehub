@@ -8,8 +8,8 @@ Example:
 {% snippet "sub-theme/snippets/sub-theme_list.html" %}
 
 #}
-<ul class="component-list list-unstyled">
+<ul class="component-list-rq list-unstyled">
   {% for sub_theme in sub_themes %}
-    {% snippet "sub_theme/snippets/sub_theme_item.html", sub_theme=sub_theme %}
+  {% snippet "sub_theme/snippets/sub_theme_item.html", sub_theme=sub_theme %}
   {% endfor %}
 </ul>

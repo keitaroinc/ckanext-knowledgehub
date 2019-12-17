@@ -1,69 +1,70 @@
 {% extends "page.html" %}
 
 {% block breadcrumb_content %}
-  <li>{{ h.nav_link(_('Research questions'), named_route='research_question.search') }}</li>
-  {% if rq.theme_data %}
-  <li>{{ h.nav_link(rq.theme_data.title|truncate(30), named_route='theme.read', name=rq.theme_data.name) }}</li>
-  {% endif%}
-  {% if rq.sub_theme_data %}
-  <li>{{ h.nav_link(rq.sub_theme_data.title|truncate(30), named_route='sub_theme.read', name=rq.sub_theme_data.name) }}</li>
-  {% endif%}
-  <li class="active">{{ h.nav_link(rq.title|truncate(30), named_route='research_question.read', name=rq.name) }}</li>
+<li>{{ h.nav_link(_('Research questions'), named_route='research_question.search') }}</li>
+{% if rq.theme_data %}
+<li>{{ h.nav_link(rq.theme_data.title|truncate(30), named_route='theme.read', name=rq.theme_data.name) }}</li>
+{% endif%}
+{% if rq.sub_theme_data %}
+<li>{{ h.nav_link(rq.sub_theme_data.title|truncate(30), named_route='sub_theme.read', name=rq.sub_theme_data.name) }}
+</li>
+{% endif%}
+<li class="active">{{ h.nav_link(rq.title|truncate(30), named_route='research_question.read', name=rq.name) }}</li>
 {% endblock %}
 
 {% block subtitle %}{{ h.dataset_display_name(rq) }} {{ g.template_title_delimiter }} {{ super() }}{% endblock %}
 
 {% block content_action %}
-  {% if h.check_access('research_question_update') %}
-    {% link_for _('Manage'), named_route='research_question.edit', name=rq.name, class_='btn btn-default', icon='wrench' %}
-  {% endif %}
+{% if h.check_access('research_question_update') %}
+{% link_for _('Manage'), named_route='research_question.edit', name=rq.name, class_='btn btn-default', icon='wrench' %}
+{% endif %}
 {% endblock %}
 
 {% block primary_content_inner %}
-    <h1 class="text-wrap">
-      {% block page_heading %}
-        {{ rq.title }}</br>
-      {% endblock %}
-    </h1>
-
-    {% block random %}
-    <h4>DASHBOARDS</h4>
-      {% if h.get_rqs_dashboards(rq['title']) %}
-        {% for viz in h.get_rqs_dashboards(rq['title']) %}
-         <li>
-            {{ h.link_to(viz['title'], h.url_for('dashboards.view', name=h.remove_space_for_url(viz['name'].lower()))) }}
-         </li>
-         
-        {% endfor %}
-      {% else %}
-      <div> There are no dashboards connected to this research question. </div>
-      {% endif %}
-      
-    {% endblock %}
-    {% block research_question_description %}
-      {% if rq.description %}
-        <div class="notes embedded-content">
-          {#{{ h.render_markdown(h.get_translated(rq.description, 'description')) }}#}
-        </div>
-      {% endif %}
-    {% endblock %}
-
-  {% block research_question_additional_info %}
-    {% snippet "research_question/snippets/additional_info.html", rq=rq %}
+<h1 class="text-wrap">
+  {% block page_heading %}
+  {{ rq.title }}</br>
   {% endblock %}
+</h1>
+
+{% block random %}
+<!-- <h4>DASHBOARDS</h4> -->
+{% if h.get_rqs_dashboards(rq['title']) %}
+{% for viz in h.get_rqs_dashboards(rq['title']) %}
+<li>
+  {{ h.link_to(viz['title'], h.url_for('dashboards.view', name=h.remove_space_for_url(viz['name'].lower()))) }}
+</li>
+
+{% endfor %}
+{% else %}
+<!-- <div> There are no dashboards connected to this research question. </div> -->
+{% endif %}
+
+{% endblock %}
+{% block research_question_description %}
+{% if rq.description %}
+<div class="notes embedded-content">
+  {#{{ h.render_markdown(h.get_translated(rq.description, 'description')) }}#}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block research_question_additional_info %}
+{% snippet "research_question/snippets/additional_info.html", rq=rq %}
+{% endblock %}
 
 {% endblock %}
 
 {% block secondary_content %}
 
-  {% block secondary_help_content %}{% endblock %}
+{% block secondary_help_content %}{% endblock %}
 
-  {% block research_question_info %}
-    {% snippet 'research_question/snippets/info.html', rq=rq, image_url=image_url %}
-  {% endblock %}
+{% block research_question_info %}
+{% snippet 'research_question/snippets/info.html', rq=rq, image_url=image_url %}
+{% endblock %}
 
-  {% block package_social %}
-    {# {% snippet "snippets/social.html" %} #}
-  {% endblock %}
+{% block package_social %}
+{# {% snippet "snippets/social.html" %} #}
+{% endblock %}
 
 {% endblock %}

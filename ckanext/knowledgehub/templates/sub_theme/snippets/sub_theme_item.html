@@ -17,16 +17,15 @@ Example:
 {% set description = h.markdown_extract(sub_theme['description'], extract_length=truncate) %}
 
 
-<li class="component-item">
-  <div class="component-content">
-    <h3 class="component-heading text-ellipsis">
+<li class="component-item-rq">
+  <div class="component-content-rq">
+    <h3 class="component-heading-rq text-ellipsis">
       {{ h.nav_link(h.truncate(title, truncate_title), named_route='sub_theme.read', name=sub_theme['name']) }}
     </h3>
     {% if description %}
-      <p class="text-wrap">{{ description }}</p>
+    <p class="text-wrap">{{ description }}</p>
     {% else %}
-      <p class="empty">{{ _("This sub-theme has no description") }}</p>
+    <p class="empty">{{ _("This sub-theme has no description") }}</p>
     {% endif %}
   </div>
 </li>
-
