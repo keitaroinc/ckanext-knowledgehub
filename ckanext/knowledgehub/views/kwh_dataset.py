@@ -11,7 +11,9 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, config, g, request
+
 from ckanext.knowledgehub.lib.writer import WriterService
+from ckanext.knowledgehub import helpers as kwh_h
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
@@ -39,103 +41,124 @@ def _get_context():
                 session=model.Session)
 
 
-def merge_all_data(id):
-    u''' Merge data resources that belongs to the dataset'''
-
+def _get_dataset_data(id):
+    u''' Return fields and records from all data resource for given package ID
+    '''
+    data_dict = {
+        'fields': [],
+        'records': [],
+        'package_name': '',
+        'err_msg': '',
+        'all_months_resource': {}
+    }
     context = _get_context()
-    fields = []
-    field_names = []
-    records = []
-    err_msg = ''
-    select = ''
 
-    package = get_action('package_show')(
-        context,
-        {'id': id})
+    try:
+        package = get_action('package_show')(context, {'id': id})
+        data_dict['package_name'] = package.get('name')
+    except Exception as e:
+        log.error(e, exc_info=True)
+        data_dict['err_msg'] = 'Internal server error'
+        return data_dict
+
     resources = package.get('resources', [])
-
     if len(resources):
         for resource in resources:
-            info = get_action('datapusher_status')(
-                context, {'id': '12162687-fdae-4876-ab4f-7683109065aa'})
-            print info
-            break
-            if resource.get('name').startswith(
-                    '{}_'.format(package.get('name'))):
+            rsc_id = resource.get('id')
+            rsc_name = resource.get('name')
+
+            if rsc_name == '{}_all_months'.format(data_dict['package_name']):
+                data_dict['all_months_resource'] = resource
                 continue
 
-            if not len(fields):
-                data = {
-                    'resource_id': resource.get('id'),
-                    'limit': 0
-                }
-                result = get_action('datastore_search')(context, data)
-                for f in result.get('fields', []):
-                    if f.get('id') in ['_id', '_full_text']:
-                        fields.append(f)
-                        field_names.append(f.get('id'))
-                        if not select:
-                            select = '"' + f.get('id') + '"'
-                        else:
-                            select += ', "' + f.get('id') + '"'
-
-                if not len(fields):
-                    break
-
-            sql = 'SELECT {select} FROM "{resource}"'.format(
-                resource=resource.get('id'),
-                select=select)
-
+            sql = 'SELECT * FROM "{resource}"'.format(
+                resource=rsc_id)
             try:
                 result = get_action('datastore_search_sql')(
                     context,
                     {'sql': sql})
 
-                if len(records) == 0:
-                    fields = result.get('fields', [])
-                    records = result.get('records', [])
+                if len(data_dict['fields']) == 0:
+                    data_dict['fields'] = result.get('fields', [])
+                    data_dict['records'] = result.get('records', [])
                     continue
-
-                current_fields = result.get('fields', [])
+                else:
+                    current_fields = result.get('fields', [])
             except Exception as e:
-                log.info(str(e))
-                continue
+                log.error('Failed to query the datastore: %s',
+                          e,
+                          exc_info=True)
+                data_dict['err_msg'] = 'Internal server error'
+                return data_dict
 
-            if fields == current_fields:
-                records.extend(result.get('records', []))
+            if data_dict['fields'] == current_fields:
+                current_results = []
+                for r in result.get('records'):
+                    row = {}
+                    for k, v in r.items():
+                        if k not in ['_id', '_full_text']:
+                            row[k] = v
+                    current_results.append(row)
+                data_dict['records'].extend(current_results)
             else:
-                diff = [f['id'] for f in current_fields if f not in fields]
-                diff.extend(
-                    [f['id'] for f in fields if f not in current_fields]
-                )
-                err_msg = ('The format of the data resources is different. '
-                           'Resource {resource} differs from the rest, '
-                           'fields: {fields}').format(
-                               resource=resource.get('name'),
-                               fields=", ".join(diff)
-                            )
-    if records:
+                diff = [f['id'] for f in current_fields
+                        if f not in data_dict['fields']]
+                diff.extend([f['id'] for f in data_dict['fields']
+                             if f not in current_fields])
+                data_dict['err_msg'] = ('The format of the data resource '
+                                        '{resource} differs from the others, '
+                                        'fields: {fields}').format(
+                                            resource=rsc_name,
+                                            fields=", ".join(diff))
+                break
+
+        data_dict['fields'] = [f for f in data_dict['fields']
+                               if f['id'] not in ['_id', '_full_text']]
+
+        return data_dict
+
+
+def merge_all_data(id):
+    u''' Merge data resources that belongs to the dataset and create
+    new data resource with the entire data
+    '''
+
+    data_dict = _get_dataset_data(id)
+
+    if data_dict['records'] and not data_dict['err_msg']:
             writer = WriterService()
-            stream = writer.csv_writer(fields, records, ',')
+            stream = writer.csv_writer(
+                data_dict['fields'], data_dict['records'], ',')
 
             filename = '{}_{}.{}'.format(
-                package.get('name'),
+                data_dict['package_name'],
                 str(datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')),
                 'csv'
             )
 
-            data_dict = {
+            rsc_dict = {
                 'package_id': id,
-                'name': filename,
+                'name': '{}_all_months'.format(data_dict['package_name']),
                 'upload':  FlaskFileStorage(stream, filename)
             }
 
-            rsc = get_action('resource_create')(context, data_dict)
+            try:
+                if data_dict['all_months_resource']:
+                    rsc_dict['id'] = data_dict['all_months_resource']['id']
+                    rsc = get_action('resource_update')(
+                        _get_context(), rsc_dict)
+                else:
+                    rsc = get_action('resource_create')(
+                        _get_context(), rsc_dict)
+
+            except Exception as e:
+                log.error(e, exc_info=True)
+                data_dict['err_msg'] = 'Internal server error'
 
     return h.redirect_to(controller='package',
                          action='read',
                          id=id,
-                         error_message=err_msg)
+                         error_message=data_dict['err_msg'])
 
 
 kwh_dataset.add_url_rule(u'/merge_all_data/<id>', view_func=merge_all_data)
