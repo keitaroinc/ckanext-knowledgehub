@@ -145,6 +145,9 @@
                             {% if c.q %}
                             {% if h.get_searched_rqs(c.q) %}
                             {% set rqs = h.get_searched_rqs(c.q) %}
+                            {% set count_rqs = rqs | length %}
+                            {{ h.snippet('snippets/search_result_text.html', query=c.q, count=count_rqs, type='research_question') }}
+
                             <div class="flex flex-wrap">
                                 {% for rq in rqs %}
                                 <div class="rq-box"
@@ -167,6 +170,9 @@
                         <div id="hidden_visuals" style="display: none" class="tab_content">
                             {% if c.q %}
                             {% if h.get_searched_visuals(c.q) %}
+                            {% set count_vis = h.get_searched_visuals(c.q) | length %}
+                            {{ h.snippet('snippets/search_result_text.html', query=c.q, count=count_vis, type='visualization') }}
+
                             <div class="col-lg-12 visualizations">
                                 <div class="visualization-wrapper">
                                     <div class="resource-view">
@@ -253,6 +259,9 @@
                             {% if c.q %}
                             {% if h.get_searched_dashboards(c.q) %}
                             {% set dashes = h.get_searched_dashboards(c.q) %}
+                            {% set count_dash = dashes | length %}
+                            {{ h.snippet('snippets/search_result_text.html', query=c.q, count=count_dash, type='dashboard') }}
+
                             {% for dashboard in dashes %}
                             <a class="dashboard-link" href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
                                 <div>

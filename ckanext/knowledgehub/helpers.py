@@ -745,7 +745,17 @@ def get_searched_dashboards(query):
 def get_searched_visuals(query):
     context = _get_context()
     list_visuals_searched = toolkit.get_action('search_visualizations')(context, {'text': query})
-    return list_visuals_searched
+    visuals = []
+    for vis in list_visuals_searched:
+        visual = model.Session.query(ResourceView)\
+        .filter(ResourceView.resource_id == vis['resource_id'])
+        data_dict_format = model_dictize\
+            .resource_view_list_dictize(visual, _get_context())
+        # get the second part of the list, since the first one is the recline view!
+        data_dict_format = data_dict_format[1]
+        visuals.append(data_dict_format)
+    return visuals
+
 def dashboard_research_questions(dashboard):
     questions = []
     if dashboard.get('indicators'):
