@@ -1,6 +1,4 @@
 import logging
-from datetime import timedelta, datetime
-from dateutil import parser
 
 from urllib import urlencode
 from six import string_types
@@ -324,14 +322,8 @@ class KWHPackageController(PackageController):
             if resource['name'] == '{}_all_months'.format(c.pkg_dict['name']):
                 all_months_resource = resource
             # Check if some data resource is not uploaded to the Datastore yet
-            day = timedelta(days=1)
-            lm = resource.get('last_modified') or resource.get('created')
-            lm = parser.parse(lm)
-            now = datetime.now()
-            diff = now - lm
-            if diff < day:
-                if (not kwh_h.is_rsc_upload_datastore(resource.get('id'))):
-                    active_upload = True
+            if not active_upload:
+                active_upload = not kwh_h.is_rsc_upload_datastore(resource)
 
             resource_views = get_action('resource_view_list')(
                 context, {'id': resource['id']})

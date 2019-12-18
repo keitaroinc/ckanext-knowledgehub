@@ -6,7 +6,8 @@ import uuid
 import json
 import functools32
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil import parser
 from flask import Blueprint
 
 try:
@@ -747,12 +748,21 @@ def dashboard_research_questions(dashboard):
     return questions
 
 
-def is_rsc_upload_datastore(id):
+def is_rsc_upload_datastore(resource):
     u''' Check whether the data resource is uploaded to the Datastore
 
     The status complete means that data is completely uploaded to Datastore.
     '''
     context = _get_context()
-    info = toolkit.get_action('datapusher_status')(context, {'id': id})
 
-    return True if info.get('status') == 'complete' else False
+    day = timedelta(days=1)
+    lm = resource.get('last_modified') or resource.get('created')
+    diff = datetime.now() - parser.parse(lm)
+    if diff < day:
+        info = toolkit.get_action('datapusher_status')(
+            context,
+            {'id': resource['id']}
+        )
+        return True if info.get('status') == 'complete' else False
+
+    return True
