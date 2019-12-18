@@ -6,6 +6,7 @@ from ckanext.knowledgehub.model.resource_feedback import ResourceFeedbacks
 from ckanext.knowledgehub.model.kwh_data import KWHData
 from ckanext.knowledgehub.model.rnn_corpus import RNNCorpus
 from ckanext.knowledgehub.model.visualization import Visualization
+from ckanext.knowledgehub.model.intents import UserIntents
 
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     'ResourceFeedbacks'
     'KWHData',
     'RNNCorpus',
-    'Visualization'
+    'UserIntents',
+    'Visualization',
 ]

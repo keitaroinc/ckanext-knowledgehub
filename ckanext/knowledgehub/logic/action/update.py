@@ -402,3 +402,7 @@ def kwh_data_update(context, data_dict):
         data = KWHData.update(filter, update_data)
 
         return data.as_dict()
+
+
+def user_intent_update(context, data_dict):
+    pass

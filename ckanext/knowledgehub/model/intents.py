@@ -35,3 +35,27 @@ user_intents = Table(
     Column('curated', types.Boolean),
     Column('accurate', types.Boolean)
 )
+
+class UserIntents(DomainObject):
+    
+    @classmethod
+    def get(cls, reference):
+       pass
+
+    @classmethod
+    def add_user_intent(self, user_intent):
+        pass
+
+    @classmethod
+    def get_list(cls, page, offset):
+        pass
+    
+    @classmethod
+    def update(cls, user_intent):
+        pass
+
+mapper(UserIntents, user_intents)
+
+def setup():
+    metadata.create_all(engine)
+              

@@ -514,3 +514,15 @@ def run_command(context, data_dict):
         return 'Error: %s' % str(e)
 
     return 'Successfully run command: %s' % ' '.join(cmd)
+
+
+def user_intent_create(context, data_dict):
+    pass
+
+
+def user_query_create(context, data_dict):
+    pass
+
+
+def user_query_result_create(context, data_dict):
+    pass
