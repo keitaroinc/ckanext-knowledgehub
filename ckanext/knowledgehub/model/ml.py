@@ -58,6 +58,7 @@ train_data_entries = Table(
            primary_key=True,
            default=make_uuid
     ),
+    Column('data_package_id', types.UnicodeText),
     Column('created_at',
         types.DateTime,
         default=datetime.datetime.utcnow),
@@ -75,3 +76,100 @@ train_job = Table(
         default=datetime.datetime.utcnow),
     Column('configuration', types.JSON)
 )
+
+
+class MLModel(DomainObject):
+
+    @classmethod
+    def get(cls, referece):
+        pass
+
+    @classmethod
+    def get_by_version(cls, model_name, version):
+        pass
+    
+    @classmethod
+    def get_latest(cls, model_name):
+        pass
+
+    @classmethod
+    def create_model(cls, model):
+        pass
+
+    @classmethod
+    def remove_model(cls, reference):
+        pass
+
+
+class TrainData(DomainObject):
+
+    @classmethod
+    def get(cls, referece):
+        pass
+
+    @classmethod
+    def get_by_name(cls, data_set_name):
+        pass
+
+    @classmethod
+    def create_data(cls, data):
+        pass
+
+    @classmethod
+    def update(cls, data):
+        pass
+
+    @classmethod
+    def remove(cls, reference):
+        pass
+
+    @classmethod
+    def add_entry(cls, data_package, data_entry):
+        pass
+
+    @classmethod
+    def add_entries(cls, data_package, entries):
+        pass
+
+class TrainJob(DomainObject):
+
+    @classmethod
+    def get(cls, reference):
+        pass
+
+    @classmethod
+    def get_all(cls, page, size):
+        pass
+
+    @classmethod
+    def get_all_with_status(cls, status, page, size):
+        pass
+
+    @classmethod
+    def create_job(cls, job):
+        pass
+
+    @classmethod
+    def get_jobs_for_worker(cls, worker_id):
+        pass
+
+    @classmethod
+    def update_job(cls, job):
+        pass
+
+    @classmethod
+    def remove_job(cls, job_id):
+        pass
+
+
+mapper(MLModel, ml_model)
+mapper(TrainData, train_data)
+mapper(TrainJob, train_job)
+
+
+def setup():
+    metadata.create_all(ml_model)
+    metadata.create_all(train_data)
+    metadata.create_all(train_data_entries)
+    metadata.create_all(train_job)
+

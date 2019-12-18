@@ -50,3 +50,41 @@ user_query_result = Table(
     Column('result_type', types.UnicodeText), # dataset, visualization, research_question etc
     Column('result_id', types.UnicodeText),   # ID of the dataset/visualization/rq etc
 )
+
+
+class UserQuery(DomainObject):
+
+    @classmethod
+    def get(cls, reference):
+        pass
+
+    @classmethod
+    def add_query(cls, query):
+        pass
+
+    @classmethod
+    def get_all(cls, page, size):
+        pass
+
+
+class UserQueryResult(DomainObject):
+
+    @classmethod
+    def get(cls, reference):
+        pass
+
+    @classmethod
+    def add_query_result(cls, result):
+        pass
+
+    @classmethod
+    def search(cls, **kwargs):
+        pass
+
+mapper(UserQuery, user_query)
+mapper(UserQueryResult, user_query_result)
+
+
+def setup():
+    metadata.create_all(user_query)
+    metadata.create_all(user_query_result)

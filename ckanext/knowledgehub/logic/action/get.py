@@ -785,3 +785,80 @@ def search_visualizations(context, data_dict):
     :returns: ``list``, the documents matching the search query from the index.
     '''
     return _search_entity(Visualization, data_dict)
+
+
+@toolkit.side_effect_free
+def user_intent_list(context, data_dict):
+    return _return_mock_intents(data_dict)
+
+
+@toolkit.side_effect_free
+def user_intent_show(context, data_dict):
+    pass
+
+
+@toolkit.side_effect_free
+def user_query_show(context, data_dict):
+    pass
+
+
+@toolkit.side_effect_free
+def user_query_list(context, data_dict):
+    pass
+
+
+@toolkit.side_effect_free
+def user_query_result_search(context, data_dict):
+    pass
+
+
+# FIXME: Remove this mock implementation when we have the real implementation in place
+def _return_mock_intents(data_dict):
+    from uuid import uuid4
+    from datetime import datetime
+    from random import randint
+
+    page = int(data_dict.get('page', 1))
+    size = int(data_dict.get('size', 20))
+
+    items = []
+
+    primary_categories = ['dataset', 'visualization', 'research_question', 'dashboard']
+    themes = [None] + [str(uuid4()) for i in range(0, 5)]
+    sub_themes = [None] + [str(uuid4()) for i in range(0, 5)]
+    research_questions = [None] + [str(uuid4()) for i in range(0, 5)]
+
+    rq_full = [
+        None, None, None,
+        'What are the demographic characteristics of the population?', 
+        'What are the demographic characteristics of the population?',
+        'What is the average time spent in COA prior to departure to COO?',]
+
+    themes_full = ['Displacement Trends', 'Displacement Conditions', 'Labor Market']
+    sub_themes_full = ['Civil Documentation', 'Conditions of Return', 'Accountability']
+    locations = ['Syria', 'MENA Region']
+    
+
+    for i in range(0, size):
+        items.append({
+            'id': str(uuid4()),
+            'created_at': str(datetime.now()),
+            'user_id': 'user',
+            'user_query_id': str(uuid4()),
+            'primary_category': primary_categories[randint(0, 3)],
+            'theme': themes[randint(0, len(themes) - 1)],
+            'sub_theme': sub_themes[randint(0, len(sub_themes) - 1)],
+            'research_question': research_questions[randint(0, len(research_questions) - 1)],
+            'inferred_transactional': rq_full[randint(0, len(rq_full) - 1)],
+            'inferred_navigational': themes_full[randint(0, len(themes_full) - 1)] if randint(0, 1) else sub_themes_full[randint(0, len(sub_themes_full) - 1)],
+            'inferred_informational': (themes_full[randint(0, len(themes_full) - 1)] if randint(0, 1) else sub_themes_full[randint(0, len(sub_themes_full) - 1)]) + ' in ' + str(randint(2000, 2019)),
+            'curated': randint(0, 1) == 1,
+            'accurate': randint(0, 1) == 1,
+        })
+
+    return {
+        'total': page*size + 5*size + size//2,
+        'page': page,
+        'size': size,
+        'items': items,
+    }

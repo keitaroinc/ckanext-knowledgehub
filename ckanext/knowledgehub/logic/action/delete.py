@@ -123,3 +123,7 @@ def resource_view_delete(context, data_dict):
     resource_view = logic.get_action('resource_view_show')(context, data_dict)
     _resource_view_delete(context, data_dict)
     Visualization.delete_from_index({'id': resource_view['id']})
+
+
+def user_intent_delete(context, data_dict):
+    pass
