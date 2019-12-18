@@ -43,5 +43,9 @@
 
   {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, all_months_rsc=all_months_resource %}
 
-  <a class="btn btn-primary pull-right" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}" {{ 'disabled' if active_upload }}>{{ _('Merge All') }}</a>
+  {% if pkg.resources %}
+    <div class="pull-right">
+      <a class="btn btn-primary" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}" {{ 'disabled' if active_upload }}>{{ _('Merge All') }}</a>
+    </div>
+  {% endif %}
 {% endblock %}
