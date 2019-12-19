@@ -311,16 +311,16 @@ class KWHPackageController(PackageController):
         # used by disqus plugin
         c.current_package_id = c.pkg.id
 
-        all_months_resource = {}
+        system_resource = {}
         active_upload = False
         # can the resources be previewed?
         for resource in c.pkg_dict['resources']:
             # Backwards compatibility with preview interface
             resource['can_be_previewed'] = self._resource_preview(
                 {'resource': resource, 'package': c.pkg_dict})
-            # Check if there is data for all months
-            if resource['name'] == '{}_all_months'.format(c.pkg_dict['name']):
-                all_months_resource = resource
+            # Check if there is a system created resource
+            if resource['resource_type'] == kwh_h.SYSTEM_RESOURCE_TYPE:
+                system_resource = resource
             # Check if some data resource is not uploaded to the Datastore yet
             if not active_upload:
                 active_upload = not kwh_h.is_rsc_upload_datastore(resource)
@@ -340,7 +340,7 @@ class KWHPackageController(PackageController):
                           extra_vars={
                               'dataset_type': package_type,
                               'error_message': error_message,
-                              'all_months_resource': all_months_resource,
+                              'system_resource': system_resource,
                               'active_upload': active_upload})
         except ckan.lib.render.TemplateNotFound as e:
             msg = _(
