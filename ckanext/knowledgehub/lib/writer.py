@@ -29,7 +29,8 @@ class WriterService():
 
         # Writing records
         for record in records:
-            writer.writerow([record[column] for column in columns])
+            writer.writerow([record[column].encode("utf-8")
+                            for column in columns])
 
         file_content = cStringIO.StringIO(output.getvalue())
 
