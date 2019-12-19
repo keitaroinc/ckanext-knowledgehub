@@ -329,6 +329,11 @@ class KWHPackageController(PackageController):
                 context, {'id': resource['id']})
             resource['has_views'] = len(resource_views) > 0
 
+        hide_merge_btn = False
+        access = check_access('package_update', context, data_dict)
+        if access and (len(c.pkg_dict['resources']) == 1 and system_resource):
+            hide_merge_btn = True
+
         error_message = request.params.get('error_message', u'')
         package_type = c.pkg_dict['type'] or 'dataset'
         self._setup_template_variables(context, {'id': id},
@@ -341,7 +346,8 @@ class KWHPackageController(PackageController):
                               'dataset_type': package_type,
                               'error_message': error_message,
                               'system_resource': system_resource,
-                              'active_upload': active_upload})
+                              'active_upload': active_upload,
+                              'hide_merge_btn': hide_merge_btn})
         except ckan.lib.render.TemplateNotFound as e:
             msg = _(
                 "Viewing datasets of type \"{package_type}\" is "

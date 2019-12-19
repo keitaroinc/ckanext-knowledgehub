@@ -43,7 +43,7 @@
 
   {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, system_resource=system_resource %}
 
-  {% if h.check_access('package_update', {'id':pkg.id }) and pkg.resources %}
+  {% if pkg.resources and not hide_merge_btn %}
     <div class="pull-right">
       <a class="btn btn-primary" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}" {{ 'disabled' if active_upload }}>{{ _('Merge All') }}</a>
     </div>

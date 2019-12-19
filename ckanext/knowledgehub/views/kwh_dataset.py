@@ -34,7 +34,6 @@ def merge_all_data(id):
     u''' Merge data resources that belongs to the dataset and create
     new data resource with the whole data
     '''
-
     try:
         data_dict = get_action('merge_all_data')(
             _get_context(),
