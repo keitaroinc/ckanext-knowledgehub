@@ -1,5 +1,7 @@
-from ckanext.knowledgehub.model import UserIntents
-from ckanext.knowledgehub.lib.ml import get_nlp_processor
+from datetime import datetime
+
+from ckanext.knowledgehub.model import UserIntents, UserQuery
+from ckanext.knowledgehub.lib.ml import get_nlp_processor, Worker
 
 from logging import getLogger
 
@@ -44,6 +46,8 @@ class UserIntentsExtractor:
         # 4. save the user intent
         self.user_intents.add_user_intent(user_intent)
 
+        return user_intent
+
 
     def post_process(self, context, user_intent):
         # TODO: check what have we inferred and errors.
@@ -61,11 +65,59 @@ class UserIntentsExtractor:
 
 class UserIntentsWorker:
 
-    def __init__(self, extractor):
+    def __init__(self,
+                 extractor,
+                 user_intents=None,
+                 user_queries=None):
         self.extractor = extractor
+        self.user_intents = user_intents or UserIntents
+        self.user_queries = user_queries or UserQuery
+        self.batch_size = 500
     
+    def _get_last(self):
+        latest_intent = self.user_intents.get_latest()
+        if latest_intent:
+            return latest_intent.created_at
+        return datetime.utcfromtimestamp(0)
+
+    def _process_batch(self, batch, last_timestamp):
+        queries = self.user_queries.get_all_after(last_timestamp, batch, self.batch_size)
+        if not queries:
+            return (0, last_timestamp)
+        
+        next_timestamp = None
+        count = 0
+        for query in queries:
+            try:
+                intent = self.process_single_query(query)
+                next_timestamp = query.created_at
+                count += 1
+            except Exception as e:
+                pass
+        return (count, next_timestamp)
+    
+    def process_all_batches(self, last_timestamp):
+        batch = 1
+        while True:
+            processed, last_timestamp = self._process_batch(batch, last_timestamp)
+            if not processed:
+                break
+            batch += 1
+
+    def process_single_query(self, query):
+        return self.extractor.extract_intents(query)
+
     def update_latest(self):
-        pass
+        last_timestamp = self._get_last()
+        self.process_all_batches(last_timestamp)
 
     def rebuild(self):
-        pass
+        self.user_intents.delete_all()
+        self.process_all_batches(datetime.utcfromtimestamp(0))
+
+
+# Default Exractor
+intents_extractor = UserIntentsExtractor()
+
+# Default worker
+worker = UserIntentsWorker(intents_extractor)

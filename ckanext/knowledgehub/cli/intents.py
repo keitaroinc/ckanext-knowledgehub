@@ -1,6 +1,9 @@
 import click
 from logging import getLogger
 
+from ckanext.knowledgehub.lib.ml.worker import Worker
+from ckanext.knowledgehub.lib.intents import UserIntentsWorker
+
 logger = getLogger(__name__)
 
 

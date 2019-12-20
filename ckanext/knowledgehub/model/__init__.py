@@ -7,6 +7,7 @@ from ckanext.knowledgehub.model.kwh_data import KWHData
 from ckanext.knowledgehub.model.rnn_corpus import RNNCorpus
 from ckanext.knowledgehub.model.visualization import Visualization
 from ckanext.knowledgehub.model.intents import UserIntents
+from ckanext.knowledgehub.model.query import UserQuery, UserQueryResult
 
 
 __all__ = [
@@ -18,5 +19,7 @@ __all__ = [
     'KWHData',
     'RNNCorpus',
     'UserIntents',
+    'UserQuery',
+    'UserQueryResult',
     'Visualization',
 ]

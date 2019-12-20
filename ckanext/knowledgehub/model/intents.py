@@ -51,10 +51,25 @@ class UserIntents(DomainObject):
         pass
     
     @classmethod
+    def get_latest(cls):
+        result = Session.query(cls).order_by(
+            user_intents.created_at.desc()).limit(1).all()
+        for latest_intent in result:
+            return latest_intent
+        return None
+
+    @classmethod
     def update(cls, user_intent):
         pass
 
+    @classmethod
+    def delete_all(cls):
+        Session.query(cls).delete()
+        Session.commit()
+
+
 mapper(UserIntents, user_intents)
+
 
 def setup():
     metadata.create_all(engine)
