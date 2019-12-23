@@ -128,12 +128,13 @@
             </div>
 
             {# RQs List #}
-            <div class="control-group control-select">
-            <select name="table_research_questions" id="table_research_questions" multiple="multiple" class="form-control" type="hidden">
-            {% for k in h.get_rq_options() %}
-                    <option value="{{ k.text }}">{{ k.text }}</option> 
-            {% endfor %}
-            </select>
+            <div class="rs-questions">
+              <label class="control-label" for="table_research_questions">{{_('Research Questions')}}</label>
+              <select name="table_research_questions" id="table_research_questions" multiple="multiple" type="hidden">
+                {% for k in h.get_rq_options() %}
+                <option value="{{ k.text }}">{{ k.text }}</option>
+                {% endfor %}
+              </select>
             </div>
 
 
