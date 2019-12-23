@@ -70,9 +70,9 @@ class UserQuery(DomainObject):
     def get_all_after(cls, after, page, size):
         page = page if page >= 1 else 1
         size = size if size >= 1 and size < 500 else 500
-        query = Session.query(cls).where(user_query.created_at >= after)
-        query.order_by(user_query.created_at)
-        query.offset((page-1)*size).limit()
+        query = Session.query(cls).filter(user_query.c.created_at >= after)
+        query.order_by(user_query.c.created_at)
+        query.offset((page-1)*size).limit(size)
 
         results = []
 
@@ -101,5 +101,4 @@ mapper(UserQueryResult, user_query_result)
 
 
 def setup():
-    metadata.create_all(user_query)
-    metadata.create_all(user_query_result)
+    metadata.create_all(engine)

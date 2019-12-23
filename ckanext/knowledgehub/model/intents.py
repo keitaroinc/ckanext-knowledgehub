@@ -53,7 +53,7 @@ class UserIntents(DomainObject):
     @classmethod
     def get_latest(cls):
         result = Session.query(cls).order_by(
-            user_intents.created_at.desc()).limit(1).all()
+            user_intents.c.created_at.desc()).limit(1).all()
         for latest_intent in result:
             return latest_intent
         return None
