@@ -1,5 +1,7 @@
 {% resource 'knowledgehub/chart' %}
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+{% resource 'knowledgehub/javascript/rqs_selection.js' %}
+
 {% import 'macros/form.html' as form %}
 
 {% if data %}
@@ -153,6 +155,15 @@
                   {% endfor %}
                 </select>
               </div>
+            </div>
+
+            {# RQs List #}
+            <div class="control-group control-select">
+            <select name="chart_research_questions" id="chart_research_questions" multiple="multiple" class="form-control" type="hidden">
+            {% for k in h.get_rq_options() %}
+                    <option value="{{ k.text }}">{{ k.text }}</option> 
+            {% endfor %}
+            </select>
             </div>
 
 
@@ -479,6 +490,7 @@
 {% set x_axis = chart.x_axis %}
 {% set y_axis = chart.y_axis %}
 {% set additional_tornado_value = chart.additional_tornado_value %}
+{% set chart_research_questions = data.chart_research_questions %}
 {% set chart_type = chart.type %}
 {% set title = data.title %}
 {% set chart_subtitle = chart.chart_subtitle %}
@@ -515,6 +527,7 @@
           x_axis = x_axis,
           y_axis = y_axis,
           additional_tornado_value = additional_tornado_value,
+          chart_research_questions = chart_research_questions,
           chart_type = chart_type,
           sql_string = sql_string,
           title = title,

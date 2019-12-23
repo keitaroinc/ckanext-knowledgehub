@@ -69,6 +69,8 @@ def _process_post_data(data, resource_id):
             data['sql_string']
         config['resource_name'] = \
             data['resource_name']
+        config['table_research_questions'] = \
+            data['table_research_questions']
 
     config['filters'] = json.dumps(filters)
 
@@ -77,7 +79,6 @@ def _process_post_data(data, resource_id):
     view_dict['title'] = config['title']
     view_dict['view_type'] = 'table'
     view_dict.update(config)
-
     return view_dict
 
 

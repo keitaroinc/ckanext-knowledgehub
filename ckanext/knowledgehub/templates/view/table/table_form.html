@@ -1,6 +1,6 @@
 {% resource 'knowledgehub/table' %}
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
-
+{% resource 'knowledgehub/javascript/rqs_selection.js' %}
 {% if data %}
 {% set table = data.__extras or {} %}
 {% set filters = data.__extras.filters or [] %}
@@ -126,6 +126,17 @@
                 </select>
               </div>
             </div>
+
+            {# RQs List #}
+            <div class="control-group control-select">
+            <select name="table_research_questions" id="table_research_questions" multiple="multiple" class="form-control" type="hidden">
+            {% for k in h.get_rq_options() %}
+                    <option value="{{ k.text }}">{{ k.text }}</option> 
+            {% endfor %}
+            </select>
+            </div>
+
+
           </div>
         </div>
       </div>

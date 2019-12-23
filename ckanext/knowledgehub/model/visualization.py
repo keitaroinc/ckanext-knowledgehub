@@ -4,7 +4,7 @@ from ckan.logic import get_action
 
 from ckanext.knowledgehub.lib.solr import Indexed, mapped
 
-
+# i rq da indexiram!!
 class Visualization(ResourceView, Indexed):
 
     indexed = [
@@ -13,12 +13,14 @@ class Visualization(ResourceView, Indexed):
         'title',
         'description',
         'view_type',
+        'research_questions',
     ]
 
     doctype = 'visualization'
 
     @staticmethod
     def before_index(data):
+        print(data)
         if data.get('description') is not None:
             return data
 
