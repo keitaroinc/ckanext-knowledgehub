@@ -1,51 +1,52 @@
 {% ckan_extends %}
 {{ super() }}
 {% block package_description %}
-  {% if error_message %}
-    <div class="alert alert-danger alert-dismissible">
-      <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-      <strong>Error:</strong> {{ error_message }}
-    </div>
-  {% endif %}
+{% if error_message %}
+<div class="alert alert-danger alert-dismissible">
+  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+  <strong>Error:</strong> {{ error_message }}
+</div>
+{% endif %}
 
-  {% if pkg.private %}
-    <span class="dataset-private label label-inverse pull-right">
-      <i class="fa fa-lock"></i>
-      {{ _('Private') }}
-    </span>
+{% if pkg.private %}
+<span class="dataset-private label label-inverse pull-right">
+  <i class="fa fa-lock"></i>
+  {{ _('Private') }}
+</span>
+{% endif %}
+<h1 class="text-wrap">
+  {% block page_heading %}
+  {{ h.dataset_display_name(pkg) }}
+  {% if pkg.state.startswith('draft') %}
+  [{{ _('Draft') }}]
   {% endif %}
-  <h1 class="text-wrap">
-    {% block page_heading %}
-      {{ h.dataset_display_name(pkg) }}
-      {% if pkg.state.startswith('draft') %}
-        [{{ _('Draft') }}]
-      {% endif %}
-      {% if pkg.state == 'deleted' %}
-        [{{ _('Deleted') }}]
-      {% endif %}
-    {% endblock %}
-  </h1>
-  {% block package_notes %}
-    {% if pkg.notes %}
-      <div class="notes embedded-content text-wrap">
-        {{ h.render_markdown(h.get_translated(pkg, 'notes')) }}
-      </div>
-    {% endif %}
+  {% if pkg.state == 'deleted' %}
+  [{{ _('Deleted') }}]
+  {% endif %}
   {% endblock %}
-  {# FIXME why is this here? seems wrong #}
-  <span class="insert-comment-thread"></span>
+</h1>
+{% block package_notes %}
+{% if pkg.notes %}
+<div class="notes embedded-content text-wrap">
+  {{ h.render_markdown(h.get_translated(pkg, 'notes')) }}
+</div>
+{% endif %}
+{% endblock %}
+{# FIXME why is this here? seems wrong #}
+<span class="insert-comment-thread"></span>
 {% endblock %}
 
 {% block package_resources %}
-  <div class="pull-right">
-    {% link_for _('Add new resource'), controller='package', action='new_resource', id=pkg.name, class_='btn btn-primary', icon='plus' %}
-  </div>
+<div class="pull-right">
+  {% link_for _('Add new resource'), controller='package', action='new_resource', id=pkg.name, class_='btn btn-primary', icon='plus' %}
+</div>
 
-  {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, system_resource=system_resource %}
+{% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, system_resource=system_resource %}
 
-  {% if pkg.resources and not hide_merge_btn %}
-    <div class="pull-right">
-      <a class="btn btn-primary" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}" {{ 'disabled' if active_upload }}>{{ _('Merge All') }}</a>
-    </div>
-  {% endif %}
+{% if pkg.resources and not hide_merge_btn %}
+<div class="pull-right" style="margin: 10px 0 10px 10px">
+  <a class="btn btn-success" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}"
+    {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
+</div>
+{% endif %}
 {% endblock %}
