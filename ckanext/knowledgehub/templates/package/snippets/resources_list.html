@@ -29,8 +29,8 @@ Example:
     <li class="resource-item" style="text-align: end">
       <a class="btn btn-success" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}"
         {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
-      {% endif %}
     </li>
+    {% endif %}
   </ul>
   {% else %}
   {% if h.check_access('resource_create', {'package_id': pkg['id']}) %}
