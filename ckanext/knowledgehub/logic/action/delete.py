@@ -125,5 +125,6 @@ def resource_view_delete(context, data_dict):
     Visualization.delete_from_index({'id': resource_view['id']})
 
 
+@toolkit.side_effect_free
 def user_intent_delete(context, data_dict):
-    pass
+    return 'OK'

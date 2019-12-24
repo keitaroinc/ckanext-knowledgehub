@@ -19,3 +19,8 @@ def dashboard_list(context, data_dict):
 @toolkit.auth_allow_anonymous_access
 def dashboard_show(context, data_dict):
     return {'success': True}
+
+
+def intent_list(context, data_dict):
+    # sysadmins only
+    return {'success': False}
