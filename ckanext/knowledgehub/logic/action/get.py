@@ -819,7 +819,7 @@ def _return_mock_intents(data_dict):
     from random import randint
 
     page = int(data_dict.get('page', 1))
-    size = int(data_dict.get('size', 20))
+    size = int(data_dict.get('size', 30))
 
     items = []
 
@@ -830,14 +830,14 @@ def _return_mock_intents(data_dict):
 
     rq_full = [
         None, None, None,
-        'What are the demographic characteristics of the population?', 
+        'What are the demographic characteristics of the population?',
         'What are the demographic characteristics of the population?',
         'What is the average time spent in COA prior to departure to COO?',]
 
     themes_full = ['Displacement Trends', 'Displacement Conditions', 'Labor Market']
     sub_themes_full = ['Civil Documentation', 'Conditions of Return', 'Accountability']
     locations = ['Syria', 'MENA Region']
-    
+
 
     for i in range(0, size):
         items.append({
