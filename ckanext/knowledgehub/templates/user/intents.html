@@ -1,0 +1,64 @@
+{% resource 'knowledgehub/table' %}
+{% resource 'knowledgehub/javascript/table_pagination.js' %}
+
+{% extends "user/read_base.html" %}
+
+{% block primary_content_inner %}
+    <h2>Clasified Intents</h2>
+    <table id="intents" class="table table-hover table-responsive" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th class="hidden">ID</th>
+                <th class="th-lr">Transactional</th>
+                <th class="th-lr">Navigational</th>
+                <th class="th-lr">Informational</th>
+                <th class="col-md-1">Remove</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in intents %}
+                <tr>
+                    <td class="hidden">{{ i.get('id') }}</td>
+                    <td>{{ i.get('inferred_transactional') }}</td>
+                    <td>{{ i.get('inferred_navigational') }}</td>
+                    <td>{{ i.get('inferred_informational') }}</td>
+                    <td>
+                        <span class="table-remove">
+                            <button type="button" class="btn btn-danger btn-rounded btn-sm my-0">Remove</button>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <th class="hidden">ID</th>
+                <th>Transactional</th>
+                <th>Navigational</th>
+                <th>Informational</th>
+                <th>Remove</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="modal fade" id="modalDelete" tabindex="-1" role="dialog" aria-labelledby="modalDelete" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h4 class="modal-title w-100 font-weight-bold ml-5 text-danger">Delete</h4>
+                    <button type="button" class="close text-danger" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body mx-3">
+                    <p class="text-center h4">Are you sure to delete selected row?</p>
+
+                </div>
+                <div class="modal-footer d-flex justify-content-center deleteButtonsWrapper">
+                    <button type="button" class="btn btn-danger btnYesClass" id="btnYes" data-dismiss="modal">Yes</button>
+                    <button type="button" class="btn btn-primary btnNoClass" id="btnNo" data-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
