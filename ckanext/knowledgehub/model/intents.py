@@ -1,14 +1,12 @@
-import ckan.plugins.toolkit as toolkit
+import datetime
+import logging
+
+from ckan import logic
 from ckan.model.meta import metadata, mapper, Session, engine
 from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
 
-#from ckanext.knowledgehub.lib.solr import Indexed, mapped
-#from ckanext.knowledgehub.model import Theme, SubThemes
-
 from sqlalchemy import types, ForeignKey, Column, Table, or_
-import datetime
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -16,10 +14,9 @@ user_intents = Table(
     'user_intents',
     metadata,
     Column('id',
-            types.UnicodeText,
+           types.UnicodeText,
            primary_key=True,
-           default=make_uuid
-    ),
+           default=make_uuid),
     Column('created_at',
            types.DateTime,
            default=datetime.datetime.utcnow),
@@ -36,26 +33,57 @@ user_intents = Table(
     Column('accurate', types.Boolean)
 )
 
+
 class UserIntents(DomainObject):
-    
+
     @classmethod
     def get(cls, reference):
-       pass
+        '''Returns a intent object referenced by its id.'''
+        if not reference:
+            return None
+
+        return Session.query(cls).get(reference)
 
     @classmethod
     def add_user_intent(self, user_intent):
         pass
 
     @classmethod
-    def get_list(cls, page, offset):
-        pass
-    
+    def get_list(cls, page=1, limit=10, order_by='created_at desc'):
+        offset = (page - 1) * limit
+        query = Session.query(cls).autoflush(False)
+
+        if order_by:
+            query = query.order_by(order_by)
+
+        if limit:
+            query = query.limit(limit)
+
+        if offset:
+            query = query.offset(offset)
+
+        return query.all()
+
     @classmethod
-    def update(cls, user_intent):
-        pass
+    def update(cls, filter, data):
+        obj = Session.query(cls).filter_by(**filter)
+        obj.update(data)
+        Session.commit()
+
+        return obj.first()
+
+    @classmethod
+    def delete(cls, filter):
+        obj = Session.query(cls).filter_by(**filter).first()
+        if obj:
+            Session.delete(obj)
+            Session.commit()
+        else:
+            raise logic.NotFound
+
 
 mapper(UserIntents, user_intents)
 
+
 def setup():
     metadata.create_all(engine)
-              
