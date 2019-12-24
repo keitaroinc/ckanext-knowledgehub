@@ -1,15 +1,17 @@
 from datetime import datetime
 
-from ckanext.knowledgehub.model import UserIntents, UserQuery
-from ckanext.knowledgehub.lib.ml import get_nlp_processor, Worker
+from ckanext.knowledgehub.model import UserIntents, UserQuery, ResearchQuestion
+from ckanext.knowledgehub.lib.ml import get_nlp_processor, Worker, model_locator as default_model_locator
 
 from logging import getLogger
 
 
 class UserIntentsExtractor:
 
-    def __init__(self, user_intents=None, nlp=None):
+    def __init__(self, user_intents=None, nlp=None, research_question=None, model_locator=None):
         self.user_intents = user_intents or UserIntents
+        self.research_question = research_question or ResearchQuestion
+        self.model_locator = model_locator or default_model_locator
         self.nlp = nlp or get_nlp_processor()
         self.logger = getLogger('ckanext.UserIntentsExtractor')
 
@@ -52,7 +54,44 @@ class UserIntentsExtractor:
         return user_intent
 
     def infer_transactional(self, context, user_intent, query):
-        pass
+        # 1. Try the search with Solr
+        #    - if found, extract research question + theme + sub theme
+        # 2. If not found Try to classify the query in theme/sub-theme
+        # 3. Populate the context and user_intent
+        research_question, theme, sub_theme = self._extract_research_question(query.query_text)
+        if research_question:
+            user_intent.research_question = research_question['id']
+        
+        prediction = False
+        if not theme or not sub_theme:
+            pred_theme, pred_sub_theme = self._classify_query(query.query_text)
+            theme = theme or pred_theme
+            sub_theme = sub_theme or pred_sub_theme
+            prediction = True
+        
+
+        user_intent.theme = theme
+        user_intent.sub_theme = sub_theme
+
+        return {
+            'research_question': research_question,
+            'theme': theme,
+            'sub_theme': sub_theme,
+            'predicted_values': prediction,
+        }
+
+    def _extract_research_question(query_text):
+        results = self.research_question.query_index(text=query_text, rows=1)
+        if results:
+            rq = results[0]
+            return (rq, rq.get('theme'), rq.get('sub_theme'))
+        return (None, None, None)
+    
+    def _classify_query(query_text):
+        # classify in theme first
+        theme = self.model_locator.get_model('theme_classifier', 'latest').predict(query_text)
+        sub_theme = self.model_locator.get_model('sub_theme_classifier', 'latest').predict(query_text)
+        return (theme, sub_theme)
 
     def infer_navigational(self, context, user_intent, query):
         pass
