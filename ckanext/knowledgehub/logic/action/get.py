@@ -804,7 +804,15 @@ def user_intent_list(context, data_dict):
     :rtype: list
     '''
 
-    intents = UserIntents.get_list(**data_dict)
+    kwargs = {}
+    if data_dict.get('page'):
+        kwargs['page'] = data_dict.get('page')
+    if data_dict.get('limit'):
+        kwargs['limit'] = data_dict.get('limit')
+    if data_dict.get('order_by'):
+        kwargs['order_by'] = data_dict.get('order_by')
+
+    intents = UserIntents.get_list(**kwargs)
     items = []
     for i in intents:
         items.append(_table_dictize(i, context))
