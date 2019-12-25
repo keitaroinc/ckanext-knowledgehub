@@ -752,8 +752,9 @@ def get_searched_visuals(query):
         data_dict_format = model_dictize\
             .resource_view_list_dictize(visual, _get_context())
         # get the second part of the list, since the first one is the recline view!
-        data_dict_format = data_dict_format[1]
-        visuals.append(data_dict_format)
+        if len(data_dict_format) > 1:
+            data_dict_format = data_dict_format[1]
+            visuals.append(data_dict_format)
     return visuals
 
 def dashboard_research_questions(dashboard):

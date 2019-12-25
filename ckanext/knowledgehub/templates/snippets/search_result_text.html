@@ -63,11 +63,17 @@
     {%- endif -%}
     
     {% if query %}
-      {%- if count -%}
-        {{ text_query.format(number=h.localised_number(count), query=query, type=type) }}
-      {%- else -%}
-        {{ text_query_none.format(query=query, type=type) }}
-      {%- endif -%}
+      {% if query == "*" %}
+        {% if count %}
+          {{ text_no_query.format(number=h.localised_number(count), type=type) }}
+        {% endif %}
+      {% else %}
+        {%- if count -%}
+          {{ text_query.format(number=h.localised_number(count), query=query, type=type) }}
+        {%- else -%}
+          {{ text_query_none.format(query=query, type=type) }}
+        {%- endif -%}
+      {% endif %}
     {%- else -%}
       {%- if count -%}
         {{ text_no_query.format(number=h.localised_number(count), type=type) }}
