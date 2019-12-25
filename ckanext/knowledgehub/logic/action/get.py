@@ -16,6 +16,7 @@ from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.model import Visualization
+from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
@@ -34,6 +35,7 @@ check_access = toolkit.check_access
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 ValidationError = toolkit.ValidationError
+NotAuthorized = toolkit.NotAuthorized
 
 
 @toolkit.side_effect_free
@@ -789,12 +791,55 @@ def search_visualizations(context, data_dict):
 
 @toolkit.side_effect_free
 def user_intent_list(context, data_dict):
-    return _return_mock_intents(data_dict)
+    ''' List the users intents
+
+    :param page: the page number
+    :type page: int
+    :param limit: items per page
+    :type limit: int
+    :param order_by: the column to wich the order shall be perform
+    :type order_by: string
+
+    :returns: a list of intents
+    :rtype: list
+    '''
+
+    intents = UserIntents.get_list(**data_dict)
+    items = []
+    for i in intents:
+        items.append(_table_dictize(i, context))
+
+    return {
+        'total': len(UserIntents.get_list()),
+        'page': data_dict.get('page'),
+        'size': data_dict.get('limit'),
+        'items': items,
+    }
 
 
 @toolkit.side_effect_free
 def user_intent_show(context, data_dict):
-    pass
+    ''' Shows a intent
+
+    :param id: the intent ID
+    :type id: string
+
+    :returns: a intent
+    :rtype: dictionary
+    '''
+    try:
+        check_access('user_intent_show', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to see'))
+
+    id = logic.get_or_bust(data_dict, 'id')
+
+    intent = UserIntents.get(id)
+    if not intent:
+        raise NotFound(_(u'Intent'))
+
+    return intent.as_dict()
 
 
 @toolkit.side_effect_free

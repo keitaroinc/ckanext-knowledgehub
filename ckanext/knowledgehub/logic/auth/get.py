@@ -24,3 +24,8 @@ def dashboard_show(context, data_dict):
 def intent_list(context, data_dict):
     # sysadmins only
     return {'success': False}
+
+
+def user_intent_show(context, data_dict):
+    # sysadmins only
+    return {'success': False}

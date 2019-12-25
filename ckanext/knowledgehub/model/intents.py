@@ -49,8 +49,11 @@ class UserIntents(DomainObject):
         pass
 
     @classmethod
-    def get_list(cls, page=1, limit=10, order_by='created_at desc'):
-        offset = (page - 1) * limit
+    def get_list(cls, page=None, limit=None, order_by='created_at desc'):
+        offset = None
+        if page and limit:
+            offset = (page - 1) * limit
+
         query = Session.query(cls).autoflush(False)
 
         if order_by:

@@ -130,3 +130,22 @@ def corpus_create():
     return {
         'corpus': [not_empty, unicode]
     }
+
+
+def user_intent_schema():
+    return {
+        'user_query_id': [
+            not_empty,
+            validators.user_query_id_validator,
+            unicode
+        ],
+        'primary_category': [ignore_missing, unicode],
+        'theme': [ignore_missing, unicode],
+        'sub_theme': [ignore_missing, unicode],
+        'research_question': [ignore_missing, unicode],
+        'inferred_transactional': [ignore_missing, unicode],
+        'inferred_navigational': [ignore_missing, unicode],
+        'inferred_informational': [ignore_missing, unicode],
+        'curated': [ignore_missing, unicode],
+        'accurate': [ignore_missing, unicode]
+    }
