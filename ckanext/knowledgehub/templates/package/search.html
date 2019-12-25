@@ -269,7 +269,7 @@
                             {{ "There are no visualizations found for the selected query. "}}
                             {% endif %}
                         </div>
-                        <div id="hidden_dashs" style="display: none" class="tab_content">
+                        <div id="hidden_dashs" style="display: none" class="tab_content col-lg-12">
                             {% if c.q %}
                             {% set query_search = c.q %}
                             {% else %}
@@ -284,21 +284,25 @@
                                 </p>
                             </div>
                             {% for dashboard in dashes %}
-                            {% set additional_info_dash = h.get_single_dash(dashboard) %}
-                            <a class="dashboard-link" href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
-                                <div>
-                                    <h4>{{dashboard.title}}</h4>
-                                    {% set truncate = truncate or 180 %}
-                                    {% set truncate_description = truncate_description or 150 %}
-                                    {% set description = dashboard['description'] %}
-                                    <p class="text-muted">
-                                        <small>{{ h.truncate(description, truncate_description) }}</small></p>
-                                    <div class="dashboard-created">
-                                        <i class="fa fa-table"></i>
-                                        {{ h.format_date(additional_info_dash.created_at)  }}
+                            <div style="margin-top:10px; display: inline-block;">
+                                {% set additional_info_dash = h.get_single_dash(dashboard) %}
+                                <a class="dashboard-link"
+                                    href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
+                                    <div>
+                                        <h4>{{dashboard.title}}</h4>
+                                        {% set truncate = truncate or 180 %}
+                                        {% set truncate_description = truncate_description or 150 %}
+                                        {% set description = dashboard['description'] %}
+                                        <p class="text-muted">
+                                            <small>{{ h.truncate(description, truncate_description) }}</small></p>
+                                        <div class="dashboard-created">
+                                            <i class="fa fa-table"></i>
+                                            {{ h.format_date(additional_info_dash.created_at)  }}
+                                        </div>
                                     </div>
-                                </div>
-                            </a>
+                                </a>
+                            </div>
+                            <hr>
                             {% endfor %}
                             {% else %}
                             {{_('There are no dashboards found for the selected query.') }}
