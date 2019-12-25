@@ -143,42 +143,42 @@
                         </div>
                         <div id="hidden_rqs" style="display: none" class="tab_content">
                             {% if c.q %}
-                                {% set query_search = c.q %}
+                            {% set query_search = c.q %}
                             {% else %}
-                                {% set query_search = "*" %}
+                            {% set query_search = "*" %}
                             {% endif %}
-                                {% if h.get_searched_rqs(query_search) %}
-                                {% set rqs = h.get_searched_rqs(query_search) %}
-                                {% set count_rqs = rqs | length %}
-                                <div class="search-results">
-                                    <p>
-                                        {{ h.snippet('snippets/search_result_text.html', query=query_search, count=count_rqs, type='research_question') }}
-                                    </p>
-                                </div>
+                            {% if h.get_searched_rqs(query_search) %}
+                            {% set rqs = h.get_searched_rqs(query_search) %}
+                            {% set count_rqs = rqs | length %}
+                            <div class="search-results">
+                                <p>
+                                    {{ h.snippet('snippets/search_result_text.html', query=query_search, count=count_rqs, type='research_question') }}
+                                </p>
+                            </div>
 
-                                <div class="flex flex-wrap">
-                                    {% for rq in rqs %}
-                                    <div class="rq-box"
-                                        style="flex: 0 48%; margin-left: 10px;margin-top:10px; background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
-                                        <h3 class="rq-heading text-wrap">
-                                            <a
-                                                href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
-                                            <small>Research Question</small>
-                                        </h3>
-                                    </div>
-                                    {% endfor %}
+                            <div class="flex flex-wrap" style="width: 100%;">
+                                {% for rq in rqs %}
+                                <div class="rq-box"
+                                    style="flex: 0 48%; margin-left: 10px;margin-top:10px; background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
+                                    <h3 class="rq-heading text-wrap">
+                                        <a
+                                            href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
+                                        <small>Research Question</small>
+                                    </h3>
                                 </div>
-                                {% else %}
-                                {{_('There are no research questions found for the selected query.') }}
-                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            {{_('There are no research questions found for the selected query.') }}
+                            {% endif %}
 
                         </div>
 
                         <div id="hidden_visuals" style="display: none" class="tab_content">
                             {% if c.q %}
-                                {% set query_search = c.q %}
+                            {% set query_search = c.q %}
                             {% else %}
-                                {% set query_search = "*" %}
+                            {% set query_search = "*" %}
                             {% endif %}
                             {% if h.get_searched_visuals(query_search) %}
                             {% set count_vis = h.get_searched_visuals(query_search) | length %}
@@ -188,44 +188,45 @@
                                 </p>
                             </div>
                             <div class="col-lg-12 visualizations">
-                                <div class="visualization-wrapper">
-                                    <div class="resource-view">
-                                        {% set vis = h.get_searched_visuals(query_search) %}
-                                        {% for resource_view in vis %}
-                                        {% if resource_view.view_type == 'chart' %}
-                                        {% set chart_id = resource_view.id %}
-                                        {% if resource_view.__extras %}
-                                        {% set colors = resource_view.__extras.color %}
-                                        {% set x_axis = resource_view.__extras.x_axis %}
-                                        {% set y_axis = resource_view.__extras.y_axis %}
-                                        {% set additional_tornado_value = resource_view.__extras.additional_tornado_value %}
-                                        {% set chart_type = resource_view.__extras.type %}
-                                        {% set title = resource_view.title %}
-                                        {% set chart_subtitle = resource_view.__extras.chart_subtitle %}
-                                        {% set chart_description = resource_view.__extras.chart_description %}
-                                        {% set show_legend = resource_view.__extras.show_legend %}
-                                        {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
-                                        {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
-                                        {% set tooltip_name = resource_view.__extras.tooltip_name %}
-                                        {% set data_format = resource_view.__extras.data_format %}
-                                        {% set y_tick_format = resource_view.__extras.y_tick_format %}
-                                        {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
-                                        {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
-                                        {% set padding_bottom = resource_view.__extras.padding_bottom %}
-                                        {% set padding_top = resource_view.__extras.padding_top %}
-                                        {% set tick_count = resource_view.__extras.tick_count %}
-                                        {% set show_labels = resource_view.__extras.show_labels %}
-                                        {% set y_label = resource_view.__extras.y_label %}
-                                        {% set y_from_zero = resource_view.__extras.y_from_zero %}
-                                        {% set data_sort = resource_view.__extras.sort %}
-                                        {% set filters = resource_view.__extras.filters %}
-                                        {% set category_name = resource_view.__extras.category_name %}
-                                        {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
-                                        {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
-                                        {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
-                                        {% set sql_string = resource_view.__extras.sql_string %}
-                                        {% endif %}
-                                        {% snippet 'ajax_snippets/chart_module.html',
+                                <div class="flex flex-wrap"
+                                    style="flex-wrap: wrap; flex-direction: column; flex-grow: 1;">
+
+                                    {% set vis = h.get_searched_visuals(query_search) %}
+                                    {% for resource_view in vis %}
+                                    {% if resource_view.view_type == 'chart' %}
+                                    {% set chart_id = resource_view.id %}
+                                    {% if resource_view.__extras %}
+                                    {% set colors = resource_view.__extras.color %}
+                                    {% set x_axis = resource_view.__extras.x_axis %}
+                                    {% set y_axis = resource_view.__extras.y_axis %}
+                                    {% set additional_tornado_value = resource_view.__extras.additional_tornado_value %}
+                                    {% set chart_type = resource_view.__extras.type %}
+                                    {% set title = resource_view.title %}
+                                    {% set chart_subtitle = resource_view.__extras.chart_subtitle %}
+                                    {% set chart_description = resource_view.__extras.chart_description %}
+                                    {% set show_legend = resource_view.__extras.show_legend %}
+                                    {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
+                                    {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
+                                    {% set tooltip_name = resource_view.__extras.tooltip_name %}
+                                    {% set data_format = resource_view.__extras.data_format %}
+                                    {% set y_tick_format = resource_view.__extras.y_tick_format %}
+                                    {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
+                                    {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
+                                    {% set padding_bottom = resource_view.__extras.padding_bottom %}
+                                    {% set padding_top = resource_view.__extras.padding_top %}
+                                    {% set tick_count = resource_view.__extras.tick_count %}
+                                    {% set show_labels = resource_view.__extras.show_labels %}
+                                    {% set y_label = resource_view.__extras.y_label %}
+                                    {% set y_from_zero = resource_view.__extras.y_from_zero %}
+                                    {% set data_sort = resource_view.__extras.sort %}
+                                    {% set filters = resource_view.__extras.filters %}
+                                    {% set category_name = resource_view.__extras.category_name %}
+                                    {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
+                                    {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
+                                    {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
+                                    {% set sql_string = resource_view.__extras.sql_string %}
+                                    {% endif %}
+                                    {% snippet 'ajax_snippets/chart_module.html',
                                                         type='chart',
                                                         chart_id = chart_id,
                                                         colors=colors,
@@ -259,9 +260,8 @@
                                                         dynamic_reference_factor=dynamic_reference_factor,
                                                         dynamic_reference_label=dynamic_reference_label
                                                     %}
-                                        {% endif %}
-                                        {% endfor %}
-                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
                                 </div>
                             </div>
                             {% else %}
@@ -270,9 +270,9 @@
                         </div>
                         <div id="hidden_dashs" style="display: none" class="tab_content">
                             {% if c.q %}
-                                {% set query_search = c.q %}
+                            {% set query_search = c.q %}
                             {% else %}
-                                {% set query_search = "*" %}
+                            {% set query_search = "*" %}
                             {% endif %}
                             {% if h.get_searched_dashboards(query_search) %}
                             {% set dashes = h.get_searched_dashboards(query_search) %}
