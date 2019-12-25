@@ -94,10 +94,86 @@ class UserIntentsExtractor:
         return (theme, sub_theme)
 
     def infer_navigational(self, context, user_intent, query):
-        pass
+        # 1. Extract LOCATION and DATE/TIME entities
+        # 2. If theme/sub-theme not already inffered, try infering from NOUNS
+        # 3. Populate theme/sub-theme + LOCATION + DATE
+        entities = self.nlp.extract_entities(query.query_text)
+        inffered = context.get('transactional', {})
+        theme = inffered.get('theme')
+        sub_theme = inffered.get('sub_theme')
+        ent_location = entities.get('LOCATION')
+        ent_date = entities.get('DATE')
+
+
+        if not theme and not sub_theme:
+            theme, sub_theme = self._infer_themes_from_entities(entities)
+        
+        nav_text = ''
+        if theme or sub_theme:
+            nav_text += (theme or sub_theme) + ' '
+        if ent_location:
+            nav_text += ent_location + ' '
+        if ent_date:
+            nav_text += ent_date
+        
+        if not user_intent.theme and theme:
+            user_intent.theme = theme
+        if not user_intent.sub_theme:
+            user_intent.sub_theme = sub_theme
+        
+        user_intent.inferred_navigational = nav_text
+
+        return {
+            'nlp_entities': entities,
+            'theme': theme,
+            'sub_theme': sub_theme,
+            'location': ent_location,
+            'date': ent_date,
+        }
+
+    def _infer_themes_from_entities(self, entities):
+        return (None, None)
 
     def infer_informational(self, context, user_intent, query):
-        pass
+        entities = (context.get('navigational', {})
+                        .get('nlp_entities') 
+                        or self.nlp.extract_entities(query.query_text))
+        theme = user_intent.theme
+        sub_theme = user_intent.sub_theme
+
+        location = entities.get('LOCATION')
+        date = entities.get('DATE')
+
+        themes = []
+        for t in [theme, sub_theme]:
+            if t:
+                themes.append(t)
+        
+        if not themes or not (location or date):
+            return {
+                'message': 'Unable to extract infromational context',
+            }
+        
+        inferred_informational = ''
+        for p_theme in themes:
+            inf_text = p_theme + ' '
+            if location:
+                inf_text += ' ' + 'in' + ' ' + location
+            if date:
+                inf_text += ' ' + 'at' + ' ' + date
+            
+            if inferred_informational:
+                inferred_informational += ', '
+            inferred_informational += inf_text
+        
+        user_intent.infer_informational = inferred_informational
+        
+        return {
+            'inffered': inferred_informational,
+        }
+
+
+
 
 
 class UserIntentsWorker:
