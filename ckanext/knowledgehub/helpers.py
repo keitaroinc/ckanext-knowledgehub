@@ -770,3 +770,9 @@ def dashboard_research_questions(dashboard):
                 questions.append(question)
 
     return questions
+
+
+def get_single_dash(data_dict):
+    single_dash = toolkit.get_action('dashboard_show')(_get_context(),
+    {'id': data_dict.get('id')})
+    return single_dash

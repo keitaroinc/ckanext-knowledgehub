@@ -283,9 +283,19 @@
                                 </p>
                             </div>
                             {% for dashboard in dashes %}
+                            {% set additional_info_dash = h.get_single_dash(dashboard) %}
                             <a class="dashboard-link" href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
                                 <div>
                                     <h4>{{dashboard.title}}</h4>
+                                    {% set truncate = truncate or 180 %}
+                                    {% set truncate_description = truncate_description or 150 %}
+                                    {% set description = dashboard['description'] %}
+                                    <p class="text-muted">
+                                        <small>{{ h.truncate(description, truncate_description) }}</small></p>
+                                    <div class="dashboard-created">
+                                        <i class="fa fa-table"></i>
+                                        {{ h.format_date(additional_info_dash.created_at)  }}
+                                    </div>
                                 </div>
                             </a>
                             {% endfor %}
