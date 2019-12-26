@@ -9,6 +9,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import UserIntents
+from ckanext.knowledgehub.model import UserQueryResult
 
 _table_dictize = ckan.lib.dictization.table_dictize
 
@@ -196,7 +197,7 @@ def kwh_data_type_validator(key, data, errors, context):
         )
 
 
-def user_query_id_validator(key, data, errors, context):
+def user_intent_query_id_validator(key, data, errors, context):
     session = context['session']
 
     query = session.query(UserIntents.user_query_id).filter_by(
@@ -206,5 +207,19 @@ def user_query_id_validator(key, data, errors, context):
 
     if result:
         errors[key].append(
-            p.toolkit._('This intent user_query_id already exists. '
+            p.toolkit._('This user_query_id already exists. '
+                        'Choose another one.'))
+
+
+def user_query_result_query_id(key, data, errors, context):
+    session = context['session']
+
+    query = session.query(UserQueryResult.query_id).filter_by(
+        query_id=data.get(key))
+
+    result = query.first()
+
+    if result:
+        errors[key].append(
+            p.toolkit._('This query_id already exists. '
                         'Choose another one.'))

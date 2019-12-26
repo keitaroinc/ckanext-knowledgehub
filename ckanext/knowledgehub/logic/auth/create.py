@@ -72,3 +72,27 @@ def run_command(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def user_intent_create(context, data_dict):
+    '''
+        Authorization check for user intent create
+    '''
+    # sysadmins only
+    return {'success': False}
+
+
+def user_query_create(context, data_dict):
+    '''
+        Authorization check for user query create
+    '''
+    # sysadmins only
+    return {'success': False}
+
+
+def user_query_result_create(context, data_dict):
+    '''
+        Authorization check for user query result create
+    '''
+    # sysadmins only
+    return {'success': False}

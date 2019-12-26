@@ -136,7 +136,7 @@ def user_intent_schema():
     return {
         'user_query_id': [
             not_empty,
-            validators.user_query_id_validator,
+            validators.user_intent_query_id_validator,
             unicode
         ],
         'primary_category': [ignore_missing, unicode],
@@ -148,4 +148,23 @@ def user_intent_schema():
         'inferred_informational': [ignore_missing, unicode],
         'curated': [ignore_missing, unicode],
         'accurate': [ignore_missing, unicode]
+    }
+
+
+def user_query_schema():
+    return {
+        'query_text': [not_empty, unicode],
+        'query_type': [ignore_missing, unicode]
+    }
+
+
+def user_query_result_schema():
+    return {
+        'query_id': [
+            not_empty,
+            validators.user_query_result_query_id,
+            unicode
+        ],
+        'result_type': [not_empty, unicode],
+        'result_id': [not_empty, unicode]
     }
