@@ -40,9 +40,7 @@ user_query_result = Table(
     Column('created_at',
            types.DateTime,
            default=datetime.datetime.utcnow),
-    # dataset, visualization, research_question etc
     Column('result_type', types.UnicodeText),
-    # ID of the dataset/visualization/rq etc
     Column('result_id', types.UnicodeText),
 )
 
@@ -133,5 +131,4 @@ mapper(UserQueryResult, user_query_result)
 
 
 def setup():
-    metadata.create_all(user_query)
-    metadata.create_all(user_query_result)
+    metadata.create_all(engine)
