@@ -141,7 +141,7 @@
                         <div id="package_list" class="tab_content">
                             {{ h.snippet('snippets/package_list.html', packages=c.page.items) }}
                         </div>
-                        <div id="hidden_rqs" style="display: none; width: 100%" class="tab_content">
+                        <div id="hidden_rqs" style="display: none;" class="tab_content">
                             {% if c.q %}
                             {% set query_search = c.q %}
                             {% else %}
@@ -157,7 +157,7 @@
                             </div>
                             <div class="row">
                                 {% for rq in rqs %}
-                                <div class="col-sm-6" style="padding: 10px;">
+                                <div class="col-sm-6" id="tabs-rqs">
                                     <div class="rq-box"
                                         style="background:linear-gradient(0deg,rgba(4, 114, 187, 0.75),rgba(4, 114, 187, 0.75)), url({{ rq.get('image_url') }}); background-blend-mode: multiply; background-size: cover;">
                                         <h3 class="rq-heading text-wrap">
@@ -189,8 +189,7 @@
                                 </p>
                             </div>
                             <div class="col-lg-12 visualizations">
-                                <div class="flex flex-wrap"
-                                    style="flex-wrap: wrap; flex-direction: column; flex-grow: 1;">
+                                <div class="flex flex-wrap" id="tabs-visualizations">
 
                                     {% set vis = h.get_searched_visuals(query_search) %}
                                     {% for resource_view in vis %}
@@ -269,7 +268,7 @@
                             {{ "There are no visualizations found for the selected query. "}}
                             {% endif %}
                         </div>
-                        <div id="hidden_dashs" style="display: none" class="tab_content col-lg-12">
+                        <div id="hidden_dashs" style="display: none; " class="tab_content">
                             {% if c.q %}
                             {% set query_search = c.q %}
                             {% else %}
@@ -283,27 +282,34 @@
                                     {{ h.snippet('snippets/search_result_text.html', query=query_search, count=count_dash, type='dashboard') }}
                                 </p>
                             </div>
-                            {% for dashboard in dashes %}
-                            <div style="margin-top:10px; display: inline-block;">
-                                {% set additional_info_dash = h.get_single_dash(dashboard) %}
-                                <a class="dashboard-link"
-                                    href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
-                                    <div>
-                                        <h4>{{dashboard.title}}</h4>
-                                        {% set truncate = truncate or 180 %}
-                                        {% set truncate_description = truncate_description or 150 %}
-                                        {% set description = dashboard['description'] %}
-                                        <p class="text-muted">
-                                            <small>{{ h.truncate(description, truncate_description) }}</small></p>
-                                        <div class="dashboard-created">
-                                            <i class="fa fa-table"></i>
-                                            {{ h.format_date(additional_info_dash.created_at)  }}
-                                        </div>
+
+                            <ul class="dataset-list list-unstyled">
+                                {% for dashboard in dashes %}
+
+                                <li class="dataset-item">
+                                    <div id="tabs-dashboards">
+                                        {% set additional_info_dash = h.get_single_dash(dashboard) %}
+                                        <a class="dashboard-link"
+                                            href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
+                                            <div style="text-align: center">
+                                                <h4>{{dashboard.title}}</h4>
+                                                {% set truncate = truncate or 180 %}
+                                                {% set truncate_description = truncate_description or 150 %}
+                                                {% set description = dashboard['description'] %}
+                                                <p class="text-muted">
+                                                    <small>{{ h.truncate(description, truncate_description) }}</small>
+                                                </p>
+                                                <div class="dashboard-created">
+                                                    <i class="fa fa-table"></i>
+                                                    {{ h.format_date(additional_info_dash.created_at)  }}
+                                                </div>
+                                            </div>
+                                        </a>
                                     </div>
-                                </a>
-                            </div>
-                            <hr>
-                            {% endfor %}
+                                </li>
+
+                                {% endfor %}
+                            </ul>
                             {% else %}
                             {{_('There are no dashboards found for the selected query.') }}
                             {% endif %}
