@@ -46,6 +46,11 @@ def user_query_list(context, data_dict):
     return {'success': False}
 
 
+def user_query_result_show(context, data_dict):
+    # sysadmins only
+    return {'success': False}
+
+
 def user_query_result_search(context, data_dict):
     # sysadmins only
     return {'success': False}

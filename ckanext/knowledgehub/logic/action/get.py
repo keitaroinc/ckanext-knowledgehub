@@ -921,6 +921,30 @@ def user_query_list(context, data_dict):
 
 
 @toolkit.side_effect_free
+def user_query_result_show(context, data_dict):
+    ''' Shows a user query result
+
+    :param id: the query result ID
+    :type id: string
+
+    :returns: a user query result
+    :rtype: dictionary
+    '''
+    try:
+        check_access('user_query_result_show', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system administrator'))
+
+    id = logic.get_or_bust(data_dict, 'id')
+
+    result = UserQueryResult.get(id)
+    if not result:
+        raise NotFound(_(u'User Query Result'))
+
+    return result.as_dict()
+
+
+@toolkit.side_effect_free
 def user_query_result_search(context, data_dict):
     ''' Search the user query results
 

@@ -96,13 +96,17 @@ class UserQueryResult(DomainObject):
     @classmethod
     def search(cls, **kwargs):
         q = kwargs.get('q')
+        page = kwargs.get('page')
         limit = kwargs.get('limit')
-        offset = kwargs.get('offset')
         order_by = kwargs.get('order_by')
 
+        offset = None
+        if page and limit:
+            offset = (page - 1) * limit
+
         kwargs.pop('q', None)
+        kwargs.pop('page', None)
         kwargs.pop('limit', None)
-        kwargs.pop('offset', None)
         kwargs.pop('order_by', None)
 
         query = Session.query(cls).autoflush(False)
@@ -123,7 +127,7 @@ class UserQueryResult(DomainObject):
         if offset:
             query = query.offset(offset)
 
-        return query
+        return query.all()
 
 
 mapper(UserQuery, user_query)
