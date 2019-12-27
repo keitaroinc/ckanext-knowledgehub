@@ -750,12 +750,28 @@ def get_predictions(context, data_dict):
     return rnn_helpers.predict_completions(text)
 
 
-def _search_entity(index, data_dict):
+def _search_entity(index, ctx, data_dict):
     text = data_dict.get('text')
     if not text:
         raise ValidationError({'text': _('Missing value')})
+
+    _save_user_query(ctx, text, index.doctype)
+
     args = ckan_params_to_solr_args(data_dict)
     return index.search_index(**args)
+
+
+def _save_user_query(ctx, text, doc_type):
+    ctx['ignore_auth'] = True
+
+    query_data = {
+        'query_text': text,
+        'query_type': doc_type
+    }
+
+    logic.get_action('user_query_create')(
+        ctx, query_data
+    )
 
 
 @toolkit.side_effect_free
@@ -766,7 +782,7 @@ def search_dashboards(context, data_dict):
 
     :returns: ``list``, the documents matching the search query from the index.
     '''
-    return _search_entity(Dashboard, data_dict)
+    return _search_entity(Dashboard, context, data_dict)
 
 
 @toolkit.side_effect_free
@@ -777,7 +793,7 @@ def search_research_questions(context, data_dict):
 
     :returns: ``list``, the documents matching the search query from the index.
     '''
-    return _search_entity(ResearchQuestion, data_dict)
+    return _search_entity(ResearchQuestion, context, data_dict)
 
 
 @toolkit.side_effect_free
@@ -788,7 +804,7 @@ def search_visualizations(context, data_dict):
 
     :returns: ``list``, the documents matching the search query from the index.
     '''
-    return _search_entity(Visualization, data_dict)
+    return _search_entity(Visualization, context, data_dict)
 
 
 @toolkit.side_effect_free

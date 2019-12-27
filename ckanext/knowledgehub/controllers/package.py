@@ -60,23 +60,37 @@ class KWHPackageController(PackageController):
 
         # unicode format (decoded from utf8)
         q = c.q = request.params.get('q', u'')
+
         # Store search query in KWH data
         try:
             if q:
                 sysadmin = get_sysadmins()[0].name
-                kwh_data_context = {
+                sysadmin_context = {
                     'user': sysadmin,
                     'ignore_auth': True
                 }
+
                 kwh_data = {
                     'type': 'search',
                     'content': q
                 }
                 logic.get_action(u'kwh_data_create')(
-                    kwh_data_context, kwh_data
+                    sysadmin_context, kwh_data
+                )
+
+                query_ctx = {
+                    'ignore_auth': True
+                }
+                query_ctx.update(context)
+                query_data = {
+                    'query_text': q,
+                    'query_type': 'dataset'
+                }
+                logic.get_action('user_query_create')(
+                    query_ctx, query_data
                 )
         except Exception as e:
-            log.debug('Error while storing KWH data: %s' % str(e))
+            log.debug('Error while storing data: %s' % str(e))
 
         c.query_error = False
         page = h.get_page_number(request.params)
