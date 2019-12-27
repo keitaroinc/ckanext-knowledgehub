@@ -4,7 +4,7 @@
 {% extends "user/read_base.html" %}
 
 {% block primary_content_inner %}
-<h2 style="padding-bottom:20px;">Clasified Intents</h2>
+<h2 id="intents-header-id">Clasified Intents</h2>
 <table id="intents" class="table table-hover dataTables_wrapper" cellspacing="0" width="100%">
     <thead>
         <tr id="intents-header">
@@ -12,7 +12,7 @@
             <th>Transactional</th>
             <th>Navigational</th>
             <th>Informational</th>
-            <th style="text-align: end; padding-right: 20px;">Remove</th>
+            <th class="remove-th">Remove</th>
         </tr>
     </thead>
     <tbody>
@@ -22,22 +22,21 @@
             <td>{{ i.get('inferred_transactional') }}</td>
             <td>{{ i.get('inferred_navigational') }}</td>
             <td>{{ i.get('inferred_informational') }}</td>
-            <td style="text-align: end">
+            <td id="remove-td">
                 <span class="table-remove">
-                    <button type="button" class="btn btn-danger btn-rounded btn-sm my-0"
-                        style="border-radius: 4px;">Remove</button>
+                    <button type="button" class="btn btn-danger btn-rounded btn-sm my-0">Remove</button>
                 </span>
             </td>
         </tr>
         {% endfor %}
     </tbody>
     <tfoot>
-        <tr>
+        <tr id="intents-footer">
             <th class="hidden">ID</th>
             <th>Transactional</th>
             <th>Navigational</th>
             <th>Informational</th>
-            <th>Remove</th>
+            <th class="remove-th">Remove</th>
         </tr>
     </tfoot>
 </table>
