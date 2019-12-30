@@ -25,6 +25,9 @@ class UserIntentsExtractor:
         ctx = {}
         # 1. create new user_intent entity
         user_intent = self.user_intents()
+        user_intent.user_id = query.user_id
+        user_intent.user_query_id = query.id
+        user_intent.primary_category = query.query_type
 
         # 2. pass down the inferrence chain
         for name, processor in self.infer_chain:
@@ -43,17 +46,22 @@ class UserIntentsExtractor:
                 self.logger.exception(e)
 
         # 3. Do post-processing and validation
-        user_intent = self.post_process(ctx, user_intent)
+        user_intents_extracted = self.post_process(ctx, user_intent)
         
         # 4. save the user intent
-        self.user_intents.add_user_intent(user_intent)
+        if user_intents_extracted:
+            self.user_intents.add_user_intent(user_intent)
 
         return user_intent
 
 
     def post_process(self, context, user_intent):
         # TODO: check what have we inferred and errors.
-        return user_intent
+        if any([user_intent.inferred_transactional,
+               user_intent.inferred_navigational,
+               user_intent.inferred_informational]):
+            return True
+        return False
 
     def infer_transactional(self, context, user_intent, query):
         # 1. Try the search with Solr
@@ -63,6 +71,7 @@ class UserIntentsExtractor:
         research_question, theme, sub_theme = self._extract_research_question(query.query_text)
         if research_question:
             user_intent.research_question = research_question['id']
+            user_intent.inferred_transactional = research_question['title']  # ? is it?
         
         prediction = False
         if not theme or not sub_theme:
@@ -78,15 +87,17 @@ class UserIntentsExtractor:
         return {
             'research_question': research_question,
             'theme': theme,
+            'theme_value': (research_question or {}).get('theme_title'), 
             'sub_theme': sub_theme,
+            'sub_theme_value': (research_question or {}).get('sub_theme_title'), 
             'predicted_values': prediction,
         }
 
     def _extract_research_question(self, query_text):
-        results = self.research_question.search_index(q={'text':query_text}, rows=1)
+        results = self.research_question.search_index(q='text:' + query_text, rows=1)
         if results:
             rq = results[0]
-            return (rq, rq.get('theme'), rq.get('sub_theme'))
+            return (rq, rq.get('theme_id'), rq.get('sub_theme_id'))
         return (None, None, None)
     
     def _classify_query(self, query_text):
@@ -101,14 +112,10 @@ class UserIntentsExtractor:
         # 3. Populate theme/sub-theme + LOCATION + DATE
         entities = self.nlp.extract_entities(query.query_text)
         inffered = context.get('transactional', {})
-        theme = inffered.get('theme')
-        sub_theme = inffered.get('sub_theme')
-        ent_location = entities.get('LOCATION')
-        ent_date = entities.get('DATE')
-        if ent_location:
-            ent_location = ent_location[0]
-        if ent_date:
-            ent_date = ent_date[0]
+        theme = inffered.get('theme_value')
+        sub_theme = inffered.get('sub_theme_value')
+        ent_location = self._extract_entity(entities, ['LOC', 'GPE'])
+        ent_date = self._extract_entity(entities, ['DATE', 'TIME'])
 
         if not theme and not sub_theme:
             theme, sub_theme = self._infer_themes_from_entities(entities)
@@ -133,7 +140,22 @@ class UserIntentsExtractor:
             'sub_theme': sub_theme,
             'location': ent_location,
             'date': ent_date,
+            'inferred': nav_text,
         }
+
+    def _extract_entity(self, entities, types):
+        ents = []
+
+        for tp in types:
+            if entities.get(tp):
+                value = entities[tp]
+                if isinstance(value, list):
+                    ents += value
+                else:
+                    ents.append(value)
+        if ents:
+            return ents[0]
+        return None
 
     def _infer_themes_from_entities(self, entities):
         return (None, None)
@@ -145,8 +167,8 @@ class UserIntentsExtractor:
         theme = user_intent.theme
         sub_theme = user_intent.sub_theme
 
-        location = entities.get('LOCATION')
-        date = entities.get('DATE')
+        location = self._extract_entity(entities, ['LOC', 'GPE'])
+        date = self._extract_entity(entities, ['DATE', 'TIME'])
 
         themes = []
         for t in [theme, sub_theme]:
@@ -155,7 +177,7 @@ class UserIntentsExtractor:
         
         if not themes or not (location or date):
             return {
-                'message': 'Unable to extract infromational context',
+                'message': 'Unable to extract informational context',
             }
         
         inferred_informational = ''

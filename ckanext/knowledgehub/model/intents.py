@@ -46,7 +46,8 @@ class UserIntents(DomainObject):
 
     @classmethod
     def add_user_intent(self, user_intent):
-        pass
+        Session.add(user_intent)
+        Session.commit()
 
     @classmethod
     def get_list(cls, page=None, limit=None, order_by='created_at desc'):
