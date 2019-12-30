@@ -58,7 +58,7 @@ def intents(id):
 
     extra_vars = _extra_template_variables(context, data_dict)
 
-    intent_dict = logic.get_action(u'user_intent_list')(context, data_dict)
+    intent_dict = logic.get_action(u'user_intent_list')(context, {})
     extra_vars['intents'] = intent_dict['items']
     extra_vars['total'] = intent_dict['total']
     extra_vars['page'] = intent_dict['page']

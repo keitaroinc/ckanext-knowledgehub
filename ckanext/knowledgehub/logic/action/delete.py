@@ -12,6 +12,7 @@ from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Visualization
+from ckanext.knowledgehub.model import UserIntents
 
 
 log = logging.getLogger(__name__)
@@ -127,4 +128,22 @@ def resource_view_delete(context, data_dict):
 
 @toolkit.side_effect_free
 def user_intent_delete(context, data_dict):
+    ''' Deletes a intent
+
+    :param id: the intent ID
+    :type id: string
+
+    :returns: OK
+    :rtype: string
+    '''
+
+    try:
+        check_access('user_intent_delete', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    id = logic.get_or_bust(data_dict, 'id')
+    UserIntents.delete({'id': id})
+
     return 'OK'

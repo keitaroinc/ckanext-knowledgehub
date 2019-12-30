@@ -15,6 +15,8 @@ from ckanext.knowledgehub.model.resource_feedback import (
 from ckanext.knowledgehub.model.kwh_data import (
     setup as kwh_data_setup
 )
+from ckanext.knowledgehub.model.intents import setup as intents_setup
+from ckanext.knowledgehub.model.query import setup as query_setup
 
 log = logging.getLogger(__name__)
 
@@ -36,6 +38,8 @@ def init():
         resource_feedback_setup()
         kwh_data_setup()
         rnn_corpus_setup()
+        intents_setup()
+        query_setup()
     except Exception as e:
         error_shout(e)
     else:

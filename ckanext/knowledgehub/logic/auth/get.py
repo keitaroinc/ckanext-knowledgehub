@@ -24,3 +24,33 @@ def dashboard_show(context, data_dict):
 def intent_list(context, data_dict):
     # sysadmins only
     return {'success': False}
+
+
+def user_intent_show(context, data_dict):
+    # sysadmins only
+    return {'success': False}
+
+
+def user_query_show(context, data_dict):
+    # sysadmins only
+    return {'success': False}
+
+
+def user_intent_list(context, data_dict):
+    # sysadmins only
+    return {'success': False}
+
+
+def user_query_list(context, data_dict):
+    # sysadmins only
+    return {'success': False}
+
+
+def user_query_result_show(context, data_dict):
+    # sysadmins only
+    return {'success': False}
+
+
+def user_query_result_search(context, data_dict):
+    # sysadmins only
+    return {'success': False}
