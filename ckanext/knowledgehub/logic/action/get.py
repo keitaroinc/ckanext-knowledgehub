@@ -924,18 +924,28 @@ def user_query_show(context, data_dict):
 
     :param id: the query ID
     :type id: string
+    :param query_text: the user search query
+    :type query_text: string
+    :param query_type: the type of the search query
+    :type query_type: string
+    :param user_id: the ID of the user
+    :type user_id: string
 
     :returns: a user query
     :rtype: dictionary
     '''
-    try:
-        check_access('user_query_show', context, data_dict)
-    except NotAuthorized:
-        raise NotAuthorized(_(u'Need to be system administrator'))
 
-    id = logic.get_or_bust(data_dict, 'id')
+    kwargs = {}
+    if data_dict.get('id'):
+        kwargs['id'] = data_dict.get('id')
+    if data_dict.get('query_text'):
+        kwargs['query_text'] = data_dict.get('query_text')
+    if data_dict.get('query_type'):
+        kwargs['query_type'] = data_dict.get('query_type')
+    if data_dict.get('user_id'):
+        kwargs['user_id'] = data_dict.get('user_id')
 
-    query = UserQuery.get(id)
+    query = UserQuery.get(**kwargs)
     if not query:
         raise NotFound(_(u'User Query'))
 
