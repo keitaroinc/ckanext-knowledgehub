@@ -559,7 +559,8 @@ def user_intent_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
 
     intent = UserIntents(**data)
     intent.save()
@@ -592,7 +593,8 @@ def user_query_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
 
     query = UserQuery(**data)
     query.save()
@@ -615,12 +617,6 @@ def user_query_result_create(context, data_dict):
     :rtype: dictionary
     '''
 
-    try:
-        check_access('user_query_result_create', context, data_dict)
-    except NotAuthorized:
-        raise NotAuthorized(_(u'Need to be system '
-                              u'administrator to administer'))
-
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.user_query_result_schema(),
                                 context)
@@ -628,7 +624,8 @@ def user_query_result_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
 
     query_result = UserQueryResult(**data)
     query_result.save()
