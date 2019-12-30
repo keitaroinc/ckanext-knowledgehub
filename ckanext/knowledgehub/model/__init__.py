@@ -22,4 +22,6 @@ __all__ = [
     'UserQuery',
     'UserQueryResult',
     'Visualization',
+    'UserQuery',
+    'UserQueryResult'
 ]
