@@ -16,6 +16,13 @@ class UpdateIntentsWorker(Worker):
         super(UpdateIntentsWorker, self).__init__(worker_id, heartbeat_interval)
         self.intents_worker = UserIntentsWorker(intents_extractor)
         self.action = action
+        # Workaround until the core translation function defaults to the Flask one
+        from paste.registry import Registry
+        from ckan.lib.cli import MockTranslator
+        registry = Registry()
+        registry.prepare()
+        from pylons import translator
+        registry.register(translator, MockTranslator())
 
     def update_intents(self):
         self.intents_worker.update_latest()

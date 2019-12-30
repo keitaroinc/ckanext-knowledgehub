@@ -70,15 +70,13 @@ class UserQuery(DomainObject):
     def get_all_after(cls, after, page, size):
         page = page if page >= 1 else 1
         size = size if size >= 1 and size < 500 else 500
-        query = Session.query(cls).filter(user_query.c.created_at >= after)
+        query = Session.query(cls).filter(user_query.c.created_at > after)
         query.order_by(user_query.c.created_at)
         query.offset((page-1)*size).limit(size)
 
         results = []
-
         for result in query.all():
             results.append(result)
-
         return results
 
 

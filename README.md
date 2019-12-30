@@ -220,3 +220,11 @@ Avalilable model types are:
 * `visualization` - rebuilds the visualizations index.
 
 If you specify `--model=all`, all indexes will be rebuilt (same as not specifying `--model` at all).
+
+# Install Spacy
+
+```bash
+pip install -U setuptools # optional, only if there is an error about PEP 517 "BackendUnavailable"
+pip install -U spacy
+python -m spacy download en_core_web_sm
+```

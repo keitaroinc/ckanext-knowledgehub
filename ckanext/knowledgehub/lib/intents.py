@@ -28,6 +28,7 @@ class UserIntentsExtractor:
 
         # 2. pass down the inferrence chain
         for name, processor in self.infer_chain:
+            result = None
             try:
                 result = processor(ctx, user_intent, query)
                 ctx[name] = {
@@ -38,7 +39,8 @@ class UserIntentsExtractor:
                 ctx[name] = {
                     'error': e,
                 }
-                self.logger.error('Processing of user intent for query %s for %s failed with %s', query.id, name, result)
+                self.logger.error('Processing of user intent for query %s for %s failed with %s', query.id, name, e)
+                self.logger.exception(e)
 
         # 3. Do post-processing and validation
         user_intent = self.post_process(ctx, user_intent)
@@ -80,14 +82,14 @@ class UserIntentsExtractor:
             'predicted_values': prediction,
         }
 
-    def _extract_research_question(query_text):
-        results = self.research_question.query_index(text=query_text, rows=1)
+    def _extract_research_question(self, query_text):
+        results = self.research_question.search_index(q={'text':query_text}, rows=1)
         if results:
             rq = results[0]
             return (rq, rq.get('theme'), rq.get('sub_theme'))
         return (None, None, None)
     
-    def _classify_query(query_text):
+    def _classify_query(self, query_text):
         # classify in theme first
         theme = self.model_locator.get_model('theme_classifier', 'latest').predict(query_text)
         sub_theme = self.model_locator.get_model('sub_theme_classifier', 'latest').predict(query_text)
@@ -103,11 +105,13 @@ class UserIntentsExtractor:
         sub_theme = inffered.get('sub_theme')
         ent_location = entities.get('LOCATION')
         ent_date = entities.get('DATE')
-
+        if ent_location:
+            ent_location = ent_location[0]
+        if ent_date:
+            ent_date = ent_date[0]
 
         if not theme and not sub_theme:
             theme, sub_theme = self._infer_themes_from_entities(entities)
-        
         nav_text = ''
         if theme or sub_theme:
             nav_text += (theme or sub_theme) + ' '
@@ -173,9 +177,6 @@ class UserIntentsExtractor:
         }
 
 
-
-
-
 class UserIntentsWorker:
 
     def __init__(self,
@@ -207,7 +208,9 @@ class UserIntentsWorker:
                 next_timestamp = query.created_at
                 count += 1
             except Exception as e:
-                pass
+                self.logger.warning('Error in processing: %s', e)
+                self.logger.exception(e)
+
         return (count, next_timestamp)
     
     def process_all_batches(self, last_timestamp):
