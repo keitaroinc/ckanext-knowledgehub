@@ -63,7 +63,7 @@ class ModelLocator:
 
     def get_model(self, name, version):
         # noop model, won't predict anything but lets the flow go through
-        return MLModel() 
+        return MLModel()
 
 
 # Export default instances

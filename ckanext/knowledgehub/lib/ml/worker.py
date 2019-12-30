@@ -6,10 +6,10 @@ from ckan.lib.redis import connect_to_redis
 
 class Worker(object):
 
-    def __init__(self, worker_id, heartbeat_interval=60000):
+    def __init__(self, worker_id, heartbeat_interval=60000, redis=None):
         self.worker_id = worker_id
         self.logger = getLogger('ckanext.Worker:' + worker_id)
-        self._redis = connect_to_redis()
+        self._redis = redis or connect_to_redis()
         self.heartbeat_interval = heartbeat_interval
         self.running = False
         self._hb_thread = None
@@ -19,16 +19,21 @@ class Worker(object):
         return 'ckan:worker:%s:heartbeat' % self.worker_id
 
     def run_heart_beat(self):
-        expire_in = int((self.heartbeat_interval/1000) + 1)
+        expire_in = int((self.heartbeat_interval/1000.0) + 1)
+        wait_interval = self.heartbeat_interval/1000.0
         def _run_heart_beat():
             while self.running:
                 self._redis.setex(self._hb_key(), 'RUNNING', expire_in)
                 self.logger.debug('Heartbeat tick.')
-                self._hb_thread_stop.wait(self.heartbeat_interval/1000)
+                self._hb_thread_stop.wait(wait_interval)
         
         self._hb_thread = Thread(target=_run_heart_beat)
         self._hb_thread.start()
-        self.logger.debug('Heartbeat started @' + str(expire_in) + ' seconds.')
+        self.logger.debug('Heartbeat started @' +
+                          '%f' % wait_interval + 
+                          's and expires in ' +
+                          str(expire_in) +
+                          ' seconds.')
     
     def stop_heart_beat(self):
         self._hb_thread_stop.set()
@@ -86,20 +91,20 @@ class Worker(object):
         pass
 
 
-class ModelTrainWorker:
+class ModelTrainWorker(Worker):
 
-    def __init__(self, worker_id, hb_time=60000):
-        super(ModelTrainWorker, self).__init__(worker_id, hb_time)
+    def __init__(self, worker_id, hb_time=60000, redis=None):
+        super(ModelTrainWorker, self).__init__(worker_id, hb_time, redis)
         self._wait = Event()
         self._scheduled = None
 
     def worker_run(self):
-        self._ev.wait()
+        self._wait.wait()
         if self._scheduled:
             self._scheduled()
 
     def train_model(self, model_name, train_data, model_version=None):
-        self._scheduled = lambda: self.do_train_model(model_name, train_data, model_version=None)
+        self._scheduled = lambda: self.do_train_model(model_name, train_data, model_version)
         self._wait.set()
 
     def do_train_model(self, model_name, train_data, model_version=None):
