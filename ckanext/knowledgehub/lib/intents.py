@@ -196,7 +196,7 @@ class UserIntentsExtractor:
         user_intent.inferred_informational = inferred_informational
         
         return {
-            'inffered': inferred_informational,
+            'inferred': inferred_informational,
         }
 
 
