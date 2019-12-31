@@ -934,6 +934,32 @@ class TestKWHDeleteActions(ActionsBase):
         assert_equals(result.get('message'), 'Dashboard deleted.')
         Dashboard.delete_from_index.assert_called_once()
 
+    def test_user_intent_delete(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        i = create_actions.user_intent_create(get_context(), data_dict)
+
+        r = delete_actions.user_intent_delete(get_context(), {'id': i['id']})
+
+        assert_equals(r, 'OK')
+
 
 class TestKWHUpdateActions(ActionsBase):
 
@@ -1160,6 +1186,37 @@ class TestKWHUpdateActions(ActionsBase):
             kwh_data_updated.get('content'),
             data_dict.get('new_content')
         )
+
+    def test_user_intent_update(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        i = create_actions.user_intent_create(get_context(), data_dict)
+
+        i_update = update_actions.user_intent_update(
+            get_context(),
+            {
+                "id": i['id'],
+                "primary_category": "dashboard"
+            })
+
+        assert_equals(i_update['primary_category'], 'dashboard')
 
     def test_knowledgehub_get_geojson_properties(self):
         user = factories.Sysadmin()
