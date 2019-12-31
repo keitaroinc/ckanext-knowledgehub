@@ -1,6 +1,7 @@
 import uuid
 from ckan.tests import factories
 from ckan.plugins import toolkit
+from ckan import model
 
 
 class User(object):
@@ -63,3 +64,14 @@ def mock_pylons():
     mapper = make_map()
     registry.register(pylons.url, URLGenerator(mapper, {}))
     registry.register(pylons.session, TestPylonsSession())
+
+
+def get_context():
+    user = factories.Sysadmin()
+    return {
+        'user': user.get('name'),
+        'auth_user_obj': User(user.get('id')),
+        'ignore_auth': True,
+        'model': model,
+        'session': model.Session
+    }
