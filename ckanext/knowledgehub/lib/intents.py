@@ -111,7 +111,7 @@ class UserIntentsExtractor:
         # 2. If theme/sub-theme not already inffered, try infering from NOUNS
         # 3. Populate theme/sub-theme + LOCATION + DATE
         entities = self.nlp.extract_entities(query.query_text)
-        inffered = context.get('transactional', {})
+        inffered = context.get('transactional', {}).get('result', {})
         theme = inffered.get('theme_value')
         sub_theme = inffered.get('sub_theme_value')
         ent_location = self._extract_entity(entities, ['LOC', 'GPE'])
@@ -164,8 +164,9 @@ class UserIntentsExtractor:
         entities = (context.get('navigational', {})
                         .get('nlp_entities') 
                         or self.nlp.extract_entities(query.query_text))
-        theme = user_intent.theme
-        sub_theme = user_intent.sub_theme
+        inffered = context.get('transactional', {}).get('result',{})
+        theme = inffered.get('theme_value')
+        sub_theme = inffered.get('sub_theme_value')
 
         location = self._extract_entity(entities, ['LOC', 'GPE'])
         date = self._extract_entity(entities, ['DATE', 'TIME'])
@@ -174,7 +175,7 @@ class UserIntentsExtractor:
         for t in [theme, sub_theme]:
             if t:
                 themes.append(t)
-        
+
         if not themes or not (location or date):
             return {
                 'message': 'Unable to extract informational context',
@@ -182,7 +183,7 @@ class UserIntentsExtractor:
         
         inferred_informational = ''
         for p_theme in themes:
-            inf_text = p_theme + ' '
+            inf_text = p_theme
             if location:
                 inf_text += ' ' + 'in' + ' ' + location
             if date:
@@ -192,7 +193,7 @@ class UserIntentsExtractor:
                 inferred_informational += ', '
             inferred_informational += inf_text
         
-        user_intent.infer_informational = inferred_informational
+        user_intent.inferred_informational = inferred_informational
         
         return {
             'inffered': inferred_informational,
