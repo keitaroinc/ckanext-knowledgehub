@@ -40,6 +40,9 @@ python setup.py develop
 pip install -r requirements.txt
 pip install -r dev-requirements.txt
 
+echo "Installing spaCy language model..."
+python -m spacy download en_core_web_sm
+
 echo "Setup database tables for ckanext-knowledgehub"
 knowledgehub -c ckan/test-core.ini db init
 
