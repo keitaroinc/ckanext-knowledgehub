@@ -12,6 +12,8 @@ from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Visualization
+from ckanext.knowledgehub import helpers as plugin_helpers
+
 
 
 log = logging.getLogger(__name__)
@@ -121,5 +123,6 @@ def dashboard_delete(context, data_dict):
 
 def resource_view_delete(context, data_dict):
     resource_view = logic.get_action('resource_view_show')(context, data_dict)
+    plugin_helpers.remove_rqs_from_dataset(resource_view)
     _resource_view_delete(context, data_dict)
     Visualization.delete_from_index({'id': resource_view['id']})

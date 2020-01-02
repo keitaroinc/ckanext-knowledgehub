@@ -31,7 +31,6 @@ from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 
-
 log = logging.getLogger(__name__)
 
 _df = lib.navl.dictization_functions
@@ -297,11 +296,9 @@ def resource_view_create(context, data_dict):
         model.repo.commit()
     rv_data = model_dictize.resource_view_dictize(resource_view, context)
 
-    # print(data_dict)
-
     # Add to index
-    Visualization.add_to_index(rv_data)
-
+    Visualization.add_to_index(rv_data)    
+    plugin_helpers.add_rqs_to_dataset(rv_data)
     return rv_data
 
 
@@ -327,9 +324,6 @@ def dashboard_create(context, data_dict):
         raise ValidationError(errors)
 
     dashboard = Dashboard()
-
-    import json
-    print json.dumps(data_dict, indent=2)
 
     items = ['name', 'title', 'description', 'type']
 

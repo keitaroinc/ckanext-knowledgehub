@@ -84,6 +84,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'remove_space_for_url': h.remove_space_for_url,
             'format_date': h.format_date,
             'dashboard_research_questions': h.dashboard_research_questions,
+            'add_rqs_to_dataset': h.add_rqs_to_dataset,
+            'remove_rqs_from_dataset': h.remove_rqs_from_dataset,
         }
 
     # IDatasetForm
@@ -209,28 +211,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     # IPackageController
     def before_index(self, pkg_dict):
         research_question = pkg_dict.get('research_question')
-
-        # Store the titles of RQs instead of ids so they are searchable
-        if research_question:
-            rq_titles = []
-
-            # Remove `{` from the beginning
-            research_question = research_question[1:]
-
-            # Remove `}` from the end
-            research_question = research_question[:-1]
-
-            rq_ids = research_question.split(',')
-
-            for rq_id in rq_ids:
-                try:
-                    rq = toolkit.get_action(
-                        'research_question_show')({}, {'id': rq_id})
-                    rq_titles.append(rq.get('title'))
-                except logic.NotFound:
-                    continue
-
-            pkg_dict['research_question'] = ','.join(rq_titles)
-            pkg_dict['extras_research_question'] = ','.join(rq_titles)
-
+        
+        pkg_dict['research_question'] = research_question
+        pkg_dict['extras_research_question'] = research_question
         return pkg_dict

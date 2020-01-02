@@ -158,11 +158,28 @@
             </div>
 
             {# RQs List #}
+            {% set dict = {} %}
+            {% for k in h.get_rq_options() %}
+              {% if chart %}
+                {% for m in chart.research_questions %}
+                  {% if k.text == m %}
+                    {% set new_item = dict.__setitem__(k.text, "True") %}
+                  {% endif %}
+                {% endfor %}
+                {% if not dict[k.text] %}
+                  {% set new_item = dict.__setitem__(k.text, "False") %}
+                {% endif %}
+
+              {% else %}
+                {% set new_item = dict.__setitem__(k.text, "False") %}
+              {% endif %}
+            {% endfor %}
             <div class="rs-questions">
               <label class="control-label" for="chart_research_questions">{{_('Research Questions')}}</label>
               <select name="chart_research_questions" id="chart_research_questions" multiple="multiple" type="hidden">
-                {% for k in h.get_rq_options() %}
-                <option value="{{ k.text }}">{{ k.text }}</option>
+                  {% for k,v in dict.items() %}
+                  <option value="{{ k }}"
+                  {% if chart %} {{ 'selected' if v == 'True'}} {% endif %}>{{ k }}</option>
                 {% endfor %}
               </select>
             </div>

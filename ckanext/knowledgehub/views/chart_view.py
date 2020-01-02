@@ -120,8 +120,8 @@ def _process_post_data(data, resource_id):
             data['chart_field_y_ticks_format']
         config['sql_string'] = \
             data['sql_string']
-        if 'chart_research_questions' in data:
-            config['chart_research_questios'] = \
+        if data.get('chart_research_questions'):
+            config['research_questions'] = \
                 data['chart_research_questions']
 
     config['filters'] = json.dumps(filters)

@@ -40,7 +40,6 @@ def _process_post_data(data, resource_id):
     config = {}
     filters = []
     for k, v in data.items():
-
         if k.startswith('data_filter_name_'):
             filter = {}
             filter_id = k.split('_')[-1]
@@ -69,8 +68,9 @@ def _process_post_data(data, resource_id):
             data['sql_string']
         config['resource_name'] = \
             data['resource_name']
-        config['table_research_questions'] = \
-            data['table_research_questions']
+        if data.get('table_research_questions'):
+            config['research_questions'] = \
+                data['table_research_questions']
 
     config['filters'] = json.dumps(filters)
 
@@ -140,7 +140,6 @@ class CreateView(MethodView):
             'pkg': package,
             'res': resource
         }
-
         return base.render(
             u'view/table/new_table_view_base.html',
             extra_vars=vars

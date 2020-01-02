@@ -284,6 +284,8 @@ def resource_view_update(context, data_dict):
 
     # Update index
     Visualization.update_index_doc(resource_view_data)
+    plugin_helpers.add_rqs_to_dataset(resource_view_data)
+
 
     return resource_view_data
 
@@ -344,24 +346,7 @@ def dashboard_update(context, data_dict):
 
 
 def package_update(context, data_dict):
-    research_questions = data_dict.get('research_question')
-    rq_options = plugin_helpers.get_rq_options()
-    rq_ids = []
-
-    if research_questions:
-        if isinstance(research_questions, list):
-            for rq in research_questions:
-                for rq_opt in rq_options:
-                    if rq == rq_opt.get('text'):
-                        rq_ids.append(rq_opt.get('id'))
-                        break
-            data_dict['research_question'] = rq_ids
-        elif isinstance(research_questions, unicode):
-            for rq in rq_options:
-                if rq.get('text') == research_questions:
-                    data_dict['research_question'] = [rq.get('id')]
-                    break
-
+    
     return ckan_package_update(context, data_dict)
 
 

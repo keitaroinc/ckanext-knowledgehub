@@ -1,5 +1,7 @@
 {% resource 'knowledgehub/map' %}
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+{% resource 'knowledgehub/javascript/rqs_selection.js' %}
+
 {% import 'macros/form.html' as form %}
 
 {% if data %}
@@ -105,6 +107,33 @@
               </select>
             </div>
           </div>
+
+          {# RQs List #}
+            {% set dict = {} %}
+            {% for k in h.get_rq_options() %}
+              {% if map %}
+                {% for m in map.research_questions %}
+                  {% if k.text == m %}
+                    {% set new_item = dict.__setitem__(k.text, "True") %}
+                  {% endif %}
+                {% endfor %}
+                {% if not dict[k.text] %}
+                  {% set new_item = dict.__setitem__(k.text, "False") %}
+                {% endif %}
+
+              {% else %}
+                {% set new_item = dict.__setitem__(k.text, "False") %}
+              {% endif %}
+            {% endfor %}
+            <div class="rs-questions">
+              <label class="control-label" for="map_research_questions">{{_('Research Questions')}}</label>
+              <select name="map_research_questions" id="map_research_questions" multiple="multiple" type="hidden">
+                  {% for k,v in dict.items() %}
+                  <option value="{{ k }}"
+                  {% if map %} {{ 'selected' if v == 'True'}} {% endif %}>{{ k }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
           </div>
         </div>
