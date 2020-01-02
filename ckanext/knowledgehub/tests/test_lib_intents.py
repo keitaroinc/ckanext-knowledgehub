@@ -1,4 +1,6 @@
 from mock import Mock, patch, MagicMock
+from datetime import datetime, timedelta
+from collections import namedtuple
 
 from ckan.tests import helpers
 
@@ -38,7 +40,6 @@ class TestUserIntentsExtractor:
             'title': 'RQ Title',
         }
         research_question.search_index.return_value = [rq]
-
 
         extractor = UserIntentsExtractor(user_intents, nlp, research_question, model_locator)
 
@@ -175,4 +176,62 @@ class TestUserIntentsExtractor:
 
 
 class TestUserIntentsWorker:
-    pass
+    
+    def test_process_all_batches(self):
+        extractor = MagicMock()
+        user_intents = MagicMock()
+        user_queries = MagicMock()
+        last_timestamp = datetime.now()
+
+        Query = namedtuple('QueryMock', ['id', 'created_at'])
+
+        def get_all_after_mock(ts, batch, batch_size):
+            assert_equals(batch_size, 500)
+            assert_true(ts is not None)
+            if batch == 3:
+                return []
+            return [Query('query-' + str(i), ts + timedelta(seconds=i+1)) for i in range(0, batch_size)]
+
+        user_queries.get_all_after.side_effect = get_all_after_mock
+
+        worker = UserIntentsWorker(extractor, user_intents, user_queries)
+
+        worker.process_single_query = Mock()
+
+        worker.process_all_batches(last_timestamp)
+
+        assert_equals(worker.process_single_query.call_count, 1000)
+        assert_equals(user_queries.get_all_after.call_count, 3)
+    
+    def test_update_latest(self):
+        extractor = MagicMock()
+        user_intents = MagicMock()
+        user_queries = MagicMock()
+        UserIntent = namedtuple('UserIntentMock', ['id', 'created_at'])
+
+        last_timestamp = datetime.now()
+
+        user_intents.get_latest.return_value = UserIntent('000', last_timestamp)
+
+        worker = UserIntentsWorker(extractor, user_intents, user_queries)
+        worker.process_all_batches = Mock()
+
+        worker.update_latest()
+
+        worker.process_all_batches.assert_called_once_with(last_timestamp)
+        user_intents.get_latest.assert_called_once()
+
+    def test_rebuild(self):
+        extractor = MagicMock()
+        user_intents = MagicMock()
+        user_queries = MagicMock()
+
+        last_timestamp = datetime.utcfromtimestamp(0)
+
+
+        worker = UserIntentsWorker(extractor, user_intents, user_queries)
+        worker.process_all_batches = Mock()
+
+        worker.rebuild()
+
+        worker.process_all_batches.assert_called_once_with(last_timestamp)
