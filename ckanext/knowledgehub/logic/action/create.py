@@ -27,6 +27,9 @@ from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.model import Visualization
+from ckanext.knowledgehub.model import UserIntents
+from ckanext.knowledgehub.model import UserQuery
+from ckanext.knowledgehub.model import UserQueryResult
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -510,3 +513,124 @@ def run_command(context, data_dict):
         return 'Error: %s' % str(e)
 
     return 'Successfully run command: %s' % ' '.join(cmd)
+
+
+def user_intent_create(context, data_dict):
+    ''' Creates a new intent
+
+    :param user_query_id: the ID of the user query
+    :type user_query_id: string
+    :param primary_category: the category of the intent (optional)
+    :type primary_category: styring
+    :param theme: the ID of the theme (optional)
+    :type theme: string
+    :param sub_theme: the ID of the sub-theme (optional)
+    :type sub_theme: string
+    :param research_question: the ID of the research question (optional)
+    :type research_question: string
+    :param inferred_transactional: the intent of transactional
+    searching (optional)
+    :type inferred_transactional: string
+    :param inferred_navigational: the intent of naviagational
+    searching (optional)
+    :type inferred_navigational: string
+    :param inferred_informational: the intent of informational
+    searching (optional)
+    :type inferred_informational: string
+    :param curated: indicate whether the classification is curated (optional)
+    :type curated: bool
+    :param accurate: indicate whether the classification is accurate (optional)
+    :type accurate: bool
+
+    :returns: the newly created intent
+    :rtype: dictionary
+    '''
+
+    try:
+        check_access('user_intent_create', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.user_intent_schema(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+
+    intent = UserIntents(**data)
+    intent.save()
+
+    return intent.as_dict()
+
+
+def user_query_create(context, data_dict):
+    ''' Save user query
+
+    :param query_text: the user search query
+    :type query_text: string
+    :param query_type: the type of the search query
+    :type query_type: string
+
+    :returns: the newly created user query
+    :rtype:dictionary
+    '''
+
+    try:
+        check_access('user_query_create', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.user_query_schema(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+
+    query = UserQuery(**data)
+    query.save()
+
+    return query.as_dict()
+
+
+def user_query_result_create(context, data_dict):
+    ''' Save user query result
+
+    :param query_id: the ID of the search query
+    :type query_id: string
+    :param result_type: the type of search (dataset, visualization,
+    research_question etc)
+    :type result_type: string
+    :param result_id: the ID of the dataset/visualization/rq etc
+    :type result_id: string
+
+    :returns: the newly created user query result
+    :rtype: dictionary
+    '''
+
+    try:
+        check_access('user_query_result_create', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.user_query_result_schema(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+
+    query_result = UserQueryResult(**data)
+    query_result.save()
+
+    return query_result.as_dict()

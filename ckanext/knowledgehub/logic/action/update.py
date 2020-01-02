@@ -22,6 +22,7 @@ from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
+from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -36,6 +37,7 @@ _get_or_bust = logic.get_or_bust
 check_access = toolkit.check_access
 NotFound = logic.NotFound
 ValidationError = toolkit.ValidationError
+NotAuthorized = toolkit.NotAuthorized
 
 
 def theme_update(context, data_dict):
@@ -387,3 +389,74 @@ def kwh_data_update(context, data_dict):
         data = KWHData.update(filter, update_data)
 
         return data.as_dict()
+
+
+def user_intent_update(context, data_dict):
+    ''' Updates an existing user intent
+
+    :param id: the ID of the user intent
+    :type name: string
+
+    :param primary_category: the category of the intent (optional)
+    :type primary_category: styring
+    :param theme: the ID of the theme (optional)
+    :type theme: string
+    :param sub_theme: the ID of the sub-theme (optional)
+    :type sub_theme: string
+    :param research_question: the ID of the research question (optional)
+    :type research_question: string
+    :param inferred_transactional: the intent of transactional
+    searching (optional)
+    :type inferred_transactional: string
+    :param inferred_navigational: the intent of naviagational
+    searching (optional)
+    :type inferred_navigational: string
+    :param inferred_informational: the intent of informational
+    searching (optional)
+    :type inferred_informational: string
+    :param curated: indicate whether the classification is curated (optional)
+    :type curated: bool
+    :param accurate: indicate whether the classification is accurate (optional)
+    :type accurate: bool
+
+    :returns: the updated user intent
+    :rtype: dictionary
+    '''
+
+    try:
+        check_access('user_intent_update', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+
+    intent = UserIntents.get(id)
+    if not intent:
+        raise NotFound(_('Intent was not found.'))
+
+    items = [
+        'primary_category',
+        'theme',
+        'sub_theme',
+        'research_question',
+        'inferred_transactional',
+        'inferred_navigational',
+        'inferred_informational',
+        'curated',
+        'accurate'
+    ]
+
+    for item in items:
+        if data_dict.get(item):
+            setattr(intent, item, data_dict.get(item))
+
+    session = context['session']
+
+    intent.save()
+    session.add(intent)
+    session.commit()
+
+    return _table_dictize(intent, context)
