@@ -1,0 +1,14 @@
+{% ckan_extends %}
+
+{% block content_primary_nav %}
+    {% set user_is_sysadmin = h.check_access('sysadmin') %}
+
+    {{ h.build_nav_icon('user.read', _('Datasets'), id=user.name) }}
+
+    {% if user_is_sysadmin %}
+        {{ h.build_nav_icon('kwh_user.intents', _('Intents'), id=user.name) }}
+    {% endif %}
+
+    {{ h.build_nav_icon('user.activity', _('Activity Stream'), id=user.name, offset=0) }}
+    {{ h.build_nav_icon('user_datarequests', _('Data Requests'), id=user.name) }}
+{% endblock %}

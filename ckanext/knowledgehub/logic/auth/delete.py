@@ -32,3 +32,11 @@ def dashboard_delete(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def user_intent_delete(context, data_dict):
+    '''
+        Authorization check for deleting a user intent
+    '''
+    # sysadmins only
+    return {'success': False}
