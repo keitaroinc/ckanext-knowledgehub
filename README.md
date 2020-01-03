@@ -228,3 +228,21 @@ pip install -U setuptools # optional, only if there is an error about PEP 517 "B
 pip install -U spacy
 python -m spacy download en_core_web_sm
 ```
+
+# User Intents
+
+User intents are extracted from the user queries in a batch process that is run
+periodically.
+
+The following command updates the latest user intents and should be run at least
+once a day:
+
+```bash
+knowledgehub -c /etc/ckan/default/production.ini intents update
+```
+
+The crontab should look something like this:
+
+```cron
+0 0 * * * knowledgehub -c /etc/ckan/default/development.ini intents update >/dev/null 2>&1
+```
