@@ -15,6 +15,8 @@ This is the main repo for the Knowledge Hub on Displaced Populations in the MENA
      - [Development Installation](#development-installation)
      - [Modify CSS](#modify-css)
      - [Running the Tests](#running-the-tests)
+ - [Install spaCy](#install-spacy)
+ - [User Intents](#user-intents)
 
 
 # Getting started
@@ -244,5 +246,5 @@ knowledgehub -c /etc/ckan/default/production.ini intents update
 The crontab should look something like this:
 
 ```cron
-0 0 * * * knowledgehub -c /etc/ckan/default/development.ini intents update >/dev/null 2>&1
+0 0 * * * knowledgehub -c /etc/ckan/default/production.ini intents update >/dev/null 2>&1
 ```
