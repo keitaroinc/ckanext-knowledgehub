@@ -237,7 +237,6 @@ def resource_create(context, data_dict):
                                        data.get('records'),
                                        ',')
 
-            print('FIELDS: %s' % data.get('fields'))
             filename = '{}_{}.{}'.format(
                 data_dict.get('db_type'),
                 str(datetime.datetime.utcnow()),
@@ -328,9 +327,6 @@ def dashboard_create(context, data_dict):
         raise ValidationError(errors)
 
     dashboard = Dashboard()
-
-    import json
-    print json.dumps(data_dict, indent=2)
 
     items = ['name', 'title', 'description', 'type']
 

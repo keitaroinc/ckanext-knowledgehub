@@ -15,6 +15,8 @@ This is the main repo for the Knowledge Hub on Displaced Populations in the MENA
      - [Development Installation](#development-installation)
      - [Modify CSS](#modify-css)
      - [Running the Tests](#running-the-tests)
+ - [Install spaCy](#install-spacy)
+ - [User Intents](#user-intents)
 
 
 # Getting started
@@ -220,3 +222,29 @@ Avalilable model types are:
 * `visualization` - rebuilds the visualizations index.
 
 If you specify `--model=all`, all indexes will be rebuilt (same as not specifying `--model` at all).
+
+# Install Spacy
+
+```bash
+pip install -U setuptools # optional, only if there is an error about PEP 517 "BackendUnavailable"
+pip install -U spacy
+python -m spacy download en_core_web_sm
+```
+
+# User Intents
+
+User intents are extracted from the user queries in a batch process that is run
+periodically.
+
+The following command updates the latest user intents and should be run at least
+once a day:
+
+```bash
+knowledgehub -c /etc/ckan/default/production.ini intents update
+```
+
+The crontab should look something like this:
+
+```cron
+0 0 * * * knowledgehub -c /etc/ckan/default/production.ini intents update >/dev/null 2>&1
+```

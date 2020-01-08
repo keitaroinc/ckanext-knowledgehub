@@ -46,7 +46,8 @@ class UserIntents(DomainObject):
 
     @classmethod
     def add_user_intent(self, user_intent):
-        pass
+        Session.add(user_intent)
+        Session.commit()
 
     @classmethod
     def get_list(cls, page=None, limit=None, order_by='created_at desc'):
@@ -68,6 +69,14 @@ class UserIntents(DomainObject):
         return query.all()
 
     @classmethod
+    def get_latest(cls):
+        result = Session.query(cls).order_by(
+            user_intents.c.created_at.desc()).limit(1).all()
+        for latest_intent in result:
+            return latest_intent
+        return None
+
+    @classmethod
     def update(cls, filter, data):
         obj = Session.query(cls).filter_by(**filter)
         obj.update(data)
@@ -83,6 +92,11 @@ class UserIntents(DomainObject):
             Session.commit()
         else:
             raise logic.NotFound
+
+    @classmethod
+    def delete_all(cls):
+        Session.query(cls).delete()
+        Session.commit()
 
 
 mapper(UserIntents, user_intents)

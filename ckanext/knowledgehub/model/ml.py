@@ -68,7 +68,10 @@ train_data_entries = Table(
 train_job = Table(
     'train_job',
     metadata,
-    Column('job_id', types.Text),
+    Column('job_id',
+           types.Text,
+           primary_key=True,
+           default=make_uuid),
     Column('worker_id', types.Text),
     Column('job_status', types.Text),
     Column('started_at',
@@ -131,6 +134,10 @@ class TrainData(DomainObject):
     def add_entries(cls, data_package, entries):
         pass
 
+
+class TrainDataEntries(DomainObject):
+    pass
+
 class TrainJob(DomainObject):
 
     @classmethod
@@ -164,12 +171,10 @@ class TrainJob(DomainObject):
 
 mapper(MLModel, ml_model)
 mapper(TrainData, train_data)
+mapper(TrainDataEntries, train_data_entries)
 mapper(TrainJob, train_job)
 
 
 def setup():
-    metadata.create_all(ml_model)
-    metadata.create_all(train_data)
-    metadata.create_all(train_data_entries)
-    metadata.create_all(train_job)
+    metadata.create_all(engine)
 
