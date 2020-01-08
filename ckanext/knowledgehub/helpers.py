@@ -768,12 +768,15 @@ def is_rsc_upload_datastore(resource):
     lm = resource.get('last_modified') or resource.get('created')
     diff = datetime.now() - parser.parse(lm)
     if diff < day:
-        task = toolkit.get_action('task_status_show')(context, {
-            'entity_id': resource['id'],
-            'task_type': 'datapusher',
-            'key': 'datapusher'
-        })
-        return True if task.get('state') == 'complete' else False
+        try:
+            task = toolkit.get_action('task_status_show')(context, {
+                'entity_id': resource['id'],
+                'task_type': 'datapusher',
+                'key': 'datapusher'
+            })
+            return True if task.get('state') == 'complete' else False
+        except logic.NotFound:
+            return False
 
     return True
 

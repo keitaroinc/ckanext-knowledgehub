@@ -457,7 +457,7 @@ class TestKWHHelpers(ActionsBase):
         rqs = kwh_helpers.get_rq_ids(resource['id'])
         assert_equals(len(rqs), 2)
 
-   
+
     def test_get_geojson_resources(self):
 
         dataset = create_dataset()
@@ -505,7 +505,7 @@ class TestKWHHelpers(ActionsBase):
         rq1 = create_actions.research_question_create(context, data_dict)
         dataset = create_dataset(
             research_question = rq1['id']
-            
+
         )
         resource = factories.Resource(
             schema='',
@@ -533,7 +533,7 @@ class TestKWHHelpers(ActionsBase):
             ],
             "force": True
         }
-        
+
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -552,16 +552,16 @@ class TestKWHHelpers(ActionsBase):
            "fields": [{"id": "value", "type": "numeric"}],
             "records": [
                 {"value": 0},
-                {"value": 1}, 
+                {"value": 1},
                 {"value": 2},
                 {"value": 3},
                 {"value": 5},
                 {"value": 6},
                 {"value": 7},
             ],
-            "force": True            
+            "force": True
         }
-        
+
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -588,7 +588,7 @@ class TestKWHHelpers(ActionsBase):
             ],
             "force": True
         }
-        
+
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -616,7 +616,7 @@ class TestKWHHelpers(ActionsBase):
             ],
             "force": True
         }
-        
+
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -631,10 +631,10 @@ class TestKWHHelpers(ActionsBase):
             resource=resource['id']
         )
         res_data = kwh_helpers.get_resource_data(sql_str)
-        
+
         assert_equals(len(res_data), 7)
-    
-    
+
+
     def test_get_geojson_properties(self):
 
         url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
@@ -672,3 +672,143 @@ class TestKWHHelpers(ActionsBase):
         date = "2019-11-21T10:09:05.900808"
         date_formated = kwh_helpers.format_date(date)
         assert_equals("2019-11-21 at 10:09", date_formated)
+
+    def test_get_dataset_data(self):
+        dataset = create_dataset()
+
+        data = {
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        d = kwh_helpers.get_dataset_data(dataset['id'])
+        assert_equals(len(d['records']), 7)
+        assert_equals(d['fields'][0]['type'], 'numeric')
+        assert_equals(d['fields'][0]['id'], 'value')
+
+    def test_get_dataset_data_err_msg(self):
+        dataset = create_dataset()
+
+        data = {
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        data = {
+            "fields": [{"id": "age", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        d = kwh_helpers.get_dataset_data(dataset['id'])
+        assert(d.get('err_msg').startswith('The format of the data resource '
+                                           '{resource} differs from the '
+                                           'others'.format(
+                                               resource=resource.get('name')
+                                            )))
+
+    def test_get_resource_filtered_data(self):
+        dataset = create_dataset()
+
+        data = {
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": "1"},
+                {"value": "2"},
+                {"value": "3"},
+                {"value": "4"},
+                {"value": "5"},
+                {"value": "6"},
+                {"value": "7"},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        d = kwh_helpers.get_resource_filtered_data(resource['id'])
+        assert_equals(d['records'], data['records'])
+
+    def test_is_rsc_upload_datastore(self):
+        dataset = create_dataset()
+
+        data = {
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": "1"},
+                {"value": "2"},
+                {"value": "3"},
+                {"value": "4"},
+                {"value": "5"},
+                {"value": "6"},
+                {"value": "7"},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        b = kwh_helpers.is_rsc_upload_datastore(resource)
+        assert_equals(b, False)
