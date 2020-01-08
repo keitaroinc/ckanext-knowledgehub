@@ -678,6 +678,7 @@ def merge_all_data(context, data_dict):
 
         if data_dict.get('system_resource'):
             rsc_dict['id'] = data_dict['system_resource']['id']
+            rsc_dict['name'] = data_dict['system_resource']['name']
             toolkit.get_action('resource_update')(
                 context, rsc_dict)
             return {}

@@ -41,6 +41,6 @@
   {% link_for _('Add new resource'), controller='package', action='new_resource', id=pkg.name, class_='btn btn-primary', icon='plus' %}
 </div>
 
-{% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, system_resource=system_resource %}
+{% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, system_resource=system_resource, active_upload=active_upload, hide_merge_btn=hide_merge_btn %}
 
 {% endblock %}
