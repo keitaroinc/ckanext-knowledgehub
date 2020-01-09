@@ -785,6 +785,10 @@ class TestKWHHelpers(ActionsBase):
         d = kwh_helpers.get_resource_filtered_data(resource['id'])
         assert_equals(d['records'], data['records'])
 
+    def test_get_resource_filtered_data_exception(self):
+        d = kwh_helpers.get_resource_filtered_data('failed-id')
+        assert_equals(d['records'], [])
+
     def test_is_rsc_upload_datastore(self):
         dataset = create_dataset()
 
@@ -811,4 +815,8 @@ class TestKWHHelpers(ActionsBase):
         helpers.call_action('datastore_create', **data)
 
         b = kwh_helpers.is_rsc_upload_datastore(resource)
+        assert_equals(b, False)
+
+    def test_is_rsc_upload_datastore_exception(self):
+        b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
