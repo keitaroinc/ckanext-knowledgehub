@@ -40,6 +40,9 @@ RUN pip install cython && \
     # disqus
     pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus"
 
+# Download spaCy language model for english language
+RUN python -m spacy download en_core_web_sm
+
 # Set plugins
 ENV CKAN__PLUGINS envvars \
                   recline_view \
