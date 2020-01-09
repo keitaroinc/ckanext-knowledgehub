@@ -8,6 +8,8 @@ import functools32
 import requests
 from datetime import datetime
 from flask import Blueprint
+from urllib import urlencode
+from six import string_types
 
 try:
     # CKAN 2.7 and later
@@ -18,10 +20,11 @@ except ImportError:
 
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
-from ckan.common import g, _
+from ckan.common import g, _, request
 from ckan import logic
 from ckan.model import ResourceView, Resource
 from ckan import lib
+from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.model import Dashboard
@@ -732,30 +735,85 @@ def format_date(str):
     return display_date
 
 
+def _get_pager(results, item_type):
+    
+    def _get_url(*args, **kwargs):
+        page = kwargs.get('page', g.page.page)
+        params = filter(lambda p: p[0] not in ['page', '_search-for'], 
+                        [(k, v.encode('utf-8')
+                             if isinstance(v, string_types) else str(v))
+                          for k, v in request.params.items()])
+        params.append(('page', page))
+        params.append(('_search-for', item_type))
+        return request.path + '?' + urlencode(params)
+    
+    return h.Page(
+        collection=results.get('results', []),
+        page=results.get('page', 1),
+        item_count=results.get('count'),
+        items_per_page=results.get('limit'),
+        url=_get_url
+    )
+
+
+def get_tab_url(tab):
+    params = filter(lambda p: p[0] not in ['page', '_search-for'], 
+                        [(k, v.encode('utf-8')
+                             if isinstance(v, string_types) else str(v))
+                          for k, v in request.params.items()])
+    if tab != 'package':
+        params.append(('_search-for', tab))
+    return request.path + ('?' + urlencode(params) if params else '')
+
+
+def get_active_tab():
+    active_tab = request.params.get('_search-for')
+    if active_tab and active_tab.strip():
+        return active_tab.strip()
+    return 'package'
+
+
 def get_searched_rqs(query):
     context = _get_context()
-    list_rqs_searched = toolkit.get_action('search_research_questions')(context, {'text': query})
+    list_rqs_searched = toolkit.get_action(
+        'search_research_questions')(
+            context, 
+            {'text': query, 'page': int(request.params.get('page', 1))})
+    list_rqs_searched['pager'] = _get_pager(list_rqs_searched,
+                                            'research-questions')
     return list_rqs_searched
 
 def get_searched_dashboards(query):
     context = _get_context()
-    list_dash_searched = toolkit.get_action('search_dashboards')(context, {'text': query})
+    list_dash_searched = toolkit.get_action(
+        'search_dashboards')(
+            context, 
+            {'text': query, 'page': int(request.params.get('page', 1))})
+    list_dash_searched['pager'] = _get_pager(list_dash_searched, 'dashboards')
     return list_dash_searched
 
 def get_searched_visuals(query):
     context = _get_context()
-    list_visuals_searched = toolkit.get_action('search_visualizations')(context, {'text': query})
+    list_visuals_searched = toolkit.get_action(
+        'search_visualizations')(
+            context, 
+            {'text': query, 'page': int(request.params.get('page', 1))})
     visuals = []
-    for vis in list_visuals_searched:
+    for vis in list_visuals_searched['results']:
         visual = model.Session.query(ResourceView)\
         .filter(ResourceView.resource_id == vis['resource_id'])
         data_dict_format = model_dictize\
             .resource_view_list_dictize(visual, _get_context())
-        # get the second part of the list, since the first one is the recline view!
+        # get the second part of the list,
+        # since the first one is the recline view!
         if len(data_dict_format) > 1:
             data_dict_format = data_dict_format[1]
             visuals.append(data_dict_format)
-    return visuals
+    list_visuals_searched['results'] = visuals
+    list_visuals_searched['pager'] = _get_pager(list_visuals_searched,
+                                                'visualizations')
+
+    return list_visuals_searched
 
 def dashboard_research_questions(dashboard):
     questions = []

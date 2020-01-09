@@ -12,10 +12,28 @@
     
     #}
     {% if type == 'dataset' %}
-      {% set text_query = ungettext('{number} dataset found for "{query}"', '{number} datasets found for "{query}"', count) %}
-      {% set text_query_none = _('No datasets found for "{query}"') %}
-      {% set text_no_query = ungettext('{number} dataset found', '{number} datasets found', count) %}
-      {% set text_no_query_none = _('No datasets found') %}
+      {% set active_tab = h.get_active_tab() %}
+      {% if active_tab == 'package' %}
+        {% set text_query = ungettext('{number} dataset found for "{query}"', '{number} datasets found for "{query}"', count) %}
+        {% set text_query_none = _('No datasets found for "{query}"') %}
+        {% set text_no_query = ungettext('{number} dataset found', '{number} datasets found', count) %}
+        {% set text_no_query_none = _('No datasets found') %}
+      {% elif active_tab == 'research-questions' %}
+        {% set text_query = ungettext('{number} research question found for "{query}"', '{number} research questions found for "{query}"', count) %}
+        {% set text_query_none = _('No research questions found for "{query}"') %}
+        {% set text_no_query = ungettext('{number} research question found', '{number} research questions found', count) %}
+        {% set text_no_query_none = _('No research questions found') %}
+      {% elif active_tab == 'visualizations' %}
+        {% set text_query = ungettext('{number} visualization found for "{query}"', '{number} visualizations found for "{query}"', count) %}
+        {% set text_query_none = _('No visualizations found for "{query}"') %}
+        {% set text_no_query = ungettext('{number} visualization found', '{number} visualizations found', count) %}
+        {% set text_no_query_none = _('No visualizations found') %}
+      {% else %}
+        {% set text_query = ungettext('{number} dashboard found for "{query}"', '{number} dashboards found for "{query}"', count) %}
+        {% set text_query_none = _('No dashboards found for "{query}"') %}
+        {% set text_no_query = ungettext('{number} dashboard found', '{number} dashboards found', count) %}
+        {% set text_no_query_none = _('No dashboards found') %}
+      {% endif%}
     
     {% elif type == 'group' %}
       {% set text_query = ungettext('{number} joint analysis found for "{query}"', '{number} joint analysis found for "{query}"', count) %}

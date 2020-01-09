@@ -88,6 +88,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_searched_visuals': h.get_searched_visuals,
             'dashboard_research_questions': h.dashboard_research_questions,
             'get_single_dash': h.get_single_dash,
+            'get_active_tab': h.get_active_tab,
+            'get_tab_url': h.get_tab_url,
         }
 
     # IDatasetForm

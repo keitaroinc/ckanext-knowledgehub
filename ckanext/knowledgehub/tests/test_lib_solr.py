@@ -3,6 +3,7 @@ from mock import Mock, patch, MagicMock
 from ckan.tests import helpers
 from ckan.plugins import toolkit
 from ckan.common import config
+from pysolr import Results
 
 from ckanext.knowledgehub.lib.solr import (
     Index,
@@ -30,11 +31,16 @@ class TestIndex(helpers.FunctionalTestBase):
 
         index.get_connection.return_value = solr_conn_mock
 
-        solr_conn_mock.search.return_value = [{
-            'id': 'aaa',
-            'p1': 'v1',
-            'p2': 'v2',
-        }]
+        solr_conn_mock.search.return_value = Results({
+            'response':{
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
 
         query = {
             'q': 'id:aaa',
@@ -51,8 +57,8 @@ class TestIndex(helpers.FunctionalTestBase):
             'rows': 500,
         })
 
-        assert_true(results)
-        assert_equals(len(results), 1, 'Expected at least 1 result')
+        assert_true(results is not None)
+        assert_equals(len(results.docs), 1, 'Expected at least 1 result')
 
     def test_search_all_args(self):
         solr_conn_mock = Mock()
@@ -61,11 +67,16 @@ class TestIndex(helpers.FunctionalTestBase):
 
         index.get_connection.return_value = solr_conn_mock
 
-        solr_conn_mock.search.return_value = [{
-            'id': 'aaa',
-            'p1': 'v1',
-            'p2': 'v2',
-        }]
+        solr_conn_mock.search.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
 
         query = {
             'q': 'id:aaa',
@@ -87,8 +98,8 @@ class TestIndex(helpers.FunctionalTestBase):
             'sort': 'qsort'
         })
 
-        assert_true(results)
-        assert_equals(len(results), 1, 'Expected at least 1 result')
+        assert_true(results is not None)
+        assert_equals(len(results.docs), 1, 'Expected at least 1 result')
 
     def test_add(self):
         solr_conn_mock = Mock()
@@ -296,15 +307,20 @@ class TestIndexedMixin(helpers.FunctionalTestBase):
     def test_update_index_doc(self):
         cls = self._get_mixin_class()
 
-        cls.index.search.return_value = [{
-            'khe_id': 'aaa',
-            'title': 'Test Model',
-            'name': 'test-model',
-            'khe_description': 'Test Description',
-            'site_id': 'test',
-            'entity_type': 'test_doc',
-            'index_id': '1',
-        }]
+        cls.index.search.return_value = Results({
+            'response': {
+                'docs': [{
+                    'khe_id': 'aaa',
+                    'title': 'Test Model',
+                    'name': 'test-model',
+                    'khe_description': 'Test Description',
+                    'site_id': 'test',
+                    'entity_type': 'test_doc',
+                    'index_id': '1',
+                }],
+                'numFound': 1,
+            }
+        })
 
         def _add(doctype, doc):
             assert_equals('test_doc', doctype)
@@ -361,22 +377,27 @@ class TestIndexedMixin(helpers.FunctionalTestBase):
     def test_search_index(self):
         cls = self._get_mixin_class()
 
-        cls.index.search.return_value = [{
-            'khe_id': 'aaa',
-            'title': 'Test Model',
-            'name': 'test-model',
-            'khe_description': 'Test Description',
-            'site_id': 'test',
-            'entity_type': 'test_doc',
-            'index_id': '1',
-        }]
+        cls.index.search.return_value = Results({
+            'response': {
+                'docs': [{
+                    'khe_id': 'aaa',
+                    'title': 'Test Model',
+                    'name': 'test-model',
+                    'khe_description': 'Test Description',
+                    'site_id': 'test',
+                    'entity_type': 'test_doc',
+                    'index_id': '1',
+                }],
+                'numFound': 1,
+            }
+        })
 
         results = cls.search_index(
             q={'p1': 'v1'},
             fq={'f1': 'v1'},
             rows=10, start=3,
             sort='test_sort')
-        assert_true(results)
+        assert_true(results is not None)
         cls.index.search.assert_called_once_with(
             'test_doc',
             q={'p1': 'v1'},

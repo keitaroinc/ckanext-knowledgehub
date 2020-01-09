@@ -4,7 +4,7 @@ import json
 
 import ckan.logic as logic
 from ckan.plugins import toolkit
-from ckan.common import _
+from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 
@@ -38,6 +38,17 @@ NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 ValidationError = toolkit.ValidationError
 NotAuthorized = toolkit.NotAuthorized
+
+
+class DateTimeEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
+            return obj.isoformat()
+        elif isinstance(obj, datetime.timedelta):
+            return (datetime.datetime.min + obj).time().isoformat()
+
+        return super(DateTimeEncoder, self).default(obj)
 
 
 @toolkit.side_effect_free
@@ -750,7 +761,23 @@ def get_predictions(context, data_dict):
     return rnn_helpers.predict_completions(text)
 
 
+
+
 def _search_entity(index, ctx, data_dict):
+    page = data_dict.get('page', 1)
+    page_size = int(data_dict.get('limit',
+                                  config.get('ckan.datasets_per_page', 20)))
+    if page <= 0:
+        page = 1
+    
+    # clean the data dict
+    for k in ['page', 'limit']:
+        if data_dict.get(k) is not None:
+            del data_dict[k]
+
+    data_dict['rows'] = page_size
+    data_dict['start'] = (page - 1) * page_size
+
     text = data_dict.get('text')
     if not text:
         raise ValidationError({'text': _('Missing value')})
@@ -758,7 +785,26 @@ def _search_entity(index, ctx, data_dict):
     _save_user_query(ctx, text, index.doctype)
 
     args = ckan_params_to_solr_args(data_dict)
-    return index.search_index(**args)
+    results = index.search_index(**args)
+
+    results.page = page
+    results.page_size = page_size
+
+    result_dict = {
+        'count': results.hits,
+        'results': results.docs,
+        'facets': results.facets,
+        'stats': results.stats,
+        'page': page,
+        'limit': page_size,
+    }
+
+    class _results_wrapper(dict):
+        pass
+        def _for_json(self):
+            return json.dumps(self, cls=DateTimeEncoder)
+
+    return _results_wrapper(result_dict)
 
 
 def _save_user_query(ctx, text, doc_type):
