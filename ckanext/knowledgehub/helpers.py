@@ -772,9 +772,13 @@ def is_rsc_upload_datastore(resource):
         })
         return True if task.get('state') == 'complete' else False
     except logic.NotFound:
-        return False
+        log.debug(
+            u'Resource {} not uploaded to datastore!'.format(resource['id'])
+        )
+    except Exception as e:
+        log.debug(u'Task status show: {}'.format(str(e)))
 
-    return True
+    return False
 
 
 def get_resource_filtered_data(id):
@@ -787,11 +791,18 @@ def get_resource_filtered_data(id):
     :returns: the resource dict with filtered fields and records
     :rtype: dict
     '''
-    sql = 'SELECT * FROM "{resource}"'.format(resource=id)
-    result = toolkit.get_action('datastore_search_sql')(
-        {'ignore_auth': True},
-        {'sql': sql}
-    )
+    result = {
+        'fields': [],
+        'records': []
+    }
+    try:
+        sql = 'SELECT * FROM "{resource}"'.format(resource=id)
+        result = toolkit.get_action('datastore_search_sql')(
+            {'ignore_auth': True},
+            {'sql': sql}
+        )
+    except Exception as e:
+        log.debug(u'Datastore search sql: {}'.format(str(e)))
 
     if len(result.get('records', [])):
         result['fields'] = [f for f in result['fields']
@@ -840,28 +851,27 @@ def get_dataset_data(id):
                 data_dict['system_resource'] = resource
                 continue
 
-            if not is_rsc_upload_datastore(resource):
-                continue
-
             result = get_resource_filtered_data(resource.get('id'))
 
-            if len(data_dict['fields']) == 0:
-                data_dict['fields'] = result['fields']
-                data_dict['records'] = result['records']
-                continue
+            if len(result.get('records')):
+                if len(data_dict['fields']) == 0:
+                    data_dict['fields'] = result['fields']
+                    data_dict['records'] = result['records']
+                    continue
 
-            if data_dict['fields'] == result.get('fields'):
-                data_dict['records'].extend(result.get('records'))
-            else:
-                diff = [f['id'] for f in result.get('fields')
-                        if f not in data_dict['fields']]
-                diff.extend([f['id'] for f in data_dict['fields']
-                             if f not in result.get('fields')])
-                data_dict['err_msg'] = ('The format of the data resource '
-                                        '{resource} differs from the others, '
-                                        'fields: {fields}').format(
-                                            resource=resource.get('name'),
-                                            fields=", ".join(diff))
-                break
+                if data_dict['fields'] == result.get('fields'):
+                    data_dict['records'].extend(result.get('records'))
+                else:
+                    diff = [f['id'] for f in result.get('fields')
+                            if f not in data_dict['fields']]
+                    diff.extend([f['id'] for f in data_dict['fields']
+                                if f not in result.get('fields')])
+                    data_dict['err_msg'] = ('The format of the data resource '
+                                            '{resource} differs from the '
+                                            'others, fields: {fields}').format(
+                                                resource=resource.get('name'),
+                                                fields=", ".join(diff)
+                                            )
+                    break
 
     return data_dict
