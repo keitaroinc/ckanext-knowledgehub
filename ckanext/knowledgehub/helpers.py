@@ -764,19 +764,15 @@ def is_rsc_upload_datastore(resource):
     '''
     context = {'ignore_auth': True}
 
-    day = timedelta(days=1)
-    lm = resource.get('last_modified') or resource.get('created')
-    diff = datetime.now() - parser.parse(lm)
-    if diff < day:
-        try:
-            task = toolkit.get_action('task_status_show')(context, {
-                'entity_id': resource['id'],
-                'task_type': 'datapusher',
-                'key': 'datapusher'
-            })
-            return True if task.get('state') == 'complete' else False
-        except logic.NotFound:
-            return False
+    try:
+        task = toolkit.get_action('task_status_show')(context, {
+            'entity_id': resource['id'],
+            'task_type': 'datapusher',
+            'key': 'datapusher'
+        })
+        return True if task.get('state') == 'complete' else False
+    except logic.NotFound:
+        return False
 
     return True
 
@@ -842,6 +838,9 @@ def get_dataset_data(id):
         for resource in resources:
             if resource.get('resource_type') == SYSTEM_RESOURCE_TYPE:
                 data_dict['system_resource'] = resource
+                continue
+
+            if not is_rsc_upload_datastore(resource):
                 continue
 
             result = get_resource_filtered_data(resource.get('id'))
