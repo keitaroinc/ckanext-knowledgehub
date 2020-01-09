@@ -762,7 +762,7 @@ def is_rsc_upload_datastore(resource):
     :returns: True if uploding is completed otherwise False
     :rtyep: bool
     '''
-    context = _get_context()
+    context = {'ignore_auth': True}
 
     day = timedelta(days=1)
     lm = resource.get('last_modified') or resource.get('created')
@@ -793,9 +793,9 @@ def get_resource_filtered_data(id):
     '''
     sql = 'SELECT * FROM "{resource}"'.format(resource=id)
     result = toolkit.get_action('datastore_search_sql')(
-                _get_context(),
-                {'sql': sql}
-            )
+        {'ignore_auth': True},
+        {'sql': sql}
+    )
 
     if len(result.get('records', [])):
         result['fields'] = [f for f in result['fields']
@@ -833,7 +833,8 @@ def get_dataset_data(id):
         'system_resource': {}
     }
 
-    package = toolkit.get_action('package_show')(_get_context(), {'id': id})
+    package = toolkit.get_action('package_show')(
+        {'ignore_auth': True}, {'id': id})
     data_dict['package_name'] = package.get('name')
 
     resources = package.get('resources', [])
@@ -864,4 +865,4 @@ def get_dataset_data(id):
                                             fields=", ".join(diff))
                 break
 
-        return data_dict
+    return data_dict
