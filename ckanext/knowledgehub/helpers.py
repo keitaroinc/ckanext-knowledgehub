@@ -803,7 +803,8 @@ def remove_rqs_from_dataset(res_view):
                 should_stay[rq] = False
                 results_search = toolkit.get_action('search_visualizations')(context, data_dict)
                 for res in results_search:
-                    if res.get('research_questions') and res.get('id') != res_view.get('id'):
+                    if res.get('research_questions') and res.get('id') != res_view.get('id') \
+                        and res.get('khe_package_id') == pkg_id:
                         questions = json.loads(res.get('research_questions'))
                         for q in questions:
                             if q == rq:
@@ -867,8 +868,8 @@ def update_rqs_in_dataset(old_data, res_view):
         new_ext = res_view.get('__extras')
         old_ext = old_data.get('__extras')
         list_rqs = []
-        if old_ext.get('research_questions'): #ako ima u staroto
-            if new_ext.get('research_questions'): #ako ima u novoto
+        if old_ext.get('research_questions'): 
+            if new_ext.get('research_questions'):
                 if isinstance(new_ext.get('research_questions'), list):
                     set_new = set(new_ext.get('research_questions'))
                 else:
@@ -882,7 +883,6 @@ def update_rqs_in_dataset(old_data, res_view):
                     li.append(old_ext.get('research_questions'))
                     set_old = set(li)
                 list_rqs = list(set_old-set_new)
-                # new_ext['research_questions'].extend(diff)
             else:
                 list_rqs = old_ext.get('research_questions')
 

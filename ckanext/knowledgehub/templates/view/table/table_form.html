@@ -141,6 +141,7 @@
                   {% if table.research_questions == k.text %}
                     {% set new_item = dict.__setitem__(k.text, "True") %}
                   {% endif %}
+                {% endif %}
                   {% if not dict[k.text] %}
                     {% set new_item = dict.__setitem__(k.text, "False") %}
                   {% endif %}
