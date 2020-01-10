@@ -48,33 +48,44 @@
                             console.log("User Quere Result: SAVED!");
                         })
                         .fail(function (error) {
-                            console.log("user_query_result_create: " + error.statusText);
+                            console.log("User Quere Result failed: " + error.statusText);
                         });
                     }
                 })
                 .fail(function (error) {
-                    console.log("user_query_show: " + error.statusText);
+                    console.log("User Query Show failed: " + error.statusText);
                 });
             }
         }
     }
 
     $(document).ready(function () {
-        var tab_content = $('.tab_content');
 
-        tab_content.on('click', '.dataset-heading', function() {
-            var result_id = $('#dataset-id').val();
-            saveUserQueryResult(DATASET_TYPE, result_id);
-        });
+        var save_user_query = function(callback) {
+            var tab_content = $('.tab_content');
 
-        tab_content.on('click', '.rq-heading', function () {
-            var result_id = $('#rq-id').val();
-            saveUserQueryResult(RQ_TYPE, result_id);
-        });
+            tab_content.on('click', '.dataset-heading', function() {
+                var dataset_content = $(this).parent('.dataset-content');
+                var result_id = dataset_content.find('#dataset-id').val();
+                callback(DATASET_TYPE, result_id);
+            });
 
-        tab_content.on('click', '.dashboard-link', function () {
-            var result_id = $('#dashboard-id').val();
-            saveUserQueryResult(DASHBOARD_TYPE, result_id);
+            tab_content.on('click', '.rq-heading', function () {
+                var rq_content = $(this).parent('.rq-box');
+                var result_id = rq_content.find('#rq-id').val();
+                callback(RQ_TYPE, result_id);
+            });
+
+            tab_content.on('click', '.dashboard-link', function () {
+                var dashboard_content = $(this).parent('#tabs-dashboards');
+                var result_id = dashboard_content.find('#dashboard-id').val();
+                callback(DASHBOARD_TYPE, result_id);
+            });
+        }
+
+        save_user_query(function(result_type, result_id){
+            // TODO: get user ID here
+            saveUserQueryResult(result_type, result_id)
         });
     });
 })(ckan.i18n.ngettext, $);
