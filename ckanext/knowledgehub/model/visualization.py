@@ -3,6 +3,7 @@ from ckan.model.meta import mapper
 from ckan.logic import get_action
 
 from ckanext.knowledgehub.lib.solr import Indexed, mapped
+import json
 
 class Visualization(ResourceView, Indexed):
 
@@ -58,14 +59,12 @@ class Visualization(ResourceView, Indexed):
             if conf.get('__extras'):
                 ext = conf.get('__extras')
                 if ext.get('research_questions'):
-                    import json
                     data_rq = json.dumps(ext.get('research_questions'))
                     data['research_questions'] = data_rq
         else:
             if data.get('__extras'):
                 ext = data.get('__extras')
                 if ext.get('research_questions'):
-                    import json
                     data_rq = json.dumps(ext.get('research_questions'))
                     data['research_questions'] = data_rq
 

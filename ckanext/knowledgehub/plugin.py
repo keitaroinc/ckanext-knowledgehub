@@ -86,6 +86,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'dashboard_research_questions': h.dashboard_research_questions,
             'add_rqs_to_dataset': h.add_rqs_to_dataset,
             'remove_rqs_from_dataset': h.remove_rqs_from_dataset,
+            'update_rqs_in_dataset': h.update_rqs_in_dataset,
         }
 
     # IDatasetForm

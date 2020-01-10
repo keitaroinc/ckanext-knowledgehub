@@ -181,6 +181,7 @@ schema. In this case the version should be set to the next CKAN version number.
 <copyField source="res_extras_*" dest="text"/>
 <copyField source="vocab_*" dest="text"/>
 <copyField source="khe_*" dest="text"/>
+<copyField source="khe_package_id" dest="text"/>
 <copyField source="urls" dest="text"/>
 <copyField source="name" dest="text"/>
 <copyField source="title" dest="text"/>

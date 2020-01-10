@@ -278,6 +278,11 @@ def resource_view_update(context, data_dict):
     # TODO need to implement custom authorization actions
     # check_access('resource_view_update', context, data_dict)
 
+    old_resource_view_data = model_dictize.resource_view_dictize(resource_view,
+                                                             context)
+
+    # before update
+
     resource_view = model_save.resource_view_dict_save(data, context)
     if not context.get('defer_commit'):
         model.repo.commit()
@@ -286,7 +291,7 @@ def resource_view_update(context, data_dict):
 
     # Update index
     Visualization.update_index_doc(resource_view_data)
-    plugin_helpers.add_rqs_to_dataset(resource_view_data)
+    plugin_helpers.update_rqs_in_dataset(old_resource_view_data, resource_view_data)
 
 
     return resource_view_data

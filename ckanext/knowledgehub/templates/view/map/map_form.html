@@ -112,11 +112,17 @@
             {% set dict = {} %}
             {% for k in h.get_rq_options() %}
               {% if map %}
-                {% for m in map.research_questions %}
-                  {% if k.text == m %}
+                {% if map.research_questions is iterable and map.research_questions is not string %}
+                  {% for m in map.research_questions %}
+                    {% if k.text == m %}
+                      {% set new_item = dict.__setitem__(k.text, "True") %}
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  {% if chart.research_questions == k.text %}
                     {% set new_item = dict.__setitem__(k.text, "True") %}
                   {% endif %}
-                {% endfor %}
+                {% endif %}
                 {% if not dict[k.text] %}
                   {% set new_item = dict.__setitem__(k.text, "False") %}
                 {% endif %}

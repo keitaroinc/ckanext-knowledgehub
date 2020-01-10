@@ -765,8 +765,11 @@ def add_rqs_to_dataset(res_view):
                 all_rqs.append(old)
     if res_view.get('research_questions'):
         res_rq = json.loads(res_view.get('research_questions'))
-        for new in res_rq:
-            all_rqs.append(new)
+        if isinstance(res_rq, unicode):
+            all_rqs.append(res_rq)
+        else:
+            for new in res_rq:
+                all_rqs.append(new)
     
     eliminate_duplicates = set(all_rqs)
     all_rqs = list(eliminate_duplicates)
@@ -806,7 +809,6 @@ def remove_rqs_from_dataset(res_view):
                             if q == rq:
                                 should_stay[rq] = True
             new_rqs_package_dict = {}
-
             package_sh = toolkit.get_action('package_show')(
                 dict(context, return_type='dict'), {'id': pkg_id})
             if package_sh.get('research_question'):
@@ -829,3 +831,91 @@ def remove_rqs_from_dataset(res_view):
                 except (KeyError, IndexError):
                     raise ValidationError(e.error_dict)
 
+
+def update_rqs_in_dataset(old_data, res_view):
+
+    context =  _get_context()
+    pkg_dict = toolkit.get_action('package_show')(
+        dict(context, return_type='dict'),
+        {'id': res_view['package_id']})
+
+    rq_options = get_rq_options()
+    all_rqs = []
+    if not pkg_dict.get('research_question'):
+        pkg_dict['research_question'] = []
+    else:
+        if isinstance(pkg_dict['research_question'], unicode):
+            old_rqs = pkg_dict.get('research_question')
+            old_list = old_rqs.split(',')
+
+            for old in old_list:
+                all_rqs.append(old)
+    if res_view.get('research_questions'):
+        res_rq = json.loads(res_view.get('research_questions'))
+        for new in res_rq:
+            all_rqs.append(new)
+    
+    eliminate_duplicates = set(all_rqs)
+    all_rqs = list(eliminate_duplicates)
+    # pkg_dict['research_question'] = ",".join(all_rqs)
+
+
+    pkg_id = res_view.get('package_id')
+
+    # 
+    if old_data.get('__extras') and res_view.get('__extras'):
+        new_ext = res_view.get('__extras')
+        old_ext = old_data.get('__extras')
+        list_rqs = []
+        if old_ext.get('research_questions'): #ako ima u staroto
+            if new_ext.get('research_questions'): #ako ima u novoto
+                if isinstance(new_ext.get('research_questions'), list):
+                    set_new = set(new_ext.get('research_questions'))
+                else:
+                    li = []
+                    li.append(new_ext.get('research_questions'))
+                    set_new = set(li)
+                if isinstance(old_ext.get('research_questions'), list):
+                    set_old = set(old_ext.get('research_questions'))
+                else:
+                    li = []
+                    li.append(old_ext.get('research_questions'))
+                    set_old = set(li)
+                list_rqs = list(set_old-set_new)
+                # new_ext['research_questions'].extend(diff)
+            else:
+                list_rqs = old_ext.get('research_questions')
+
+            data_dict = {}
+            should_stay = {}
+            for rq in list_rqs:
+                data_dict['text']= rq
+                data_dict['fq'] = "khe_package_id:" + pkg_id
+                should_stay[rq] = False
+                results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+                for res in results_search:
+                    if res.get('research_questions') and res.get('id') != res_view.get('id') \
+                    and res.get('khe_package_id') == pkg_id:
+                        questions = json.loads(res.get('research_questions'))
+                        for q in questions:
+                            if q == rq:
+                                should_stay[rq] = True
+            new_rqs_package_dict = {}
+
+            questions_package = all_rqs
+            for q in questions_package:
+                if q in should_stay:
+                    if should_stay[q] == False:
+                        questions_package.remove(q)
+            pkg_dict['research_question'] = ",".join(questions_package)
+
+            try:
+                context['defer_commit'] = True
+                context['use_cache'] = False
+                toolkit.get_action('package_update')(context, pkg_dict)
+                context.pop('defer_commit')
+            except ValidationError as e:
+                try:
+                    raise ValidationError(e.error_dict['research_question'][-1])
+                except (KeyError, IndexError):
+                    raise ValidationError(e.error_dict)

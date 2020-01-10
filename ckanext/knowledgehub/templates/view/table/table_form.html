@@ -131,14 +131,19 @@
             {% set dict = {} %}
             {% for k in h.get_rq_options() %}
               {% if table %}
-                {% for m in table.research_questions %}
-                  {% if k.text == m %}
+                {% if table.research_questions is iterable and table.research_questions is not string %}
+                  {% for m in table.research_questions %}
+                    {% if k.text == m %}
+                      {% set new_item = dict.__setitem__(k.text, "True") %}
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  {% if table.research_questions == k.text %}
                     {% set new_item = dict.__setitem__(k.text, "True") %}
                   {% endif %}
-                {% endfor %}
-                {% if not dict[k.text] %}
-                  {% set new_item = dict.__setitem__(k.text, "False") %}
-                {% endif %}
+                  {% if not dict[k.text] %}
+                    {% set new_item = dict.__setitem__(k.text, "False") %}
+                  {% endif %}
 
               {% else %}
                 {% set new_item = dict.__setitem__(k.text, "False") %}
