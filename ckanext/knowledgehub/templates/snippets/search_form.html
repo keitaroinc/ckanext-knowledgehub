@@ -2,6 +2,13 @@
 
 {% ckan_extends %}
 
+{% block search_sortby %}
+  {{ super() }}
+  {% if h.get_active_tab() != 'package' %}
+    <input type="hidden" name="_search-for" value="{{h.get_active_tab()}}">
+  {% endif %}
+{% endblock %}
+
 {% block search_input %}
   <div class="input-group search-input-group">
     <input aria-label="{% block header_site_search_label %}{{ placeholder }}{% endblock %}" id="field-giant-search" type="text" class="form-control input-lg" name="q" value="{{ query }}" autocomplete="off" placeholder="{{ placeholder }}">

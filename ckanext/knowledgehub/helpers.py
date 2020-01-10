@@ -773,31 +773,57 @@ def get_active_tab():
     return 'package'
 
 
+def _get_sort():
+    sort = request.params.get('sort', '').strip()
+    return sort.replace('title_string', 'title')
+
+
 def get_searched_rqs(query):
     context = _get_context()
+    search_query = {
+        'text': query,
+        'page': int(request.params.get('page', 1)),
+    }
+    sort = _get_sort()
+    if sort:
+        search_query['sort'] = sort
     list_rqs_searched = toolkit.get_action(
         'search_research_questions')(
             context, 
-            {'text': query, 'page': int(request.params.get('page', 1))})
+            search_query)
     list_rqs_searched['pager'] = _get_pager(list_rqs_searched,
                                             'research-questions')
     return list_rqs_searched
 
 def get_searched_dashboards(query):
     context = _get_context()
+    search_query = {
+        'text': query,
+        'page': int(request.params.get('page', 1)),
+    }
+    sort = _get_sort()
+    if sort:
+        search_query['sort'] = sort
     list_dash_searched = toolkit.get_action(
         'search_dashboards')(
             context, 
-            {'text': query, 'page': int(request.params.get('page', 1))})
+            search_query)
     list_dash_searched['pager'] = _get_pager(list_dash_searched, 'dashboards')
     return list_dash_searched
 
 def get_searched_visuals(query):
     context = _get_context()
+    search_query = {
+        'text': query,
+        'page': int(request.params.get('page', 1)),
+    }
+    sort = _get_sort()
+    if sort:
+        search_query['sort'] = sort
     list_visuals_searched = toolkit.get_action(
         'search_visualizations')(
             context, 
-            {'text': query, 'page': int(request.params.get('page', 1))})
+            search_query)
     visuals = []
     for vis in list_visuals_searched['results']:
         visual = model.Session.query(ResourceView)\
