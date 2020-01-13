@@ -58,7 +58,7 @@ def ckan_params_to_solr_args(data_dict):
     provided = {}
     provided.update(data_dict)
     for argn in VALID_SOLR_ARGS:
-        if provided.get(argn):
+        if provided.get(argn) is not None:
             solr_args[argn] = provided.pop(argn)
     q = []
     if solr_args.get('q'):
@@ -515,8 +515,8 @@ class Indexed:
 
         for result in index_results:
             results.append(indexed_doc_to_data_dict(result, fields))
-
-        return results
+        index_results.docs = results
+        return index_results
 
     @classmethod
     def delete_from_index(cls, data):
