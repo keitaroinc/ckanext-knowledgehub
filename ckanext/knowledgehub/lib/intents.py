@@ -173,8 +173,8 @@ class UserIntentsExtractor:
     def _extract_research_question(self, query_text):
         results = self.research_question.search_index(q='text:' + query_text,
                                                       rows=1)
-        if results:
-            rq = results[0]
+        if results.hits:
+            rq = results.docs[0]
             return (rq, rq.get('theme_id'), rq.get('sub_theme_id'))
         return (None, None, None)
 

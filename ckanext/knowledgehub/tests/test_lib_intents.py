@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from collections import namedtuple
 
 from ckan.tests import helpers
+from pysolr import Results
 
 from ckanext.knowledgehub.lib.intents import (
     UserIntentsExtractor,
@@ -39,7 +40,12 @@ class TestUserIntentsExtractor:
             'sub_theme_title': 'SubTheme',
             'title': 'RQ Title',
         }
-        research_question.search_index.return_value = [rq]
+        research_question.search_index.return_value = Results({
+            'response': {
+                'docs': [rq],
+                'numFound': 1,
+            }
+        })
 
         extractor = UserIntentsExtractor(user_intents, nlp, research_question, model_locator)
 
@@ -79,7 +85,12 @@ class TestUserIntentsExtractor:
             'sub_theme_title': 'SubTheme',
             'title': 'RQ Title',
         }
-        research_question.search_index.return_value = [rq]
+        research_question.search_index.return_value = Results({
+            'response': {
+                'docs': [rq],
+                'numFound': 1,
+            }
+        })
 
 
         extractor = UserIntentsExtractor(user_intents, nlp, research_question, model_locator)
