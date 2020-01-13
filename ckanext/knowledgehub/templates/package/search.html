@@ -10,24 +10,24 @@
 {% set active_tab = h.get_active_tab() %}
 
 {% if active_tab == 'research-questions' %}
-    {% set search_results = h.get_searched_rqs(query_search) %}
+{% set search_results = h.get_searched_rqs(query_search) %}
 {% elif active_tab == 'visualizations' %}
-    {% set search_results = h.get_searched_visuals(query_search) %}
+{% set search_results = h.get_searched_visuals(query_search) %}
 {% elif active_tab == 'dashboards' %}
-    {% set search_results = h.get_searched_dashboards(query_search) %}
+{% set search_results = h.get_searched_dashboards(query_search) %}
 {% else %}
 {% endif %}
 
 {% block subtitle %}
-    {% if active_tab == 'research-questions' %}
-    {{ _("Research Questions") }}
-    {% elif active_tab == 'visualizations' %}
-    {{ _("Visualizations") }}
-    {% elif active_tab == 'dashboards' %}
-    {{ _("Dashboards") }}
-    {% else %}
-    {{ _("Datasets") }}
-    {% endif%}
+{% if active_tab == 'research-questions' %}
+{{ _("Research Questions") }}
+{% elif active_tab == 'visualizations' %}
+{{ _("Visualizations") }}
+{% elif active_tab == 'dashboards' %}
+{{ _("Dashboards") }}
+{% else %}
+{{ _("Datasets") }}
+{% endif%}
 {% endblock %}
 
 {% block breadcrumb_content %}
@@ -125,12 +125,11 @@
                     </div>
                     <div class="col-lg-7 group-list indicators">
 
-                        <div class="group-list-items" style="display: inline-block">
+                        <div class="group-list-items tabs-items">
 
-                            <ul class="nav nav-tabs" id="navlinks">
+                            <ul class="nav nav-tabs flex flex-wrap" id="navlinks">
                                 <li class="{% if active_tab=='package' %}active{% endif %}">
-                                    <a class="group-list-items tab"
-                                        href="{{h.get_tab_url('package')}}">DATASETS</a>
+                                    <a class="group-list-items tab" href="{{h.get_tab_url('package')}}">DATASETS</a>
                                 </li>
                                 <li class="{% if active_tab=='research-questions' %}active{% endif %}">
                                     <a class="group-list-items tab"
@@ -190,44 +189,44 @@
                         <div id="hidden_visuals" class="tab_content">
                             {% if search_results.count %}
                             {% set count_vis = search_results.count %}
-                                <div class="flex flex-wrap" id="tabs-visualizations">
-                                    {% set vis = search_results.results %}
-                                    {% for resource_view in vis %}
-                                    <div class="col-lg-12 visualizations">
-                                        {% if resource_view.view_type == 'chart' %}
-                                        {% set chart_id = resource_view.id %}
-                                        {% if resource_view.__extras %}
-                                        {% set colors = resource_view.__extras.color %}
-                                        {% set x_axis = resource_view.__extras.x_axis %}
-                                        {% set y_axis = resource_view.__extras.y_axis %}
-                                        {% set additional_tornado_value = resource_view.__extras.additional_tornado_value %}
-                                        {% set chart_type = resource_view.__extras.type %}
-                                        {% set title = resource_view.title %}
-                                        {% set chart_subtitle = resource_view.__extras.chart_subtitle %}
-                                        {% set chart_description = resource_view.__extras.chart_description %}
-                                        {% set show_legend = resource_view.__extras.show_legend %}
-                                        {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
-                                        {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
-                                        {% set tooltip_name = resource_view.__extras.tooltip_name %}
-                                        {% set data_format = resource_view.__extras.data_format %}
-                                        {% set y_tick_format = resource_view.__extras.y_tick_format %}
-                                        {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
-                                        {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
-                                        {% set padding_bottom = resource_view.__extras.padding_bottom %}
-                                        {% set padding_top = resource_view.__extras.padding_top %}
-                                        {% set tick_count = resource_view.__extras.tick_count %}
-                                        {% set show_labels = resource_view.__extras.show_labels %}
-                                        {% set y_label = resource_view.__extras.y_label %}
-                                        {% set y_from_zero = resource_view.__extras.y_from_zero %}
-                                        {% set data_sort = resource_view.__extras.sort %}
-                                        {% set filters = resource_view.__extras.filters %}
-                                        {% set category_name = resource_view.__extras.category_name %}
-                                        {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
-                                        {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
-                                        {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
-                                        {% set sql_string = resource_view.__extras.sql_string %}
-                                        {% endif %}
-                                        {% snippet 'ajax_snippets/chart_module.html',
+                            <div class="flex flex-wrap" id="tabs-visualizations">
+                                {% set vis = search_results.results %}
+                                {% for resource_view in vis %}
+                                <div class="col-xs-12 visualizations">
+                                    {% if resource_view.view_type == 'chart' %}
+                                    {% set chart_id = resource_view.id %}
+                                    {% if resource_view.__extras %}
+                                    {% set colors = resource_view.__extras.color %}
+                                    {% set x_axis = resource_view.__extras.x_axis %}
+                                    {% set y_axis = resource_view.__extras.y_axis %}
+                                    {% set additional_tornado_value = resource_view.__extras.additional_tornado_value %}
+                                    {% set chart_type = resource_view.__extras.type %}
+                                    {% set title = resource_view.title %}
+                                    {% set chart_subtitle = resource_view.__extras.chart_subtitle %}
+                                    {% set chart_description = resource_view.__extras.chart_description %}
+                                    {% set show_legend = resource_view.__extras.show_legend %}
+                                    {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
+                                    {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
+                                    {% set tooltip_name = resource_view.__extras.tooltip_name %}
+                                    {% set data_format = resource_view.__extras.data_format %}
+                                    {% set y_tick_format = resource_view.__extras.y_tick_format %}
+                                    {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
+                                    {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
+                                    {% set padding_bottom = resource_view.__extras.padding_bottom %}
+                                    {% set padding_top = resource_view.__extras.padding_top %}
+                                    {% set tick_count = resource_view.__extras.tick_count %}
+                                    {% set show_labels = resource_view.__extras.show_labels %}
+                                    {% set y_label = resource_view.__extras.y_label %}
+                                    {% set y_from_zero = resource_view.__extras.y_from_zero %}
+                                    {% set data_sort = resource_view.__extras.sort %}
+                                    {% set filters = resource_view.__extras.filters %}
+                                    {% set category_name = resource_view.__extras.category_name %}
+                                    {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
+                                    {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
+                                    {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
+                                    {% set sql_string = resource_view.__extras.sql_string %}
+                                    {% endif %}
+                                    {% snippet 'ajax_snippets/chart_module.html',
                                                             type='chart',
                                                             chart_id = chart_id,
                                                             colors=colors,
@@ -261,10 +260,10 @@
                                                             dynamic_reference_factor=dynamic_reference_factor,
                                                             dynamic_reference_label=dynamic_reference_label
                                                         %}
-                                        {% endif %}
-                                    </div>
-                                    {% endfor %}
+                                    {% endif %}
                                 </div>
+                                {% endfor %}
+                            </div>
                             {% else %}
                             {{ "There are no visualizations found for the selected query. "}}
                             {% endif %}
@@ -329,11 +328,11 @@
     </div>
 
     {% block page_pagination %}
-        {% if active_tab == 'package' %}
-            {{ c.page.pager(q=c.q) }}
-        {% else %}
-            {{ search_results.pager.pager(q=c.q) }}
-        {% endif %}
+    {% if active_tab == 'package' %}
+    {{ c.page.pager(q=c.q) }}
+    {% else %}
+    {{ search_results.pager.pager(q=c.q) }}
+    {% endif %}
     {% endblock %}
 </section>
 
@@ -343,7 +342,7 @@
     <div class="row">
         <div class="col-lg-10 col-lg-offset-1 title">
             <h4>VISUALIZATIONS</h4>
-            <hr>
+
         </div>
         {% if h.get_last_visuals() %}
         <div class="col-lg-10 col-lg-offset-1 visualizations">
