@@ -62,7 +62,7 @@ class UserQuery(DomainObject):
     @classmethod
     def add_query(cls, query):
         pass
-    
+
     @classmethod
     def get_all_after(cls, after, page, size):
         page = page if page >= 1 else 1
