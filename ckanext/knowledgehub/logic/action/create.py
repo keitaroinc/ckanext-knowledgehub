@@ -362,7 +362,6 @@ def dashboard_create(context, data_dict):
 
 
 def package_create(context, data_dict):
-
     return ckan_package_create(context, data_dict)
 
 
