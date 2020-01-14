@@ -1,12 +1,12 @@
 {% resource 'knowledgehub/table' %}
 {% resource 'knowledgehub/chart' %}
+{% resource 'knowledgehub/javascript/user_query_result.js' %}
 
 
 {% extends "page.html" %}
 {% import 'macros/form.html' as form %}
 
 {% set query_search = c.q or '*' %}
-{% set rq_search_results = h.get_searched_rqs(query_search) %}
 {% set active_tab = h.get_active_tab() %}
 
 {% if active_tab == 'research-questions' %}
@@ -174,6 +174,7 @@
                                                 href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
                                             <small>Research Question</small>
                                         </h3>
+                                        <input type="hidden" id="rq-id" name="rq-id" value="{{ rq.get('id') }}">
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -297,6 +298,7 @@
                                                 </div>
                                             </div>
                                         </a>
+                                        <input type="hidden" id="dashboard-id" name="dashboard-id" value="{{ dashboard.id }}">
                                     </div>
                                 </li>
 
@@ -430,6 +432,7 @@
         </div>
         {% endif %}
 
+        <input type="hidden" id="user-id" value="{{ c.userobj.id }}">
     </div>
 </div>
 {% endblock %}

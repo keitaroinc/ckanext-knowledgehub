@@ -5,7 +5,6 @@
     const DATASET_TYPE = 'dataset'
     const RQ_TYPE = 'research_question'
     const DASHBOARD_TYPE = 'dashboard'
-    const VISUALIZATION_TYPE = 'visualization'
 
     var api = {
         get: function (action, params) {
@@ -23,44 +22,34 @@
         }
     };
 
-    function saveUserQueryResult(result_type, result_id) {
-        var url = window.location.href
-        var parts = url.split('/')
-        var page = parts[3]
-
-        if (!SKIP_PAGES.includes(page)) {
-            var query_text = $('#field-giant-search').val();
-            if (query_text) {
-                var user_id = $('#user-id').val();
-                api.get('user_query_show', {
-                    query_text: query_text,
-                    user_id: user_id
+    function saveUserQueryResult(query_text, result_type, result_id, user_id) {
+        api.get('user_query_show', {
+            query_text: query_text,
+            query_type: result_type,
+            user_id: user_id
+        })
+        .done(function (data) {
+            if (data.success) {
+                var query_id = data.result.id
+                api.post('user_query_result_create', {
+                    query_id: query_id,
+                    result_type: result_type,
+                    result_id: result_id
                 })
                 .done(function (data) {
-                    if (data.success) {
-                        var query_id = data.result.id
-                        api.post('user_query_result_create', {
-                            query_id: query_id,
-                            result_type: result_type,
-                            result_id: result_id
-                        })
-                        .done(function (data) {
-                            console.log("User Quere Result: SAVED!");
-                        })
-                        .fail(function (error) {
-                            console.log("User Quere Result failed: " + error.statusText);
-                        });
-                    }
+                    console.log("User Quere Result: SAVED!");
                 })
                 .fail(function (error) {
-                    console.log("User Query Show failed: " + error.statusText);
+                    console.log("User Quere Result failed: " + error.statusText);
                 });
             }
-        }
+        })
+        .fail(function (error) {
+            console.log("User Query Show failed: " + error.statusText);
+        });
     }
 
     $(document).ready(function () {
-
         var save_user_query = function(callback) {
             var tab_content = $('.tab_content');
 
@@ -84,8 +73,16 @@
         }
 
         save_user_query(function(result_type, result_id){
-            // TODO: get user ID here
-            saveUserQueryResult(result_type, result_id)
+            var url = window.location.href
+            var parts = url.split('/')
+            var page = parts[3]
+            if (!SKIP_PAGES.includes(page)) {
+                var query_text = $('#field-giant-search').val();
+                if (query_text) {
+                    var user_id = $('#user-id').val();
+                    saveUserQueryResult(query_text, result_type, result_id, user_id)
+                }
+            }
         });
     });
 })(ckan.i18n.ngettext, $);
