@@ -59,8 +59,9 @@ class Dashboard(DomainObject, Indexed):
 
     @staticmethod
     def before_index(data):    
-        ind = data.get('indicators')
-        ind = json.loads(data['indicators'])
+        ind = []
+        if data.get('indicators'):
+            ind = json.loads(data['indicators'])
         list_rqs = []
         data['research_questions'] = []
         for k in ind:
