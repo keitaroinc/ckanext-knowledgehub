@@ -34,6 +34,7 @@ from ckanext.knowledgehub.model import (Dashboard,
                                         ResearchQuestion,
                                         Visualization)
 from ckanext.datastore.logic.action import datastore_create
+from pysolr import Results
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
@@ -216,7 +217,7 @@ class TestKWHCreateActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (1)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
@@ -576,6 +577,7 @@ class TestKWHGetActions(ActionsBase):
             data_dict.get('title')
         )
 
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_show_list(self):
         user = factories.Sysadmin()
         context = {
@@ -588,10 +590,16 @@ class TestKWHGetActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (2)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         dashboard_show = get_actions.dashboard_show(
@@ -966,6 +974,7 @@ class TestKWHDeleteActions(ActionsBase):
         ResearchQuestion.delete_from_index.assert_called_once()
 
     @_monkey_patch(Dashboard, 'delete_from_index', mock.Mock())
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_delete(self):
         user = factories.Sysadmin()
         context = {
@@ -978,10 +987,16 @@ class TestKWHDeleteActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (3)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         result = delete_actions.dashboard_delete(
@@ -1185,6 +1200,7 @@ class TestKWHUpdateActions(ActionsBase):
         Visualization.update_index_doc.assert_called_once()
 
     @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_update(self):
         user = factories.Sysadmin()
         context = {
@@ -1197,10 +1213,16 @@ class TestKWHUpdateActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (4)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         data_dict['id'] = dashboard.get('id')
@@ -1479,11 +1501,16 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
 
     @_monkey_patch(Dashboard, 'search_index', mock.Mock())
     def test_search_dashboards(self):
-        Dashboard.search_index.return_value = [{
-            'id': 'aaa',
-            'p1': 'v1',
-            'p2': 'v2',
-        }]
+        Dashboard.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
         results = get_actions.search_dashboards({}, {
             'text': 'aaa',
         })
@@ -1492,11 +1519,16 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
 
     @_monkey_patch(ResearchQuestion, 'search_index', mock.Mock())
     def test_search_research_questions(self):
-        ResearchQuestion.search_index.return_value = [{
-            'id': 'aaa',
-            'p1': 'v1',
-            'p2': 'v2',
-        }]
+        ResearchQuestion.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
         results = get_actions.search_research_questions({}, {
             'text': 'aaa',
         })
@@ -1505,11 +1537,16 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
 
     @_monkey_patch(Visualization, 'search_index', mock.Mock())
     def test_search_visualizations(self):
-        Visualization.search_index.return_value = [{
-            'id': 'aaa',
-            'p1': 'v1',
-            'p2': 'v2',
-        }]
+        Visualization.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
         results = get_actions.search_visualizations({}, {
             'text': 'aaa',
         })
