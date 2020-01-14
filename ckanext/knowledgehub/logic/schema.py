@@ -162,7 +162,6 @@ def user_query_result_schema():
     return {
         'query_id': [
             not_empty,
-            validators.user_query_result_query_id,
             unicode
         ],
         'result_type': [not_empty, unicode],

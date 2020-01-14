@@ -761,15 +761,13 @@ def get_predictions(context, data_dict):
     return rnn_helpers.predict_completions(text)
 
 
-
-
 def _search_entity(index, ctx, data_dict):
     page = data_dict.get('page', 1)
     page_size = int(data_dict.get('limit',
                                   config.get('ckan.datasets_per_page', 20)))
     if page <= 0:
         page = 1
-    
+
     # clean the data dict
     for k in ['page', 'limit']:
         if data_dict.get(k) is not None:
@@ -800,7 +798,6 @@ def _search_entity(index, ctx, data_dict):
     }
 
     class _results_wrapper(dict):
-        pass
         def _for_json(self):
             return json.dumps(self, cls=DateTimeEncoder)
 
@@ -810,14 +807,15 @@ def _search_entity(index, ctx, data_dict):
 def _save_user_query(ctx, text, doc_type):
     ctx['ignore_auth'] = True
 
-    query_data = {
-        'query_text': text,
-        'query_type': doc_type
-    }
-
-    logic.get_action('user_query_create')(
-        ctx, query_data
-    )
+    if text != '*':
+        query_data = {
+            'query_text': text,
+            'query_type': doc_type
+        }
+        try:
+            logic.get_action('user_query_create')(ctx, query_data)
+        except Exception as e:
+            log.debug('Save user query: %s', str(e))
 
 
 @toolkit.side_effect_free
@@ -924,18 +922,28 @@ def user_query_show(context, data_dict):
 
     :param id: the query ID
     :type id: string
+    :param query_text: the user search query
+    :type query_text: string
+    :param query_type: the type of the search query
+    :type query_type: string
+    :param user_id: the ID of the user
+    :type user_id: string
 
     :returns: a user query
     :rtype: dictionary
     '''
-    try:
-        check_access('user_query_show', context, data_dict)
-    except NotAuthorized:
-        raise NotAuthorized(_(u'Need to be system administrator'))
 
-    id = logic.get_or_bust(data_dict, 'id')
+    kwargs = {}
+    if data_dict.get('id'):
+        kwargs['id'] = data_dict.get('id')
+    if data_dict.get('query_text'):
+        kwargs['query_text'] = data_dict.get('query_text')
+    if data_dict.get('query_type'):
+        kwargs['query_type'] = data_dict.get('query_type')
+    if data_dict.get('user_id'):
+        kwargs['user_id'] = data_dict.get('user_id')
 
-    query = UserQuery.get(id)
+    query = UserQuery.get(**kwargs)
     if not query:
         raise NotFound(_(u'User Query'))
 

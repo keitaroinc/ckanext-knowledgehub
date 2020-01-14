@@ -19,6 +19,7 @@ import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.create import package_create as ckan_package_create
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
+from ckanext.knowledgehub.logic.action.get import user_query_show
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
@@ -40,10 +41,12 @@ log = logging.getLogger(__name__)
 _df = lib.navl.dictization_functions
 _table_dictize = lib.dictization.table_dictize
 check_access = toolkit.check_access
+get_action = toolkit.get_action
 _get_or_bust = logic.get_or_bust
 NotFound = logic.NotFound
 ValidationError = toolkit.ValidationError
 NotAuthorized = toolkit.NotAuthorized
+Invalid = _df.Invalid
 
 
 def theme_create(context, data_dict):
@@ -559,7 +562,8 @@ def user_intent_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
 
     intent = UserIntents(**data)
     intent.save()
@@ -592,12 +596,30 @@ def user_query_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
 
-    query = UserQuery(**data)
-    query.save()
+    def save_user_query(data):
+        query = UserQuery(**data)
+        query.save()
+        return query.as_dict()
 
-    return query.as_dict()
+    if data.get('user_id'):
+        try:
+            query = user_query_show(
+                context,
+                {
+                    'query_text': data.get('query_text'),
+                    'query_type': data.get('query_type'),
+                    'user_id': data.get('user_id')
+                }
+            )
+
+            raise Invalid(_('User query already exists'))
+        except NotFound:
+            return save_user_query(data)
+
+    return save_user_query(data)
 
 
 def user_query_result_create(context, data_dict):
@@ -615,12 +637,6 @@ def user_query_result_create(context, data_dict):
     :rtype: dictionary
     '''
 
-    try:
-        check_access('user_query_result_create', context, data_dict)
-    except NotAuthorized:
-        raise NotAuthorized(_(u'Need to be system '
-                              u'administrator to administer'))
-
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.user_query_result_schema(),
                                 context)
@@ -628,7 +644,8 @@ def user_query_result_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user_id'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
 
     query_result = UserQueryResult(**data)
     query_result.save()

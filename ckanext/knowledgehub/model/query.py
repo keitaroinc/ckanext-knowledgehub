@@ -48,17 +48,21 @@ user_query_result = Table(
 class UserQuery(DomainObject):
 
     @classmethod
-    def get(cls, reference):
-        '''Returns a user_query object referenced by its id.'''
-        if not reference:
+    def get(cls, **kwargs):
+        '''Returns a filtered user_query object '''
+        if not len(kwargs):
             return None
 
-        return Session.query(cls).get(reference)
+        query = Session.query(cls).autoflush(False)
+        query = query.order_by('created_at desc')
+        query = query.filter_by(**kwargs)
+
+        return query.first()
 
     @classmethod
     def add_query(cls, query):
         pass
-    
+
     @classmethod
     def get_all_after(cls, after, page, size):
         page = page if page >= 1 else 1
