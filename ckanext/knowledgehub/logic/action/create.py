@@ -19,6 +19,7 @@ import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.create import package_create as ckan_package_create
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
+from ckanext.knowledgehub.logic.action.get import user_query_show
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
@@ -605,7 +606,7 @@ def user_query_create(context, data_dict):
 
     if data.get('user_id'):
         try:
-            query = get_action('user_query_show')(
+            query = user_query_show(
                 context,
                 {
                     'query_text': data.get('query_text'),
