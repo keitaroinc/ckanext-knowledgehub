@@ -4,7 +4,7 @@ import json
 
 import ckan.logic as logic
 from ckan.plugins import toolkit
-from ckan.common import _
+from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 
@@ -38,6 +38,17 @@ NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 ValidationError = toolkit.ValidationError
 NotAuthorized = toolkit.NotAuthorized
+
+
+class DateTimeEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
+            return obj.isoformat()
+        elif isinstance(obj, datetime.timedelta):
+            return (datetime.datetime.min + obj).time().isoformat()
+
+        return super(DateTimeEncoder, self).default(obj)
 
 
 @toolkit.side_effect_free
@@ -751,6 +762,20 @@ def get_predictions(context, data_dict):
 
 
 def _search_entity(index, ctx, data_dict):
+    page = data_dict.get('page', 1)
+    page_size = int(data_dict.get('limit',
+                                  config.get('ckan.datasets_per_page', 20)))
+    if page <= 0:
+        page = 1
+
+    # clean the data dict
+    for k in ['page', 'limit']:
+        if data_dict.get(k) is not None:
+            del data_dict[k]
+
+    data_dict['rows'] = page_size
+    data_dict['start'] = (page - 1) * page_size
+
     text = data_dict.get('text')
     if not text:
         raise ValidationError({'text': _('Missing value')})
@@ -758,20 +783,39 @@ def _search_entity(index, ctx, data_dict):
     _save_user_query(ctx, text, index.doctype)
 
     args = ckan_params_to_solr_args(data_dict)
-    return index.search_index(**args)
+    results = index.search_index(**args)
+
+    results.page = page
+    results.page_size = page_size
+
+    result_dict = {
+        'count': results.hits,
+        'results': results.docs,
+        'facets': results.facets,
+        'stats': results.stats,
+        'page': page,
+        'limit': page_size,
+    }
+
+    class _results_wrapper(dict):
+        def _for_json(self):
+            return json.dumps(self, cls=DateTimeEncoder)
+
+    return _results_wrapper(result_dict)
 
 
 def _save_user_query(ctx, text, doc_type):
     ctx['ignore_auth'] = True
 
-    query_data = {
-        'query_text': text,
-        'query_type': doc_type
-    }
-
-    logic.get_action('user_query_create')(
-        ctx, query_data
-    )
+    if text != '*':
+        query_data = {
+            'query_text': text,
+            'query_type': doc_type
+        }
+        try:
+            logic.get_action('user_query_create')(ctx, query_data)
+        except Exception as e:
+            log.debug('Save user query: %s', str(e))
 
 
 @toolkit.side_effect_free
@@ -878,18 +922,28 @@ def user_query_show(context, data_dict):
 
     :param id: the query ID
     :type id: string
+    :param query_text: the user search query
+    :type query_text: string
+    :param query_type: the type of the search query
+    :type query_type: string
+    :param user_id: the ID of the user
+    :type user_id: string
 
     :returns: a user query
     :rtype: dictionary
     '''
-    try:
-        check_access('user_query_show', context, data_dict)
-    except NotAuthorized:
-        raise NotAuthorized(_(u'Need to be system administrator'))
 
-    id = logic.get_or_bust(data_dict, 'id')
+    kwargs = {}
+    if data_dict.get('id'):
+        kwargs['id'] = data_dict.get('id')
+    if data_dict.get('query_text'):
+        kwargs['query_text'] = data_dict.get('query_text')
+    if data_dict.get('query_type'):
+        kwargs['query_type'] = data_dict.get('query_type')
+    if data_dict.get('user_id'):
+        kwargs['user_id'] = data_dict.get('user_id')
 
-    query = UserQuery.get(id)
+    query = UserQuery.get(**kwargs)
     if not query:
         raise NotFound(_(u'User Query'))
 

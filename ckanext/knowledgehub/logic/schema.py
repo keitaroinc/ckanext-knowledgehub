@@ -56,7 +56,7 @@ def sub_theme_update():
 def research_question_schema():
     return {
         'name': [not_empty,
-                 name_validator,
+                 validators.long_name_validator(),
                  validators.research_question_name_validator,
                  unicode],
         'theme': [ignore_missing, unicode],
@@ -162,7 +162,6 @@ def user_query_result_schema():
     return {
         'query_id': [
             not_empty,
-            validators.user_query_result_query_id,
             unicode
         ],
         'result_type': [not_empty, unicode],

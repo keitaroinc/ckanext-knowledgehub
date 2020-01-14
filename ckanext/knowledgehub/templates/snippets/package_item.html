@@ -1,4 +1,5 @@
 {% ckan_extends %}
+
 {% block heading %}
 <h3 class="dataset-heading text-ellipsis">
     {% block heading_private %}
@@ -65,5 +66,7 @@
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Author:
 </span><span class="text-muted">{{ package.author }}</span></h5></a>
 {% endif %}
+
+<input type="hidden" id="dataset-id" name="dataset_id" value="{{ package.id }}">
 
 {% endblock %}

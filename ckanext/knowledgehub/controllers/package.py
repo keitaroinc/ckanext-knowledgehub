@@ -23,6 +23,12 @@ render = base.render
 
 log = logging.getLogger(__name__)
 
+SKIP_SEARCH_FOR = [
+    'research-questions',
+    'dashboards',
+    'visualizations'
+]
+
 
 def _encode_params(params):
     return [(k, v.encode('utf-8') if isinstance(v, string_types) else str(v))
@@ -60,6 +66,7 @@ class KWHPackageController(PackageController):
 
         # unicode format (decoded from utf8)
         q = c.q = request.params.get('q', u'')
+        search_for = request.params.get('_search-for', u'datasets')
 
         # Store search query in KWH data
         try:
@@ -78,17 +85,18 @@ class KWHPackageController(PackageController):
                     sysadmin_context, kwh_data
                 )
 
-                query_ctx = {
-                    'ignore_auth': True
-                }
-                query_ctx.update(context)
-                query_data = {
-                    'query_text': q,
-                    'query_type': 'dataset'
-                }
-                logic.get_action('user_query_create')(
-                    query_ctx, query_data
-                )
+                if search_for not in SKIP_SEARCH_FOR:
+                    query_ctx = {
+                        'ignore_auth': True
+                    }
+                    query_ctx.update(context)
+                    query_data = {
+                        'query_text': q,
+                        'query_type': 'dataset'
+                    }
+                    logic.get_action('user_query_create')(
+                        query_ctx, query_data
+                    )
         except Exception as e:
             log.debug('Error while storing data: %s' % str(e))
 

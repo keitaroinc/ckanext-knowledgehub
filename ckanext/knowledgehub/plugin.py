@@ -82,11 +82,17 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_single_rq': h.get_single_rq,
             'get_rqs_dashboards': h.get_rqs_dashboards,
             'remove_space_for_url': h.remove_space_for_url,
-            'format_date': h.format_date,
+            'format_date': h.format_date, 
+            'get_searched_rqs': h.get_searched_rqs,
+            'get_searched_dashboards': h.get_searched_dashboards,
+            'get_searched_visuals': h.get_searched_visuals,
             'dashboard_research_questions': h.dashboard_research_questions,
             'add_rqs_to_dataset': h.add_rqs_to_dataset,
             'remove_rqs_from_dataset': h.remove_rqs_from_dataset,
             'update_rqs_in_dataset': h.update_rqs_in_dataset,
+            'get_single_dash': h.get_single_dash,
+            'get_active_tab': h.get_active_tab,
+            'get_tab_url': h.get_tab_url,
         }
 
     # IDatasetForm

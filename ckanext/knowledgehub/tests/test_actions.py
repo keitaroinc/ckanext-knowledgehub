@@ -27,11 +27,13 @@ from ckanext.knowledgehub.logic.action import delete as delete_actions
 from ckanext.knowledgehub.logic.action import update as update_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
-                                                mock_pylons)
+                                                mock_pylons,
+                                                get_context)
 from ckanext.knowledgehub.model import (Dashboard,
                                         ResearchQuestion,
                                         Visualization)
 from ckanext.datastore.logic.action import datastore_create
+from pysolr import Results
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
@@ -214,7 +216,7 @@ class TestKWHCreateActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (1)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
@@ -304,6 +306,67 @@ class TestKWHCreateActions(ActionsBase):
             'Successfully run command: knowledgehub -c %s %s'
             % (os.environ.get('CKAN_INI'), data_dict.get('command'))
         )
+
+    def test_user_query_create(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        assert_equals(data_dict['query_text'], query['query_text'])
+        assert_equals(data_dict['query_type'], query['query_type'])
+
+    def test_user_intent_create(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        intent = create_actions.user_intent_create(get_context(), data_dict)
+        assert_equals(data_dict['inferred_transactional'],
+                      intent['inferred_transactional'])
+        assert_equals(data_dict['inferred_navigational'],
+                      intent['inferred_navigational'])
+        assert_equals(data_dict['inferred_informational'],
+                      intent['inferred_informational'])
+
+    def test_user_query_result_create(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            "query_id": query['id'],
+            "result_type": "dataset",
+            "result_id": "bfbe08a1-24ab-493d-8892-72e399f6e1b7"
+        }
+
+        result = create_actions.user_query_result_create(
+            get_context(),
+            data_dict)
+
+        assert_equals(data_dict['result_type'], result['result_type'])
+        assert_equals(data_dict['result_id'], result['result_id'])
+        assert_equals(data_dict['query_id'], result['query_id'])
 
 
 class TestKWHGetActions(ActionsBase):
@@ -456,6 +519,7 @@ class TestKWHGetActions(ActionsBase):
             data_dict.get('title')
         )
 
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_show_list(self):
         user = factories.Sysadmin()
         context = {
@@ -468,10 +532,16 @@ class TestKWHGetActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (2)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         dashboard_show = get_actions.dashboard_show(
@@ -603,6 +673,155 @@ class TestKWHGetActions(ActionsBase):
 
         assert_equals(last_rnn_corpus, data_dict.get('corpus'))
 
+    def test_user_query_show(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        q = create_actions.user_query_create(get_context(), data_dict)
+        q_shows = get_actions.user_query_show(get_context(), {'id': q['id']})
+
+        assert_equals(q['query_text'], q_shows['query_text'])
+
+    def test_user_intent_show(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        i = create_actions.user_intent_create(get_context(), data_dict)
+        i_show = get_actions.user_intent_show(get_context(), {'id': i['id']})
+
+        assert_equals(i['inferred_transactional'],
+                      i_show['inferred_transactional'])
+        assert_equals(i['inferred_navigational'],
+                      i_show['inferred_navigational'])
+        assert_equals(i['inferred_informational'],
+                      i_show['inferred_informational'])
+
+    def test_user_query_result_show(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            "query_id": query['id'],
+            "result_type": "dataset",
+            "result_id": "bfbe08a1-24ab-493d-8892-72e399f6e1b7"
+        }
+
+        r = create_actions.user_query_result_create(get_context(), data_dict)
+        r_show = get_actions.user_query_result_show(
+            get_context(),
+            {'id': r['id']})
+
+        assert_equals(r['result_type'], r_show['result_type'])
+        assert_equals(r['result_id'], r_show['result_id'])
+        assert_equals(r['query_id'], r_show['query_id'])
+
+    def test_user_intent_list(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        create_actions.user_intent_create(get_context(), data_dict)
+
+        i_list = get_actions.user_intent_list(
+            get_context(),
+            {
+                'page': 1,
+                'limit': 10,
+                'order_by': 'created_at asc'
+            })
+
+        assert_equals(i_list['total'], 1)
+        assert_equals(i_list['page'], 1)
+        assert_equals(i_list['size'], 10)
+        assert_equals(len(i_list['items']), 1)
+
+    def test_user_query_list(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        q = create_actions.user_query_create(get_context(), data_dict)
+
+        q_list = get_actions.user_query_list(
+            get_context(),
+            {
+                'page': 1,
+                'limit': 10,
+                'order_by': 'created_at asc'
+            })
+
+        assert_equals(q_list['total'], 1)
+        assert_equals(q_list['page'], 1)
+        assert_equals(q_list['size'], 10)
+        assert_equals(len(q_list['items']), 1)
+
+    def test_user_query_result_search(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            "query_id": query['id'],
+            "result_type": "dataset",
+            "result_id": "bfbe08a1-24ab-493d-8892-72e399f6e1b7"
+        }
+
+        r = create_actions.user_query_result_create(get_context(), data_dict)
+
+        r_search = get_actions.user_query_result_search(
+            get_context(),
+            {
+                "q": "dataset",
+                "page": 1,
+                "limit": 10
+            })
+
+        assert_equals(r_search['total'], 1)
+        assert_equals(r_search['page'], 1)
+        assert_equals(r_search['size'], 10)
+        assert_equals(len(r_search['items']), 1)
+
 
 class TestKWHDeleteActions(ActionsBase):
 
@@ -697,6 +916,7 @@ class TestKWHDeleteActions(ActionsBase):
         ResearchQuestion.delete_from_index.assert_called_once()
 
     @_monkey_patch(Dashboard, 'delete_from_index', mock.Mock())
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_delete(self):
         user = factories.Sysadmin()
         context = {
@@ -709,10 +929,16 @@ class TestKWHDeleteActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (3)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         result = delete_actions.dashboard_delete(
@@ -722,6 +948,32 @@ class TestKWHDeleteActions(ActionsBase):
 
         assert_equals(result.get('message'), 'Dashboard deleted.')
         Dashboard.delete_from_index.assert_called_once()
+
+    def test_user_intent_delete(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        i = create_actions.user_intent_create(get_context(), data_dict)
+
+        r = delete_actions.user_intent_delete(get_context(), {'id': i['id']})
+
+        assert_equals(r, 'OK')
 
 
 class TestKWHUpdateActions(ActionsBase):
@@ -890,6 +1142,7 @@ class TestKWHUpdateActions(ActionsBase):
         Visualization.update_index_doc.assert_called_once()
 
     @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_update(self):
         user = factories.Sysadmin()
         context = {
@@ -902,10 +1155,16 @@ class TestKWHUpdateActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (4)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         data_dict['id'] = dashboard.get('id')
@@ -950,6 +1209,37 @@ class TestKWHUpdateActions(ActionsBase):
             data_dict.get('new_content')
         )
 
+    def test_user_intent_update(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        i = create_actions.user_intent_create(get_context(), data_dict)
+
+        i_update = update_actions.user_intent_update(
+            get_context(),
+            {
+                "id": i['id'],
+                "primary_category": "dashboard"
+            })
+
+        assert_equals(i_update['primary_category'], 'dashboard')
+
     def test_knowledgehub_get_geojson_properties(self):
         user = factories.Sysadmin()
         context = {
@@ -961,7 +1251,8 @@ class TestKWHUpdateActions(ActionsBase):
         }
 
         data_dict = {
-            'map_resource': "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
+            'map_resource':
+                "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
 
         }
         res = get_actions.knowledgehub_get_geojson_properties(context,
@@ -1152,11 +1443,16 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
 
     @_monkey_patch(Dashboard, 'search_index', mock.Mock())
     def test_search_dashboards(self):
-        Dashboard.search_index.return_value = [{
-            'id': 'aaa',
-            'p1': 'v1',
-            'p2': 'v2',
-        }]
+        Dashboard.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
         results = get_actions.search_dashboards({}, {
             'text': 'aaa',
         })
@@ -1165,11 +1461,16 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
 
     @_monkey_patch(ResearchQuestion, 'search_index', mock.Mock())
     def test_search_research_questions(self):
-        ResearchQuestion.search_index.return_value = [{
-            'id': 'aaa',
-            'p1': 'v1',
-            'p2': 'v2',
-        }]
+        ResearchQuestion.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
         results = get_actions.search_research_questions({}, {
             'text': 'aaa',
         })
@@ -1178,11 +1479,16 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
 
     @_monkey_patch(Visualization, 'search_index', mock.Mock())
     def test_search_visualizations(self):
-        Visualization.search_index.return_value = [{
-            'id': 'aaa',
-            'p1': 'v1',
-            'p2': 'v2',
-        }]
+        Visualization.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
         results = get_actions.search_visualizations({}, {
             'text': 'aaa',
         })

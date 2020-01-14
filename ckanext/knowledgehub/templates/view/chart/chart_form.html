@@ -52,13 +52,12 @@
                   required="required">
               </div>
             </div>
-
             <div class="control-group title">
               <label class="control-label" for="chart_field_description">{{ _('Description') }}</label>
               <div class="controls input-controls">
                 <textarea class="inputs" id="chart_field_description" type="text" name="chart_field_description"
                   value="{{ chart.chart_description }}" placeholder="{{ _('Chart description') }}" maxlength="100"
-                  required="required"></textarea>
+                  required="required"> {{ chart.chart_description }}</textarea>
               </div>
             </div>
 
