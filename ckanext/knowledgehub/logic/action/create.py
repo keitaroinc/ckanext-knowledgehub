@@ -40,10 +40,12 @@ log = logging.getLogger(__name__)
 _df = lib.navl.dictization_functions
 _table_dictize = lib.dictization.table_dictize
 check_access = toolkit.check_access
+get_action = toolkit.get_action
 _get_or_bust = logic.get_or_bust
 NotFound = logic.NotFound
 ValidationError = toolkit.ValidationError
 NotAuthorized = toolkit.NotAuthorized
+Invalid = _df.Invalid
 
 
 def theme_create(context, data_dict):
@@ -596,10 +598,27 @@ def user_query_create(context, data_dict):
     if user:
         data['user_id'] = model.User.by_name(user.decode('utf8')).id
 
-    query = UserQuery(**data)
-    query.save()
+    def save_user_query(data):
+        query = UserQuery(**data)
+        query.save()
+        return query.as_dict()
 
-    return query.as_dict()
+    if data.get('user_id'):
+        try:
+            query = get_action('user_query_show')(
+                context,
+                {
+                    'query_text': data.get('query_text'),
+                    'query_type': data.get('query_type'),
+                    'user_id': data.get('user_id')
+                }
+            )
+
+            raise Invalid(_('User query already exists'))
+        except NotFound:
+            return save_user_query(data)
+
+    return save_user_query(data)
 
 
 def user_query_result_create(context, data_dict):
