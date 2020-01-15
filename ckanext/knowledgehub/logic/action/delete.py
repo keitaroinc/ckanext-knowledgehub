@@ -23,6 +23,7 @@ check_access = toolkit.check_access
 ValidationError = toolkit.ValidationError
 NotAuthorized = toolkit.NotAuthorized
 NotFound = logic.NotFound
+_get_or_bust = logic.get_or_bust
 
 
 def theme_delete(context, data_dict):
@@ -150,3 +151,76 @@ def user_intent_delete(context, data_dict):
     UserIntents.delete({'id': id})
 
     return 'OK'
+
+
+def member_delete(context, data_dict=None):
+    '''Remove an object (e.g. a user, dataset or group) from a group.
+
+    You must be authorized to edit a group to remove objects from it.
+
+    :param id: the id of the group
+    :type id: string
+    :param object: the id or name of the object to be removed
+    :type object: string
+    :param object_type: the type of the object to be removed, e.g. ``package``
+        or ``user``
+    :type object_type: string
+
+    '''
+    model = context['model']
+
+    group_id, obj_id, obj_type = _get_or_bust(
+        data_dict, ['id', 'object', 'object_type'])
+
+    group = model.Group.get(group_id)
+    if not group:
+        raise NotFound('Group was not found.')
+
+    obj_class = logic.model_name_to_class(model, obj_type)
+    obj = obj_class.get(obj_id)
+    if not obj:
+        raise NotFound('%s was not found.' % obj_type.title())
+
+    check_access('member_delete', context, data_dict)
+
+    member = model.Session.query(model.Member).\
+        filter(model.Member.table_name == obj_type).\
+        filter(model.Member.table_id == obj.id).\
+        filter(model.Member.group_id == group.id).\
+        filter(model.Member.state == 'active').first()
+    if member:
+        rev = model.repo.new_revision()
+        rev.author = context.get('user')
+        rev.message = _(u'REST API: Delete Member: %s') % obj_id
+        member.delete()
+        model.repo.commit()
+
+    package_id = data_dict.get('object')
+    package = toolkit.get_action('package_show')(
+        {'ignore_auth': True},
+        {'id': package_id, 'include_tracking': True}
+    )
+
+    resource_views = []
+    for resource in package.get('resources'):
+        resource_view_list = toolkit.get_action('resource_view_list')(
+            context, {'id': resource.get('id')})
+        for resource_view in resource_view_list:
+            if resource_view.get('view_type') == 'chart' or \
+               resource_view.get('view_type') == 'map' or \
+               resource_view.get('view_type') == 'table':
+                resource_views.append(resource_view)
+
+    for view in resource_views:
+        view_data = {
+            'id': view.get('id'),
+            'resource_id': view.get('resource_id'),
+            'title': view.get('title'),
+            'description': view.get('description'),
+            'view_type': view.get('view_type')
+        }
+        view_data.update(view.get('__extras', {}))
+        toolkit.get_action('resource_view_update')(
+            context,
+            view_data
+        )
