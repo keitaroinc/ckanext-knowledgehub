@@ -206,10 +206,10 @@ def resource_update(context, data_dict):
     :type validation_options: string
     '''
 
-    if (data_dict['schema'] == ''):
+    if (data_dict.get('schema') == ''):
         del data_dict['schema']
 
-    if (data_dict['validation_options'] == ''):
+    if (data_dict.get('validation_options') == ''):
         del data_dict['validation_options']
 
     if data_dict.get('db_type') is not None:

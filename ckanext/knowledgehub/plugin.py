@@ -90,6 +90,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_single_dash': h.get_single_dash,
             'get_active_tab': h.get_active_tab,
             'get_tab_url': h.get_tab_url,
+            'is_rsc_upload_datastore': h.is_rsc_upload_datastore,
+            'get_dataset_data': h.get_dataset_data,
+            'get_resource_filtered_data': h.get_resource_filtered_data
         }
 
     # IDatasetForm
@@ -188,6 +191,11 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             controller='ckanext.knowledgehub.controllers:KWHPackageController'
         ) as m:
             m.connect('search', '/dataset', action='search')
+            m.connect(
+                'dataset_read',
+                '/dataset/{id}',
+                action='read',
+                ckan_icon='sitemap')
 
         # Override read action, for changing the titles in facets and tell CKAN where to look for
         # new and list actions.
