@@ -1171,6 +1171,7 @@ def get_dataset_data(id):
 
     return data_dict
 
+
 def get_package_data_quality(id):
     context = _get_context()
     try:
@@ -1179,6 +1180,7 @@ def get_package_data_quality(id):
         return {}
     return result
 
+
 def get_resource_data_quality(id):
     context = _get_context()
     try:
@@ -1186,3 +1188,39 @@ def get_resource_data_quality(id):
     except Exception:
         return {}
     return result
+
+
+def view_org_groups_update(package_id):
+    ''' Update the organization and groups of the views
+
+    param package_id: the id or name of the package
+    type package_id: string
+    '''
+    package = toolkit.get_action('package_show')(
+        {'ignore_auth': True},
+        {'id': package_id, 'include_tracking': True}
+    )
+
+    resource_views = []
+    for resource in package.get('resources'):
+        resource_view_list = toolkit.get_action('resource_view_list')(
+            {'ignore_auth': True}, {'id': resource.get('id')})
+        for resource_view in resource_view_list:
+            if resource_view.get('view_type') == 'chart' or \
+               resource_view.get('view_type') == 'map' or \
+               resource_view.get('view_type') == 'table':
+                resource_views.append(resource_view)
+
+    for view in resource_views:
+        view_data = {
+            'id': view.get('id'),
+            'resource_id': view.get('resource_id'),
+            'title': view.get('title'),
+            'description': view.get('description'),
+            'view_type': view.get('view_type')
+        }
+        view_data.update(view.get('__extras', {}))
+        toolkit.get_action('resource_view_update')(
+            {'ignore_auth': True},
+            view_data
+        )

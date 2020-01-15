@@ -757,34 +757,6 @@ def member_create(context, data_dict=None):
     model.Session.add(member)
     model.repo.commit()
 
-    package_id = data_dict.get('object')
-    package = toolkit.get_action('package_show')(
-      {'ignore_auth': True},
-      {'id': package_id, 'include_tracking': True}
-    )
-
-    resource_views = []
-    for resource in package.get('resources'):
-        resource_view_list = toolkit.get_action('resource_view_list')(
-            context, {'id': resource.get('id')})
-        for resource_view in resource_view_list:
-            if resource_view.get('view_type') == 'chart' or \
-                    resource_view.get('view_type') == 'map' or \
-                    resource_view.get('view_type') == 'table':
-                resource_views.append(resource_view)
-
-    for view in resource_views:
-        view_data = {
-            'id': view.get('id'),
-            'resource_id': view.get('resource_id'),
-            'title': view.get('title'),
-            'description': view.get('description'),
-            'view_type': view.get('view_type')
-        }
-        view_data.update(view.get('__extras', {}))
-        toolkit.get_action('resource_view_update')(
-            context,
-            view_data
-        )
+    plugin_helpers.view_org_groups_update(data_dict.get('object'))
 
     return model_dictize.member_dictize(member, context)

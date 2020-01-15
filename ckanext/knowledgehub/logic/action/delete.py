@@ -15,6 +15,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents
+from ckanext.knowledgehub import helpers as kwh_helpers
 
 
 log = logging.getLogger(__name__)
@@ -195,32 +196,4 @@ def member_delete(context, data_dict=None):
         member.delete()
         model.repo.commit()
 
-    package_id = data_dict.get('object')
-    package = toolkit.get_action('package_show')(
-        {'ignore_auth': True},
-        {'id': package_id, 'include_tracking': True}
-    )
-
-    resource_views = []
-    for resource in package.get('resources'):
-        resource_view_list = toolkit.get_action('resource_view_list')(
-            context, {'id': resource.get('id')})
-        for resource_view in resource_view_list:
-            if resource_view.get('view_type') == 'chart' or \
-               resource_view.get('view_type') == 'map' or \
-               resource_view.get('view_type') == 'table':
-                resource_views.append(resource_view)
-
-    for view in resource_views:
-        view_data = {
-            'id': view.get('id'),
-            'resource_id': view.get('resource_id'),
-            'title': view.get('title'),
-            'description': view.get('description'),
-            'view_type': view.get('view_type')
-        }
-        view_data.update(view.get('__extras', {}))
-        toolkit.get_action('resource_view_update')(
-            context,
-            view_data
-        )
+    kwh_helpers.view_org_groups_update(data_dict.get('object'))
