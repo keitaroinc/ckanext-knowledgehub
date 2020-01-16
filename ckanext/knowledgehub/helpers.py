@@ -1190,8 +1190,8 @@ def get_resource_data_quality(id):
     return result
 
 
-def view_org_groups_update(package_id):
-    ''' Update the organization and groups of the views
+def _views_dashboards_groups_update(package_id):
+    ''' Update groups of the visualizations and dashboards
 
     param package_id: the id or name of the package
     type package_id: string
@@ -1224,3 +1224,20 @@ def view_org_groups_update(package_id):
             {'ignore_auth': True},
             view_data
         )
+
+    for view in resource_views:
+        docs = toolkit.get_action('search_dashboards')(
+            {'ignore_auth': True},
+            {'text': '*', 'fq': 'khe_indicators:' + view.get('id')}
+        )
+
+        for dashboard in docs.get('results', []):
+            data_dict = toolkit.get_action('dashboard_show')(
+                {'ignore_auth': True},
+                {'id': dashboard.get('id')}
+            )
+
+            toolkit.get_action('dashboard_update')(
+                {'ignore_auth': True},
+                data_dict
+            )

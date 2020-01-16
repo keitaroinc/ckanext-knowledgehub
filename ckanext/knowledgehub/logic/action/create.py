@@ -757,6 +757,7 @@ def member_create(context, data_dict=None):
     model.Session.add(member)
     model.repo.commit()
 
-    plugin_helpers.view_org_groups_update(data_dict.get('object'))
+    if obj_type == 'package':
+        plugin_helpers._views_dashboards_groups_update(data_dict.get('object'))
 
     return model_dictize.member_dictize(member, context)
