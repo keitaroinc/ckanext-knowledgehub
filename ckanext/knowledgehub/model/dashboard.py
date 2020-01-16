@@ -21,6 +21,8 @@ import ckan.logic as logic
 from ckan.common import _
 from ckanext.knowledgehub.lib.solr import Indexed, mapped
 
+get_action = logic.get_action
+
 __all__ = ['Dashboard', 'dashboard_table']
 
 dashboard_table = Table(
@@ -52,23 +54,44 @@ class Dashboard(DomainObject, Indexed):
         'type',
         'source',
         'indicators',
-        'research_questions'
+        'research_questions',
+        mapped('groups', 'groups'),
+        mapped('organizations', 'organizations')
     ]
     doctype = 'dashboard'
 
-
     @staticmethod
-    def before_index(data):    
+    def before_index(data):
         ind = []
         if data.get('indicators'):
             ind = json.loads(data['indicators'])
         list_rqs = []
+        organizations = []
+        groups = []
         data['research_questions'] = []
         for k in ind:
-            res_q = get_action('research_question_show')({'ignore_auth': True},
-            {'id': k['research_question']})
+            res_q = get_action('research_question_show')(
+                {'ignore_auth': True},
+                {'id': k['research_question']}
+            )
             list_rqs.append(res_q['title'])
-        data['research_questions'] = ','.join(list_rqs)    
+
+            docs = get_action('search_visualizations')(
+                {'ignore_auth': True},
+                {'text': '*', 'fq': 'entity_id:' + k['resource_view_id']}
+            )
+            for v in docs.get('results', []):
+                organization = v.get('organization')
+                if organization:
+                    organizations.append(organization)
+                view_groups = v.get('groups')
+                if view_groups:
+                    groups.extend(view_groups)
+
+        data['research_questions'] = ','.join(list_rqs)
+        data['organizations'] = list(set(organizations))
+        data['groups'] = list(set(groups))
+
         return data
 
     @classmethod
