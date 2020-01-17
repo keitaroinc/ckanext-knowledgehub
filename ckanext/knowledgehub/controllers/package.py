@@ -22,6 +22,7 @@ NotAuthorized = logic.NotAuthorized
 check_access = logic.check_access
 get_action = logic.get_action
 render = base.render
+abort = base.abort
 
 log = logging.getLogger(__name__)
 
