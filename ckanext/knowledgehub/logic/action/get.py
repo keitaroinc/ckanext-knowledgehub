@@ -18,7 +18,7 @@ from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import UserQuery
-from ckanext.knowledgehub.model import UserQueryResult
+from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
@@ -1056,3 +1056,58 @@ def user_query_result_search(context, data_dict):
         'size': data_dict.get('limit'),
         'items': items,
     }
+
+
+def _metrics_to_data_dict(metrics):
+    result = {}
+    for metric in ['completeness', 'uniqueness', 'timeliness', 'accuracy',
+                   'validity', 'consistency']:
+        result[metric] = getattr(metrics, metric) if metrics else None
+    return result
+
+
+@toolkit.side_effect_free
+def package_data_quality(context, data_dict):
+    if not data_dict.get('id'):
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('package_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    metrics = DataQualityMetrics.get_dataset_metrics(data_dict['id'])
+    if not metrics:
+        raise NotFound(_('Not Found'))
+
+    result = _metrics_to_data_dict(metrics)
+    result['package_id'] = data_dict['id']
+    calculated_on = metrics.modified_at or metrics.created_at
+    if calculated_on:
+        calculated_on = calculated_on.isoformat()
+    result['calculated_on'] = calculated_on
+    return result
+
+
+@toolkit.side_effect_free
+def resource_data_quality(context, data_dict):
+    if not data_dict.get('id'):
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('resource_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    metrics = DataQualityMetrics.get_resource_metrics(data_dict['id'])
+    if not metrics:
+        raise NotFound(_('Not Found'))
+
+    result = _metrics_to_data_dict(metrics)
+    result['resource_id'] = data_dict['id']
+    calculated_on = metrics.modified_at or metrics.created_at
+    if calculated_on:
+        calculated_on = calculated_on.isoformat()
+    result['calculated_on'] = calculated_on
+
+    return result
