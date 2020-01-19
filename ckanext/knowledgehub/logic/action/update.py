@@ -22,7 +22,7 @@ from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
-from ckanext.knowledgehub.model import UserIntents
+from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -475,3 +475,86 @@ def user_intent_update(context, data_dict):
     session.commit()
 
     return _table_dictize(intent, context)
+
+
+def package_data_quality_update(context, data_dict):
+    if not data_dict.get('id'):
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('package_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    db_metric = DataQualityMetrics.get_dataset_metrics(data_dict['id'])
+    if not db_metric:
+        db_metric = DataQualityMetrics(type='package', ref_id=data_dict['id'])
+
+    results = {}
+    result_dict = {}
+    dimensions = ['completeness', 'uniqueness', 'timeliness', 'validity',
+                  'accuracy', 'consistency']
+    for dimension in dimensions:
+        value = data_dict.get(dimension)
+        results[dimension] = value or {}
+        if value is not None:
+            if value.get('value') is None:
+                field = '%s.value' % dimension
+                raise ValidationError({field: _('Missing Value')})
+            setattr(db_metric, dimension, value['value'])
+            result_dict[dimension] = value
+
+    db_metric.metrics = results
+    db_metric.modified_at = datetime.datetime.now()
+    db_metric.save()
+
+    result_dict['calculated_on'] = db_metric.modified_at.isoformat()
+
+    return result_dict
+
+
+def resource_data_quality_update(context, data_dict):
+    if not data_dict.get('id'):
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('resource_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    db_metric = DataQualityMetrics.get_dataset_metrics(data_dict['id'])
+    if not db_metric:
+        db_metric = DataQualityMetrics(type='package', ref_id=data_dict['id'])
+
+    results = {}
+    result_dict = {}
+    dimensions = {
+        'completeness': ['value', 'total', 'complete'],
+        'uniqueness': ['value'],
+        'timeliness': ['value'],
+        'validity': ['value'],
+        'accuracy': ['value'],
+        'consistency': ['value'],
+    }
+
+    for dimension, required_fields in dimensions:
+        value = data_dict.get(dimension)
+        results[dimension] = value or {}
+        if value is not None:
+            # validate
+            errors = {}
+            for field in required_fields:
+                if value.get(field) is None:
+                    errors['%s.%s' % (dimension, field)] = _('Missing Value')
+            if errors:
+                raise ValidationError(errors)
+            setattr(db_metric, dimension, value['value'])
+            result_dict[dimension] = value
+
+    db_metric.metrics = results
+    db_metric.modified_at = datetime.datetime.now()
+    db_metric.save()
+
+    result_dict['calculated_on'] = db_metric.modified_at.isoformat()
+
+    return result_dict

@@ -18,7 +18,7 @@ from ckanext.knowledgehub.model.kwh_data import (
 from ckanext.knowledgehub.model.intents import setup as intents_db_setup
 from ckanext.knowledgehub.model.query import setup as query_db_setup
 from ckanext.knowledgehub.model.ml import setup as ml_db_setup
-
+from ckanext.knowledgehub.model.data_quality import setup as data_quality_setup
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ def init():
         intents_db_setup()
         query_db_setup()
         ml_db_setup()
+        data_quality_setup()
     except Exception as e:
         error_shout(e)
     else:
