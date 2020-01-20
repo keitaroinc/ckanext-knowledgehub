@@ -125,6 +125,7 @@ class DataQualityMetrics(object):
                 self.logger.error('Failed to calculate metric: %s. Error: %s',
                                   metric, str(e))
                 self.logger.exception(e)
+                print 'ERRRORORORORORO'
                 results[metric.name] = {
                     'failed': True,
                     'error': str(e),
@@ -220,6 +221,44 @@ class Uniqueness(DimensionMetric):
 
     def __init__(self):
         super(Uniqueness, self).__init__('uniqueness')
+    
+    def calculate_metric(self, resource, data):
+        total = {}
+        distinct = {}
+
+        for row in data['records']:
+            for col, value in row.items():
+                total[col] = total.get(col, 0) + 1
+                if distinct.get(col) is None:
+                    distinct[col] = set()
+                distinct[col].add(value)
+        
+        result = {
+            'total': sum(v for _,v in total.items()),
+            'unique': sum([len(s) for _,s in distinct.items()]), 
+            'columns': {},
+        }
+        result['value'] = 100.0*float(result['unique'])/float(result['total']) if result['total'] > 0 else 0.0
+
+        for col, tot in total.items():
+            unique = len(distinct.get(col, set()))
+            result['columns'][col] = {
+                'total': tot,
+                'unique': unique,
+                'value': 100.0*float(unique)/float(tot) if tot > 0 else 0.0,
+            }
+        print 'RESULT ->', result
+        return result
+
+    def calculate_cumulative_metric(self, resources, metrics):
+        result = {}
+        print 'METRICS -> ', metrics
+        result['total'] = sum([r['total'] for r in metrics])
+        result['unique'] = sum([r['unique'] for r in metrics])
+
+        result['value'] = 100.0*float(result['unique'])/float(result['total']) if result['total'] > 0 else 0.0
+
+        return result
 
 
 class Timeliness(DimensionMetric):

@@ -23,7 +23,7 @@ data_quality_metrics_table = Table(
     Column('ref_id', types.UnicodeText, nullable=False),
     Column('resource_last_modified', types.DateTime),
     Column('completeness', types.Float),
-    Column('uniqueness', types.Integer),
+    Column('uniqueness', types.Float),
     Column('timeliness', types.Float),
     Column('validity', types.Float),
     Column('accuracy', types.Float),
