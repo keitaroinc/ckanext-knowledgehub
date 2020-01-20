@@ -911,7 +911,7 @@ def remove_rqs_from_dataset(res_view):
                 data_dict['text']= rq
                 data_dict['fq'] = "khe_package_id:" + pkg_id
                 should_stay[rq] = False
-                results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+                results_search = toolkit.get_action('search_visualizations')({'ignore_auth': True}, data_dict)
                 for res in results_search:
                     if res.get('research_questions') and res.get('id') != res_view.get('id') \
                         and res.get('khe_package_id') == pkg_id:
@@ -923,7 +923,7 @@ def remove_rqs_from_dataset(res_view):
                                 should_stay[rq] = True
             new_rqs_package_dict = {}
             package_sh = toolkit.get_action('package_show')(
-                dict(context, return_type='dict'), {'id': pkg_id})
+                dict({'ignore_auth': True}, return_type='dict'), {'id': pkg_id})
             if package_sh.get('research_question'):
                 questions_package = package_sh.get('research_question').split(",")
                 for q in questions_package:
