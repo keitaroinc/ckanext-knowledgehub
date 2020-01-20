@@ -857,9 +857,9 @@ def dashboard_research_questions(dashboard):
 
 def add_rqs_to_dataset(res_view):
 
-    context =  _get_context()
+    #context =  _get_context()
     pkg_dict = toolkit.get_action('package_show')(
-        dict(context, return_type='dict'),
+        dict({'ignore_auth': True}, return_type='dict'),
         {'id': res_view['package_id']})
 
     rq_options = get_rq_options()
@@ -947,9 +947,9 @@ def remove_rqs_from_dataset(res_view):
 
 def update_rqs_in_dataset(old_data, res_view):
 
-    context =  _get_context()
+    # context =  _get_context()
     pkg_dict = toolkit.get_action('package_show')(
-        dict(context, return_type='dict'),
+        dict({'ignore_auth': True}, return_type='dict'),
         {'id': res_view['package_id']})
 
     rq_options = get_rq_options()
@@ -1006,7 +1006,7 @@ def update_rqs_in_dataset(old_data, res_view):
             data_dict['text']= rq
             data_dict['fq'] = "khe_package_id:" + pkg_id
             should_stay[rq] = False
-            results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+            results_search = toolkit.get_action('search_visualizations')({'ignore_auth': True}, data_dict)
             for res in results_search:
                 if res.get('research_questions'):
                     questions = json.loads(res.get('research_questions'))
