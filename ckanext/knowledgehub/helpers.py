@@ -91,9 +91,9 @@ def id_to_title(model, id):
 
 
 def get_rq_options(idValue=False):
-    context = _get_context()
+    # context = _get_context()
     rq_options = []
-    rq_list = toolkit.get_action('research_question_list')(context, {})
+    rq_list = toolkit.get_action('research_question_list')({'ignore_auth': True}, {})
 
     for rq in rq_list.get(u'data', []):
         if idValue:
