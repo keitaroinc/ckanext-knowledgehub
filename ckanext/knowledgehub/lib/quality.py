@@ -125,7 +125,6 @@ class DataQualityMetrics(object):
                 self.logger.error('Failed to calculate metric: %s. Error: %s',
                                   metric, str(e))
                 self.logger.exception(e)
-                print 'ERRRORORORORORO'
                 results[metric.name] = {
                     'failed': True,
                     'error': str(e),
