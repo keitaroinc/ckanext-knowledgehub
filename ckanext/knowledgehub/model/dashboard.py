@@ -55,6 +55,7 @@ class Dashboard(DomainObject, Indexed):
         'source',
         'indicators',
         'research_questions',
+        'datasets',
         mapped('groups', 'groups'),
         mapped('organizations', 'organizations')
     ]
@@ -68,6 +69,7 @@ class Dashboard(DomainObject, Indexed):
         list_rqs = []
         organizations = []
         groups = []
+        datasets = []
         data['research_questions'] = []
         for k in ind:
             res_q = get_action('research_question_show')(
@@ -87,10 +89,15 @@ class Dashboard(DomainObject, Indexed):
                 view_groups = v.get('groups')
                 if view_groups:
                     groups.extend(view_groups)
+                print v
+                package_id = v.get('package_id')
+                if package_id:
+                    datasets.append(package_id)
 
         data['research_questions'] = ','.join(list_rqs)
         data['organizations'] = list(set(organizations))
         data['groups'] = list(set(groups))
+        data['datasets'] = ', '.join(list(set(datasets)))
 
         return data
 

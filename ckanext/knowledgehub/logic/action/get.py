@@ -22,6 +22,7 @@ from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
+from ckanext.knowledgehub.logic.auth.get import dashboard_show as dashboard_show_auth
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 
@@ -421,6 +422,8 @@ def dashboard_show(context, data_dict):
     :returns: single dashboard dict
     :rtype: dictionary
     '''
+    check_access('dashboard_show', context, data_dict)
+
     name_or_id = data_dict.get("id") or data_dict.get("name")
 
     if name_or_id is None:
@@ -462,20 +465,34 @@ def dashboard_list(context, data_dict):
     sort = data_dict.get(u'sort', u'name asc')
     q = data_dict.get(u'q', u'')
 
+    def result_iter(size=100):
+        offset = 0
+        while True:
+            t_db_list = Dashboard.search(q=q,
+                                        limit=size,
+                                        offset=offset,
+                                        order_by=sort).all()
+            if not t_db_list:
+                break
+            for dashboard in t_db_list:
+                yield dashboard
+            offset += size
+
     dashboards = []
+    for dashboard in result_iter():
+        try:
+            check_access('dashboard_show', context, {'name': dashboard.name})
+        except NotAuthorized:
+            continue
 
-    t_db_list = Dashboard.search(q=q,
-                                 limit=limit,
-                                 offset=offset,
-                                 order_by=sort)\
-        .all()
+        if offset == 0 and len(dashboards) == limit:
+            break
+        if offset != 0 and len(dashboards) == limit + offset:
+            break
 
-    for dashboard in t_db_list:
         dashboards.append(_table_dictize(dashboard, context))
 
-    total = len(Dashboard.search().all())
-
-    return {u'total': total, u'page': page,
+    return {u'total': len(dashboards), u'page': page,
             u'items_per_page': limit, u'data': dashboards}
 
 

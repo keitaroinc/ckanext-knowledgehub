@@ -1190,7 +1190,7 @@ def get_resource_data_quality(id):
     return result
 
 
-def _views_dashboards_groups_update(package_id):
+def views_dashboards_groups_update(package_id):
     ''' Update groups of the visualizations and dashboards
 
     param package_id: the id or name of the package

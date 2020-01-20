@@ -1,4 +1,5 @@
 import ckan.plugins.toolkit as toolkit
+import ckan.lib.helpers as h
 
 
 @toolkit.auth_allow_anonymous_access
@@ -16,9 +17,28 @@ def dashboard_list(context, data_dict):
     return {'success': True}
 
 
-@toolkit.auth_allow_anonymous_access
 def dashboard_show(context, data_dict):
-    return {'success': True}
+    docs = toolkit.get_action('search_dashboards')(
+        {'ignore_auth': True},
+        {'text': '*', 'fq': 'name:' + data_dict.get('name')}
+    )
+    if docs.get('count', 0) == 1:
+        dashboard = docs['results'][0]
+        datasets_str = dashboard.get('datasets', '')
+        if datasets_str:
+            datasets = datasets_str.split(', ')
+            for dataset in datasets:
+                try:
+                    context.pop('package', None)
+                    a = toolkit.check_access(
+                        'package_show', context, {'id': dataset})
+
+                except toolkit.NotAuthorized:
+                    return {'success': False}
+
+            return {'success': True}
+
+    return {'success': False}
 
 
 def intent_list(context, data_dict):

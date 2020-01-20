@@ -197,4 +197,4 @@ def member_delete(context, data_dict=None):
         model.repo.commit()
 
     if obj_type == 'package':
-        kwh_helpers._views_dashboards_groups_update(data_dict.get('object'))
+        kwh_helpers.views_dashboards_groups_update(data_dict.get('object'))
