@@ -862,7 +862,15 @@ def add_rqs_to_dataset(res_view):
         dict({'ignore_auth': True}, return_type='dict'),
         {'id': res_view['package_id']})
 
-    rq_options = get_rq_options()
+
+    rq_options = []
+    rq_list = toolkit.get_action('research_question_list')(dict({'ignore_auth': True}, return_type='dict'), {})
+
+    for rq in rq_list.get(u'data', []):
+        opt = {u'text': rq[u'title'],
+                u'value': rq[u'title'], u'id': rq[u'id']}
+        rq_options.append(opt)
+    # rq_options = get_rq_options()
     all_rqs = []
     if not pkg_dict.get('research_question'):
         pkg_dict['research_question'] = []
@@ -890,11 +898,11 @@ def add_rqs_to_dataset(res_view):
         context['use_cache'] = False
         toolkit.get_action('package_update')(context, pkg_dict)
         context.pop('defer_commit')
-    except ValidationError as e:
+    except logic.ValidationError as e:
         try:
-            raise ValidationError(e.error_dict['research_question'][-1])
+            raise logic.ValidationError(e.error_dict['research_question'][-1])
         except (KeyError, IndexError):
-            raise ValidationError(e.error_dict)
+            raise logic.ValidationError(e.error_dict)
     
 
 def remove_rqs_from_dataset(res_view):
