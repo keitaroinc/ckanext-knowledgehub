@@ -899,7 +899,7 @@ def add_rqs_to_dataset(res_view):
 
 def remove_rqs_from_dataset(res_view):
 
-    context = _get_context()
+    # context = _get_context()
     pkg_id = res_view.get('package_id')
     if res_view.get('__extras'):
         ext = res_view.get('__extras')
