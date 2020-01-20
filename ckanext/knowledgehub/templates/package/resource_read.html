@@ -71,8 +71,8 @@
 {% endblock %}
 {% block resource_read_url %}
 {% if res.url and h.is_url(res.url) %}
-<p><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title" type="text"
-    name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
+<p class="pull-right"><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title"
+    type="text" name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
     onclick="copyToClipBoard()"><b>Copy
       url</b></button></p>
 
@@ -194,6 +194,8 @@
                 dynamic_reference_label=dynamic_reference_label %}
   {% snippet 'ajax_snippets/visual_info_module.html',
               title = chart_title,
+              subtitle = chart_subtitle,
+              description = chart_description,
               resource_id = resource_id %}
 
   {% elif current_resource_view.view_type == 'table'  %}
@@ -225,6 +227,8 @@
                   table_title = table_title %}
   {% snippet 'ajax_snippets/visual_info_module.html',
                   title = table_title,
+                  subtitle = table_subtitle,
+                  description = table_description,
                   resource_id = resource_id %}
 
   {% elif current_resource_view.view_type == 'map'  %}
