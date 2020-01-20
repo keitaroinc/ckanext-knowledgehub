@@ -864,7 +864,7 @@ def add_rqs_to_dataset(res_view):
 
 
     rq_options = []
-    rq_list = logic.get_action('research_question_list')(context, {})
+    rq_list = logic.get_action('research_question_list')
 
     for rq in rq_list.get(u'data', []):
         opt = {u'text': rq[u'title'],
