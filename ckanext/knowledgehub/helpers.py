@@ -857,14 +857,14 @@ def dashboard_research_questions(dashboard):
 
 def add_rqs_to_dataset(res_view):
 
-    #context =  _get_context()
+    context =  _get_context()
     pkg_dict = toolkit.get_action('package_show')(
         dict({'ignore_auth': True}, return_type='dict'),
         {'id': res_view['package_id']})
 
 
     rq_options = []
-    rq_list = logic.get_action('research_question_list')(dict({'ignore_auth': True}, return_type='dict'), {})
+    rq_list = logic.get_action('research_question_list')(context, {})
 
     for rq in rq_list.get(u'data', []):
         opt = {u'text': rq[u'title'],
