@@ -74,7 +74,8 @@
 <p class="pull-right"><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title"
     type="text" name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
     onclick="copyToClipBoard()"><b>Copy
-      url</b></button></p>
+      url</b></button>
+</p>
 
 {% elif res.url %}
 <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
@@ -120,7 +121,8 @@
 {% endblock %}
 
 {% block resource_view_content %}
-<div class="resource-view">
+<div class=" resource-view">
+
   {% set views_created = res.has_views %}
   {% if views_created %}
   {% for resource_view in resource_views %}
@@ -272,8 +274,11 @@
 
   {% endif %}
   {% endfor %}
+
   {% else %}
+
   {# Views not created #}
+
   <div class="data-viewer-info">
     <p>{{ _("There are no views created for this resource yet.") }}</p>
     {% if h.check_access('resource_view_create', {'resource_id': c.resource.id}) %}
