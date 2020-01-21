@@ -305,9 +305,10 @@ def resource_view_create(context, data_dict):
     Visualization.add_to_index(rv_data)    
 
     # this check is because of the unit tests
-    ext = rv_data['__extras']
-    if ext.get('research_questions'):
-        plugin_helpers.add_rqs_to_dataset(rv_data)
+    if rv_data.get('__extras'):
+        ext = rv_data['__extras']
+        if ext.get('research_questions'):
+            plugin_helpers.add_rqs_to_dataset(rv_data)
     return rv_data
 
 

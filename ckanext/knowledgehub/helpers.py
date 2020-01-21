@@ -904,7 +904,7 @@ def add_rqs_to_dataset(res_view):
 
 def remove_rqs_from_dataset(res_view):
 
-    # context = _get_context()
+    context = _get_context()
     pkg_id = res_view.get('package_id')
     if res_view.get('__extras'):
         ext = res_view.get('__extras')
@@ -916,15 +916,13 @@ def remove_rqs_from_dataset(res_view):
                 data_dict['text']= rq
                 data_dict['fq'] = "khe_package_id:" + pkg_id
                 should_stay[rq] = False
-                results_search = toolkit.get_action('search_visualizations')({'ignore_auth': True}, data_dict)
-                for res in results_search:
+                results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+                for res in results_search['results']:
                     if res.get('research_questions') and res.get('id') != res_view.get('id') \
                         and res.get('khe_package_id') == pkg_id:
                         questions = json.loads(res.get('research_questions'))
                         for q in questions:
                             if q == rq:
-                                print("should stay:")
-                                print(q)
                                 should_stay[rq] = True
             new_rqs_package_dict = {}
             package_sh = toolkit.get_action('package_show')(
@@ -1011,13 +1009,12 @@ def update_rqs_in_dataset(old_data, res_view):
             data_dict['text']= rq
             data_dict['fq'] = "khe_package_id:" + pkg_id
             should_stay[rq] = False
-            results_search = toolkit.get_action('search_visualizations')({'ignore_auth': True}, data_dict)
-            for res in results_search:
+            results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+            for res in results_search['results']:
                 if res.get('research_questions'):
                     questions = json.loads(res.get('research_questions'))
                     if isinstance(questions, list):
                         for q in questions:
-                            print(q)
                             if q == rq:
                                 should_stay[rq] = True
                     else:
