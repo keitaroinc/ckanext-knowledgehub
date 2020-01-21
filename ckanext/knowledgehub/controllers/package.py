@@ -287,6 +287,7 @@ class KWHPackageController(PackageController):
                       extra_vars={'dataset_type': package_type})
 
     def read(self, id):
+        print 'READ: ___'
         context = {'model': model, 'session': model.Session,
                    'user': c.user, 'for_view': True,
                    'auth_user_obj': c.userobj}

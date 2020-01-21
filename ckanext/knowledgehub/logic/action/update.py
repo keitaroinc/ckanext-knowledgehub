@@ -26,6 +26,7 @@ from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
+from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
 
 
 log = logging.getLogger(__name__)
@@ -238,7 +239,9 @@ def resource_update(context, data_dict):
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
-    ckan_rsc_update(context, data_dict)
+    result = ckan_rsc_update(context, data_dict)
+    schedule_data_quality_check(result['package_id'])
+    return result
 
 
 # Overwrite of the original 'resource_view_update'
@@ -364,7 +367,9 @@ def package_update(context, data_dict):
                     data_dict['research_question'] = [rq.get('id')]
                     break
 
-    return ckan_package_update(context, data_dict)
+    result = ckan_package_update(context, data_dict)
+    schedule_data_quality_check(result['id'])
+    return result
 
 
 def kwh_data_update(context, data_dict):

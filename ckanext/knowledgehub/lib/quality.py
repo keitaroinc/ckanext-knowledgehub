@@ -93,21 +93,37 @@ class DataQualityMetrics(object):
                          package_id)
 
     def calculate_metrics_for_resource(self, resource, data):
-        # TODO: check for cached calculation
         last_modified = datetime.strptime((resource.get('last_modified') or
                                            resource.get('created')),
                                           '%Y-%m-%dT%H:%M:%S.%f')
         self.logger.debug('Resource last modified on: %s', last_modified)
         data_quality = self._get_metrics_record('resource', resource['id'])
+        cached_calculation = False
         if data_quality:
             self.logger.debug('Data Quality calculated for '
                               'version modified on: %s',
                               data_quality.resource_last_modified)
             if data_quality.resource_last_modified >= last_modified:
-                self.logger.debug('Data Quality already calculated.')
-                return data_quality.metrics
-            self.logger.debug('Resource changes since last calculated. '
-                              'Calculating data quality again.')
+                
+                cached_calculation = True
+                # check if all metrics have been calculated or some needs to be
+                # calculated again
+                if all(map(lambda m: m is not None,
+                           [
+                            data_quality.completeness,
+                            data_quality.uniqueness,
+                            data_quality.accuracy,
+                            data_quality.validity,
+                            data_quality.timeliness,
+                            data_quality.consistency
+                          ])):
+                    self.logger.debug('Data Quality already calculated.')
+                    return data_quality.metrics
+                else:
+                    self.logger.debug('Data Quality not calculated for all dimensions.')
+            else:
+                self.logger.debug('Resource changes since last calculated. '
+                            'Calculating data quality again.')
         else:
             data_quality = DataQualityMetricsModel(type='resource',
                                                    ref_id=resource['id'])
@@ -119,6 +135,12 @@ class DataQualityMetrics(object):
         results = {}
         for metric in self.metrics:
             try:
+                if cached_calculation and getattr(data_quality, metric.name) is not None:
+                    cached = data_quality.metrics[metric.name]
+                    if not cached.get('failed'):
+                        self.logger.debug('Dimension %s already calculated. Skipping...')
+                        results[metric.name] = cached
+                        continue
                 self.logger.debug('Calculating dimension: %s...', metric)
                 results[metric.name] = metric.calculate_metric(resource, data)
             except Exception as e:
