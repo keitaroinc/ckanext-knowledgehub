@@ -22,6 +22,7 @@ Example:
     {% endif %}
     {% endfor %}
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     {% endblock %}
     {% if not hide_merge_btn %}
@@ -38,6 +39,12 @@ Example:
     <h3>Merge Resources</h3>
 
 >>>>>>> Visual changes made on the dataset page, removing consol logs from js file.
+=======
+
+    {% endblock %}
+    {% if not hide_merge_btn %}
+    <br>
+>>>>>>> Visual changes on the Dataset page for the resources.
     <li class="resource-item" style="text-align: end">
       <a class="btn btn-success" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}"
         {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
