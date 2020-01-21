@@ -9,6 +9,7 @@ from ckanext.knowledgehub.model.visualization import Visualization
 from ckanext.knowledgehub.model.intents import UserIntents
 from ckanext.knowledgehub.model.query import UserQuery, UserQueryResult
 from ckanext.knowledgehub.model.data_quality import DataQualityMetrics
+from ckanext.knowledgehub.model.resource_validate import ResourceValidate
 
 
 __all__ = [
@@ -25,5 +26,6 @@ __all__ = [
     'UserQueryResult',
     'Visualization',
     'UserQuery',
-    'UserQueryResult'
+    'UserQueryResult',
+    'ResourceValidate'
 ]

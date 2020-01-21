@@ -37,6 +37,7 @@
       </ul>
     </div>
   </li>
+  
   {% endif %}
 
   {% if res.url and h.is_url(res.url) %}
@@ -59,6 +60,10 @@
     </div>
   </li>
   {% endif %}
+
+<textarea cols = '50' rows = '4' name='text' id='validation_status' class="btn btn-primary" style='resize:vertical; visibility:hidden' placeholder="Validation Status"></textarea>
+<button onClick='document.getElementById("validation_status").style.visibility = "visible" '> {{ _('Validate') }}</button> 
+
 
   {% if res.datastore_active %}
   <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>

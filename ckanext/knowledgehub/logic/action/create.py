@@ -25,6 +25,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
+from ckanext.knowledgehub.model import ResourceValidate
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.model import Visualization
@@ -431,6 +432,38 @@ def resource_feedback(context, data_dict):
         rf = ResourceFeedbacks.update(filter, data)
 
         return rf.as_dict()
+
+
+def resource_validate(context, data_dict):
+    '''
+    Resource validate mechanism
+
+        :param description
+        :param resource
+    '''
+    check_access('resource_validate', context, data_dict)
+
+    session = context['session']
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.resource_validate_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    data['user'] = model.User.by_name(user.decode('utf8')).id
+    resource = data.get('resource')
+    resource_validate_data = ResourceValidate.get(
+        resource=data.get('resource'),
+        user=data.get('user')
+    ).first()
+
+    if not resource_validate_data:
+        resource_validate_data = ResourceValidate(**data)
+        resource_validate_data.save()
+        return resource_validate_data.as_dict()
 
 
 def kwh_data_create(context, data_dict):
