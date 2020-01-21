@@ -8,7 +8,7 @@ from ckan.lib.plugins import DefaultDatasetForm
 import ckanext.knowledgehub.helpers as h
 
 from ckanext.knowledgehub.helpers import _register_blueprints
-
+from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
@@ -25,6 +25,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'knowledgehub')
+        # patch the CKAN core functionality
+        patch_ckan_core_search()
 
     # IBlueprint
     def get_blueprint(self):
