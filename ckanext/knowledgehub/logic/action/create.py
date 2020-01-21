@@ -217,10 +217,10 @@ def resource_create(context, data_dict):
     :type validation_options: string
     '''
 
-    if (data_dict['schema'] == ''):
+    if (data_dict.get('schema') == ''):
         del data_dict['schema']
 
-    if (data_dict['validation_options'] == ''):
+    if (data_dict.get('validation_options') == ''):
         del data_dict['validation_options']
 
     if data_dict.get('db_type') is not None:
@@ -635,3 +635,58 @@ def user_query_result_create(context, data_dict):
     query_result.save()
 
     return query_result.as_dict()
+
+
+def merge_all_data(context, data_dict):
+    u''' Merge data resources that belongs to the dataset and create
+    new data resource with the whole data
+
+    :param id: the dataset ID
+    :type id: string
+
+    :returns: the resource created/updated or error message
+    :rtype: dict
+    '''
+
+    package_id = data_dict.get('id')
+
+    if not package_id:
+        raise ValidationError({'id': _('Missing value')})
+
+    data_dict = plugin_helpers.get_dataset_data(package_id)
+
+    if data_dict.get('records') and not data_dict.get('err_msg'):
+        writer = WriterService()
+        stream = writer.csv_writer(
+            data_dict.get('fields'), data_dict['records'], ',')
+
+        package_name = data_dict.get('package_name')
+        filename = '{}_{}.{}'.format(
+            package_name,
+            str(datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')),
+            'csv'
+        )
+
+        rsc_dict = {
+            'package_id': package_id,
+            'name': '{}_{}'.format(
+                package_name,
+                plugin_helpers.SYSTEM_RESOURCE_TYPE
+            ),
+            'upload':  FlaskFileStorage(stream, filename),
+            'resource_type': plugin_helpers.SYSTEM_RESOURCE_TYPE
+        }
+
+        if data_dict.get('system_resource'):
+            rsc_dict['id'] = data_dict['system_resource']['id']
+            rsc_dict['name'] = data_dict['system_resource']['name']
+            toolkit.get_action('resource_update')(
+                context, rsc_dict)
+            return {}
+        else:
+            return toolkit.get_action('resource_create')(
+                context, rsc_dict)
+
+    return {
+        'err_msg': data_dict['err_msg']
+    }

@@ -6,7 +6,8 @@ import uuid
 import json
 import functools32
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil import parser
 from flask import Blueprint
 from urllib import urlencode
 from six import string_types
@@ -33,6 +34,9 @@ from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 
 log = logging.getLogger(__name__)
 model_dictize = lib.dictization.model_dictize
+
+SYSTEM_RESOURCE_TYPE = 'system_merge'
+INVALID_COLUMN_NAMES = ['_id', '_full_text']
 
 
 def _get_context():
@@ -1043,3 +1047,129 @@ def get_single_dash(data_dict):
     single_dash = toolkit.get_action('dashboard_show')(_get_context(),
     {'id': data_dict.get('id')})
     return single_dash
+
+
+def is_rsc_upload_datastore(resource):
+    u''' Check whether the data resource is uploaded to the Datastore
+
+    The status complete means that data is completely uploaded to Datastore.
+
+    :param resource: data resource dictionary
+    :type resource: dict
+
+    :returns: True if uploding is completed otherwise False
+    :rtyep: bool
+    '''
+    context = {'ignore_auth': True}
+
+    try:
+        task = toolkit.get_action('task_status_show')(context, {
+            'entity_id': resource['id'],
+            'task_type': 'datapusher',
+            'key': 'datapusher'
+        })
+        return True if task.get('state') == 'complete' else False
+    except logic.NotFound:
+        log.debug(
+            u'Resource {} not uploaded to datastore!'.format(resource['id'])
+        )
+    except Exception as e:
+        log.debug(u'Task status show: {}'.format(str(e)))
+
+    return False
+
+
+def get_resource_filtered_data(id):
+    u''' Get all data from datastore and exclude `_id` and _full_text`
+    from fiedls and records.
+
+    :param id: resource ID
+    :type id: string
+
+    :returns: the resource dict with filtered fields and records
+    :rtype: dict
+    '''
+    result = {
+        'fields': [],
+        'records': []
+    }
+    try:
+        sql = 'SELECT * FROM "{resource}"'.format(resource=id)
+        result = toolkit.get_action('datastore_search_sql')(
+            {'ignore_auth': True},
+            {'sql': sql}
+        )
+    except Exception as e:
+        log.debug(u'Datastore search sql: {}'.format(str(e)))
+
+    if len(result.get('records', [])):
+        result['fields'] = [f for f in result['fields']
+                            if f['id'] not in INVALID_COLUMN_NAMES]
+
+        filtered_records = []
+        for r in result.get('records'):
+            row = {k: v for k, v in r.items() if k not in INVALID_COLUMN_NAMES}
+            filtered_records.append(row)
+
+        result['records'] = filtered_records
+
+    return result
+
+
+def get_dataset_data(id):
+    u''' Return fields and records from all data resources for given package ID
+
+    The method does not return the data from the system merged data resource.
+    If the format of the data resources is different it sets the message that
+    tells which resource and what fields are different.
+
+    :param id: the dataset ID
+    :type id: string
+
+    :returns: dict with filterd fields and records, package_name, err_msg
+    and system_resource
+    :rtype: dict
+    '''
+    data_dict = {
+        'fields': [],
+        'records': [],
+        'package_name': '',
+        'err_msg': '',
+        'system_resource': {}
+    }
+
+    package = toolkit.get_action('package_show')(
+        {'ignore_auth': True}, {'id': id})
+    data_dict['package_name'] = package.get('name')
+
+    resources = package.get('resources', [])
+    if len(resources):
+        for resource in resources:
+            if resource.get('resource_type') == SYSTEM_RESOURCE_TYPE:
+                data_dict['system_resource'] = resource
+                continue
+
+            result = get_resource_filtered_data(resource.get('id'))
+
+            if len(result.get('records')):
+                if len(data_dict['fields']) == 0:
+                    data_dict['fields'] = result['fields']
+                    data_dict['records'] = result['records']
+                    continue
+
+                if data_dict['fields'] == result.get('fields'):
+                    data_dict['records'].extend(result.get('records'))
+                else:
+                    diff = [f['id'] for f in result.get('fields')
+                            if f not in data_dict['fields']]
+                    diff.extend([f['id'] for f in data_dict['fields']
+                                if f not in result.get('fields')])
+                    data_dict['err_msg'] = ('The format of the data resource '
+                                            '{resource} differs from the '
+                                            'others, fields: {fields}').format(
+                                                resource=resource.get('name'),
+                                                fields=", ".join(diff)
+                                            )
+                    break
+
+    return data_dict

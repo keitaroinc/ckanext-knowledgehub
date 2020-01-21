@@ -25,6 +25,7 @@ from ckanext.knowledgehub.logic.action import create as create_actions
 from ckanext.knowledgehub.logic.action import get as get_actions
 from ckanext.knowledgehub.logic.action import delete as delete_actions
 from ckanext.knowledgehub.logic.action import update as update_actions
+from ckanext.knowledgehub import helpers as kwh_helpers
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons,
@@ -368,6 +369,63 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(data_dict['result_type'], result['result_type'])
         assert_equals(data_dict['result_id'], result['result_id'])
         assert_equals(data_dict['query_id'], result['query_id'])
+
+    def test_merge_all_data(self):
+        dataset = create_dataset()
+
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data = {
+            "resource_id": resource['id'],
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 4},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        helpers.call_action('datastore_create', **data)
+
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data = {
+            "resource_id": resource['id'],
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 8},
+                {"value": 9},
+                {"value": 10},
+                {"value": 11},
+                {"value": 12},
+                {"value": 13},
+                {"value": 14},
+            ],
+            "force": True
+        }
+        helpers.call_action('datastore_create', **data)
+
+        system_rsc = create_actions.merge_all_data(
+            get_context(),
+            {'id': dataset['id']}
+        )
+
+        assert_equals(
+            system_rsc['resource_type'],
+            kwh_helpers.SYSTEM_RESOURCE_TYPE
+        )
 
 
 class TestKWHGetActions(ActionsBase):
