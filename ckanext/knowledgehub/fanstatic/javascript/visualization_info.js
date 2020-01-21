@@ -45,7 +45,6 @@ ckan.module('visualization_info', function ($) {
       var table_title = this.options.title;
       var subtitle = this.options.subtitle
       var description = this.options.description
-      console.log(this.options)
       var rq_ids = this.options.id;
       var rqs = "";
       var content = "";
