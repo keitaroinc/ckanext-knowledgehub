@@ -21,10 +21,23 @@ Example:
     {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource, can_edit=can_edit %}
     {% endif %}
     {% endfor %}
+<<<<<<< HEAD
 
     {% endblock %}
     {% if not hide_merge_btn %}
     <br>
+=======
+    {% if system_resource %}
+    <br>
+    <h3>{{ _('System Resources') }}</h3>
+    {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=system_resource, can_edit=can_edit %}
+    {% endif %}
+    {% endblock %}
+    {% if not hide_merge_btn %}
+    <br>
+    <h3>Merge Resources</h3>
+
+>>>>>>> Visual changes made on the dataset page, removing consol logs from js file.
     <li class="resource-item" style="text-align: end">
       <a class="btn btn-success" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}"
         {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
