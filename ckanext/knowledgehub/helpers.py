@@ -91,9 +91,9 @@ def id_to_title(model, id):
 
 
 def get_rq_options(idValue=False):
-    # context = _get_context()
+    context = _get_context()
     rq_options = []
-    rq_list = toolkit.get_action('research_question_list')({'ignore_auth': True}, {})
+    rq_list = toolkit.get_action('research_question_list')(context, {})
 
     for rq in rq_list.get(u'data', []):
         if idValue:
@@ -857,20 +857,14 @@ def dashboard_research_questions(dashboard):
 
 def add_rqs_to_dataset(res_view):
 
-    #context =  _get_context()
+    context = _get_context()
     pkg_dict = toolkit.get_action('package_show')(
         dict({'ignore_auth': True}, return_type='dict'),
         {'id': res_view['package_id']})
 
 
-    rq_options = []
-    rq_list = toolkit.get_action('research_question_list')({'ignore_auth': True}, {})
+    rq_options = get_rq_options()
 
-    for rq in rq_list.get(u'data', []):
-        opt = {u'text': rq[u'title'],
-                u'value': rq[u'title'], u'id': rq[u'id']}
-        rq_options.append(opt)
-    # rq_options = get_rq_options()
     all_rqs = []
     if not pkg_dict.get('research_question'):
         pkg_dict['research_question'] = []
@@ -892,7 +886,6 @@ def add_rqs_to_dataset(res_view):
     eliminate_duplicates = set(all_rqs)
     all_rqs = list(eliminate_duplicates)
     pkg_dict['research_question'] = ",".join(all_rqs)
-
     try:
         context['defer_commit'] = True
         context['use_cache'] = False
@@ -955,9 +948,9 @@ def remove_rqs_from_dataset(res_view):
 
 def update_rqs_in_dataset(old_data, res_view):
 
-    # context =  _get_context()
+    context = _get_context()
     pkg_dict = toolkit.get_action('package_show')(
-        dict({'ignore_auth': True}, return_type='dict'),
+        dict({'ignore_auth': True }, return_type='dict'),
         {'id': res_view['package_id']})
 
     rq_options = get_rq_options()

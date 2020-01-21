@@ -172,7 +172,6 @@ class TestKWHCreateActions(ActionsBase):
 
     @_monkey_patch(Visualization, 'add_to_index', mock.Mock())
     def test_resource_view_create(self):
-        mock_pylons()
 
         dataset = create_dataset()
         resource = factories.Resource(

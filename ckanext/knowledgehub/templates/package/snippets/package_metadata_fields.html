@@ -9,15 +9,8 @@
 {% block custom_fields %}
 
 <!-- TODO: Add the countries in a helper function  -->
-<<<<<<< Updated upstream
 {% block basic_fields_country %}
 {% set country_codes = ['Egypt', 'Iraq', 'Jordan', 'Lebanon', 'Syria', 'Turkey'] %}
-=======
-{% block basic_fields_country_of_displacement %}
-{{ form.select('country_code_displacement', label=_('Country of Displacement'), options=country_options, error=errors.country, selected=country_code_displacement) }}
-
-<!-- {% set country_codes = ['Egypt', 'Iraq', 'Jordan', 'Lebanon', 'Syria', 'Turkey'] %}
->>>>>>> Stashed changes
 <div class="control-group">
   <label class="control-label" for="field-country_code">{{ _("Country") }}</label>
   <div class="controls">
@@ -27,7 +20,7 @@
       {% endfor %}
     </select>
   </div>
-</div> -->
+</div> 
 {% endblock %}
 
   <!-- {% block basic_fields_unit_supported %}
