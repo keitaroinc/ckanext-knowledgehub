@@ -55,28 +55,36 @@ class DataQualityMetrics(object):
 
     def _fetch_resource_data(self, resource):
         # FIXME: Maybe fetch differently for different resources types?
-        results = toolkit.get_action('datastore_search')(
-            {
-                'ignore_auth': True,
-            },
-            {
-                'resource_id': resource['id'],
-                'offset': 0
-            }
-        )
-        if results and results['total']:
-            # FIXME: do this with pagination if we have too large datasets
+        try:
             results = toolkit.get_action('datastore_search')(
                 {
                     'ignore_auth': True,
                 },
                 {
                     'resource_id': resource['id'],
-                    'offset': 0,
-                    'limit': results['total'],
+                    'offset': 0
                 }
             )
-        return results
+            if results and results['total']:
+                # FIXME: do this with pagination if we have too large datasets
+                results = toolkit.get_action('datastore_search')(
+                    {
+                        'ignore_auth': True,
+                    },
+                    {
+                        'resource_id': resource['id'],
+                        'offset': 0,
+                        'limit': results['total'],
+                    }
+                )
+            return results
+        except Exception as e:
+            self.logger.warning('Failed to fetch data for resource %s. Error: %s', resource['id'], str(e))
+            self.logger.exception(e)
+            return {
+                'total': 0,
+                'records': [],
+            }
 
     def _get_metrics_record(self, ref_type, ref_id):
         metrics = DataQualityMetricsModel.get(ref_type, ref_id)
@@ -152,7 +160,7 @@ class DataQualityMetrics(object):
                 if cached_calculation and getattr(data_quality, metric.name) is not None:
                     cached = data_quality.metrics[metric.name]
                     if not cached.get('failed'):
-                        self.logger.debug('Dimension %s already calculated. Skipping...')
+                        self.logger.debug('Dimension %s already calculated. Skipping...', metric.name)
                         results[metric.name] = cached
                         continue
                 self.logger.debug('Calculating dimension: %s...', metric)
@@ -342,9 +350,9 @@ class Timeliness(DimensionMetric):
             }
         avg_delay = timedelta(seconds=int(total_delta/measured_count))
 
-        self.logger.info('Measured records: %d of %d.', measured_count, data.get('total', 0))
-        self.logger.info('Total delay: %s (%d seconds).', str(total_delta), total_delta)
-        self.logger.info('Average delay: %s (%d seconds).', str(avg_delay), avg_delay.total_seconds())
+        self.logger.debug('Measured records: %d of %d.', measured_count, data.get('total', 0))
+        self.logger.debug('Total delay: %s (%d seconds).', str(total_delta), total_delta)
+        self.logger.debug('Average delay: %s (%d seconds).', str(avg_delay), avg_delay.total_seconds())
 
         return {
             'value': '+%s' % str(avg_delay),
@@ -381,6 +389,61 @@ class Accuracy(DimensionMetric):
 
     def __init__(self):
         super(Accuracy, self).__init__('accuracy')
+    
+    def calculate_metric(self, resource, data):
+        settings = resource.get('data_quality_settings', {}).get('accuracy', {})
+        column = settings.get('column')
+        if not column:
+            self.logger.error('Cannot calculate accuracy on this resource '
+                              'because no accuracy column is specified.')
+            return {
+                'failed': True,
+                'error': 'Missing accuracy column.',
+            }
+        
+        accurate = 0
+        inaccurate = 0
+
+        for row in data['records']:
+            flag = row.get(column)
+            if flag is None or flag.strip() == '':
+                # neither accurate or inaccurate
+                continue
+            if flag.lower() in ['1', 'yes', 'accurate', 't', 'true']:
+                accurate += 1
+            else:
+                inaccurate += 1
+        
+        total = accurate + inaccurate
+        value = 0.0
+        if total:
+            value = float(accurate)/float(total) * 100.0
+        
+        self.logger.debug('Accurate: %d', accurate)
+        self.logger.debug('Inaccurate: %d', inaccurate)
+        self.logger.debug('Accuracy: %f%%', value)
+        return {
+            'value': value,
+            'total': total,
+            'accurate': accurate,
+            'inaccurate': inaccurate,
+        }
+
+    def calculate_cumulative_metric(self, resources, metrics):
+        accurate = sum([r.get('accurate', 0) for r in metrics])
+        inaccurate = sum([r.get('inaccurate', 0) for r in metrics])
+
+        total = accurate + inaccurate
+        value = 0.0
+        if total:
+            value = float(accurate)/float(total) * 100.0
+        
+        return {
+            'value': value,
+            'total': total,
+            'accurate': accurate,
+            'inaccurate': inaccurate,
+        }
 
 
 class Consistency(DimensionMetric):

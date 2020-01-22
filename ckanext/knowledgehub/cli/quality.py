@@ -25,6 +25,7 @@ def quality():
               default='all',
               help='Which metric to calculate.')
 def calculate(dataset, dimension):
+    _register_mock_translator()
     dimensions = ['completeness',
                   'uniqueness',
                   'timeliness',
@@ -57,3 +58,13 @@ def calculate(dataset, dimension):
             metrics.calculate_metrics_for_dataset(pkg['id'])
     else:
         metrics.calculate_metrics_for_dataset(dataset)
+
+
+def _register_mock_translator():
+    # Workaround until the core translation function defaults to the Flask one
+    from paste.registry import Registry
+    from ckan.lib.cli import MockTranslator
+    registry = Registry()
+    registry.prepare()
+    from pylons import translator
+    registry.register(translator, MockTranslator())

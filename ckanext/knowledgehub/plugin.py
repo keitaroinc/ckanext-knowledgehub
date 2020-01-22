@@ -182,6 +182,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'sql': defaults,
             'dq_timeliness_column': defaults,
             'dq_timeliness_date_format': defaults,
+            'dq_accuracy_column': defaults,
         })
         return schema
 

@@ -102,6 +102,16 @@
                       error=errors.dq_timeliness_date_format,
                       classes=[]) }}
       </div>
+      <div class="accuracy-settings">
+        <h4>{{_('Accuracy Settings')}}</h4>
+        {{ form.input('dq_accuracy_column',
+                      id='dq_accuracy_column',
+                      label=_('Column with flag if the record is accurate'),
+                      placeholder=_('eg. is_accurate'),
+                      value=data.dq_accuracy_column,
+                      error=errors.dq_accuracy_column,
+                      classes=[]) }}
+      </div>
     </div>
   </div>
   
