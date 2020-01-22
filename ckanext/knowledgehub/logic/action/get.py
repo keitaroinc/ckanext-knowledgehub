@@ -22,7 +22,6 @@ from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
-from ckanext.knowledgehub.logic.auth.get import dashboard_show as dashboard_show_auth
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 
@@ -465,18 +464,18 @@ def dashboard_list(context, data_dict):
     sort = data_dict.get(u'sort', u'name asc')
     q = data_dict.get(u'q', u'')
 
-    def result_iter(size=100):
+    def result_iter(limit=100):
         offset = 0
         while True:
-            t_db_list = Dashboard.search(q=q,
-                                        limit=size,
-                                        offset=offset,
-                                        order_by=sort).all()
-            if not t_db_list:
+            dashboards = Dashboard.search(q=q,
+                                          limit=limit,
+                                          offset=offset,
+                                          order_by=sort).all()
+            if not dashboards:
                 break
-            for dashboard in t_db_list:
+            for dashboard in dashboards:
                 yield dashboard
-            offset += size
+            offset += limit
 
     dashboards = []
     for dashboard in result_iter():
@@ -485,15 +484,15 @@ def dashboard_list(context, data_dict):
         except NotAuthorized:
             continue
 
-        if offset == 0 and len(dashboards) == limit:
-            break
-        if offset != 0 and len(dashboards) == limit + offset:
+        if len(dashboards) == limit + offset:
             break
 
         dashboards.append(_table_dictize(dashboard, context))
 
-    return {u'total': len(dashboards), u'page': page,
-            u'items_per_page': limit, u'data': dashboards}
+    return {u'total': len(dashboards),
+            u'page': page,
+            u'items_per_page': limit,
+            u'data': dashboards[offset:offset+limit]}
 
 
 @toolkit.side_effect_free
