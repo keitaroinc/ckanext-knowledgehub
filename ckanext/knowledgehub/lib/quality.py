@@ -4,7 +4,8 @@ from ckanext.knowledgehub.model.data_quality import (
 )
 from logging import getLogger
 from functools import reduce
-from datetime import datetime
+from datetime import datetime, timedelta
+import dateutil
 
 
 class DimensionMetric(object):
@@ -38,6 +39,19 @@ class DataQualityMetrics(object):
                 'id': package_id,
             }
         )
+    
+    def _data_quality_settings(self, resource):
+        settings = {}
+        for dimension in ['completeness', 'uniqueness', 'timeliness',
+                          'validity', 'accuracy', 'consistency']:
+            for key, value in resource.items():
+                prefix = 'dq_%s' % dimension
+                if key.startswith(prefix):
+                    if settings.get(dimension) is None:
+                        settings[dimension] = {}
+                    setting = key[len(prefix) + 1:]
+                    settings[dimension][setting] = value
+        return settings
 
     def _fetch_resource_data(self, resource):
         # FIXME: Maybe fetch differently for different resources types?
@@ -76,6 +90,7 @@ class DataQualityMetrics(object):
         for resource in dataset['resources']:
             self.logger.debug('Calculating data quality for resource: %s',
                               resource['id'])
+            resource['data_quality_settings'] = self._data_quality_settings(resource)
             data = self._fetch_resource_data(resource)
             result = self.calculate_metrics_for_resource(resource, data)
             if result is None:
@@ -104,7 +119,6 @@ class DataQualityMetrics(object):
                               'version modified on: %s',
                               data_quality.resource_last_modified)
             if data_quality.resource_last_modified >= last_modified:
-                
                 cached_calculation = True
                 # check if all metrics have been calculated or some needs to be
                 # calculated again
@@ -268,12 +282,10 @@ class Uniqueness(DimensionMetric):
                 'unique': unique,
                 'value': 100.0*float(unique)/float(tot) if tot > 0 else 0.0,
             }
-        print 'RESULT ->', result
         return result
 
     def calculate_cumulative_metric(self, resources, metrics):
         result = {}
-        print 'METRICS -> ', metrics
         result['total'] = sum([r['total'] for r in metrics])
         result['unique'] = sum([r['unique'] for r in metrics])
 
@@ -287,6 +299,77 @@ class Timeliness(DimensionMetric):
     def __init__(self):
         super(Timeliness, self).__init__('timeliness')
 
+    def calculate_metric(self, resource, data):
+        settings = resource.get('data_quality_settings', {}).get('timeliness', {})
+        print 'DQ Settings ->', resource.get('data_quality_settings', {})
+        column = settings.get('column')
+        if not column:
+            self.logger.warning('No column for record entry date defined '
+                                'for resource %s', resource['id'])
+            return {
+                'failed': True,
+                'error': 'No date column defined in settings',
+            }
+        dt_format = settings.get('date_format')
+        parse_date_column = lambda ds: dateutil.parser.parse(ds)
+        if dt_format:
+            parse_date_column = lambda ds: datetime.strptime(ds, dt_format)
+        
+        created = dateutil.parser.parse(resource['created'])
+
+        measured_count = 0
+        total_delta = 0
+
+        for row in data['records']:
+            value = row.get(column)
+            if value:
+                try:
+                    record_date = parse_date_column(value)
+                    if record_date > created:
+                        self.logger.warning('Date of record creating is after the time it has entered the system.')
+                        continue
+                    delta = created - record_date
+                    total_delta += delta.total_seconds()
+                    measured_count += 1
+                except Exception as e:
+                    self.logger.debug('Failed to process value: %s. Error: %s', value, str(e))
+        if measured_count == 0:
+            return {
+                'value': '',
+                'total': 0,
+                'average': 0,
+                'records': 0,
+            }
+        avg_delay = timedelta(seconds=int(total_delta/measured_count))
+
+        self.logger.info('Measured records: %d of %d.', measured_count, data.get('total', 0))
+        self.logger.info('Total delay: %s (%d seconds).', str(total_delta), total_delta)
+        self.logger.info('Average delay: %s (%d seconds).', str(avg_delay), avg_delay.total_seconds())
+
+        return {
+            'value': '+%s' % str(avg_delay),
+            'total': int(total_delta),
+            'average': avg_delay.total_seconds(),
+            'records': measured_count,
+        }
+
+    def calculate_cumulative_metric(self, resources, metrics):
+        total_delay = sum([r.get('total', 0) for r in metrics])
+        total_records = sum([r.get('records', 0) for r in metrics])
+        if not total_records:
+            return {
+                'value': '',
+                'total': int(total_delay),
+                'average': 0,
+                'records': 0,
+            }
+        avg_delay = int(total_delay/total_records)
+        return {
+            'value': '+%s' % str(timedelta(seconds=avg_delay)),
+            'total': int(total_delay),
+            'average': avg_delay,
+            'records': total_records,
+        }
 
 class Validity(DimensionMetric):
 
