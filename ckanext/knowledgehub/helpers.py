@@ -990,3 +990,20 @@ def get_dataset_data(id):
                     break
 
     return data_dict
+
+def get_package_data_quality(id):
+    print(id)
+    context = _get_context()
+    try:
+        result = toolkit.get_action('package_data_quality') (context, {'id': id})
+    except Exception:
+        return {}
+    return result
+
+def get_resource_data_quality(id):
+    context = _get_context()
+    try:
+        result = toolkit.get_action('resource_data_quality') (context, {'id': id})
+    except Exception:
+        return {}
+    return result
