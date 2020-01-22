@@ -722,7 +722,12 @@ def resource_feedback_count(type, resource, dataset):
 def get_dashboards(limit=5, order_by='created_by asc'):
     dashboards = Dashboard.search(limit=limit, order_by=order_by).all()
 
-    return dashboards
+    dashboards = toolkit.get_action('dashboard_list')(
+        _get_context(),
+        {'limit': limit, 'sort': order_by}
+    )
+
+    return dashboards.get('data', [])
 
 
 def remove_space_for_url(str):
@@ -740,17 +745,17 @@ def format_date(str):
 
 
 def _get_pager(results, item_type):
-    
+
     def _get_url(*args, **kwargs):
         page = kwargs.get('page', g.page.page)
-        params = filter(lambda p: p[0] not in ['page', '_search-for'], 
+        params = filter(lambda p: p[0] not in ['page', '_search-for'],
                         [(k, v.encode('utf-8')
                              if isinstance(v, string_types) else str(v))
                           for k, v in request.params.items()])
         params.append(('page', page))
         params.append(('_search-for', item_type))
         return request.path + '?' + urlencode(params)
-    
+
     return h.Page(
         collection=results.get('results', []),
         page=results.get('page', 1),
@@ -761,7 +766,7 @@ def _get_pager(results, item_type):
 
 
 def get_tab_url(tab):
-    params = filter(lambda p: p[0] not in ['page', '_search-for'], 
+    params = filter(lambda p: p[0] not in ['page', '_search-for'],
                         [(k, v.encode('utf-8')
                              if isinstance(v, string_types) else str(v))
                           for k, v in request.params.items()])
@@ -793,25 +798,60 @@ def get_searched_rqs(query):
         search_query['sort'] = sort
     list_rqs_searched = toolkit.get_action(
         'search_research_questions')(
-            context, 
+            context,
             search_query)
     list_rqs_searched['pager'] = _get_pager(list_rqs_searched,
                                             'research-questions')
     return list_rqs_searched
 
 def get_searched_dashboards(query):
-    context = _get_context()
-    search_query = {
-        'text': query,
-        'page': int(request.params.get('page', 1)),
+    page = int(request.params.get('page', 1))
+    limit = int(config.get('ckan.datasets_per_page', 20))
+    offset = (page -1) * limit
+    list_dash_searched = {
+        'count': 0,
+        'limit': limit,
+        'stats': {},
+        'facets': {},
+        'results': []
     }
-    sort = _get_sort()
-    if sort:
-        search_query['sort'] = sort
-    list_dash_searched = toolkit.get_action(
-        'search_dashboards')(
-            context, 
-            search_query)
+
+    def result_iter(page=1):
+        search_query = {
+            'text': query,
+        }
+        sort = _get_sort()
+        if sort:
+            search_query['sort'] = sort
+        while True:
+            search_query['page'] = page
+            dashboards = toolkit.get_action('search_dashboards')(
+                _get_context(),
+                search_query)
+            results = dashboards.get('results', [])
+            if not results:
+                break
+            list_dash_searched['count'] = dashboards['count']
+            for r in results:
+                yield r
+            page += 1
+
+    dashboards = []
+    for dashboard in result_iter():
+        try:
+            toolkit.check_access(
+                'dashboard_show',
+                _get_context(),
+                {'name': dashboard.get('name')})
+        except toolkit.NotAuthorized:
+            continue
+
+        if len(dashboards) == limit + offset:
+            break
+
+        dashboards.append(dashboard)
+
+    list_dash_searched['results'] = dashboards[offset:offset+limit]
     list_dash_searched['pager'] = _get_pager(list_dash_searched, 'dashboards')
     return list_dash_searched
 
@@ -826,7 +866,7 @@ def get_searched_visuals(query):
         search_query['sort'] = sort
     list_visuals_searched = toolkit.get_action(
         'search_visualizations')(
-            context, 
+            context,
             search_query)
     visuals = []
     for vis in list_visuals_searched['results']:
