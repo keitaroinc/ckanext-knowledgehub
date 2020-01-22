@@ -8,6 +8,38 @@ from datetime import datetime, timedelta
 import dateutil
 
 
+class LazyStreamingList(object):
+
+    def __init__(self, fetch_page, page_size=512):
+        self.fetch_page = fetch_page
+        self.page_size = page_size
+        self.page = 0
+        self.buffer = None
+        self.total = 0
+    
+    def _fetch_buffer(self):
+        result = self.fetch_page(self.page, self.page_size)
+        self.total = result.get('total', 0)
+        self.buffer = result.get('records', [])
+        self.page += 1
+
+    def iterator(self):
+        current = 0
+        self._fetch_buffer()
+        while True:
+            if current >= self.total or not self.buffer:
+                # end of all results
+                raise StopIteration()
+            for row in self.buffer:
+                current += 1
+                yield row
+            # fetch next buffer
+            self._fetch_buffer()
+    
+    def __iter__(self):
+        return self.iterator()
+
+
 class DimensionMetric(object):
 
     def __init__(self, name):
@@ -54,37 +86,29 @@ class DataQualityMetrics(object):
         return settings
 
     def _fetch_resource_data(self, resource):
-        # FIXME: Maybe fetch differently for different resources types?
-        try:
-            results = toolkit.get_action('datastore_search')(
-                {
-                    'ignore_auth': True,
-                },
-                {
+
+        def _fetch_page(page, page_size):
+            try:
+                context = {'ignore_auth': True}
+                return toolkit.get_action('datastore_search')(context, {
                     'resource_id': resource['id'],
-                    'offset': 0
+                    'offset': page*page_size,
+                    'limit': page_size,
+                })
+            except Exception as e:
+                self.logger.warning('Failed to fetch data for resource %s. Error: %s', resource['id'], str(e))
+                self.logger.exception(e)
+                return {
+                    'total': 0,
+                    'records': [],
                 }
-            )
-            if results and results['total']:
-                # FIXME: do this with pagination if we have too large datasets
-                results = toolkit.get_action('datastore_search')(
-                    {
-                        'ignore_auth': True,
-                    },
-                    {
-                        'resource_id': resource['id'],
-                        'offset': 0,
-                        'limit': results['total'],
-                    }
-                )
-            return results
-        except Exception as e:
-            self.logger.warning('Failed to fetch data for resource %s. Error: %s', resource['id'], str(e))
-            self.logger.exception(e)
-            return {
-                'total': 0,
-                'records': [],
-            }
+
+        result = _fetch_page(0, 1)  # to calculate the total from start
+        return {
+            'total': result.get('total', 0),
+            'records': LazyStreamingList(_fetch_page),
+            'fields': result['fields'], # metadata
+        }
 
     def _get_metrics_record(self, ref_type, ref_id):
         metrics = DataQualityMetricsModel.get(ref_type, ref_id)
@@ -99,8 +123,7 @@ class DataQualityMetrics(object):
             self.logger.debug('Calculating data quality for resource: %s',
                               resource['id'])
             resource['data_quality_settings'] = self._data_quality_settings(resource)
-            data = self._fetch_resource_data(resource)
-            result = self.calculate_metrics_for_resource(resource, data)
+            result = self.calculate_metrics_for_resource(resource)
             if result is None:
                 result = {}
             self.logger.debug('Result: %s', result)
@@ -115,7 +138,7 @@ class DataQualityMetrics(object):
         self.logger.info('Data Quality metrcis calculated for dataset: %s.',
                          package_id)
 
-    def calculate_metrics_for_resource(self, resource, data):
+    def calculate_metrics_for_resource(self, resource):
         last_modified = datetime.strptime((resource.get('last_modified') or
                                            resource.get('created')),
                                           '%Y-%m-%dT%H:%M:%S.%f')
@@ -164,7 +187,8 @@ class DataQualityMetrics(object):
                         results[metric.name] = cached
                         continue
                 self.logger.debug('Calculating dimension: %s...', metric)
-                results[metric.name] = metric.calculate_metric(resource, data)
+                data_stream = self._fetch_resource_data(resource) # data is a stream
+                results[metric.name] = metric.calculate_metric(resource, data_stream)
             except Exception as e:
                 self.logger.error('Failed to calculate metric: %s. Error: %s',
                                   metric, str(e))
@@ -309,7 +333,6 @@ class Timeliness(DimensionMetric):
 
     def calculate_metric(self, resource, data):
         settings = resource.get('data_quality_settings', {}).get('timeliness', {})
-        print 'DQ Settings ->', resource.get('data_quality_settings', {})
         column = settings.get('column')
         if not column:
             self.logger.warning('No column for record entry date defined '
