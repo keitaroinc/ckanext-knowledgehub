@@ -37,6 +37,7 @@ chart_view = Blueprint(
 
 
 def _process_post_data(data, resource_id):
+
     config = {}
     filters = []
     for k, v in data.items():
@@ -119,6 +120,9 @@ def _process_post_data(data, resource_id):
             data['chart_field_y_ticks_format']
         config['sql_string'] = \
             data['sql_string']
+        if data.get('chart_research_questions'):
+            config['research_questions'] = \
+                data['chart_research_questions']
 
     config['filters'] = json.dumps(filters)
 

@@ -1,4 +1,5 @@
 {% ckan_extends %}
+{% resource 'knowledgehub/javascript/list_countries.js' %}
 
 {% block package_metadata_fields %}
 {% block package_metadata_author %}
@@ -19,7 +20,7 @@
       {% endfor %}
     </select>
   </div>
-</div>
+</div> 
 {% endblock %}
 
   <!-- {% block basic_fields_unit_supported %}
@@ -66,16 +67,6 @@
 	{{ form.input('indicator_type', id='field-ind-type', label=_('Indicator Type'), placeholder=_('e.g. Quantitative'), value=data.indicator_type, error=errors.indicator_type, classes=['control-full'], is_required=False) }}
   {% endblock %} -->
 
-  {# Research question start #}
-    {% set rq_options = h.get_rq_options() %}
-
-    {% if data.research_question %}
-      {% set selected_rq = h.rq_ids_to_titles(data.research_question) %}
-    {% endif %}
-
-    {{ form.selectmulti('research_question', label=_('Research question'), options=rq_options, selected=selected_rq, id='field-research_question', error=errors.research_question, attrs={"multiple": "multiple", "data-module": "autocomplete"}, classes=['control-medium']) }}
-
-  {# Research question end #}
 
   {% endblock %}
 

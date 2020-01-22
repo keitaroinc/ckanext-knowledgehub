@@ -173,6 +173,7 @@ class TestKWHCreateActions(ActionsBase):
 
     @_monkey_patch(Visualization, 'add_to_index', mock.Mock())
     def test_resource_view_create(self):
+
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],

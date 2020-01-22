@@ -89,6 +89,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_searched_dashboards': h.get_searched_dashboards,
             'get_searched_visuals': h.get_searched_visuals,
             'dashboard_research_questions': h.dashboard_research_questions,
+            'add_rqs_to_dataset': h.add_rqs_to_dataset,
+            'remove_rqs_from_dataset': h.remove_rqs_from_dataset,
+            'update_rqs_in_dataset': h.update_rqs_in_dataset,
             'get_single_dash': h.get_single_dash,
             'get_active_tab': h.get_active_tab,
             'get_tab_url': h.get_tab_url,
@@ -102,6 +105,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         defaults = [toolkit.get_validator('ignore_missing')]
         package_defaults = [toolkit.get_validator('ignore_missing'),
                             toolkit.get_converter('convert_to_extras')]
+        mandatory_defaults = [toolkit.get_validator('not_empty')]
+
 
         schema.update({
             'unit_supported': package_defaults,
@@ -147,6 +152,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         defaults = [toolkit.get_validator('ignore_missing')]
         package_defaults = [toolkit.get_converter('convert_from_extras'),
                             toolkit.get_validator('ignore_missing')]
+        mandatory_defaults = [toolkit.get_validator('not_missing')]
 
         schema.update({
             'unit_supported': package_defaults,
@@ -290,28 +296,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     # IPackageController
     def before_index(self, pkg_dict):
         research_question = pkg_dict.get('research_question')
-
-        # Store the titles of RQs instead of ids so they are searchable
-        if research_question:
-            rq_titles = []
-
-            # Remove `{` from the beginning
-            research_question = research_question[1:]
-
-            # Remove `}` from the end
-            research_question = research_question[:-1]
-
-            rq_ids = research_question.split(',')
-
-            for rq_id in rq_ids:
-                try:
-                    rq = toolkit.get_action(
-                        'research_question_show')({}, {'id': rq_id})
-                    rq_titles.append(rq.get('title'))
-                except logic.NotFound:
-                    continue
-
-            pkg_dict['research_question'] = ','.join(rq_titles)
-            pkg_dict['extras_research_question'] = ','.join(rq_titles)
-
+        
+        pkg_dict['research_question'] = research_question
+        pkg_dict['extras_research_question'] = research_question
         return pkg_dict
