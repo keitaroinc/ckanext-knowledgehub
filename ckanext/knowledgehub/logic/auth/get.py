@@ -18,9 +18,17 @@ def dashboard_list(context, data_dict):
 
 
 def dashboard_show(context, data_dict):
+    search_query = {'text': '*'}
+    if data_dict.get('id'):
+        search_query['entity_id'] = data_dict.get('id')
+    elif data_dict.get('name'):
+        search_query['name'] = data_dict.get('name')
+    else:
+        return {'success': False}
+
     docs = toolkit.get_action('search_dashboards')(
         {'ignore_auth': True},
-        {'text': '*', 'fq': 'name:' + data_dict.get('name')}
+        search_query
     )
     if docs.get('count', 0) == 1:
         dashboard = docs['results'][0]
@@ -32,7 +40,6 @@ def dashboard_show(context, data_dict):
                     context.pop('package', None)
                     a = toolkit.check_access(
                         'package_show', context, {'id': dataset})
-
                 except toolkit.NotAuthorized:
                     return {'success': False}
 
