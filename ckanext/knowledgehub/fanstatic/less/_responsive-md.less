@@ -1,23 +1,30 @@
   @media only screen and (max-width: @screen-md) {
     .accordion {
-    display: block;
-  }
-  .accordion-group {
+      display: block;
+    }
+
+    .accordion-group {
       width: 100%;
       padding: 0;
     }
 
-.module-content,
-.visualization-wrapper {
-  > .resource-view {
-      .flex-column;
-      &>div {
-        width: 100%;
+    .module-content,
+    .visualization-wrapper {
+      >.resource-view {
+        .flex-column;
+
+        &>div {
+          width: 100%;
+        }
       }
     }
+
+    .visualization-logo {
+      max-width: 200px;
+    }
+
+    .rs-questions {
+      width: 100%;
+      padding: 0;
+    }
   }
-  .visualization-logo{
-    max-width: 200px;
-  }
-  
-}

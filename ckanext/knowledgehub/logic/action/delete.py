@@ -6,6 +6,8 @@ import ckan.logic as logic
 from ckan.logic.action.delete import resource_view_delete as _resource_view_delete
 from ckan.plugins import toolkit
 from ckan.common import _
+from ckanext.knowledgehub import helpers as plugin_helpers
+
 
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import Theme
@@ -122,6 +124,7 @@ def dashboard_delete(context, data_dict):
 
 def resource_view_delete(context, data_dict):
     resource_view = logic.get_action('resource_view_show')(context, data_dict)
+    plugin_helpers.remove_rqs_from_dataset(resource_view)
     _resource_view_delete(context, data_dict)
     Visualization.delete_from_index({'id': resource_view['id']})
 

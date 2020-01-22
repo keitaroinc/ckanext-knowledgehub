@@ -281,6 +281,11 @@ def resource_view_update(context, data_dict):
     # TODO need to implement custom authorization actions
     # check_access('resource_view_update', context, data_dict)
 
+    old_resource_view_data = model_dictize.resource_view_dictize(resource_view,
+                                                             context)
+
+    # before update
+
     resource_view = model_save.resource_view_dict_save(data, context)
     if not context.get('defer_commit'):
         model.repo.commit()
@@ -289,6 +294,14 @@ def resource_view_update(context, data_dict):
 
     # Update index
     Visualization.update_index_doc(resource_view_data)
+
+    # this check is done for the unit tests
+    if resource_view_data.get('__extras'):
+        ext = resource_view_data['__extras']
+        ext_old = resource_view_data['__extras']
+        if ext_old.get('research_questions') or ext.get('research_questions'):
+            plugin_helpers.update_rqs_in_dataset(old_resource_view_data, resource_view_data)
+
 
     return resource_view_data
 
@@ -349,24 +362,6 @@ def dashboard_update(context, data_dict):
 
 
 def package_update(context, data_dict):
-    research_questions = data_dict.get('research_question')
-    rq_options = plugin_helpers.get_rq_options()
-    rq_ids = []
-
-    if research_questions:
-        if isinstance(research_questions, list):
-            for rq in research_questions:
-                for rq_opt in rq_options:
-                    if rq == rq_opt.get('text'):
-                        rq_ids.append(rq_opt.get('id'))
-                        break
-            data_dict['research_question'] = rq_ids
-        elif isinstance(research_questions, unicode):
-            for rq in rq_options:
-                if rq.get('text') == research_questions:
-                    data_dict['research_question'] = [rq.get('id')]
-                    break
-
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
     return result
