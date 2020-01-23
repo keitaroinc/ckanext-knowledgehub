@@ -302,7 +302,7 @@ def resource_view_create(context, data_dict):
     rv_data = model_dictize.resource_view_dictize(resource_view, context)
 
     # Add to index
-    Visualization.add_to_index(rv_data)    
+    Visualization.add_to_index(rv_data)
 
     # this check is because of the unit tests
     if rv_data.get('__extras'):
