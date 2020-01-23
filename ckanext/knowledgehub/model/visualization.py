@@ -15,7 +15,7 @@ class Visualization(ResourceView, Indexed):
         'view_type',
         'research_questions',
         'package_id',
-	mapped('organization', 'organization'),
+	    mapped('organization', 'organization'),
         mapped('groups', 'groups')
     ]
 
@@ -23,7 +23,7 @@ class Visualization(ResourceView, Indexed):
 
     @staticmethod
     def before_index(data):
-	package_id = data.get('package_id')
+	    package_id = data.get('package_id')
         package = get_action('package_show')(
             {'ignore_auth': True},
             {'id': package_id, 'include_tracking': True}
