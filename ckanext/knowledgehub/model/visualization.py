@@ -23,11 +23,10 @@ class Visualization(ResourceView, Indexed):
 
     @staticmethod
     def before_index(data):
-	    package_id = data.get('package_id')
+        package_id = data.get('package_id')
         package = get_action('package_show')(
             {'ignore_auth': True},
-            {'id': package_id, 'include_tracking': True}
-        )
+            {'id': package_id, 'include_tracking': True})
         if package:
             data['organization'] = package.get('organization', {}).get('name')
 
