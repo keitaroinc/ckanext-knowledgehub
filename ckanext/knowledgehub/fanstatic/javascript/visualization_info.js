@@ -47,18 +47,18 @@ ckan.module('visualization_info', function ($) {
       var subtitle = this.options.subtitle
       var description = this.options.description
       var rqs = "";
-      var content = "";
+      var info = ""
       if (subtitle != "") {
-        content += '<p>' + '<b>Subtitle: </b>' + subtitle + '</p>';
+        info += '<p>' + '<b>Subtitle: </b>' + subtitle + '</p>';
       }
       if (description != "") {
-        content += '<p>' + '<b>Description: </b>' + description + '</p>';
+        info += '<p>' + '<b>Description: </b>' + description + '</p>';
       }
       if (rq_ids == 0)
         rqs = "This dataset contains no research <br/ > questions.";
       else
         rqs = "<strong> Research Questions: </strong>";
-      content = rqs;
+      var content = rqs;
       content += '<br/ >';
       var rqs_list = this.options.rqs;
       if (rqs_list != 0) {
@@ -78,11 +78,11 @@ ckan.module('visualization_info', function ($) {
           content += '<a href="' + x + '">"' + remove_comma[i] + '"</a>';
           content += '<br/ >';
         }
+        info += content
       }
-
       this.el.popover({
         title: "Title: " + table_title,
-        content: content,
+        content: info,
         html: true,
         placement: 'right'
       });
