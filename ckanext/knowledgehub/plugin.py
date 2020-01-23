@@ -97,7 +97,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_tab_url': h.get_tab_url,
             'is_rsc_upload_datastore': h.is_rsc_upload_datastore,
             'get_dataset_data': h.get_dataset_data,
-            'get_resource_filtered_data': h.get_resource_filtered_data
+            'get_resource_filtered_data': h.get_resource_filtered_data,
+            'get_package_data_quality': h.get_package_data_quality,
+            'get_resource_data_quality': h.get_resource_data_quality,
         }
 
     # IDatasetForm
