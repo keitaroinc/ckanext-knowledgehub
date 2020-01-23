@@ -489,7 +489,7 @@ def dashboard_list(context, data_dict):
 
         dashboards.append(_table_dictize(dashboard, context))
 
-    return {u'total': len(dashboards),
+    return {u'total': len(Dashboard.search().all()),
             u'page': page,
             u'items_per_page': limit,
             u'data': dashboards[offset:offset+limit]}

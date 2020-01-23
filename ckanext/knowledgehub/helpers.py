@@ -831,7 +831,6 @@ def get_searched_dashboards(query):
             results = dashboards.get('results', [])
             if not results:
                 break
-            list_dash_searched['count'] = dashboards['count']
             for r in results:
                 yield r
             page += 1
@@ -846,11 +845,9 @@ def get_searched_dashboards(query):
         except toolkit.NotAuthorized:
             continue
 
-        if len(dashboards) == limit + offset:
-            break
-
         dashboards.append(dashboard)
 
+    list_dash_searched['count'] = len(dashboards)
     list_dash_searched['results'] = dashboards[offset:offset+limit]
     list_dash_searched['pager'] = _get_pager(list_dash_searched, 'dashboards')
     return list_dash_searched
