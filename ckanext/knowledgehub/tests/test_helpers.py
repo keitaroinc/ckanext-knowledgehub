@@ -21,6 +21,7 @@ from ckanext.knowledgehub.model.dashboard import (
     setup as dashboard_db_setup,
     Dashboard,
 )
+from ckanext.knowledgehub.model.visualization import Visualization
 from ckanext.knowledgehub.model.rnn_corpus import setup as rnn_corpus_setup
 from ckanext.knowledgehub.model.resource_feedback import (
     setup as resource_feedback_setup
@@ -221,7 +222,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(last_visuals), 1)
 
-    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
     def test_get_rqs_dashboards(self):
         user = factories.Sysadmin()
         context = {
@@ -863,6 +864,10 @@ class TestKWHHelpers(ActionsBase):
         b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
 
+
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
+    @_monkey_patch(ResearchQuestion, 'update_index_doc', mock.Mock())
     def test_views_dashboards_groups_update(self):
         dataset = create_dataset()
         resource = factories.Resource(
