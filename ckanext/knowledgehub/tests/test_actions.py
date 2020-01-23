@@ -39,6 +39,7 @@ from pysolr import Results
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
+assert_true = nose.tools.assert_true
 
 
 class _monkey_patch:
@@ -1155,7 +1156,7 @@ class TestKWHUpdateActions(ActionsBase):
 
         rsc_updated = update_actions.resource_update(context, data_dict)
 
-        assert_equals(rsc_updated, None)
+        assert_true(rsc_updated is not None)
 
     @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     def test_resource_view_update(self):
