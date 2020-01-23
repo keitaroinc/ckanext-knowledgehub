@@ -257,7 +257,8 @@ ckan.module('table', function () {
                     });
 
                     // Set title value
-                    $("div.dt-header").html(`<div>${title} <p>${subtitle}</p> <p>${description}</p><div>`);
+                    //$("div.dt-header").html(`<div>${title} <p>${subtitle}</p> <p>${description}</p><div>`);
+                    $("div.dt-header").html(`<p>${title}</p>`);
                 } else {
                     this.el.text(this._('Table could not be created!'));
                 }
