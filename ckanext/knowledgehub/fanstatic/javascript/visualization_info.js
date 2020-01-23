@@ -43,22 +43,23 @@ ckan.module('visualization_info', function ($) {
     initialize: function () {
       var resource_id = this.options.resource_id;
       var table_title = this.options.title;
-      var rq_ids = this.options.id;
       var subtitle = this.options.subtitle
       var description = this.options.description
+
+      var rq_ids = this.options.id;
       var rqs = "";
-      var info = ""
+      var content = "";
       if (subtitle != "") {
-        info += '<p>' + '<b>Subtitle: </b>' + subtitle + '</p>';
+        content += '<p>' + '<b>Subtitle: </b>' + subtitle + '</p>';
       }
       if (description != "") {
-        info += '<p>' + '<b>Description: </b>' + description + '</p>';
+        content += '<p>' + '<b>Description: </b>' + description + '</p>';
       }
       if (rq_ids == 0)
         rqs = "This dataset contains no research <br/ > questions.";
       else
         rqs = "<strong> Research Questions: </strong>";
-      var content = rqs;
+      content += rqs;
       content += '<br/ >';
       var rqs_list = this.options.rqs;
       if (rqs_list != 0) {
@@ -78,11 +79,12 @@ ckan.module('visualization_info', function ($) {
           content += '<a href="' + x + '">"' + remove_comma[i] + '"</a>';
           content += '<br/ >';
         }
-        info += content
+
       }
+
       this.el.popover({
         title: "Title: " + table_title,
-        content: info,
+        content: content,
         html: true,
         placement: 'right'
       });
