@@ -992,7 +992,6 @@ def get_dataset_data(id):
     return data_dict
 
 def get_package_data_quality(id):
-    print(id)
     context = _get_context()
     try:
         result = toolkit.get_action('package_data_quality') (context, {'id': id})

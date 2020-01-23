@@ -4,7 +4,8 @@
 {% resource 'knowledgehub/javascript/resource_feedback.js' %}
 {% resource 'knowledgehub/javascript/copy_clipboard.js' %}
 {% ckan_extends %}
-{%  set data_quality = h.get_resource_data_quality(resource_id)  %}
+
+
 {% block resource_actions %}
 <ul>
   {% block resource_actions_inner %}
@@ -12,7 +13,6 @@
   <li>
     {% link_for _('Manage'), controller='package', action='resource_edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}
   </li>
-
   <li>
     <div class="btn-group">
       <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
@@ -297,8 +297,10 @@
 {% endblock %}
 
 {% block primary_content %}
+
+{%  set data_quality = h.get_resource_data_quality(res.id)  %}
 <section class="additional-info">
-  <h3>{{ _('Data Quality') }}</h3>
+  <h2>{{ _('Data Quality') }}</h2>
   {% if data_quality.calculated_on %}
   <p>Calculated on: {{data_quality.calculated_on}}</p>
   {% endif %}
