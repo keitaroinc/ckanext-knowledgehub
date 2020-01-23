@@ -45,13 +45,7 @@ ckan.module('visualization_info', function ($) {
       var table_title = this.options.title;
       var subtitle = this.options.subtitle
       var description = this.options.description
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-      console.log(this.options)
->>>>>>> Removed the subtitle and the description from the resource visualization and now they are displayed in the popover on the more info button, the table title is now in the center of the visualization, the copy url button is not located on the right side under the download button.
-=======
->>>>>>> Visual changes made on the dataset page, removing consol logs from js file.
+
       var rq_ids = this.options.id;
       var rqs = "";
       var content = "";
