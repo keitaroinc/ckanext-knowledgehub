@@ -1,4 +1,5 @@
 import ckan.plugins.toolkit as toolkit
+import ckan.lib.uploader as uploader
 from ckanext.knowledgehub.model.data_quality import (
     DataQualityMetrics as DataQualityMetricsModel
 )
@@ -6,6 +7,14 @@ from logging import getLogger
 from functools import reduce
 from datetime import datetime, timedelta
 import dateutil
+import json
+import re
+
+import requests
+from goodtables import validate
+
+
+log = getLogger(__name__)
 
 
 class LazyStreamingList(object):
@@ -407,6 +416,66 @@ class Validity(DimensionMetric):
     def __init__(self):
         super(Validity, self).__init__('validity')
 
+    def _perform_validation(self, resource, total_rows):
+        rc = {}
+        rc.update(resource)
+        rc['validation_options'] = {
+            'row_limit': total_rows,
+        }
+        return validate_resource_data(rc)
+
+    def calculate_metric(self, resource, data):
+        validation = None
+        try:
+            validation = self._perform_validation(resource, data.get('total', 0))
+        except Exception as e:
+            self.logger.error('Failed to validate data for resource: %s. Error: %s', resource['id'], str(e))
+            self.logger.exception(e)
+            return {
+                'failed': True,
+                'error': str(e),
+            }
+
+        total_rows = 0
+        total_errors = 0
+        for table in validation.get('tables', []):
+            total_rows += table.get('row-count', 0)
+            total_errors += table.get('error-count', 0)
+        
+        if total_rows == 0:
+            return {
+                'value': 0.0,
+                'total': 0,
+                'valid': 0,
+            }
+        
+        valid = total_rows - total_errors
+        value = float(valid)/float(total_rows) * 100.0
+
+        return {
+            'value': value,
+            'total': total_rows,
+            'valid': valid,
+        }
+        
+        return {}
+
+        def calculate_cumulative_metric(self, resources, metrics):
+            total = sum([r.get('total', 0) for r in metrics])
+            valid = sum([r.get('valid', 0) for r in metrics])
+            
+            if total == 0:
+                return {
+                    'value': 0.0,
+                    'total': 0,
+                    'valid': 0,
+                }
+            
+            return {
+                'value': float(total)/float(valid),
+                'total': total,
+                'valid': valid,
+            }
 
 class Accuracy(DimensionMetric):
 
@@ -473,3 +542,86 @@ class Consistency(DimensionMetric):
 
     def __init__(self):
         super(Consistency, self).__init__('consistency')
+
+
+# resource validation
+def validate_resource_data(resource):
+
+    log.debug(u'Validating resource {}'.format(resource['id']))
+
+    options = toolkit.config.get(
+        u'ckanext.validation.default_validation_options')
+    if options:
+        options = json.loads(options)
+    else:
+        options = {}
+
+    resource_options = resource.get(u'validation_options')
+    if resource_options and isinstance(resource_options, basestring):
+        resource_options = json.loads(resource_options)
+    if resource_options:
+        options.update(resource_options)
+
+    dataset = toolkit.get_action('package_show')(
+        {'ignore_auth': True}, {'id': resource['package_id']})
+
+    source = None
+    if resource.get(u'url_type') == u'upload':
+        upload = uploader.get_resource_uploader(resource)
+        if isinstance(upload, uploader.ResourceUpload):
+            source = upload.get_path(resource[u'id'])
+        else:
+            # Upload is not the default implementation (ie it's a cloud storage
+            # implementation)
+            pass_auth_header = toolkit.asbool(
+                toolkit.config.get(u'ckanext.validation.pass_auth_header', True))
+            if dataset[u'private'] and pass_auth_header:
+                s = requests.Session()
+                s.headers.update({
+                    u'Authorization': t.config.get(
+                        u'ckanext.validation.pass_auth_header_value',
+                        _get_site_user_api_key())
+                })
+
+                options[u'http_session'] = s
+
+    if not source:
+        source = resource[u'url']
+
+    schema = resource.get(u'schema')
+    if schema and isinstance(schema, basestring):
+        if schema.startswith('http'):
+            r = requests.get(schema)
+            schema = r.json()
+        else:
+            schema = json.loads(schema)
+
+    _format = resource[u'format'].lower()
+
+    report = _validate_table(source, _format=_format, schema=schema, **options)
+
+    # Hide uploaded files
+    for table in report.get('tables', []):
+        if table['source'].startswith('/'):
+            table['source'] = resource['url']
+    for index, warning in enumerate(report.get('warnings', [])):
+        report['warnings'][index] = re.sub(r'Table ".*"', 'Table', warning)
+
+    return report
+
+
+def _validate_table(source, _format=u'csv', schema=None, **options):
+
+    report = validate(source, format=_format, schema=schema, **options)
+
+    log.debug(u'Validating source: {}'.format(source))
+
+    return report
+
+
+def _get_site_user_api_key():
+
+    site_user_name = toolkit.get_action('get_site_user')({'ignore_auth': True}, {})
+    site_user = toolkit.get_action('get_site_user')(
+        {'ignore_auth': True}, {'id': site_user_name})
+    return site_user['apikey']
