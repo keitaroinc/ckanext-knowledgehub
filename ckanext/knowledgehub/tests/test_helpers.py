@@ -862,3 +862,55 @@ class TestKWHHelpers(ActionsBase):
     def test_is_rsc_upload_datastore_exception(self):
         b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
+
+    def test_views_dashboards_groups_update(self):
+        dataset = create_dataset()
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'description': 'Visualization description',
+            'view_type': 'chart',
+            'config': {
+                "color": "#59a14f",
+                "y_label": "Usage",
+                "show_legend": "Yes"
+            }
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict)
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard',
+            'description': 'Dashboard description',
+            'type': 'internal',
+            'indicators': [
+                {"research_question": "54be129c-9e6f-4a0b-938a-bb6f2493dc91",
+                 "resource_view_id": rsc_view['id'],
+                 "order": 1,
+                 "size": "small"}
+            ]
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+
+        kwh_helpers.views_dashboards_groups_update(dataset['id'])
+
+        d = get_actions.dashboard_show(context, {'id': dashboard['id']})
+
+        assert_equals(d['name'], data_dict['name'])
+        assert_equals(d['type'], data_dict['type'])
