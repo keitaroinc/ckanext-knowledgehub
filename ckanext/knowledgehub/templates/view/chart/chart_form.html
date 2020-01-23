@@ -1,5 +1,7 @@
 {% resource 'knowledgehub/chart' %}
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+{% resource 'knowledgehub/javascript/rqs_selection.js' %}
+
 {% import 'macros/form.html' as form %}
 
 {% if data %}
@@ -154,6 +156,39 @@
               </div>
             </div>
 
+            {# RQs List #}
+            {% set dict = {} %}
+            {% for k in h.get_rq_options() %}
+              {% if chart %}
+                {% if chart.research_questions is iterable and chart.research_questions is not string %}
+                  {% for m in chart.research_questions %}
+                    {% if k.text == m %}
+                      {% set new_item = dict.__setitem__(k.text, "True") %}
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  {% if chart.research_questions == k.text %}
+                    {% set new_item = dict.__setitem__(k.text, "True") %}
+                  {% endif %}
+                {% endif %}
+
+                {% if not dict[k.text] %}
+                  {% set new_item = dict.__setitem__(k.text, "False") %}
+                {% endif %}
+
+              {% else %}
+                {% set new_item = dict.__setitem__(k.text, "False") %}
+              {% endif %}
+            {% endfor %}
+            <div class="rs-questions">
+              <label class="control-label" for="chart_research_questions">{{_('Research Questions')}}</label>
+              <select name="chart_research_questions" id="chart_research_questions" multiple="multiple" type="hidden">
+                  {% for k,v in dict.items() %}
+                  <option value="{{ k }}"
+                  {% if chart %} {{ 'selected' if v == 'True'}} {% endif %}>{{ k }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
 
           </div>
@@ -478,6 +513,7 @@
 {% set x_axis = chart.x_axis %}
 {% set y_axis = chart.y_axis %}
 {% set additional_tornado_value = chart.additional_tornado_value %}
+{% set chart_research_questions = data.chart_research_questions %}
 {% set chart_type = chart.type %}
 {% set title = data.title %}
 {% set chart_subtitle = chart.chart_subtitle %}
@@ -514,6 +550,7 @@
           x_axis = x_axis,
           y_axis = y_axis,
           additional_tornado_value = additional_tornado_value,
+          chart_research_questions = chart_research_questions,
           chart_type = chart_type,
           sql_string = sql_string,
           title = title,

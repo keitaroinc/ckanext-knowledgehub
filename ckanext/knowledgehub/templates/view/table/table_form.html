@@ -1,6 +1,6 @@
 {% resource 'knowledgehub/table' %}
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
-
+{% resource 'knowledgehub/javascript/rqs_selection.js' %}
 {% if data %}
 {% set table = data.__extras or {} %}
 {% set filters = data.__extras.filters or [] %}
@@ -125,6 +125,41 @@
                   <option value="SUM"> SUM </option>
                 </select>
               </div>
+            </div>
+
+            {# RQs List #}
+            {% set dict = {} %}
+            {% for k in h.get_rq_options() %}
+              {% if table %}
+                {% if table.research_questions is iterable and table.research_questions is not string %}
+                  {% for m in table.research_questions %}
+                    {% if k.text == m %}
+                      {% set new_item = dict.__setitem__(k.text, "True") %}
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  {% if table.research_questions == k.text %}
+                    {% set new_item = dict.__setitem__(k.text, "True") %}
+                  {% endif %}
+                {% endif %}
+                  {% if not dict[k.text] %}
+                    {% set new_item = dict.__setitem__(k.text, "False") %}
+                  {% endif %}
+
+              {% else %}
+                {% set new_item = dict.__setitem__(k.text, "False") %}
+              {% endif %}
+            {% endfor %}
+
+            <div class="rs-questions">
+              <label class="control-label" for="table_research_questions">{{_('Research Questions')}}</label>
+              <select name="table_research_questions" id="table_research_questions" multiple="multiple">                      
+                {% for k,v in dict.items() %}
+                  <option value="{{ k }}"
+                  {% if table %} {{ 'selected' if v == 'True'}} {% endif %}>{{ k }}</option>
+                {% endfor %}
+              </select>
+
             </div>
           </div>
         </div>
