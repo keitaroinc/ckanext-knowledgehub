@@ -89,7 +89,6 @@ class Dashboard(DomainObject, Indexed):
                 view_groups = v.get('groups')
                 if view_groups:
                     groups.extend(view_groups)
-                print v
                 package_id = v.get('package_id')
                 if package_id:
                     datasets.append(package_id)

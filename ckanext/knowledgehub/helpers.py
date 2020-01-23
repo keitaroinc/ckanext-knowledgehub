@@ -719,11 +719,11 @@ def resource_feedback_count(type, resource, dataset):
     return rf_list.get('total', 0)
 
 
-def get_dashboards(limit=5, order_by='created_by asc'):
-    dashboards = Dashboard.search(limit=limit, order_by=order_by).all()
-
+def get_dashboards(ctx={}, limit=5, order_by='created_by asc'):
+    if not ctx:
+        ctx = _get_context()
     dashboards = toolkit.get_action('dashboard_list')(
-        _get_context(),
+        ctx,
         {'limit': limit, 'sort': order_by}
     )
 
@@ -923,7 +923,7 @@ def add_rqs_to_dataset(res_view):
         else:
             for new in res_rq:
                 all_rqs.append(new)
-    
+
     eliminate_duplicates = set(all_rqs)
     all_rqs = list(eliminate_duplicates)
     pkg_dict['research_question'] = ",".join(all_rqs)
@@ -937,7 +937,7 @@ def add_rqs_to_dataset(res_view):
             raise logic.ValidationError(e.error_dict['research_question'][-1])
         except (KeyError, IndexError):
             raise logic.ValidationError(e.error_dict)
-    
+
 
 def remove_rqs_from_dataset(res_view):
 
@@ -997,7 +997,7 @@ def update_rqs_in_dataset(old_data, res_view):
     if not pkg_dict.get('research_question'): # dataset has no rqs
         pkg_dict['research_question'] = []
     else:
-        if isinstance(pkg_dict['research_question'], unicode): # expected format 
+        if isinstance(pkg_dict['research_question'], unicode): # expected format
             old_rqs = pkg_dict.get('research_question')
             old_list = old_rqs.split(',')
 
@@ -1010,7 +1010,7 @@ def update_rqs_in_dataset(old_data, res_view):
                 all_rqs.append(new)
         else:
             all_rqs.append(res_rq)
-        
+
     eliminate_duplicates = set(all_rqs)
     all_rqs = list(eliminate_duplicates)
 
@@ -1025,17 +1025,17 @@ def update_rqs_in_dataset(old_data, res_view):
                 if isinstance(new_ext.get('research_questions'), list):
                     set_new = set(new_ext.get('research_questions'))
                 else: # only one new
-                    li = [] 
+                    li = []
                     li.append(new_ext.get('research_questions'))
                     set_new = set(li)
                 if isinstance(old_ext.get('research_questions'), list):
                     set_old = set(old_ext.get('research_questions'))
                 else: # only one old
-                    li = [] 
+                    li = []
                     li.append(old_ext.get('research_questions'))
                     set_old = set(li)
                 list_rqs = list(set_old-set_new)
-            else: # all were removed 
+            else: # all were removed
                 if isinstance(old_ext.get('research_questions'), list): # if they are more than 1
                     list_rqs = old_ext.get('research_questions')
                 else: # if it is only 1
@@ -1273,7 +1273,6 @@ def views_dashboards_groups_update(package_id):
                 {'ignore_auth': True},
                 {'id': dashboard.get('id')}
             )
-
             toolkit.get_action('dashboard_update')(
                 {'ignore_auth': True},
                 data_dict

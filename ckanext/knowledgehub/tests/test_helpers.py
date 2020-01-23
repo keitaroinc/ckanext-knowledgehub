@@ -439,7 +439,7 @@ class TestKWHHelpers(ActionsBase):
         }
         dashboard = create_actions.dashboard_create(context, data_dict)
 
-        dashboards = kwh_helpers.get_dashboards()
+        dashboards = kwh_helpers.get_dashboards(ctx=context)
 
         assert_equals(len(dashboards), 1)
 

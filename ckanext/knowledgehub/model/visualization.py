@@ -28,12 +28,12 @@ class Visualization(ResourceView, Indexed):
             {'ignore_auth': True},
             {'id': package_id, 'include_tracking': True}
         )
+        if package:
+            data['organization'] = package.get('organization', {}).get('name')
 
-        data['organization'] = package['organization']['name']
-
-        data['groups'] = []
-        for g in package.get('groups', []):
-            data['groups'].append(g['name'])
+            data['groups'] = []
+            for g in package.get('groups', []):
+                data['groups'].append(g['name'])
 
         if data.get('_sa_instance_state'):
             del data['_sa_instance_state']
@@ -86,7 +86,7 @@ class Visualization(ResourceView, Indexed):
         resource_view = get_action('resource_view_show')(
             {'ignore_auth': True},
             {'id': data['id']})
-        data['package_id'] = resource_view['package_id']     
+        data['package_id'] = resource_view['package_id']
         return data
 
 
