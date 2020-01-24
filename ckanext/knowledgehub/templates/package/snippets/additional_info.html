@@ -110,7 +110,7 @@
       {% if data_quality.completeness %}
       <tr>
         <th>Completeness</th>
-        <td>{{data_quality.completeness}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.completeness | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
@@ -132,7 +132,7 @@
       {% if data_quality.validity %}
       <tr>
         <th>Validity</th>
-        <td>{{data_quality.validity}}&percnt;</td>
+        <td>{{ '%0.2f' % data_quality.validity | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
@@ -143,7 +143,7 @@
       {% if data_quality.uniqueness %}
       <tr>
         <th>Uniqueness</th>
-        <td>{{data_quality.uniqueness}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.uniqueness | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
@@ -154,7 +154,7 @@
       {% if data_quality.consistency %}
       <tr>
         <th>Consistency</th>
-        <td>{{data_quality.consistency}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.consistency | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
@@ -165,7 +165,7 @@
       {% if data_quality.accuracy %}
       <tr>
         <th>Accuracy</th>
-        <td>{{data_quality.accuracy}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.accuracy | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
