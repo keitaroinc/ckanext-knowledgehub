@@ -6,6 +6,13 @@ MailerException = mailer.MailerException
 
 
 def request_validation(user, resource_url):
+    ''' Send request to specific user for data resource validation
+
+    :param user: The user object
+    :type user: object
+    :param resource_url: the full URL to the resource
+    :type resource_url: string
+    '''
     if not user:
         raise MailerException(_('User object not provided'))
     if not resource_url:
