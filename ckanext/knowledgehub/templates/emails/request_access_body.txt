@@ -1,0 +1,6 @@
+Hi {{ user_name }},
+
+Validation of data resource is requested on {{ resource_url }}.
+
+Best regards,
+{{ site_title }}
