@@ -45,14 +45,21 @@ ckan.module('visualization_info', function ($) {
       var table_title = this.options.title;
       var subtitle = this.options.subtitle
       var description = this.options.description
+      var rsq = this.options.resq
       // rq_ids = this.options.id;
       // var rqs = "";
+
       var content = "";
       if (subtitle != "") {
         content += '<p>' + '<b>Subtitle: </b>' + subtitle + '</p>';
       }
       if (description != "") {
         content += '<p>' + '<b>Description: </b>' + description + '</p>';
+      }
+      if (rsq != "") {
+        rsq = rsq.replace(/u'/g, "")
+        rsq = rsq.replace(/'/g, "").replace("[", "").replace("]", "");
+        content += '<p>' + '<b>Research questions: </b>' + rsq + '</p>';
       }
       // if (rq_ids == 0)
       //   rqs = "This dataset contains no research <br/ > questions.";
