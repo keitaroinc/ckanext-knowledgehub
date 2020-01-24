@@ -10,7 +10,7 @@ def request_validation(user, resource_url):
 
     :param user: The user object
     :type user: object
-    :param resource_url: the full URL to the resource
+    :param resource_url: The full URL to the resource
     :type resource_url: string
     '''
     if not user:
