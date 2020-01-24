@@ -127,6 +127,9 @@
   {% if resource_view == current_resource_view %}
   {% if current_resource_view.view_type == 'chart' %}
   {% if resource_view and resource_view.__extras %}
+  {% if resource_view.__extras.research_questions %}
+  {% set research_questions = resource_view.__extras.research_questions %}
+  {% endif %}
   {% set colors = resource_view.__extras.color %}
   {% set chart_id = resource_view.__extras.id %}
   {% set x_axis = resource_view.__extras.x_axis %}
@@ -196,11 +199,16 @@
               title = chart_title,
               subtitle = chart_subtitle,
               description = chart_description,
+              resq = research_questions,
               resource_id = resource_id %}
 
   {% elif current_resource_view.view_type == 'table'  %}
 
   {% if resource_view and resource_view.__extras %}
+  {% if resource_view.__extras.research_questions %}
+  {% set research_questions = resource_view.__extras.research_questions %}
+  {{research_questions}}
+  {% endif %}
   {% set main_value = resource_view.__extras.main_value %}
   {% set y_axis = resource_view.__extras.y_axis %}
   {% set sql_string = resource_view.__extras.sql_string %}
@@ -229,6 +237,7 @@
                   title = table_title,
                   subtitle = table_subtitle,
                   description = table_description,
+                  resq = research_questions,
                   resource_id = resource_id %}
 
   {% elif current_resource_view.view_type == 'map'  %}
