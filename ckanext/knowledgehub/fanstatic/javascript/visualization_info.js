@@ -45,9 +45,8 @@ ckan.module('visualization_info', function ($) {
       var table_title = this.options.title;
       var subtitle = this.options.subtitle
       var description = this.options.description
-
-      var rq_ids = this.options.id;
-      var rqs = "";
+      // rq_ids = this.options.id;
+      // var rqs = "";
       var content = "";
       if (subtitle != "") {
         content += '<p>' + '<b>Subtitle: </b>' + subtitle + '</p>';
@@ -55,32 +54,32 @@ ckan.module('visualization_info', function ($) {
       if (description != "") {
         content += '<p>' + '<b>Description: </b>' + description + '</p>';
       }
-      if (rq_ids == 0)
-        rqs = "This dataset contains no research <br/ > questions.";
-      else
-        rqs = "<strong> Research Questions: </strong>";
-      content += rqs;
-      content += '<br/ >';
-      var rqs_list = this.options.rqs;
-      if (rqs_list != 0) {
+      // if (rq_ids == 0)
+      //   rqs = "This dataset contains no research <br/ > questions.";
+      // else
+      //   rqs = "<strong> Research Questions: </strong>";
+      // content += rqs;
+      // content += '<br/ >';
+      // var rqs_list = this.options.rqs;
+      // if (rqs_list != 0) {
 
-        rqs_list = rqs_list.replace(/u'/g, "");
+      //   rqs_list = rqs_list.replace(/u'/g, "");
 
-        rqs_list = rqs_list.replace(/'/g, "").replace("[", "").replace("]", "");
-        var remove_comma = rqs_list.split(',');
+      //   rqs_list = rqs_list.replace(/'/g, "").replace("[", "").replace("]", "");
+      //   var remove_comma = rqs_list.split(',');
 
-        rq_ids = rq_ids.replace(/{/g, "");
-        rq_ids = rq_ids.replace(/}/g, "");
-        rq_ids = rq_ids.replace(/ /g, "");
-        rq_ids = rq_ids.split(',');
-        for (var i = 0; i < remove_comma.length; ++i) {
-          var x = "";
-          x += make_url(rq_ids[i]);
-          content += '<a href="' + x + '">"' + remove_comma[i] + '"</a>';
-          content += '<br/ >';
-        }
+      //   rq_ids = rq_ids.replace(/{/g, "");
+      //   rq_ids = rq_ids.replace(/}/g, "");
+      //   rq_ids = rq_ids.replace(/ /g, "");
+      //   rq_ids = rq_ids.split(',');
+      //   for (var i = 0; i < remove_comma.length; ++i) {
+      //     var x = "";
+      //     x += make_url(rq_ids[i]);
+      //     content += '<a href="' + x + '">"' + remove_comma[i] + '"</a>';
+      //     content += '<br/ >';
+      //   }
 
-      }
+      // }
 
       this.el.popover({
         title: "Title: " + table_title,
