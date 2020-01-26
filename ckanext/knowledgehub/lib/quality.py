@@ -457,25 +457,22 @@ class Validity(DimensionMetric):
             'total': total_rows,
             'valid': valid,
         }
-        
-        return {}
 
-        def calculate_cumulative_metric(self, resources, metrics):
-            total = sum([r.get('total', 0) for r in metrics])
-            valid = sum([r.get('valid', 0) for r in metrics])
-            
-            if total == 0:
-                return {
-                    'value': 0.0,
-                    'total': 0,
-                    'valid': 0,
-                }
-            
+    def calculate_cumulative_metric(self, resources, metrics):
+        total = sum([r.get('total', 0) for r in metrics])
+        valid = sum([r.get('valid', 0) for r in metrics])
+        if total == 0:
             return {
-                'value': float(total)/float(valid),
-                'total': total,
-                'valid': valid,
+                'value': 0.0,
+                'total': 0,
+                'valid': 0,
             }
+        
+        return {
+            'value': float(total)/float(valid) * 100.0,
+            'total': total,
+            'valid': valid,
+        }
 
 class Accuracy(DimensionMetric):
 
@@ -542,11 +539,123 @@ class Consistency(DimensionMetric):
 
     def __init__(self):
         super(Consistency, self).__init__('consistency')
+    
+    def validate_date(self, field, value, _type, report):
+        date_format = detect_date_format(value) or 'unknown'
+        report['formats'][date_format] = report['formats'].get(date_format, 0) + 1
 
+    def validate_numeric(self, field, value, _type, report):
+        num_format = detect_numeric_format(value) or 'unknown'
+        report['formats'][num_format] = report['formats'].get(num_format, 0) + 1
+
+    def validate_int(self, field, value, _type, report):
+        num_format = detect_numeric_format(value) or 'unknown'
+        report['formats'][num_format] = report['formats'].get(num_format, 0) + 1
+
+    def validate_string(self, field, value, _type, report):
+        report['formats'][_type] = report['formats'].get(_type, 0) + 1
+
+    def get_consistency_validators(self):
+        return {
+            'timestamp': self.validate_date,
+            'numeric': self.validate_numeric,
+            'int': self.validate_int,
+            'string': self.validate_string,
+            'text': self.validate_string,
+        }
+
+    def calculate_metric(self, resource, data):
+        validators = self.get_consistency_validators()
+        fields = {f['id']: f for f in data['fields']}
+        report = {f['id']: {'count': 0, 'formats': {}} for f in data['fields']}
+
+        for row in data['records']:
+            for field, value in row.items():
+                field_type = fields.get(field, {}).get('type')
+                validator = validators.get(field_type)
+                field_report = report[field]
+                if validator:
+                    validator(field, value, field_type, field_report)
+                    field_report['count'] += 1
+        
+        for field, field_report in report.items():
+            most_consistent = max([count for _,count in field_report['formats'].items()])
+            field_report['consistent'] = most_consistent
+
+        total = sum([f.get('count', 0) for _, f in report.items()])
+        consistent = sum([f.get('consistent', 0) for _, f in report.items()])
+        value = float(consistent)/float(total) * 100.0
+        return {
+            'total': total,
+            'consistent': consistent,
+            'value': value,
+            'report': report,
+        }
+    
+    def calculate_cumulative_metric(self, resources, metrics):
+        total = sum([r.get('total', 0) for r in metrics])
+        consistent = sum([r.get('consistent', 0) for r in metrics])
+        value = float(consistent)/float(total) * 100.0
+        return {
+            'total': total,
+            'consistent': consistent,
+            'value': value,
+        }
+
+
+# Date format utils
+
+_all_date_formats = [
+    '%Y-%m-%dT%H:%M:%S',
+    '%Y-%m-%dT%H:%M:%S.%f',
+    '%Y-%m-%dT%H:%M:%SZ',
+    '%Y-%m-%dT%H:%M:%S.%fZ',
+    '%Y-%m-%dT%H:%M:%S%Z',
+    '%Y-%m-%dT%H:%M:%S.%f%Z',
+]
+
+_all_numeric_formats = [
+    r'$\d+^',
+    r'$[+-]\d+^',
+    r'$(\d{1,3},)+^',
+    r'$(\d{1,3},)+\.\d+^',
+    r'$[+-](\d{1,3},)+^',
+    r'$[+-](\d{1,3},)+\.\d+^',
+    r'$\d+\.\d+^',
+    r'$[+-]\d+\.\d+^',
+]
+
+def detect_date_format(datestr):
+    if re.match(r'$\d^', datestr):
+        return 'unix-timestamp'
+    if re.match(r'$\d+\.\d+', datestr):
+        return 'timestamp'
+    if re.match(r'$\d+[\+\-]\d+^', datestr):
+        return 'timestamp-tz'
+    for dt_format in _all_date_formats:
+        try:
+            datetime.strptime(datestr, dt_format)
+            return dt_format
+        except:
+            pass
+    return None
+
+def detect_numeric_format(numstr):
+    for parser in [int, float]:
+        try:
+            parser(numstr)
+            return parser.__name__
+        except:
+            pass
+    
+    for num_format in _all_numeric_formats:
+        m = re.match(num_format, numstr)
+        if m:
+            return num_format
+        return None
 
 # resource validation
 def validate_resource_data(resource):
-
     log.debug(u'Validating resource {}'.format(resource['id']))
 
     options = toolkit.config.get(
@@ -611,7 +720,6 @@ def validate_resource_data(resource):
 
 
 def _validate_table(source, _format=u'csv', schema=None, **options):
-
     report = validate(source, format=_format, schema=schema, **options)
 
     log.debug(u'Validating source: {}'.format(source))
@@ -620,7 +728,6 @@ def _validate_table(source, _format=u'csv', schema=None, **options):
 
 
 def _get_site_user_api_key():
-
     site_user_name = toolkit.get_action('get_site_user')({'ignore_auth': True}, {})
     site_user = toolkit.get_action('get_site_user')(
         {'ignore_auth': True}, {'id': site_user_name})

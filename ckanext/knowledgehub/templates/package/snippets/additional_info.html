@@ -96,7 +96,7 @@
 
   <h3>{{ _('Data Quality') }}</h3>
   {% if data_quality.calculated_on %}
-  <p>Calculated on: {{data_quality.calculated_on}}</p>
+  <p>Calculated on: {{ h.render_datetime(data_quality.calculated_on, with_hours=True) }}</p>
   {% endif %}
   <table class="table table-striped table-bordered table-condensed">
     <thead>
