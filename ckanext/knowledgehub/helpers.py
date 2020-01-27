@@ -859,6 +859,186 @@ def dashboard_research_questions(dashboard):
 
     return questions
 
+def add_rqs_to_dataset(res_view):
+
+    context = _get_context()
+    pkg_dict = toolkit.get_action('package_show')(
+        dict({'ignore_auth': True}, return_type='dict'),
+        {'id': res_view['package_id']})
+
+
+    rq_options = get_rq_options()
+
+    all_rqs = []
+    if not pkg_dict.get('research_question'):
+        pkg_dict['research_question'] = []
+    else:
+        if isinstance(pkg_dict['research_question'], unicode):
+            old_rqs = pkg_dict.get('research_question')
+            old_list = old_rqs.split(',')
+
+            for old in old_list:
+                all_rqs.append(old)
+    if res_view.get('research_questions'):
+        res_rq = json.loads(res_view.get('research_questions'))
+        if isinstance(res_rq, unicode):
+            all_rqs.append(res_rq)
+        else:
+            for new in res_rq:
+                all_rqs.append(new)
+    
+    eliminate_duplicates = set(all_rqs)
+    all_rqs = list(eliminate_duplicates)
+    pkg_dict['research_question'] = ",".join(all_rqs)
+    try:
+        context['defer_commit'] = True
+        context['use_cache'] = False
+        toolkit.get_action('package_update')(context, pkg_dict)
+        context.pop('defer_commit')
+    except logic.ValidationError as e:
+        try:
+            raise logic.ValidationError(e.error_dict['research_question'][-1])
+        except (KeyError, IndexError):
+            raise logic.ValidationError(e.error_dict)
+    
+
+def remove_rqs_from_dataset(res_view):
+
+    context = _get_context()
+    pkg_id = res_view.get('package_id')
+    if res_view.get('__extras'):
+        ext = res_view.get('__extras')
+        if ext.get('research_questions'):
+            list_rqs = res_view['__extras']['research_questions']
+            data_dict = {}
+            should_stay = {}
+            for rq in list_rqs:
+                data_dict['text']= rq
+                data_dict['fq'] = "khe_package_id:" + pkg_id
+                should_stay[rq] = False
+                results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+                for res in results_search['results']:
+                    if res.get('research_questions') and res.get('id') != res_view.get('id') \
+                        and res.get('khe_package_id') == pkg_id:
+                        questions = json.loads(res.get('research_questions'))
+                        for q in questions:
+                            if q == rq:
+                                should_stay[rq] = True
+            new_rqs_package_dict = {}
+            package_sh = toolkit.get_action('package_show')(
+                dict({'ignore_auth': True}, return_type='dict'), {'id': pkg_id})
+            if package_sh.get('research_question'):
+                questions_package = package_sh.get('research_question').split(",")
+                for q in questions_package:
+                    if q in should_stay:
+                        if should_stay[q] == False:
+                            questions_package.remove(q)
+                package_sh['research_question'] = ",".join(questions_package)
+
+
+            try:
+                context['defer_commit'] = True
+                context['use_cache'] = False
+                toolkit.get_action('package_update')(context, package_sh)
+                context.pop('defer_commit')
+            except ValidationError as e:
+                try:
+                    raise ValidationError(e.error_dict['research_question'][-1])
+                except (KeyError, IndexError):
+                    raise ValidationError(e.error_dict)
+
+
+def update_rqs_in_dataset(old_data, res_view):
+
+    context = _get_context()
+    pkg_dict = toolkit.get_action('package_show')(
+        dict({'ignore_auth': True }, return_type='dict'),
+        {'id': res_view['package_id']})
+
+    rq_options = get_rq_options()
+    all_rqs = []
+    if not pkg_dict.get('research_question'): # dataset has no rqs
+        pkg_dict['research_question'] = []
+    else:
+        if isinstance(pkg_dict['research_question'], unicode): # expected format 
+            old_rqs = pkg_dict.get('research_question')
+            old_list = old_rqs.split(',')
+
+            for old in old_list:
+                all_rqs.append(old)
+    if res_view.get('research_questions'):
+        res_rq = json.loads(res_view.get('research_questions'))
+        if isinstance(res_rq, list):
+            for new in res_rq:
+                all_rqs.append(new)
+        else:
+            all_rqs.append(res_rq)
+        
+    eliminate_duplicates = set(all_rqs)
+    all_rqs = list(eliminate_duplicates)
+
+    pkg_id = res_view.get('package_id')
+
+    if old_data.get('__extras') and res_view.get('__extras'):
+        new_ext = res_view.get('__extras')
+        old_ext = old_data.get('__extras')
+        list_rqs = [] # list of rqs that were removed in update
+        if old_ext.get('research_questions'): # alrdy had rqs
+            if new_ext.get('research_questions'): # and we have new rqs
+                if isinstance(new_ext.get('research_questions'), list):
+                    set_new = set(new_ext.get('research_questions'))
+                else: # only one new
+                    li = [] 
+                    li.append(new_ext.get('research_questions'))
+                    set_new = set(li)
+                if isinstance(old_ext.get('research_questions'), list):
+                    set_old = set(old_ext.get('research_questions'))
+                else: # only one old
+                    li = [] 
+                    li.append(old_ext.get('research_questions'))
+                    set_old = set(li)
+                list_rqs = list(set_old-set_new)
+            else: # all were removed 
+                if isinstance(old_ext.get('research_questions'), list): # if they are more than 1
+                    list_rqs = old_ext.get('research_questions')
+                else: # if it is only 1
+                    list_rqs.append(old_ext.get('research_questions'))
+        data_dict = {}
+        should_stay = {}
+        for rq in list_rqs:
+            data_dict['text']= rq
+            data_dict['fq'] = "khe_package_id:" + pkg_id
+            should_stay[rq] = False
+            results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+            for res in results_search['results']:
+                if res.get('research_questions'):
+                    questions = json.loads(res.get('research_questions'))
+                    if isinstance(questions, list):
+                        for q in questions:
+                            if q == rq:
+                                should_stay[rq] = True
+                    else:
+                        if questions == rq:
+                            should_stay[rq] = True
+        new_rqs_package_dict = {}
+
+        questions_package = all_rqs
+        for q in questions_package:
+            if q in should_stay:
+                if should_stay[q] == False:
+                    questions_package.remove(q)
+        pkg_dict['research_question'] = ",".join(questions_package)
+
+        try:
+            context['defer_commit'] = True
+            context['use_cache'] = False
+            toolkit.get_action('package_update')(context, pkg_dict)
+            context.pop('defer_commit')
+        except ValidationError as e:
+            try:
+                raise ValidationError(e.error_dict['research_question'][-1])
+            except (KeyError, IndexError):
+                raise ValidationError(e.error_dict)
 
 def get_single_dash(data_dict):
     single_dash = toolkit.get_action('dashboard_show')(_get_context(),
@@ -990,3 +1170,19 @@ def get_dataset_data(id):
                     break
 
     return data_dict
+
+def get_package_data_quality(id):
+    context = _get_context()
+    try:
+        result = toolkit.get_action('package_data_quality') (context, {'id': id})
+    except Exception:
+        return {}
+    return result
+
+def get_resource_data_quality(id):
+    context = _get_context()
+    try:
+        result = toolkit.get_action('resource_data_quality') (context, {'id': id})
+    except Exception:
+        return {}
+    return result

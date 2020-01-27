@@ -36,7 +36,6 @@ from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 
-
 log = logging.getLogger(__name__)
 
 _df = lib.navl.dictization_functions
@@ -304,8 +303,13 @@ def resource_view_create(context, data_dict):
     rv_data = model_dictize.resource_view_dictize(resource_view, context)
 
     # Add to index
-    Visualization.add_to_index(rv_data)
+    Visualization.add_to_index(rv_data)    
 
+    # this check is because of the unit tests
+    if rv_data.get('__extras'):
+        ext = rv_data['__extras']
+        if ext.get('research_questions'):
+            plugin_helpers.add_rqs_to_dataset(rv_data)
     return rv_data
 
 
@@ -366,25 +370,6 @@ def dashboard_create(context, data_dict):
 
 
 def package_create(context, data_dict):
-
-    research_questions = data_dict.get('research_question')
-    rq_options = plugin_helpers.get_rq_options()
-    rq_ids = []
-
-    if research_questions:
-        if isinstance(research_questions, list):
-            for rq in research_questions:
-                for rq_opt in rq_options:
-                    if rq == rq_opt.get('text'):
-                        rq_ids.append(rq_opt.get('id'))
-                        break
-            data_dict['research_question'] = rq_ids
-        elif isinstance(research_questions, unicode):
-            for rq in rq_options:
-                if rq.get('text') == research_questions:
-                    data_dict['research_question'] = [rq.get('id')]
-                    break
-
     return ckan_package_create(context, data_dict)
 
 

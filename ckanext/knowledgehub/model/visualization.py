@@ -3,7 +3,7 @@ from ckan.model.meta import mapper
 from ckan.logic import get_action
 
 from ckanext.knowledgehub.lib.solr import Indexed, mapped
-
+import json
 
 class Visualization(ResourceView, Indexed):
 
@@ -13,12 +13,16 @@ class Visualization(ResourceView, Indexed):
         'title',
         'description',
         'view_type',
+        'research_questions',
+        'package_id'
     ]
 
     doctype = 'visualization'
 
     @staticmethod
     def before_index(data):
+        if data.get('_sa_instance_state'):
+            del data['_sa_instance_state']
         if data.get('description') is not None:
             return data
 
@@ -48,6 +52,27 @@ class Visualization(ResourceView, Indexed):
                 data['description'] = _get_description(resource_view)
         else:
             data['description'] = _get_description(data)
+
+        # get research questions
+        if data.get('config'):
+            conf = data.get('config')
+            if conf.get('__extras'):
+                ext = conf.get('__extras')
+                if ext.get('research_questions'):
+                    data_rq = json.dumps(ext.get('research_questions'))
+                    data['research_questions'] = data_rq
+        else:
+            if data.get('__extras'):
+                ext = data.get('__extras')
+                if ext.get('research_questions'):
+                    data_rq = json.dumps(ext.get('research_questions'))
+                    data['research_questions'] = data_rq
+
+        # get package_id
+        resource_view = get_action('resource_view_show')(
+            {'ignore_auth': True},
+            {'id': data['id']})
+        data['package_id'] = resource_view['package_id']     
         return data
 
 

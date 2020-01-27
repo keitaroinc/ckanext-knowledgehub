@@ -67,6 +67,9 @@ def _process_post_data(data, resource_id):
             data['map_field_subtitle']
         config['map_description'] = \
             data['map_field_description']
+        if data.get('map_research_questions'):
+            config['research_questions'] = \
+                data['research_questions']
 
     config['filters'] = json.dumps(filters)
 

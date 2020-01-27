@@ -496,7 +496,7 @@ class TestKWHHelpers(ActionsBase):
             url='https://jsonplaceholder.typicode.com/posts'
         )
         rqs = kwh_helpers.get_rq_ids(resource['id'])
-        assert_equals(len(rqs), 2)
+        assert_equals(len(rqs), 8)
 
 
     def test_get_geojson_resources(self):
