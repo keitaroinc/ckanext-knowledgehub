@@ -54,3 +54,8 @@ def user_query_result_show(context, data_dict):
 def user_query_result_search(context, data_dict):
     # sysadmins only
     return {'success': False}
+
+
+def resource_validate_show(context, data_dict):
+    # sysadmins only
+    return {'success': False}

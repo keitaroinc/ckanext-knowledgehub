@@ -19,6 +19,7 @@ from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub.model import ResourceValidate
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
@@ -558,3 +559,35 @@ def resource_data_quality_update(context, data_dict):
     result_dict['calculated_on'] = db_metric.modified_at.isoformat()
 
     return result_dict
+
+
+@toolkit.side_effect_free
+def resource_validate_update(context, data_dict):
+    ''' Updates an existing validation status of resource
+
+    :param what: validation status of the resource
+    :type name: string
+
+    :returns: the updated validation status
+    :rtype: dictionary
+    '''
+
+    try:
+        logic.check_access('resource_validate_update', context, data_dict)
+    except logic.NotAuthorized:
+        raise logic.NotAuthorized(_(u'Need to be system '
+                                    u'administrator to administer'))
+
+    id = logic.get_or_bust(data_dict, 'id')
+    data_dict.pop('id')
+
+    resource_validate = ResourceValidate.get(id=id)
+
+    if not resource_validate:
+        log.debug('Could not find validation status %s', id)
+        raise logic.NotFound(_('Validation status was not found.'))
+
+    filter = {'id': id}
+    st = ResourceValidate.update(filter, data_dict)
+
+    return st.as_dict()

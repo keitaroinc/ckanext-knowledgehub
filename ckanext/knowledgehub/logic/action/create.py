@@ -434,38 +434,6 @@ def resource_feedback(context, data_dict):
         return rf.as_dict()
 
 
-def resource_validate(context, data_dict):
-    '''
-    Resource validate mechanism
-
-        :param description
-        :param resource
-    '''
-    check_access('resource_validate', context, data_dict)
-
-    session = context['session']
-
-    data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validate_schema(),
-                                context)
-
-    if errors:
-        raise ValidationError(errors)
-
-    user = context.get('user')
-    data['user'] = model.User.by_name(user.decode('utf8')).id
-    resource = data.get('resource')
-    resource_validate_data = ResourceValidate.get(
-        resource=data.get('resource'),
-        user=data.get('user')
-    ).first()
-
-    if not resource_validate_data:
-        resource_validate_data = ResourceValidate(**data)
-        resource_validate_data.save()
-        return resource_validate_data.as_dict()
-
-
 def kwh_data_create(context, data_dict):
     '''
     Store Knowledge Hub data
@@ -739,3 +707,40 @@ def merge_all_data(context, data_dict):
     return {
         'err_msg': data_dict['err_msg']
     }
+
+
+def resource_validate_create(context, data_dict):
+    '''
+    Saves user validation report
+        :param what
+        :param resource
+    '''
+    check_access('resource_validate_create', context, data_dict)
+    user = context['user']
+    session = context['session']
+
+    context['resource_validate'] = None
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.resource_validate_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    resource_validate = ResourceValidate()
+
+    items = ['what']
+
+    for item in items:
+        setattr(resource_validate, item, data.get(item))
+
+    resource_validate.when = datetime.datetime.utcnow()
+    resource_validate.who = user
+    resource_validate.resource = data.get('resource')
+
+    resource_validate.save()
+
+    session.add(resource_validate)
+    session.commit()
+
+    return _table_dictize(resource_validate, context)

@@ -13,6 +13,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
+from ckanext.knowledgehub.model import ResourceValidate
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.model import Visualization
@@ -1111,3 +1112,22 @@ def resource_data_quality(context, data_dict):
     result['calculated_on'] = calculated_on
 
     return result
+
+
+@toolkit.side_effect_free
+def resource_validate_status(context, data_dict):
+    id = data_dict.get('id')
+    if not id:
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('resource_validate_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    filter = {"id": id}
+    validation_status = ResourceValidate.get(**filter)
+    if not validation_status:
+        raise NotFound(_('Not Found'))
+
+    return validation_status.as_dict()

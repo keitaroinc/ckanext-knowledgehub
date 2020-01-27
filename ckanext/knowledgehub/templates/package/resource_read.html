@@ -3,6 +3,7 @@
 {% resource 'knowledgehub/map' %}
 {% resource 'knowledgehub/javascript/resource_feedback.js' %}
 {% resource 'knowledgehub/javascript/copy_clipboard.js' %}
+{% resource 'knowledgehub/javascript/validation_form.js' %}
 {% ckan_extends %}
 
 {% block resource_actions %}
@@ -60,10 +61,23 @@
     </div>
   </li>
   {% endif %}
-
-<textarea cols = '50' rows = '4' name='text' id='validation_status' class="btn btn-primary" style='resize:vertical; visibility:hidden' placeholder="Validation Status"></textarea>
-<button onClick='document.getElementById("validation_status").style.visibility = "visible" '> {{ _('Validate') }}</button> 
-
+<div>
+  <form id="mainForm">
+    <div id='validationForm' style="display:none;">
+      <div class="row">
+      <div class="col-md-12">
+        <form action="create.resource_validate_create" method="POST" id="validation_status">
+          <div id="what" class="form-row">
+            <textarea cols = '50' rows = '3' name = "comment" placeholder = "  Validation Status" id = "comment" ></textarea>
+          </div>
+          <a href="#"><input type="submit" name="dsubmit" id="validationSubmit" value="Submit Validation"></a>
+        </form>
+      </div>
+      </div>
+    </div>
+    <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit" onclick="showValidationForm()">{{ _('Validation Report') }}</button>
+  </form>
+</div>
 
   {% if res.datastore_active %}
   <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>

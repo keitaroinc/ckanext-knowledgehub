@@ -23,7 +23,7 @@ resource_validate_table = Table(
         primary_key=True,
         default=make_uuid),
     Column(
-        'description',
+        'what',
         types.UnicodeText,
         nullable=False),
     Column(
@@ -32,12 +32,11 @@ resource_validate_table = Table(
         ForeignKey('resource.id', ondelete='CASCADE'),
         nullable=False),
     Column(
-        'user',
+        'who',
         types.UnicodeText,
-        ForeignKey('user.id', ondelete='CASCADE'),
         nullable=False),
     Column(
-        'created_at',
+        'when',
         types.DateTime,
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow)
@@ -47,40 +46,13 @@ resource_validate_table = Table(
 class ResourceValidate(DomainObject):
 
     @classmethod
-    def get(cls, id_or_name=None, **kwargs):
-        q = kwargs.get('q')
-        limit = kwargs.get('limit')
-        offset = kwargs.get('offset')
-        order_by = kwargs.get('order_by')
-
-        kwargs.pop('q', None)
-        kwargs.pop('limit', None)
-        kwargs.pop('offset', None)
-        kwargs.pop('order_by', None)
-
+    def get(cls, **kwargs):
+        if not len(kwargs):
+            return None
         query = Session.query(cls).autoflush(False)
         query = query.filter_by(**kwargs)
 
-        if id_or_name:
-            query = query.filter(
-                or_(cls.id == id_or_name, cls.name == id_or_name)
-            )
-
-        if q:
-            query = query.filter(
-                or_(cls.name.contains(q), cls.name.ilike(r"%{}%".format(q)))
-            )
-
-        if order_by:
-            query = query.order_by(order_by)
-
-        if limit:
-            query = query.limit(limit)
-
-        if offset:
-            query = query.offset(offset)
-
-        return query
+        return query.first()
 
     @classmethod
     def update(cls, filter, data):

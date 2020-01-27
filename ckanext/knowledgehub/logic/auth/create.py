@@ -44,14 +44,6 @@ def resource_feedback(context, data_dict):
     return {'success': True}
 
 
-def resource_validate(context, data_dict):
-    '''
-        Authorization check for resource validate
-    '''
-    # all users
-    return {'success': True}
-
-
 def package_create(context, data_dict=None):
     # This auth function must be overriden like this, otherwise a recursion
     # error is thrown when the /dataset page is accessed by a regular user
@@ -101,6 +93,14 @@ def user_query_create(context, data_dict):
 def user_query_result_create(context, data_dict):
     '''
         Authorization check for user query result create
+    '''
+    # sysadmins only
+    return {'success': False}
+
+
+def resource_validate_create(context, data_dict):
+    '''
+        Authorization check for validation status of resource
     '''
     # sysadmins only
     return {'success': False}

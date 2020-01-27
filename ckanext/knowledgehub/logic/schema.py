@@ -110,7 +110,7 @@ def resource_feedback_schema():
 
 def resource_validate_schema():
     return {
-        'description': [not_empty, unicode],
+        'what': [not_empty, unicode],
         'resource': [not_empty, resource_id_exists]
     }
 
