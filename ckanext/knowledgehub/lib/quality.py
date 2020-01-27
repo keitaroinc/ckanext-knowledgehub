@@ -27,6 +27,10 @@ class LazyStreamingList(object):
         self.total = 0
     
     def _fetch_buffer(self):
+        if self.total:
+            if self.page*self.page_size >= self.total:
+                self.buffer = []
+                return
         result = self.fetch_page(self.page, self.page_size)
         self.total = result.get('total', 0)
         self.buffer = result.get('records', [])
@@ -176,7 +180,7 @@ class DataQualityMetrics(object):
                 else:
                     self.logger.debug('Data Quality not calculated for all dimensions.')
             else:
-                self.logger.debug('Resource changes since last calculated. '
+                self.logger.debug('Resource changed since last calculated. '
                             'Calculating data quality again.')
         else:
             data_quality = DataQualityMetricsModel(type='resource',
@@ -199,6 +203,7 @@ class DataQualityMetrics(object):
                         self.logger.debug('Calculation has been performed manually. Skipping...', metric.name)
                         results[metric.name] = cached
                         continue
+                    
                 self.logger.debug('Calculating dimension: %s...', metric)
                 data_stream = self._fetch_resource_data(resource) # data is a stream
                 results[metric.name] = metric.calculate_metric(resource, data_stream)
@@ -235,7 +240,7 @@ class DataQualityMetrics(object):
         for metric in self.metrics:
             cached = dataset_results.get(metric.name, {})
             if cached.get('manual'):
-                self.logger.debug('Metrics %s is calculated manually. Skipping...')
+                self.logger.debug('Metric %s is calculated manually. Skipping...', metric.name)
                 cumulative[metric.name] = cached
                 continue
             metric_results = [res.get(metric.name, {}) for res in results]
