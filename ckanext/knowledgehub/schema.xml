@@ -115,8 +115,8 @@ schema. In this case the version should be set to the next CKAN version number.
     <field name="theme" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="sub_theme" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="research_question" type="text" indexed="true" stored="true" multiValued="true"/>
-    <field name="country_code_displacement" type="string" indexed="true" stored="true"/>
-    <field name="country_code_origin" type="string" indexed="true" stored="true"/>
+    <field name="country_code_displacement" type="string" indexed="true" stored="true" multiValued="true"/>
+    <field name="country_code_origin" type="string" indexed="true" stored="true" multiValued="true"/>
 
 
 
