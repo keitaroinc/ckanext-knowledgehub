@@ -195,6 +195,10 @@ class DataQualityMetrics(object):
                         self.logger.debug('Dimension %s already calculated. Skipping...', metric.name)
                         results[metric.name] = cached
                         continue
+                    if cached.get('manual'):
+                        self.logger.debug('Calculation has been performed manually. Skipping...', metric.name)
+                        results[metric.name] = cached
+                        continue
                 self.logger.debug('Calculating dimension: %s...', metric)
                 data_stream = self._fetch_resource_data(resource) # data is a stream
                 results[metric.name] = metric.calculate_metric(resource, data_stream)
@@ -227,7 +231,13 @@ class DataQualityMetrics(object):
             data_quality = DataQualityMetricsModel(type='package')
             data_quality.ref_id = package_id
         cumulative = {}
+        dataset_results = data_quality.metrics or {}
         for metric in self.metrics:
+            cached = dataset_results.get(metric.name, {})
+            if cached.get('manual'):
+                self.logger.debug('Metrics %s is calculated manually. Skipping...')
+                cumulative[metric.name] = cached
+                continue
             metric_results = [res.get(metric.name, {}) for res in results]
             cumulative[metric.name] = metric.calculate_cumulative_metric(
                 resources,
@@ -284,8 +294,9 @@ class Completeness(DimensionMetric):
 
     def calculate_cumulative_metric(self, resources, metrics):
         total, complete = reduce(lambda (total, complete), result: (
-            total + result['total'],
-            complete + result['complete']), metrics, (0, 0))
+            total + result.get('total', 0),
+            complete + result.get('complete', 0)
+        ), metrics, (0, 0))
         return {
             'total': total,
             'complete': complete,
