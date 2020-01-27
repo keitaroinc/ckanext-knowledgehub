@@ -25,14 +25,49 @@ from ckanext.knowledgehub.logic.action import create as create_actions
 from ckanext.knowledgehub.logic.action import get as get_actions
 from ckanext.knowledgehub.logic.action import delete as delete_actions
 from ckanext.knowledgehub.logic.action import update as update_actions
+from ckanext.knowledgehub import helpers as kwh_helpers
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
-                                                mock_pylons)
+                                                mock_pylons,
+                                                get_context)
+from ckanext.knowledgehub.model import (Dashboard,
+                                        ResearchQuestion,
+                                        Visualization)
 from ckanext.datastore.logic.action import datastore_create
+from pysolr import Results
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
+
+
+class _monkey_patch:
+
+    def __init__(self, obj, prop, patch_with):
+        self.obj = obj
+        self.prop = prop
+        self.patch_with = patch_with
+
+    def __call__(self, method):
+        original_prop = None
+        if hasattr(self.obj, self.prop):
+            original_prop = getattr(self.obj, self.prop)
+
+        def _with_patched(*args, **kwargs):
+            # patch
+            setattr(self.obj, self.prop, self.patch_with)
+            try:
+                return method(*args, **kwargs)
+            finally:
+                # unpatch
+                if original_prop is not None:
+                    setattr(self.obj, self.prop, original_prop)
+                else:
+                    delattr(self.obj, self.prop)
+        _with_patched.__name__ = method.__name__
+        _with_patched.__module__ = method.__module__
+        _with_patched.__doc__ = method.__doc__
+        return _with_patched
 
 
 class ActionsBase(helpers.FunctionalTestBase):
@@ -50,12 +85,14 @@ class ActionsBase(helpers.FunctionalTestBase):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.load('datapusher')
+
     @classmethod
     def teardown_class(self):
         if not plugins.plugin_loaded('datastore'):
             plugins.unload('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.unload('datapusher')
+
 
 class TestKWHCreateActions(ActionsBase):
 
@@ -98,6 +135,7 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(sub_theme.get('name'), data_dict.get('name'))
 
+    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_research_question_create(self):
         user = factories.Sysadmin()
         context = {
@@ -131,8 +169,11 @@ class TestKWHCreateActions(ActionsBase):
         rq = create_actions.research_question_create(context, data_dict)
 
         assert_equals(rq.get('name'), data_dict.get('name'))
+        ResearchQuestion.add_to_index.assert_called_once()
 
+    @_monkey_patch(Visualization, 'add_to_index', mock.Mock())
     def test_resource_view_create(self):
+
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
@@ -162,7 +203,9 @@ class TestKWHCreateActions(ActionsBase):
         rsc_view = create_actions.resource_view_create(context, data_dict)
 
         assert_equals(rsc_view.get('package_id'), dataset.get('id'))
+        Visualization.add_to_index.assert_called_once()
 
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_create(self):
         user = factories.Sysadmin()
         context = {
@@ -175,13 +218,14 @@ class TestKWHCreateActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (1)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         assert_equals(dashboard.get('name'), data_dict.get('name'))
+        Dashboard.add_to_index.assert_called_once()
 
     def test_resource_feedback(self):
         user = factories.Sysadmin()
@@ -263,6 +307,124 @@ class TestKWHCreateActions(ActionsBase):
             cmd,
             'Successfully run command: knowledgehub -c %s %s'
             % (os.environ.get('CKAN_INI'), data_dict.get('command'))
+        )
+
+    def test_user_query_create(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        assert_equals(data_dict['query_text'], query['query_text'])
+        assert_equals(data_dict['query_type'], query['query_type'])
+
+    def test_user_intent_create(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        intent = create_actions.user_intent_create(get_context(), data_dict)
+        assert_equals(data_dict['inferred_transactional'],
+                      intent['inferred_transactional'])
+        assert_equals(data_dict['inferred_navigational'],
+                      intent['inferred_navigational'])
+        assert_equals(data_dict['inferred_informational'],
+                      intent['inferred_informational'])
+
+    def test_user_query_result_create(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            "query_id": query['id'],
+            "result_type": "dataset",
+            "result_id": "bfbe08a1-24ab-493d-8892-72e399f6e1b7"
+        }
+
+        result = create_actions.user_query_result_create(
+            get_context(),
+            data_dict)
+
+        assert_equals(data_dict['result_type'], result['result_type'])
+        assert_equals(data_dict['result_id'], result['result_id'])
+        assert_equals(data_dict['query_id'], result['query_id'])
+
+    def test_merge_all_data(self):
+        dataset = create_dataset()
+
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data = {
+            "resource_id": resource['id'],
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 4},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        helpers.call_action('datastore_create', **data)
+
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data = {
+            "resource_id": resource['id'],
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 8},
+                {"value": 9},
+                {"value": 10},
+                {"value": 11},
+                {"value": 12},
+                {"value": 13},
+                {"value": 14},
+            ],
+            "force": True
+        }
+        helpers.call_action('datastore_create', **data)
+
+        system_rsc = create_actions.merge_all_data(
+            get_context(),
+            {'id': dataset['id']}
+        )
+
+        assert_equals(
+            system_rsc['resource_type'],
+            kwh_helpers.SYSTEM_RESOURCE_TYPE
         )
 
 
@@ -416,6 +578,7 @@ class TestKWHGetActions(ActionsBase):
             data_dict.get('title')
         )
 
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_show_list(self):
         user = factories.Sysadmin()
         context = {
@@ -428,10 +591,16 @@ class TestKWHGetActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (2)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         dashboard_show = get_actions.dashboard_show(
@@ -563,6 +732,155 @@ class TestKWHGetActions(ActionsBase):
 
         assert_equals(last_rnn_corpus, data_dict.get('corpus'))
 
+    def test_user_query_show(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        q = create_actions.user_query_create(get_context(), data_dict)
+        q_shows = get_actions.user_query_show(get_context(), {'id': q['id']})
+
+        assert_equals(q['query_text'], q_shows['query_text'])
+
+    def test_user_intent_show(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        i = create_actions.user_intent_create(get_context(), data_dict)
+        i_show = get_actions.user_intent_show(get_context(), {'id': i['id']})
+
+        assert_equals(i['inferred_transactional'],
+                      i_show['inferred_transactional'])
+        assert_equals(i['inferred_navigational'],
+                      i_show['inferred_navigational'])
+        assert_equals(i['inferred_informational'],
+                      i_show['inferred_informational'])
+
+    def test_user_query_result_show(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            "query_id": query['id'],
+            "result_type": "dataset",
+            "result_id": "bfbe08a1-24ab-493d-8892-72e399f6e1b7"
+        }
+
+        r = create_actions.user_query_result_create(get_context(), data_dict)
+        r_show = get_actions.user_query_result_show(
+            get_context(),
+            {'id': r['id']})
+
+        assert_equals(r['result_type'], r_show['result_type'])
+        assert_equals(r['result_id'], r_show['result_id'])
+        assert_equals(r['query_id'], r_show['query_id'])
+
+    def test_user_intent_list(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        create_actions.user_intent_create(get_context(), data_dict)
+
+        i_list = get_actions.user_intent_list(
+            get_context(),
+            {
+                'page': 1,
+                'limit': 10,
+                'order_by': 'created_at asc'
+            })
+
+        assert_equals(i_list['total'], 1)
+        assert_equals(i_list['page'], 1)
+        assert_equals(i_list['size'], 10)
+        assert_equals(len(i_list['items']), 1)
+
+    def test_user_query_list(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        q = create_actions.user_query_create(get_context(), data_dict)
+
+        q_list = get_actions.user_query_list(
+            get_context(),
+            {
+                'page': 1,
+                'limit': 10,
+                'order_by': 'created_at asc'
+            })
+
+        assert_equals(q_list['total'], 1)
+        assert_equals(q_list['page'], 1)
+        assert_equals(q_list['size'], 10)
+        assert_equals(len(q_list['items']), 1)
+
+    def test_user_query_result_search(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            "query_id": query['id'],
+            "result_type": "dataset",
+            "result_id": "bfbe08a1-24ab-493d-8892-72e399f6e1b7"
+        }
+
+        r = create_actions.user_query_result_create(get_context(), data_dict)
+
+        r_search = get_actions.user_query_result_search(
+            get_context(),
+            {
+                "q": "dataset",
+                "page": 1,
+                "limit": 10
+            })
+
+        assert_equals(r_search['total'], 1)
+        assert_equals(r_search['page'], 1)
+        assert_equals(r_search['size'], 10)
+        assert_equals(len(r_search['items']), 1)
+
 
 class TestKWHDeleteActions(ActionsBase):
 
@@ -615,6 +933,7 @@ class TestKWHDeleteActions(ActionsBase):
 
         assert_equals(result, 'OK')
 
+    @_monkey_patch(ResearchQuestion, 'delete_from_index', mock.Mock())
     def test_research_question_delete(self):
         user = factories.Sysadmin()
         context = {
@@ -653,7 +972,10 @@ class TestKWHDeleteActions(ActionsBase):
         )
 
         assert_equals(result, None)
+        ResearchQuestion.delete_from_index.assert_called_once()
 
+    @_monkey_patch(Dashboard, 'delete_from_index', mock.Mock())
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_delete(self):
         user = factories.Sysadmin()
         context = {
@@ -666,10 +988,16 @@ class TestKWHDeleteActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (3)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         result = delete_actions.dashboard_delete(
@@ -678,6 +1006,33 @@ class TestKWHDeleteActions(ActionsBase):
         )
 
         assert_equals(result.get('message'), 'Dashboard deleted.')
+        Dashboard.delete_from_index.assert_called_once()
+
+    def test_user_intent_delete(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        i = create_actions.user_intent_create(get_context(), data_dict)
+
+        r = delete_actions.user_intent_delete(get_context(), {'id': i['id']})
+
+        assert_equals(r, 'OK')
 
 
 class TestKWHUpdateActions(ActionsBase):
@@ -731,6 +1086,7 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(sub_theme_updated.get('title'), data_dict.get('title'))
 
+    @_monkey_patch(ResearchQuestion, 'update_index_doc', mock.Mock())
     def test_research_question_update(self):
         user = factories.Sysadmin()
         context = {
@@ -771,6 +1127,7 @@ class TestKWHUpdateActions(ActionsBase):
         )
 
         assert_equals(rq_updated.get('title'), data_dict.get('title'))
+        ResearchQuestion.update_index_doc.assert_called_once()
 
     def test_resource_update(self):
         user = factories.Sysadmin()
@@ -800,6 +1157,7 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(rsc_updated, None)
 
+    @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     def test_resource_view_update(self):
         dataset = create_dataset()
         resource = factories.Resource(
@@ -840,7 +1198,10 @@ class TestKWHUpdateActions(ActionsBase):
             rsc_view_updated.get('title'),
             data_dict.get('title')
         )
+        Visualization.update_index_doc.assert_called_once()
 
+    @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_update(self):
         user = factories.Sysadmin()
         context = {
@@ -853,10 +1214,16 @@ class TestKWHUpdateActions(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (4)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
+
+        def _mock_create_dashboard(data_dict):
+            return data_dict
+
+        Dashboard.add_to_index.side_effect = _mock_create_dashboard
+
         dashboard = create_actions.dashboard_create(context, data_dict)
 
         data_dict['id'] = dashboard.get('id')
@@ -867,6 +1234,7 @@ class TestKWHUpdateActions(ActionsBase):
         )
 
         assert_equals(dashboard_updated.get('title'), data_dict.get('title'))
+        Dashboard.update_index_doc.assert_called_once()
 
     def test_kwh_data_update(self):
         user = factories.Sysadmin()
@@ -899,6 +1267,38 @@ class TestKWHUpdateActions(ActionsBase):
             kwh_data_updated.get('content'),
             data_dict.get('new_content')
         )
+
+    def test_user_intent_update(self):
+        data_dict = {
+            'query_text': 'How many refugees are they in MENA Region in 2019?',
+            'query_type': 'dataset'
+        }
+
+        query = create_actions.user_query_create(get_context(), data_dict)
+
+        data_dict = {
+            'user_query_id': query['id'],
+            'primary_category': 'dataset',
+            'theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'sub_theme': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'research_question': '08563b0c-9c51-4daa-b33c-0892b1878a6d',
+            'inferred_transactional':
+                'How many refugees are they in MENA Region in 2019?',
+            'inferred_navigational': 'MENA Region, 2019',
+            'inferred_informational': 'Refugees in MENA Region in 2019?'
+        }
+
+        i = create_actions.user_intent_create(get_context(), data_dict)
+
+        i_update = update_actions.user_intent_update(
+            get_context(),
+            {
+                "id": i['id'],
+                "primary_category": "dashboard"
+            })
+
+        assert_equals(i_update['primary_category'], 'dashboard')
+
     def test_knowledgehub_get_geojson_properties(self):
         user = factories.Sysadmin()
         context = {
@@ -910,10 +1310,12 @@ class TestKWHUpdateActions(ActionsBase):
         }
 
         data_dict = {
-            'map_resource':"https://www.grandconcourse.ca/map/data/GCPoints.geojson"
+            'map_resource':
+                "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
 
         }
-        res = get_actions.knowledgehub_get_geojson_properties(context, data_dict)
+        res = get_actions.knowledgehub_get_geojson_properties(context,
+                                                              data_dict)
         assert_equals(len(res), 26)
 
     def test_get_resource_data(self):
@@ -928,7 +1330,7 @@ class TestKWHUpdateActions(ActionsBase):
         }
         dataset = create_dataset()
         data = {
-           "fields": [{"id": "value", "type": "numeric"}],
+            "fields": [{"id": "value", "type": "numeric"}],
             "records": [
                 {"value": 0},
                 {"value": 1},
@@ -954,13 +1356,13 @@ class TestKWHUpdateActions(ActionsBase):
             resource=resource['id']
         )
         data_dict = {
-            'sql_string' : sql_str
+            'sql_string': sql_str
         }
         res_data = get_actions.get_resource_data(context, data_dict)
 
         assert_equals(len(res_data), 7)
 
-    #TODO: the next two tests give error when we add filters, the end result
+    # TODO: the next two tests give error when we add filters, the end result
     #       is written for printing errors only
 
     # def test_get_chart_data(self):
@@ -1093,5 +1495,61 @@ class TestKWHUpdateActions(ActionsBase):
     #     }
 
     #     res = get_actions.visualizations_for_rq(context, data_dict_rq)
-    #     assert_equals(res, "") 
-        
+    #     assert_equals(res, "")
+
+
+class SearchIndexActionsTest(helpers.FunctionalTestBase):
+
+    @_monkey_patch(Dashboard, 'search_index', mock.Mock())
+    def test_search_dashboards(self):
+        Dashboard.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
+        results = get_actions.search_dashboards({}, {
+            'text': 'aaa',
+        })
+        assert_equals(1, len(results))
+        Dashboard.search_index.called_once_with(q='text:aaa', rows=500)
+
+    @_monkey_patch(ResearchQuestion, 'search_index', mock.Mock())
+    def test_search_research_questions(self):
+        ResearchQuestion.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
+        results = get_actions.search_research_questions({}, {
+            'text': 'aaa',
+        })
+        assert_equals(1, len(results))
+        ResearchQuestion.search_index.called_once_with(q='text:aaa', rows=500)
+
+    @_monkey_patch(Visualization, 'search_index', mock.Mock())
+    def test_search_visualizations(self):
+        Visualization.search_index.return_value = Results({
+            'response': {
+                'docs': [{
+                    'id': 'aaa',
+                    'p1': 'v1',
+                    'p2': 'v2',
+                }],
+                'numFound': 1,
+            }
+        })
+        results = get_actions.search_visualizations({}, {
+            'text': 'aaa',
+        })
+        assert_equals(1, len(results))
+        Visualization.search_index.called_once_with(q='text:aaa', rows=500)

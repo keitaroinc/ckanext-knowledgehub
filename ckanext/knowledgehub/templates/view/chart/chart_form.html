@@ -1,14 +1,16 @@
 {% resource 'knowledgehub/chart' %}
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
+{% resource 'knowledgehub/javascript/rqs_selection.js' %}
+
 {% import 'macros/form.html' as form %}
 
 {% if data %}
-  {% set chart = data.__extras or {} %}
-  {% set filters = data.__extras.filters or [] %}
-  {% set default_sql_string = data.__extras.sql_string or [] %}
+{% set chart = data.__extras or {} %}
+{% set filters = data.__extras.filters or [] %}
+{% set default_sql_string = data.__extras.sql_string or [] %}
 {% else %}
-  {% set chart = {} %}
-  {% set filters = [] %}
+{% set chart = {} %}
+{% set filters = [] %}
 {% endif %}
 
 {% snippet 'snippets/data_transformation.html', res=res, filters=filters, default_sql_string=default_sql_string %}
@@ -37,22 +39,25 @@
             <div class="control-group title">
               <label class="control-label" for="chart_field_title">{{ _('Title') }}</label>
               <div class="controls input-controls">
-                <input id="chart_field_title" type="text" name="chart_field_title" value="{{ chart_title }}"
-                  placeholder="{{ _('Chart title') }}" required="required">
+                <input class="inputs" id="chart_field_title" type="text" name="chart_field_title"
+                  value="{{ chart_title }}" placeholder="{{ _('Chart title') }}" required="required">
               </div>
             </div>
 
             <div class="control-group title">
               <label class="control-label" for="chart_field_subtitle">{{ _('Subtitle') }}</label>
               <div class="controls input-controls">
-                  <input id="chart_field_subtitle" type="text" name="chart_field_subtitle" value="{{ chart.chart_subtitle }}" placeholder="{{ _('Chart subtitle') }}" maxlength="100" required="required">
+                <input class="inputs" id="chart_field_subtitle" type="text" name="chart_field_subtitle"
+                  value="{{ chart.chart_subtitle }}" placeholder="{{ _('Chart subtitle') }}" maxlength="100"
+                  required="required">
               </div>
             </div>
-
             <div class="control-group title">
               <label class="control-label" for="chart_field_description">{{ _('Description') }}</label>
               <div class="controls input-controls">
-                  <input id="chart_field_description" type="text" name="chart_field_description" value="{{ chart.chart_description }}" placeholder="{{ _('Chart description') }}" maxlength="100" required="required">
+                <textarea class="inputs" id="chart_field_description" type="text" name="chart_field_description"
+                  value="{{ chart.chart_description }}" placeholder="{{ _('Chart description') }}" maxlength="100"
+                  required="required"> {{ chart.chart_description }}</textarea>
               </div>
             </div>
 
@@ -138,17 +143,52 @@
             {# Measure, Additional Tornado Values #}
             {% set additional_tornado_value = h.get_resource_columns(res['id'], []) %}
             <div class="control-group control-select">
-              <label class="control-label" for="chart_field_additional_tornado_value">{{ _('Additional Tornado Value') }}</label>
+              <label class="control-label"
+                for="chart_field_additional_tornado_value">{{ _('Additional Tornado Value') }}</label>
               <div class="controls input-controls">
                 <select id="chart_field_additional_tornado_value" name="chart_field_additional_tornado_value">
                   {% for value in additional_tornado_value %}
-                  <option value="{{value}}" {% if chart %}{{ 'selected' if value == chart.additional_tornado_value }}{% endif %}>
+                  <option value="{{value}}"
+                    {% if chart %}{{ 'selected' if value == chart.additional_tornado_value }}{% endif %}>
                     {{value}}</option>
                   {% endfor %}
                 </select>
               </div>
             </div>
 
+            {# RQs List #}
+            {% set dict = {} %}
+            {% for k in h.get_rq_options() %}
+              {% if chart %}
+                {% if chart.research_questions is iterable and chart.research_questions is not string %}
+                  {% for m in chart.research_questions %}
+                    {% if k.text == m %}
+                      {% set new_item = dict.__setitem__(k.text, "True") %}
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  {% if chart.research_questions == k.text %}
+                    {% set new_item = dict.__setitem__(k.text, "True") %}
+                  {% endif %}
+                {% endif %}
+
+                {% if not dict[k.text] %}
+                  {% set new_item = dict.__setitem__(k.text, "False") %}
+                {% endif %}
+
+              {% else %}
+                {% set new_item = dict.__setitem__(k.text, "False") %}
+              {% endif %}
+            {% endfor %}
+            <div class="rs-questions">
+              <label class="control-label" for="chart_research_questions">{{_('Research Questions')}}</label>
+              <select name="chart_research_questions" id="chart_research_questions" multiple="multiple" type="hidden">
+                  {% for k,v in dict.items() %}
+                  <option value="{{ k }}"
+                  {% if chart %} {{ 'selected' if v == 'True'}} {% endif %}>{{ k }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
 
           </div>
@@ -198,7 +238,7 @@
 
             {# X-axis label multiline #}
             {% if chart %}
-              {% set x_text_multiline = chart.x_text_multiline %}
+            {% set x_text_multiline = chart.x_text_multiline %}
             {% endif %}
             <div class="control-group control-checkbox justify-content-between ">
               <label class="control-label"
@@ -226,7 +266,7 @@
 
             {# Y-axis title #}
             {% if chart %}
-              {% set y_label = chart.y_label %}
+            {% set y_label = chart.y_label %}
             {% endif %}
             <div class="control-group ">
               <label class="control-label" for="chart_field_y_label">{{ _('Y axis title') }}</label>
@@ -239,7 +279,7 @@
 
             {# Y-axis from zero #}
             {% if chart %}
-              {% set y_from_zero = chart.y_from_zero %}
+            {% set y_from_zero = chart.y_from_zero %}
             {% endif %}
             <div class="control-group control-checkbox justify-content-between ">
               <label class="control-label" for="chart_field_y_from_zero">{{ _('Start from zero') }}</label>
@@ -248,12 +288,12 @@
                   value="{{ y_from_zero }}" {% if y_from_zero=='false' %}{% else %}checked{% endif %}>
               </div>
             </div>
-            
+
             {# Y-axis label format #}
             {% if chart and chart.tick_count%}
-              {% set ticks_formats = h.get_data_formats(5) %}
+            {% set ticks_formats = h.get_data_formats(5) %}
             {% else %}
-              {% set ticks_formats = h.get_data_formats() %}
+            {% set ticks_formats = h.get_data_formats() %}
             {% endif %}
             <div class="control-group control-select">
               <label class="control-label" for="chart_field_y_ticks_format">{{ _('Y axis label format') }}</label>
@@ -310,7 +350,7 @@
 
             {# Show labels #}
             {% if chart %}
-              {% set show_labels = chart.show_labels %}
+            {% set show_labels = chart.show_labels %}
             {% endif %}
             <div class="control-group control-checkbox justify-content-between ">
               <label class="control-label" for="chart_field_labels">{{ _('Show data labels') }}</label>
@@ -322,7 +362,7 @@
 
             {# Show legend #}
             {% if chart %}
-              {% set show_legend = chart.show_legend %}
+            {% set show_legend = chart.show_legend %}
             {% endif %}
             <div class="control-group control-checkbox justify-content-between ">
               <label class="control-label" for="chart_field_legend">{{ _('Show legend') }}</label>
@@ -365,7 +405,7 @@
 
             {# Dynamic Reference Factor #}
             {% if chart %}
-              {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
+            {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
             {% endif %}
             <div class="control-group">
               <label class="control-label"
@@ -379,7 +419,7 @@
 
             {# Dynamic Reference Label #}
             {% if chart %}
-              {% set dynamic_reference_label = chart.dynamic_reference_label %}
+            {% set dynamic_reference_label = chart.dynamic_reference_label %}
             {% endif %}
             <div class="control-group">
               <label class="control-label"
@@ -396,6 +436,7 @@
     </div>
 
 
+
     {# Controls #}
     <ul class="inline text-right chart-actions">
       <li class="list-unstyled"><a class="btn  btn-default update-chart-btn"><span class="fa fa-refresh"
@@ -404,7 +445,7 @@
     <span class="grippy"></span>
     {# Legacy #}
     {% if chart %}
-      {% set tooltip_name = chart.tooltip_name %}
+    {% set tooltip_name = chart.tooltip_name %}
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_tooltip_name">{{ _('Tooltip name') }}</label>
@@ -414,7 +455,7 @@
       </div>
     </div>
     {% if chart %}
-      {% set ptop = chart.padding_top %}
+    {% set ptop = chart.padding_top %}
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_padding_top">{{ _('Padding top') }}</label>
@@ -424,7 +465,7 @@
       </div>
     </div>
     {% if chart %}
-      {% set pbtm = chart.padding_bottom %}
+    {% set pbtm = chart.padding_bottom %}
     {% endif %}
     <div class="control-group hidden">
       <label class="control-label" for="chart_field_padding_bottom">{{ _('Padding bottom') }}</label>
@@ -467,39 +508,40 @@
   </div>
 </div>
 
-  {% if chart %}
-    {% set colors = chart.color %}
-    {% set x_axis = chart.x_axis %}
-    {% set y_axis = chart.y_axis %}
-    {% set additional_tornado_value = chart.additional_tornado_value %}
-    {% set chart_type = chart.type %}
-    {% set title = data.title %}
-    {% set chart_subtitle = chart.chart_subtitle %}
-    {% set chart_description = chart.chart_description %}
-    {% set show_legend = chart.show_legend %}
-    {% set x_text_rotate = chart.x_text_rotate %}
-    {% set x_text_multiline = chart.x_text_multiline %}
-    {% set tooltip_name = chart.tooltip_name %}
-    {% set data_format = chart.data_format %}
-    {% set y_operation = chart.y_operation %}
-    {% set y_tick_format = chart.y_tick_format %}
-    {% set chart_padding_left = chart.chart_padding_left %}
-    {% set chart_padding_bottom = chart.chart_padding_bottom %}
-    {% set padding_bottom = chart.padding_bottom %}
-    {% set padding_top = chart.padding_top %}
-    {% set tick_count = chart.tick_count %}
-    {% set show_labels = chart.show_labels %}
-    {% set y_label = chart.y_label %}
-    {% set y_from_zero = chart.y_from_zero %}
-    {% set data_sort = chart.sort %}
-    {% set filters = chart.filters %}
-    {% set category_name = chart.category_name %}
-    {% set dynamic_reference_type = chart.dynamic_reference_type %}
-    {% set dynamic_reference_factor = chart.dynamic_reference_factor %}
-    {% set dynamic_reference_label = chart.dynamic_reference_label %}
-    {% set data_type = chart.data_type %}
-    {% set chart_id = chart.id %}
-  {% endif %}
+{% if chart %}
+{% set colors = chart.color %}
+{% set x_axis = chart.x_axis %}
+{% set y_axis = chart.y_axis %}
+{% set additional_tornado_value = chart.additional_tornado_value %}
+{% set chart_research_questions = data.chart_research_questions %}
+{% set chart_type = chart.type %}
+{% set title = data.title %}
+{% set chart_subtitle = chart.chart_subtitle %}
+{% set chart_description = chart.chart_description %}
+{% set show_legend = chart.show_legend %}
+{% set x_text_rotate = chart.x_text_rotate %}
+{% set x_text_multiline = chart.x_text_multiline %}
+{% set tooltip_name = chart.tooltip_name %}
+{% set data_format = chart.data_format %}
+{% set y_operation = chart.y_operation %}
+{% set y_tick_format = chart.y_tick_format %}
+{% set chart_padding_left = chart.chart_padding_left %}
+{% set chart_padding_bottom = chart.chart_padding_bottom %}
+{% set padding_bottom = chart.padding_bottom %}
+{% set padding_top = chart.padding_top %}
+{% set tick_count = chart.tick_count %}
+{% set show_labels = chart.show_labels %}
+{% set y_label = chart.y_label %}
+{% set y_from_zero = chart.y_from_zero %}
+{% set data_sort = chart.sort %}
+{% set filters = chart.filters %}
+{% set category_name = chart.category_name %}
+{% set dynamic_reference_type = chart.dynamic_reference_type %}
+{% set dynamic_reference_factor = chart.dynamic_reference_factor %}
+{% set dynamic_reference_label = chart.dynamic_reference_label %}
+{% set data_type = chart.data_type %}
+{% set chart_id = chart.id %}
+{% endif %}
 <div class="preview-wrapper custom-width">
   {% snippet 'ajax_snippets/chart_module.html',
           type = 'chart',
@@ -508,6 +550,7 @@
           x_axis = x_axis,
           y_axis = y_axis,
           additional_tornado_value = additional_tornado_value,
+          chart_research_questions = chart_research_questions,
           chart_type = chart_type,
           sql_string = sql_string,
           title = title,

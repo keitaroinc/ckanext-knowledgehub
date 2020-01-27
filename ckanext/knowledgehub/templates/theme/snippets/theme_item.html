@@ -4,25 +4,25 @@
 {% set notes = h.markdown_extract(theme.description, extract_length=truncate) %}
 
 {% block theme_item %}
-  <li class="component-item">
-    {% block content %}
-      <div class="component-content">
-        {% block heading %}
-          <h3 class="component-heading text-ellipsis">
-            {% block heading_title %}
-		      {{ h.link_to(h.truncate(title, truncate_title), h.url_for('theme.read', name=theme.name)) }}
-            {% endblock %}
-          </h3>
-        {% endblock %}
-
-        {% block notes %}
-          {% if notes %}
-          <div class="text-wrap">{{ notes|urlize }}</div>
-          {% else %}
-            <p class="empty">{{ _("This theme has no description") }}</p>
-          {% endif %}
-        {% endblock %}
-      </div>
+<li class="component-item-rq">
+  {% block content %}
+  <div class="component-content-rq">
+    {% block heading %}
+    <h3 class="component-heading-rq text-ellipsis">
+      {% block heading_title %}
+      {{ h.link_to(h.truncate(title, truncate_title), h.url_for('theme.read', name=theme.name)) }}
+      {% endblock %}
+    </h3>
     {% endblock %}
-  </li>
+
+    {% block notes %}
+    {% if notes %}
+    <div class="text-wrap">{{ notes|urlize }}</div>
+    {% else %}
+    <p class="empty">{{ _("This theme has no description") }}</p>
+    {% endif %}
+    {% endblock %}
+  </div>
+  {% endblock %}
+</li>
 {% endblock %}

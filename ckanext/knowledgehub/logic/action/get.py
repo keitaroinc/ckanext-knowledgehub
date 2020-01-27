@@ -4,7 +4,7 @@ import json
 
 import ckan.logic as logic
 from ckan.plugins import toolkit
-from ckan.common import _
+from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 
@@ -15,8 +15,13 @@ from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
+from ckanext.knowledgehub.model import Visualization
+from ckanext.knowledgehub.model import UserIntents
+from ckanext.knowledgehub.model import UserQuery
+from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
+from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 
@@ -32,6 +37,18 @@ check_access = toolkit.check_access
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 ValidationError = toolkit.ValidationError
+NotAuthorized = toolkit.NotAuthorized
+
+
+class DateTimeEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
+            return obj.isoformat()
+        elif isinstance(obj, datetime.timedelta):
+            return (datetime.datetime.min + obj).time().isoformat()
+
+        return super(DateTimeEncoder, self).default(obj)
 
 
 @toolkit.side_effect_free
@@ -518,6 +535,7 @@ def visualizations_for_rq(context, data_dict):
 
     return resource_views
 
+
 def dashboards_for_rq(context, data_dict):
     research_question = data_dict.get('research_question')
 
@@ -539,6 +557,7 @@ def dashboards_for_rq(context, data_dict):
                 views.append(res_view)
 
     return views
+
 
 @toolkit.side_effect_free
 def resource_user_feedback(context, data_dict):
@@ -740,3 +759,355 @@ def get_predictions(context, data_dict):
         raise ValidationError({'text': _('Missing value')})
 
     return rnn_helpers.predict_completions(text)
+
+
+def _search_entity(index, ctx, data_dict):
+    page = data_dict.get('page', 1)
+    page_size = int(data_dict.get('limit',
+                                  config.get('ckan.datasets_per_page', 20)))
+    if page <= 0:
+        page = 1
+
+    # clean the data dict
+    for k in ['page', 'limit']:
+        if data_dict.get(k) is not None:
+            del data_dict[k]
+
+    data_dict['rows'] = page_size
+    data_dict['start'] = (page - 1) * page_size
+
+    text = data_dict.get('text')
+    if not text:
+        raise ValidationError({'text': _('Missing value')})
+
+    _save_user_query(ctx, text, index.doctype)
+
+    args = ckan_params_to_solr_args(data_dict)
+    results = index.search_index(**args)
+
+    results.page = page
+    results.page_size = page_size
+
+    result_dict = {
+        'count': results.hits,
+        'results': results.docs,
+        'facets': results.facets,
+        'stats': results.stats,
+        'page': page,
+        'limit': page_size,
+    }
+
+    class _results_wrapper(dict):
+        def _for_json(self):
+            return json.dumps(self, cls=DateTimeEncoder)
+
+    return _results_wrapper(result_dict)
+
+
+def _save_user_query(ctx, text, doc_type):
+    ctx['ignore_auth'] = True
+
+    if text != '*':
+        query_data = {
+            'query_text': text,
+            'query_type': doc_type
+        }
+        try:
+            logic.get_action('user_query_create')(ctx, query_data)
+        except Exception as e:
+            log.debug('Save user query: %s', str(e))
+
+
+@toolkit.side_effect_free
+def search_dashboards(context, data_dict):
+    u'''Performs a search in the index for dashboards.
+
+    :param data_dict: ``dict``, the query arguments for the search.
+
+    :returns: ``list``, the documents matching the search query from the index.
+    '''
+    return _search_entity(Dashboard, context, data_dict)
+
+
+@toolkit.side_effect_free
+def search_research_questions(context, data_dict):
+    u'''Performs a search in the index for research questions.
+
+    :param data_dict: ``dict``, the query arguments for the search.
+
+    :returns: ``list``, the documents matching the search query from the index.
+    '''
+    return _search_entity(ResearchQuestion, context, data_dict)
+
+
+@toolkit.side_effect_free
+def search_visualizations(context, data_dict):
+    u'''Performs a search in the index for visualizations.
+
+    :param data_dict: ``dict``, the query arguments for the search.
+
+    :returns: ``list``, the documents matching the search query from the index.
+    '''
+    return _search_entity(Visualization, context, data_dict)
+
+
+@toolkit.side_effect_free
+def user_intent_list(context, data_dict):
+    ''' List the users intents
+
+    :param page: the page number
+    :type page: int
+    :param limit: items per page
+    :type limit: int
+    :param order_by: the column to wich the order shall be perform
+    :type order_by: string
+
+    :returns: a list of intents
+    :rtype: list
+    '''
+
+    try:
+        check_access('user_intent_list', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system administrator'))
+
+    kwargs = {}
+    if data_dict.get('page'):
+        kwargs['page'] = data_dict.get('page')
+    if data_dict.get('limit'):
+        kwargs['limit'] = data_dict.get('limit')
+    if data_dict.get('order_by'):
+        kwargs['order_by'] = data_dict.get('order_by')
+
+    intents = UserIntents.get_list(**kwargs)
+    items = []
+    for i in intents:
+        items.append(_table_dictize(i, context))
+
+    return {
+        'total': len(UserIntents.get_list()),
+        'page': data_dict.get('page'),
+        'size': data_dict.get('limit'),
+        'items': items,
+    }
+
+
+@toolkit.side_effect_free
+def user_intent_show(context, data_dict):
+    ''' Shows a intent
+
+    :param id: the intent ID
+    :type id: string
+
+    :returns: a intent
+    :rtype: dictionary
+    '''
+    try:
+        check_access('user_intent_show', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system administrator'))
+
+    id = logic.get_or_bust(data_dict, 'id')
+
+    intent = UserIntents.get(id)
+    if not intent:
+        raise NotFound(_(u'Intent'))
+
+    return intent.as_dict()
+
+
+@toolkit.side_effect_free
+def user_query_show(context, data_dict):
+    ''' Shows a user query
+
+    :param id: the query ID
+    :type id: string
+    :param query_text: the user search query
+    :type query_text: string
+    :param query_type: the type of the search query
+    :type query_type: string
+    :param user_id: the ID of the user
+    :type user_id: string
+
+    :returns: a user query
+    :rtype: dictionary
+    '''
+
+    kwargs = {}
+    if data_dict.get('id'):
+        kwargs['id'] = data_dict.get('id')
+    if data_dict.get('query_text'):
+        kwargs['query_text'] = data_dict.get('query_text')
+    if data_dict.get('query_type'):
+        kwargs['query_type'] = data_dict.get('query_type')
+    if data_dict.get('user_id'):
+        kwargs['user_id'] = data_dict.get('user_id')
+
+    query = UserQuery.get(**kwargs)
+    if not query:
+        raise NotFound(_(u'User Query'))
+
+    return query.as_dict()
+
+
+@toolkit.side_effect_free
+def user_query_list(context, data_dict):
+    ''' List the user queries
+
+    :param page: the page number
+    :type page: int
+    :param limit: items per page
+    :type limit: int
+    :param order_by: the column to wich the order shall be perform
+    :type order_by: string
+
+    :returns: a list of user queries
+    :rtype: list
+    '''
+    try:
+        check_access('user_query_list', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system administrator'))
+
+    kwargs = {}
+    if data_dict.get('page'):
+        kwargs['page'] = data_dict.get('page')
+    if data_dict.get('limit'):
+        kwargs['limit'] = data_dict.get('limit')
+    if data_dict.get('order_by'):
+        kwargs['order_by'] = data_dict.get('order_by')
+
+    queries = UserQuery.get_all(**kwargs)
+    items = []
+    for q in queries:
+        items.append(_table_dictize(q, context))
+
+    return {
+        'total': len(UserQuery.get_all()),
+        'page': data_dict.get('page'),
+        'size': data_dict.get('limit'),
+        'items': items,
+    }
+
+
+@toolkit.side_effect_free
+def user_query_result_show(context, data_dict):
+    ''' Shows a user query result
+
+    :param id: the query result ID
+    :type id: string
+
+    :returns: a user query result
+    :rtype: dictionary
+    '''
+    try:
+        check_access('user_query_result_show', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system administrator'))
+
+    id = logic.get_or_bust(data_dict, 'id')
+
+    result = UserQueryResult.get(id)
+    if not result:
+        raise NotFound(_(u'User Query Result'))
+
+    return result.as_dict()
+
+
+@toolkit.side_effect_free
+def user_query_result_search(context, data_dict):
+    ''' Search the user query results
+
+    :param q: the search query
+    :type q: string
+    :param page: the page number
+    :type page: int
+    :param limit: items per page
+    :type limit: int
+    :param order_by: the column to wich the order shall be perform
+    :type order_by: string
+
+    :returns: a list of user query results
+    :rtype: list
+    '''
+    try:
+        check_access('user_query_result_search', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system administrator'))
+
+    kwargs = {}
+    if data_dict.get('q'):
+        kwargs['q'] = data_dict.get('q')
+    if data_dict.get('page'):
+        kwargs['page'] = data_dict.get('page')
+    if data_dict.get('limit'):
+        kwargs['limit'] = data_dict.get('limit')
+    if data_dict.get('order_by'):
+        kwargs['order_by'] = data_dict.get('order_by')
+
+    results = UserQueryResult.search(**kwargs)
+    items = []
+    for r in results:
+        items.append(_table_dictize(r, context))
+
+    return {
+        'total': len(UserQueryResult.search(**kwargs)),
+        'page': data_dict.get('page'),
+        'size': data_dict.get('limit'),
+        'items': items,
+    }
+
+
+def _metrics_to_data_dict(metrics):
+    result = {}
+    for metric in ['completeness', 'uniqueness', 'timeliness', 'accuracy',
+                   'validity', 'consistency']:
+        result[metric] = getattr(metrics, metric) if metrics else None
+    return result
+
+
+@toolkit.side_effect_free
+def package_data_quality(context, data_dict):
+    if not data_dict.get('id'):
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('package_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    metrics = DataQualityMetrics.get_dataset_metrics(data_dict['id'])
+    if not metrics:
+        raise NotFound(_('Not Found'))
+
+    result = _metrics_to_data_dict(metrics)
+    result['package_id'] = data_dict['id']
+    calculated_on = metrics.modified_at or metrics.created_at
+    if calculated_on:
+        calculated_on = calculated_on.isoformat()
+    result['calculated_on'] = calculated_on
+    return result
+
+
+@toolkit.side_effect_free
+def resource_data_quality(context, data_dict):
+    if not data_dict.get('id'):
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('resource_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    metrics = DataQualityMetrics.get_resource_metrics(data_dict['id'])
+    if not metrics:
+        raise NotFound(_('Not Found'))
+
+    result = _metrics_to_data_dict(metrics)
+    result['resource_id'] = data_dict['id']
+    calculated_on = metrics.modified_at or metrics.created_at
+    if calculated_on:
+        calculated_on = calculated_on.isoformat()
+    result['calculated_on'] = calculated_on
+
+    return result

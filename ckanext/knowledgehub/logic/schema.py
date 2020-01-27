@@ -56,7 +56,7 @@ def sub_theme_update():
 def research_question_schema():
     return {
         'name': [not_empty,
-                 name_validator,
+                 validators.long_name_validator(),
                  validators.research_question_name_validator,
                  unicode],
         'theme': [ignore_missing, unicode],
@@ -129,4 +129,41 @@ def kwh_data_schema_update():
 def corpus_create():
     return {
         'corpus': [not_empty, unicode]
+    }
+
+
+def user_intent_schema():
+    return {
+        'user_query_id': [
+            not_empty,
+            validators.user_intent_query_id_validator,
+            unicode
+        ],
+        'primary_category': [ignore_missing, unicode],
+        'theme': [ignore_missing, unicode],
+        'sub_theme': [ignore_missing, unicode],
+        'research_question': [ignore_missing, unicode],
+        'inferred_transactional': [ignore_missing, unicode],
+        'inferred_navigational': [ignore_missing, unicode],
+        'inferred_informational': [ignore_missing, unicode],
+        'curated': [ignore_missing, unicode],
+        'accurate': [ignore_missing, unicode]
+    }
+
+
+def user_query_schema():
+    return {
+        'query_text': [not_empty, unicode],
+        'query_type': [ignore_missing, unicode]
+    }
+
+
+def user_query_result_schema():
+    return {
+        'query_id': [
+            not_empty,
+            unicode
+        ],
+        'result_type': [not_empty, unicode],
+        'result_id': [not_empty, unicode]
     }

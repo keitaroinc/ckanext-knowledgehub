@@ -6,8 +6,11 @@ import uuid
 import json
 import functools32
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil import parser
 from flask import Blueprint
+from urllib import urlencode
+from six import string_types
 
 try:
     # CKAN 2.7 and later
@@ -18,10 +21,11 @@ except ImportError:
 
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
-from ckan.common import g, _
+from ckan.common import g, _, request
 from ckan import logic
 from ckan.model import ResourceView, Resource
 from ckan import lib
+from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.model import Dashboard
@@ -30,6 +34,9 @@ from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 
 log = logging.getLogger(__name__)
 model_dictize = lib.dictization.model_dictize
+
+SYSTEM_RESOURCE_TYPE = 'system_merge'
+INVALID_COLUMN_NAMES = ['_id', '_full_text']
 
 
 def _get_context():
@@ -721,11 +728,461 @@ def get_dashboards(limit=5, order_by='created_by asc'):
 def remove_space_for_url(str):
     return str.replace(" ", "-")
 
+
 def format_date(str):
     # split date & time
-    date = str.split('T') # date[0] is the date, date[1] is the time
-    time_basic = date[1].split('.') # time_basic[0] = hh/mm/ss
-    # remove seconds 
+    date = str.split('T')  # date[0] is the date, date[1] is the time
+    time_basic = date[1].split('.')  # time_basic[0] = hh/mm/ss
+    # remove seconds
     time_basic[0] = time_basic[0][:-3]
     display_date = date[0] + ' at ' + time_basic[0]
     return display_date
+
+
+def _get_pager(results, item_type):
+    
+    def _get_url(*args, **kwargs):
+        page = kwargs.get('page', g.page.page)
+        params = filter(lambda p: p[0] not in ['page', '_search-for'], 
+                        [(k, v.encode('utf-8')
+                             if isinstance(v, string_types) else str(v))
+                          for k, v in request.params.items()])
+        params.append(('page', page))
+        params.append(('_search-for', item_type))
+        return request.path + '?' + urlencode(params)
+    
+    return h.Page(
+        collection=results.get('results', []),
+        page=results.get('page', 1),
+        item_count=results.get('count'),
+        items_per_page=results.get('limit'),
+        url=_get_url
+    )
+
+
+def get_tab_url(tab):
+    params = filter(lambda p: p[0] not in ['page', '_search-for'], 
+                        [(k, v.encode('utf-8')
+                             if isinstance(v, string_types) else str(v))
+                          for k, v in request.params.items()])
+    if tab != 'package':
+        params.append(('_search-for', tab))
+    return request.path + ('?' + urlencode(params) if params else '')
+
+
+def get_active_tab():
+    active_tab = request.params.get('_search-for')
+    if active_tab and active_tab.strip():
+        return active_tab.strip()
+    return 'package'
+
+
+def _get_sort():
+    sort = request.params.get('sort', '').strip()
+    return sort.replace('title_string', 'title')
+
+
+def get_searched_rqs(query):
+    context = _get_context()
+    search_query = {
+        'text': query,
+        'page': int(request.params.get('page', 1)),
+    }
+    sort = _get_sort()
+    if sort:
+        search_query['sort'] = sort
+    list_rqs_searched = toolkit.get_action(
+        'search_research_questions')(
+            context, 
+            search_query)
+    list_rqs_searched['pager'] = _get_pager(list_rqs_searched,
+                                            'research-questions')
+    return list_rqs_searched
+
+def get_searched_dashboards(query):
+    context = _get_context()
+    search_query = {
+        'text': query,
+        'page': int(request.params.get('page', 1)),
+    }
+    sort = _get_sort()
+    if sort:
+        search_query['sort'] = sort
+    list_dash_searched = toolkit.get_action(
+        'search_dashboards')(
+            context, 
+            search_query)
+    list_dash_searched['pager'] = _get_pager(list_dash_searched, 'dashboards')
+    return list_dash_searched
+
+def get_searched_visuals(query):
+    context = _get_context()
+    search_query = {
+        'text': query,
+        'page': int(request.params.get('page', 1)),
+    }
+    sort = _get_sort()
+    if sort:
+        search_query['sort'] = sort
+    list_visuals_searched = toolkit.get_action(
+        'search_visualizations')(
+            context, 
+            search_query)
+    visuals = []
+    for vis in list_visuals_searched['results']:
+        visual = model.Session.query(ResourceView)\
+        .filter(ResourceView.resource_id == vis['resource_id'])
+        data_dict_format = model_dictize\
+            .resource_view_list_dictize(visual, _get_context())
+        # get the second part of the list,
+        # since the first one is the recline view!
+        if len(data_dict_format) > 1:
+            data_dict_format = data_dict_format[1]
+            visuals.append(data_dict_format)
+    list_visuals_searched['results'] = visuals
+    list_visuals_searched['pager'] = _get_pager(list_visuals_searched,
+                                                'visualizations')
+
+    return list_visuals_searched
+
+def dashboard_research_questions(dashboard):
+    questions = []
+    if dashboard.get('indicators'):
+        context = _get_context()
+        research_question_show = logic.get_action('research_question_show')
+        for indicator in dashboard['indicators']:
+            if indicator.get('research_question'):
+                question = research_question_show(context, {
+                    'id': indicator['research_question']
+                })
+                questions.append(question)
+
+    return questions
+
+def add_rqs_to_dataset(res_view):
+
+    context = _get_context()
+    pkg_dict = toolkit.get_action('package_show')(
+        dict({'ignore_auth': True}, return_type='dict'),
+        {'id': res_view['package_id']})
+
+
+    rq_options = get_rq_options()
+
+    all_rqs = []
+    if not pkg_dict.get('research_question'):
+        pkg_dict['research_question'] = []
+    else:
+        if isinstance(pkg_dict['research_question'], unicode):
+            old_rqs = pkg_dict.get('research_question')
+            old_list = old_rqs.split(',')
+
+            for old in old_list:
+                all_rqs.append(old)
+    if res_view.get('research_questions'):
+        res_rq = json.loads(res_view.get('research_questions'))
+        if isinstance(res_rq, unicode):
+            all_rqs.append(res_rq)
+        else:
+            for new in res_rq:
+                all_rqs.append(new)
+    
+    eliminate_duplicates = set(all_rqs)
+    all_rqs = list(eliminate_duplicates)
+    pkg_dict['research_question'] = ",".join(all_rqs)
+    try:
+        context['defer_commit'] = True
+        context['use_cache'] = False
+        toolkit.get_action('package_update')(context, pkg_dict)
+        context.pop('defer_commit')
+    except logic.ValidationError as e:
+        try:
+            raise logic.ValidationError(e.error_dict['research_question'][-1])
+        except (KeyError, IndexError):
+            raise logic.ValidationError(e.error_dict)
+    
+
+def remove_rqs_from_dataset(res_view):
+
+    context = _get_context()
+    pkg_id = res_view.get('package_id')
+    if res_view.get('__extras'):
+        ext = res_view.get('__extras')
+        if ext.get('research_questions'):
+            list_rqs = res_view['__extras']['research_questions']
+            data_dict = {}
+            should_stay = {}
+            for rq in list_rqs:
+                data_dict['text']= rq
+                data_dict['fq'] = "khe_package_id:" + pkg_id
+                should_stay[rq] = False
+                results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+                for res in results_search['results']:
+                    if res.get('research_questions') and res.get('id') != res_view.get('id') \
+                        and res.get('khe_package_id') == pkg_id:
+                        questions = json.loads(res.get('research_questions'))
+                        for q in questions:
+                            if q == rq:
+                                should_stay[rq] = True
+            new_rqs_package_dict = {}
+            package_sh = toolkit.get_action('package_show')(
+                dict({'ignore_auth': True}, return_type='dict'), {'id': pkg_id})
+            if package_sh.get('research_question'):
+                questions_package = package_sh.get('research_question').split(",")
+                for q in questions_package:
+                    if q in should_stay:
+                        if should_stay[q] == False:
+                            questions_package.remove(q)
+                package_sh['research_question'] = ",".join(questions_package)
+
+
+            try:
+                context['defer_commit'] = True
+                context['use_cache'] = False
+                toolkit.get_action('package_update')(context, package_sh)
+                context.pop('defer_commit')
+            except ValidationError as e:
+                try:
+                    raise ValidationError(e.error_dict['research_question'][-1])
+                except (KeyError, IndexError):
+                    raise ValidationError(e.error_dict)
+
+
+def update_rqs_in_dataset(old_data, res_view):
+
+    context = _get_context()
+    pkg_dict = toolkit.get_action('package_show')(
+        dict({'ignore_auth': True }, return_type='dict'),
+        {'id': res_view['package_id']})
+
+    rq_options = get_rq_options()
+    all_rqs = []
+    if not pkg_dict.get('research_question'): # dataset has no rqs
+        pkg_dict['research_question'] = []
+    else:
+        if isinstance(pkg_dict['research_question'], unicode): # expected format 
+            old_rqs = pkg_dict.get('research_question')
+            old_list = old_rqs.split(',')
+
+            for old in old_list:
+                all_rqs.append(old)
+    if res_view.get('research_questions'):
+        res_rq = json.loads(res_view.get('research_questions'))
+        if isinstance(res_rq, list):
+            for new in res_rq:
+                all_rqs.append(new)
+        else:
+            all_rqs.append(res_rq)
+        
+    eliminate_duplicates = set(all_rqs)
+    all_rqs = list(eliminate_duplicates)
+
+    pkg_id = res_view.get('package_id')
+
+    if old_data.get('__extras') and res_view.get('__extras'):
+        new_ext = res_view.get('__extras')
+        old_ext = old_data.get('__extras')
+        list_rqs = [] # list of rqs that were removed in update
+        if old_ext.get('research_questions'): # alrdy had rqs
+            if new_ext.get('research_questions'): # and we have new rqs
+                if isinstance(new_ext.get('research_questions'), list):
+                    set_new = set(new_ext.get('research_questions'))
+                else: # only one new
+                    li = [] 
+                    li.append(new_ext.get('research_questions'))
+                    set_new = set(li)
+                if isinstance(old_ext.get('research_questions'), list):
+                    set_old = set(old_ext.get('research_questions'))
+                else: # only one old
+                    li = [] 
+                    li.append(old_ext.get('research_questions'))
+                    set_old = set(li)
+                list_rqs = list(set_old-set_new)
+            else: # all were removed 
+                if isinstance(old_ext.get('research_questions'), list): # if they are more than 1
+                    list_rqs = old_ext.get('research_questions')
+                else: # if it is only 1
+                    list_rqs.append(old_ext.get('research_questions'))
+        data_dict = {}
+        should_stay = {}
+        for rq in list_rqs:
+            data_dict['text']= rq
+            data_dict['fq'] = "khe_package_id:" + pkg_id
+            should_stay[rq] = False
+            results_search = toolkit.get_action('search_visualizations')(context, data_dict)
+            for res in results_search['results']:
+                if res.get('research_questions'):
+                    questions = json.loads(res.get('research_questions'))
+                    if isinstance(questions, list):
+                        for q in questions:
+                            if q == rq:
+                                should_stay[rq] = True
+                    else:
+                        if questions == rq:
+                            should_stay[rq] = True
+        new_rqs_package_dict = {}
+
+        questions_package = all_rqs
+        for q in questions_package:
+            if q in should_stay:
+                if should_stay[q] == False:
+                    questions_package.remove(q)
+        pkg_dict['research_question'] = ",".join(questions_package)
+
+        try:
+            context['defer_commit'] = True
+            context['use_cache'] = False
+            toolkit.get_action('package_update')(context, pkg_dict)
+            context.pop('defer_commit')
+        except ValidationError as e:
+            try:
+                raise ValidationError(e.error_dict['research_question'][-1])
+            except (KeyError, IndexError):
+                raise ValidationError(e.error_dict)
+
+def get_single_dash(data_dict):
+    single_dash = toolkit.get_action('dashboard_show')(_get_context(),
+    {'id': data_dict.get('id')})
+    return single_dash
+
+
+def is_rsc_upload_datastore(resource):
+    u''' Check whether the data resource is uploaded to the Datastore
+
+    The status complete means that data is completely uploaded to Datastore.
+
+    :param resource: data resource dictionary
+    :type resource: dict
+
+    :returns: True if uploding is completed otherwise False
+    :rtyep: bool
+    '''
+    context = {'ignore_auth': True}
+
+    try:
+        task = toolkit.get_action('task_status_show')(context, {
+            'entity_id': resource['id'],
+            'task_type': 'datapusher',
+            'key': 'datapusher'
+        })
+        return True if task.get('state') == 'complete' else False
+    except logic.NotFound:
+        log.debug(
+            u'Resource {} not uploaded to datastore!'.format(resource['id'])
+        )
+    except Exception as e:
+        log.debug(u'Task status show: {}'.format(str(e)))
+
+    return False
+
+
+def get_resource_filtered_data(id):
+    u''' Get all data from datastore and exclude `_id` and _full_text`
+    from fiedls and records.
+
+    :param id: resource ID
+    :type id: string
+
+    :returns: the resource dict with filtered fields and records
+    :rtype: dict
+    '''
+    result = {
+        'fields': [],
+        'records': []
+    }
+    try:
+        sql = 'SELECT * FROM "{resource}"'.format(resource=id)
+        result = toolkit.get_action('datastore_search_sql')(
+            {'ignore_auth': True},
+            {'sql': sql}
+        )
+    except Exception as e:
+        log.debug(u'Datastore search sql: {}'.format(str(e)))
+
+    if len(result.get('records', [])):
+        result['fields'] = [f for f in result['fields']
+                            if f['id'] not in INVALID_COLUMN_NAMES]
+
+        filtered_records = []
+        for r in result.get('records'):
+            row = {k: v for k, v in r.items() if k not in INVALID_COLUMN_NAMES}
+            filtered_records.append(row)
+
+        result['records'] = filtered_records
+
+    return result
+
+
+def get_dataset_data(id):
+    u''' Return fields and records from all data resources for given package ID
+
+    The method does not return the data from the system merged data resource.
+    If the format of the data resources is different it sets the message that
+    tells which resource and what fields are different.
+
+    :param id: the dataset ID
+    :type id: string
+
+    :returns: dict with filterd fields and records, package_name, err_msg
+    and system_resource
+    :rtype: dict
+    '''
+    data_dict = {
+        'fields': [],
+        'records': [],
+        'package_name': '',
+        'err_msg': '',
+        'system_resource': {}
+    }
+
+    package = toolkit.get_action('package_show')(
+        {'ignore_auth': True}, {'id': id})
+    data_dict['package_name'] = package.get('name')
+
+    resources = package.get('resources', [])
+    if len(resources):
+        for resource in resources:
+            if resource.get('resource_type') == SYSTEM_RESOURCE_TYPE:
+                data_dict['system_resource'] = resource
+                continue
+
+            result = get_resource_filtered_data(resource.get('id'))
+
+            if len(result.get('records')):
+                if len(data_dict['fields']) == 0:
+                    data_dict['fields'] = result['fields']
+                    data_dict['records'] = result['records']
+                    continue
+
+                if data_dict['fields'] == result.get('fields'):
+                    data_dict['records'].extend(result.get('records'))
+                else:
+                    diff = [f['id'] for f in result.get('fields')
+                            if f not in data_dict['fields']]
+                    diff.extend([f['id'] for f in data_dict['fields']
+                                if f not in result.get('fields')])
+                    data_dict['err_msg'] = ('The format of the data resource '
+                                            '{resource} differs from the '
+                                            'others, fields: {fields}').format(
+                                                resource=resource.get('name'),
+                                                fields=", ".join(diff)
+                                            )
+                    break
+
+    return data_dict
+
+def get_package_data_quality(id):
+    context = _get_context()
+    try:
+        result = toolkit.get_action('package_data_quality') (context, {'id': id})
+    except Exception:
+        return {}
+    return result
+
+def get_resource_data_quality(id):
+    context = _get_context()
+    try:
+        result = toolkit.get_action('resource_data_quality') (context, {'id': id})
+    except Exception:
+        return {}
+    return result

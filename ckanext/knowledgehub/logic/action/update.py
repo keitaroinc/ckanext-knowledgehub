@@ -21,6 +21,8 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import KWHData
+from ckanext.knowledgehub.model import Visualization
+from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -35,6 +37,7 @@ _get_or_bust = logic.get_or_bust
 check_access = toolkit.check_access
 NotFound = logic.NotFound
 ValidationError = toolkit.ValidationError
+NotAuthorized = toolkit.NotAuthorized
 
 
 def theme_update(context, data_dict):
@@ -169,7 +172,12 @@ def research_question_update(context, data_dict):
     filter = {'id': id}
     data.pop('__extras', None)
     rq = ResearchQuestion.update(filter, data)
-    return rq.as_dict()
+    rq_data = rq.as_dict()
+
+    # Update index
+    ResearchQuestion.update_index_doc(rq_data)
+
+    return rq_data
 
 
 def resource_update(context, data_dict):
@@ -198,10 +206,10 @@ def resource_update(context, data_dict):
     :type validation_options: string
     '''
 
-    if (data_dict['schema'] == ''):
+    if (data_dict.get('schema') == ''):
         del data_dict['schema']
 
-    if (data_dict['validation_options'] == ''):
+    if (data_dict.get('validation_options') == ''):
         del data_dict['validation_options']
 
     if data_dict.get('db_type') is not None:
@@ -229,7 +237,7 @@ def resource_update(context, data_dict):
                 )
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
-            
+
     ckan_rsc_update(context, data_dict)
 
 
@@ -270,10 +278,29 @@ def resource_view_update(context, data_dict):
     # TODO need to implement custom authorization actions
     # check_access('resource_view_update', context, data_dict)
 
+    old_resource_view_data = model_dictize.resource_view_dictize(resource_view,
+                                                             context)
+
+    # before update
+
     resource_view = model_save.resource_view_dict_save(data, context)
     if not context.get('defer_commit'):
         model.repo.commit()
-    return model_dictize.resource_view_dictize(resource_view, context)
+    resource_view_data = model_dictize.resource_view_dictize(resource_view,
+                                                             context)
+
+    # Update index
+    Visualization.update_index_doc(resource_view_data)
+
+    # this check is done for the unit tests
+    if resource_view_data.get('__extras'):
+        ext = resource_view_data['__extras']
+        ext_old = resource_view_data['__extras']
+        if ext_old.get('research_questions') or ext.get('research_questions'):
+            plugin_helpers.update_rqs_in_dataset(old_resource_view_data, resource_view_data)
+
+
+    return resource_view_data
 
 
 def dashboard_update(context, data_dict):
@@ -323,28 +350,16 @@ def dashboard_update(context, data_dict):
     session.add(dashboard)
     session.commit()
 
-    return _table_dictize(dashboard, context)
+    dashboard_data = _table_dictize(dashboard, context)
+
+    # Update index
+    Dashboard.update_index_doc(dashboard_data)
+
+    return dashboard_data
 
 
 def package_update(context, data_dict):
-    research_questions = data_dict.get('research_question')
-    rq_options = plugin_helpers.get_rq_options()
-    rq_ids = []
-
-    if research_questions:
-        if isinstance(research_questions, list):
-            for rq in research_questions:
-                for rq_opt in rq_options:
-                    if rq == rq_opt.get('text'):
-                        rq_ids.append(rq_opt.get('id'))
-                        break
-            data_dict['research_question'] = rq_ids
-        elif isinstance(research_questions, unicode):
-            for rq in rq_options:
-                if rq.get('text') == research_questions:
-                    data_dict['research_question'] = [rq.get('id')]
-                    break
-
+    
     return ckan_package_update(context, data_dict)
 
 
@@ -385,3 +400,157 @@ def kwh_data_update(context, data_dict):
         data = KWHData.update(filter, update_data)
 
         return data.as_dict()
+
+
+def user_intent_update(context, data_dict):
+    ''' Updates an existing user intent
+
+    :param id: the ID of the user intent
+    :type name: string
+
+    :param primary_category: the category of the intent (optional)
+    :type primary_category: styring
+    :param theme: the ID of the theme (optional)
+    :type theme: string
+    :param sub_theme: the ID of the sub-theme (optional)
+    :type sub_theme: string
+    :param research_question: the ID of the research question (optional)
+    :type research_question: string
+    :param inferred_transactional: the intent of transactional
+    searching (optional)
+    :type inferred_transactional: string
+    :param inferred_navigational: the intent of naviagational
+    searching (optional)
+    :type inferred_navigational: string
+    :param inferred_informational: the intent of informational
+    searching (optional)
+    :type inferred_informational: string
+    :param curated: indicate whether the classification is curated (optional)
+    :type curated: bool
+    :param accurate: indicate whether the classification is accurate (optional)
+    :type accurate: bool
+
+    :returns: the updated user intent
+    :rtype: dictionary
+    '''
+
+    try:
+        check_access('user_intent_update', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+
+    intent = UserIntents.get(id)
+    if not intent:
+        raise NotFound(_('Intent was not found.'))
+
+    items = [
+        'primary_category',
+        'theme',
+        'sub_theme',
+        'research_question',
+        'inferred_transactional',
+        'inferred_navigational',
+        'inferred_informational',
+        'curated',
+        'accurate'
+    ]
+
+    for item in items:
+        if data_dict.get(item):
+            setattr(intent, item, data_dict.get(item))
+
+    session = context['session']
+
+    intent.save()
+    session.add(intent)
+    session.commit()
+
+    return _table_dictize(intent, context)
+
+
+def package_data_quality_update(context, data_dict):
+    if not data_dict.get('id'):
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('package_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    db_metric = DataQualityMetrics.get_dataset_metrics(data_dict['id'])
+    if not db_metric:
+        db_metric = DataQualityMetrics(type='package', ref_id=data_dict['id'])
+
+    results = {}
+    result_dict = {}
+    dimensions = ['completeness', 'uniqueness', 'timeliness', 'validity',
+                  'accuracy', 'consistency']
+    for dimension in dimensions:
+        value = data_dict.get(dimension)
+        results[dimension] = value or {}
+        if value is not None:
+            if value.get('value') is None:
+                field = '%s.value' % dimension
+                raise ValidationError({field: _('Missing Value')})
+            setattr(db_metric, dimension, value['value'])
+            result_dict[dimension] = value
+
+    db_metric.metrics = results
+    db_metric.modified_at = datetime.datetime.now()
+    db_metric.save()
+
+    result_dict['calculated_on'] = db_metric.modified_at.isoformat()
+
+    return result_dict
+
+
+def resource_data_quality_update(context, data_dict):
+    if not data_dict.get('id'):
+        raise ValidationError({'id': _(u'Missing Value')})
+
+    try:
+        check_access('resource_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    db_metric = DataQualityMetrics.get_dataset_metrics(data_dict['id'])
+    if not db_metric:
+        db_metric = DataQualityMetrics(type='package', ref_id=data_dict['id'])
+
+    results = {}
+    result_dict = {}
+    dimensions = {
+        'completeness': ['value', 'total', 'complete'],
+        'uniqueness': ['value'],
+        'timeliness': ['value'],
+        'validity': ['value'],
+        'accuracy': ['value'],
+        'consistency': ['value'],
+    }
+
+    for dimension, required_fields in dimensions:
+        value = data_dict.get(dimension)
+        results[dimension] = value or {}
+        if value is not None:
+            # validate
+            errors = {}
+            for field in required_fields:
+                if value.get(field) is None:
+                    errors['%s.%s' % (dimension, field)] = _('Missing Value')
+            if errors:
+                raise ValidationError(errors)
+            setattr(db_metric, dimension, value['value'])
+            result_dict[dimension] = value
+
+    db_metric.metrics = results
+    db_metric.modified_at = datetime.datetime.now()
+    db_metric.save()
+
+    result_dict['calculated_on'] = db_metric.modified_at.isoformat()
+
+    return result_dict

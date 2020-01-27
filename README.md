@@ -15,6 +15,8 @@ This is the main repo for the Knowledge Hub on Displaced Populations in the MENA
      - [Development Installation](#development-installation)
      - [Modify CSS](#modify-css)
      - [Running the Tests](#running-the-tests)
+ - [Install spaCy](#install-spacy)
+ - [User Intents](#user-intents)
 
 
 # Getting started
@@ -193,4 +195,56 @@ To run the tests and produce a coverage report, first make sure you have coverag
 
 ```
 nosetests --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.knowledgehub --cover-inclusive --cover-erase --cover-tests
+```
+
+# Search Index Rebuilding
+
+The installed extension offers rebuilding of the Solr index for multiple types of indexed documents.
+
+To rebuild the full index (CKAN core search index and the other document types such as dashboards, visualizations and research questions), run the following command:
+
+```bash
+nowledgehub -c /etc/ckan/default/production.ini search-index rebuild
+```
+
+If you need to rebuild the index for specific document type (model), then you specify the `--model` parameter:
+
+```bash
+nowledgehub -c /etc/ckan/default/production.ini search-index rebuild --model dashboard
+```
+
+This would rebuild the index for dashboards.
+
+Avalilable model types are: 
+* `ckan` - rebuilds the CKAN core (package) index,
+* `dashboard` - rebuilds the dasboards index,
+* `research-question` - rebuilds the research questions index and
+* `visualization` - rebuilds the visualizations index.
+
+If you specify `--model=all`, all indexes will be rebuilt (same as not specifying `--model` at all).
+
+# Install Spacy
+
+```bash
+pip install -U setuptools # optional, only if there is an error about PEP 517 "BackendUnavailable"
+pip install -U spacy
+python -m spacy download en_core_web_sm
+```
+
+# User Intents
+
+User intents are extracted from the user queries in a batch process that is run
+periodically.
+
+The following command updates the latest user intents and should be run at least
+once a day:
+
+```bash
+knowledgehub -c /etc/ckan/default/production.ini intents update
+```
+
+The crontab should look something like this:
+
+```cron
+0 0 * * * knowledgehub -c /etc/ckan/default/production.ini intents update >/dev/null 2>&1
 ```

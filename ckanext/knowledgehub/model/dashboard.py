@@ -1,5 +1,6 @@
 import datetime
-
+import json
+import ast
 from sqlalchemy import (
     types,
     Column,
@@ -15,8 +16,10 @@ from ckan.model.meta import (
 )
 from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
+from ckan.logic import get_action
 import ckan.logic as logic
 from ckan.common import _
+from ckanext.knowledgehub.lib.solr import Indexed, mapped
 
 __all__ = ['Dashboard', 'dashboard_table']
 
@@ -39,7 +42,34 @@ dashboard_table = Table(
 )
 
 
-class Dashboard(DomainObject):
+class Dashboard(DomainObject, Indexed):
+
+    indexed = [
+        mapped('id', 'entity_id'),
+        'name',
+        'title',
+        'description',
+        'type',
+        'source',
+        'indicators',
+        'research_questions'
+    ]
+    doctype = 'dashboard'
+
+
+    @staticmethod
+    def before_index(data):    
+        ind = []
+        if data.get('indicators'):
+            ind = json.loads(data['indicators'])
+        list_rqs = []
+        data['research_questions'] = []
+        for k in ind:
+            res_q = get_action('research_question_show')({'ignore_auth': True},
+            {'id': k['research_question']})
+            list_rqs.append(res_q['title'])
+        data['research_questions'] = ','.join(list_rqs)    
+        return data
 
     @classmethod
     def get(cls, reference):

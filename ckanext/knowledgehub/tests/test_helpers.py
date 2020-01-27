@@ -12,9 +12,15 @@ from ckan.plugins import toolkit as toolkit
 from ckan import model
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
-from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
+from ckanext.knowledgehub.model.research_question import (
+    setup as rq_db_setup,
+    ResearchQuestion,
+)
 from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
-from ckanext.knowledgehub.model.dashboard import setup as dashboard_db_setup
+from ckanext.knowledgehub.model.dashboard import (
+    setup as dashboard_db_setup,
+    Dashboard,
+)
 from ckanext.knowledgehub.model.rnn_corpus import setup as rnn_corpus_setup
 from ckanext.knowledgehub.model.resource_feedback import (
     setup as resource_feedback_setup
@@ -34,6 +40,35 @@ from ckanext.datastore.logic.action import datastore_search
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
+
+
+class _monkey_patch:
+
+    def __init__(self, obj, prop, patch_with):
+        self.obj = obj
+        self.prop = prop
+        self.patch_with = patch_with
+
+    def __call__(self, method):
+        original_prop = None
+        if hasattr(self.obj, self.prop):
+            original_prop = getattr(self.obj, self.prop)
+
+        def _with_patched(*args, **kwargs):
+            # patch
+            setattr(self.obj, self.prop, self.patch_with)
+            try:
+                return method(*args, **kwargs)
+            finally:
+                # unpatch
+                if original_prop is not None:
+                    setattr(self.obj, self.prop, original_prop)
+                else:
+                    delattr(self.obj, self.prop)
+        _with_patched.__name__ = method.__name__
+        _with_patched.__module__ = method.__module__
+        _with_patched.__doc__ = method.__doc__
+        return _with_patched
 
 
 class ActionsBase(helpers.FunctionalTestBase):
@@ -186,6 +221,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(last_visuals), 1)
 
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_get_rqs_dashboards(self):
         user = factories.Sysadmin()
         context = {
@@ -198,7 +234,7 @@ class TestKWHHelpers(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (5)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
@@ -208,6 +244,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(dashboards), 0)
 
+    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq(self):
         user = factories.Sysadmin()
         context = {
@@ -271,6 +308,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(isinstance(config, str), True)
 
+    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_single_rq(self):
         user = factories.Sysadmin()
         context = {
@@ -307,6 +345,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(rq_show.get('title'), rq.get('title'))
 
+    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_rq_ids_to_titles(self):
         user = factories.Sysadmin()
         context = {
@@ -381,6 +420,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(total, 1)
 
+    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_get_dashboards(self):
         user = factories.Sysadmin()
         context = {
@@ -393,7 +433,7 @@ class TestKWHHelpers(ActionsBase):
 
         data_dict = {
             'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
+            'title': 'Internal Dashboard (6)',
             'description': 'Dashboard description',
             'type': 'internal'
         }
@@ -410,6 +450,7 @@ class TestKWHHelpers(ActionsBase):
         assert_equals(new_url, 'http://host:port/lang/data-set')
 
 
+    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq_options(self):
 
         user = factories.Sysadmin()
@@ -455,9 +496,9 @@ class TestKWHHelpers(ActionsBase):
             url='https://jsonplaceholder.typicode.com/posts'
         )
         rqs = kwh_helpers.get_rq_ids(resource['id'])
-        assert_equals(len(rqs), 2)
+        assert_equals(len(rqs), 8)
 
-   
+
     def test_get_geojson_resources(self):
 
         dataset = create_dataset()
@@ -470,6 +511,7 @@ class TestKWHHelpers(ActionsBase):
         resources = kwh_helpers.get_geojson_resources()
         assert_equals(len(resources), 1)
 
+    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq_titles_from_res(self):
 
         user = factories.Sysadmin()
@@ -505,7 +547,7 @@ class TestKWHHelpers(ActionsBase):
         rq1 = create_actions.research_question_create(context, data_dict)
         dataset = create_dataset(
             research_question = rq1['id']
-            
+
         )
         resource = factories.Resource(
             schema='',
@@ -533,7 +575,7 @@ class TestKWHHelpers(ActionsBase):
             ],
             "force": True
         }
-        
+
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -552,16 +594,16 @@ class TestKWHHelpers(ActionsBase):
            "fields": [{"id": "value", "type": "numeric"}],
             "records": [
                 {"value": 0},
-                {"value": 1}, 
+                {"value": 1},
                 {"value": 2},
                 {"value": 3},
                 {"value": 5},
                 {"value": 6},
                 {"value": 7},
             ],
-            "force": True            
+            "force": True
         }
-        
+
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -588,7 +630,7 @@ class TestKWHHelpers(ActionsBase):
             ],
             "force": True
         }
-        
+
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -616,7 +658,7 @@ class TestKWHHelpers(ActionsBase):
             ],
             "force": True
         }
-        
+
         resource = factories.Resource(
             schema='',
             validation_options='',
@@ -631,10 +673,10 @@ class TestKWHHelpers(ActionsBase):
             resource=resource['id']
         )
         res_data = kwh_helpers.get_resource_data(sql_str)
-        
+
         assert_equals(len(res_data), 7)
-    
-    
+
+
     def test_get_geojson_properties(self):
 
         url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
@@ -672,3 +714,151 @@ class TestKWHHelpers(ActionsBase):
         date = "2019-11-21T10:09:05.900808"
         date_formated = kwh_helpers.format_date(date)
         assert_equals("2019-11-21 at 10:09", date_formated)
+
+    def test_get_dataset_data(self):
+        dataset = create_dataset()
+
+        data = {
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        d = kwh_helpers.get_dataset_data(dataset['id'])
+        assert_equals(len(d['records']), 7)
+        assert_equals(d['fields'][0]['type'], 'numeric')
+        assert_equals(d['fields'][0]['id'], 'value')
+
+    def test_get_dataset_data_err_msg(self):
+        dataset = create_dataset()
+
+        data = {
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        data = {
+            "fields": [{"id": "age", "type": "numeric"}],
+            "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        d = kwh_helpers.get_dataset_data(dataset['id'])
+        assert(d.get('err_msg').startswith('The format of the data resource '
+                                           '{resource} differs from the '
+                                           'others'.format(
+                                               resource=resource.get('name')
+                                            )))
+
+    def test_get_resource_filtered_data(self):
+        dataset = create_dataset()
+
+        data = {
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": "1"},
+                {"value": "2"},
+                {"value": "3"},
+                {"value": "4"},
+                {"value": "5"},
+                {"value": "6"},
+                {"value": "7"},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        d = kwh_helpers.get_resource_filtered_data(resource['id'])
+        assert_equals(d['records'], data['records'])
+
+    def test_get_resource_filtered_data_exception(self):
+        d = kwh_helpers.get_resource_filtered_data('failed-id')
+        assert_equals(d['records'], [])
+
+    def test_is_rsc_upload_datastore(self):
+        dataset = create_dataset()
+
+        data = {
+            "fields": [{"id": "value", "type": "numeric"}],
+            "records": [
+                {"value": "1"},
+                {"value": "2"},
+                {"value": "3"},
+                {"value": "4"},
+                {"value": "5"},
+                {"value": "6"},
+                {"value": "7"},
+            ],
+            "force": True
+        }
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        b = kwh_helpers.is_rsc_upload_datastore(resource)
+        assert_equals(b, False)
+
+    def test_is_rsc_upload_datastore_exception(self):
+        b = kwh_helpers.is_rsc_upload_datastore({})
+        assert_equals(b, False)

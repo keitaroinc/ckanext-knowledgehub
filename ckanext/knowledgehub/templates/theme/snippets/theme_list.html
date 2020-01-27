@@ -10,13 +10,13 @@ Example:
 #}
 
 {% block theme_list %}
-  {% if themes %}
-    <ul class="component-list list-unstyled">
-    	{% block theme_list_inner %}
-	      {% for theme in themes %}
-	        {% snippet "theme/snippets/theme_item.html", theme=theme, position=loop.index %}
-	      {% endfor %}
-	    {% endblock %}
-    </ul>
-  {% endif %}
+{% if themes %}
+<ul class="component-list-rq list-unstyled">
+  {% block theme_list_inner %}
+  {% for theme in themes %}
+  {% snippet "theme/snippets/theme_item.html", theme=theme, position=loop.index %}
+  {% endfor %}
+  {% endblock %}
+</ul>
+{% endif %}
 {% endblock %}

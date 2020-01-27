@@ -1,47 +1,31 @@
+<!--Changes here or view?-->
 <div class="chart-{{ chart_id }}">
-        <div class="dc-header html2canvas-ignore">
-            <a class="btn-chart-download" data-module="chart-to-png" data-module-id="chart-{{chart_id}}"
-                data-module-type="{{ data_type }}">
-                <i class="fa fa-download fa-lg" aria-hidden="true" title="{{ _('Download image') }}"
+    <div class="dc-header html2canvas-ignore" id="downloadImageButton">
+        <a class="btn-chart-download" data-module="chart-to-png" data-module-id="chart-{{chart_id}}"
+            data-module-type="{{ data_type }}">
+            <i class="fa fa-download fa-lg" aria-hidden="true" title="{{ _('Download image') }}"
                 data-name="{{ title }}"></i>
-            </a>
-        </div>
-    <div class="item-content" id="chart-module-id" data-module="chart"
-        data-module-type="{{ type }}"
-        data-module-colors="{{ colors }}"
-        data-module-x_axis="{{ x_axis }}"
-        data-module-y_axis="{{ y_axis }}"
-        data-module-additional_tornado_value="{{ additional_tornado_value }}"
-        data-module-sql_string="{{ sql_string }}"
-        data-module-chart_type="{{ chart_type }}"
-        data-module-title="{{ title }}"
-        data-module-chart_subtitle="{{ chart_subtitle }}"
-        data-module-chart_description="{{ chart_description }}"
-        data-module-show_legend="{{ show_legend }}"
-        data-module-x_text_rotate="{{ x_text_rotate }}"
-        data-module-x_text_multiline="{{ x_text_multiline }}"
-        data-module-tooltip_name="{{ tooltip_name }}"
-        data-module-data_format="{{ data_format }}"
-        data-module-y_tick_format="{{ y_tick_format }}"
-        data-module-y_operation="{{ y_operation }}"
-        data-module-chart_padding_left="{{ chart_padding_left }}"
-        data-module-chart_padding_bottom="{{ chart_padding_bottom }}"
-        data-module-padding_top="{{ padding_top }}"
-        data-module-padding_bottom="{{ padding_bottom }}"
-        data-module-tick_count="{{ tick_count }}"
-        data-module-show_labels="{{ show_labels }}"
-        data-module-category_name="{{ category_name }}"
-        data-module-filters="{{ filters }}"
-        data-module-y_label="{{ y_label }}"
-        data-module-y_from_zero="{{ y_from_zero or 'false' }}"
-        data-module-data_sort="{{ data_sort }}"
+        </a>
+    </div>
+    <div class="item-content" id="chart-module-id" data-module="chart" data-module-type="{{ type }}"
+        data-module-colors="{{ colors }}" data-module-x_axis="{{ x_axis }}" data-module-y_axis="{{ y_axis }}"
+        data-module-additional_tornado_value="{{ additional_tornado_value }}" data-module-sql_string="{{ sql_string }}"
+        data-module-chart_type="{{ chart_type }}" data-module-title="{{ title }}"
+        data-module-chart_subtitle="{{ chart_subtitle }}" data-module-chart_description="{{ chart_description }}"
+        data-module-show_legend="{{ show_legend }}" data-module-x_text_rotate="{{ x_text_rotate }}"
+        data-module-x_text_multiline="{{ x_text_multiline }}" data-module-tooltip_name="{{ tooltip_name }}"
+        data-module-data_format="{{ data_format }}" data-module-y_tick_format="{{ y_tick_format }}"
+        data-module-y_operation="{{ y_operation }}" data-module-chart_padding_left="{{ chart_padding_left }}"
+        data-module-chart_padding_bottom="{{ chart_padding_bottom }}" data-module-padding_top="{{ padding_top }}"
+        data-module-padding_bottom="{{ padding_bottom }}" data-module-tick_count="{{ tick_count }}"
+        data-module-show_labels="{{ show_labels }}" data-module-category_name="{{ category_name }}"
+        data-module-filters="{{ filters }}" data-module-y_label="{{ y_label }}"
+        data-module-y_from_zero="{{ y_from_zero or 'false' }}" data-module-data_sort="{{ data_sort }}"
         data-module-measure_label="{{ measure_label }}"
         data-module-dynamic_reference_type="{{ dynamic_reference_type }}"
         data-module-dynamic_reference_factor="{{ dynamic_reference_factor }}"
-        data-module-dynamic_reference_label="{{ dynamic_reference_label }}"
-        data-module-data_type="{{ data_type }}"
-        style="width: {{ width or 'initial' }}; height: {{ height or 'initial' }};"
-        >
+        data-module-dynamic_reference_label="{{ dynamic_reference_label }}" data-module-data_type="{{ data_type }}"
+        style="max-width: {{ width or 'initial' }}; height: {{ height or 'initial' }};">
         Loading...
     </div>
 

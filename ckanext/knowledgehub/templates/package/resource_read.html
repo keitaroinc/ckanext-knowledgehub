@@ -2,154 +2,164 @@
 {% resource 'knowledgehub/chart' %}
 {% resource 'knowledgehub/map' %}
 {% resource 'knowledgehub/javascript/resource_feedback.js' %}
-
+{% resource 'knowledgehub/javascript/copy_clipboard.js' %}
 {% ckan_extends %}
 
+
 {% block resource_actions %}
-  <ul>
-    {% block resource_actions_inner %}
-      {% if h.check_access('package_update', {'id':pkg.id }) %}
-        <li>{% link_for _('Manage'), controller='package', action='resource_edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
-
+<ul>
+  {% block resource_actions_inner %}
+  {% if h.check_access('package_update', {'id':pkg.id }) %}
+  <li>
+    {% link_for _('Manage'), controller='package', action='resource_edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}
+  </li>
+  <li>
+    <div class="btn-group">
+      <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="fa fa-bar-chart"></i>
+        {{ _('visualize') }}
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
         <li>
-          <div class="btn-group">
-            <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
-              <i class="fa fa-bar-chart"></i>
-              {{ _('visualize') }}
-              <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu">
-              <li>
-                <a href="{% url_for 'chart_view.new_chart', id=pkg.name, resource_id=res.id %}"><i class="fa fa-line-chart"></i>
-                  {{ _('Chart') }}</a>
-              </li>
-              <li>
-                <a href="{% url_for 'table_view.new_table', id=pkg.name, resource_id=res.id %}"><i class="fa fa-table"></i>
-                  {{ _('Table') }}</a>
-              </li>
-              <li>
-                <a href="{% url_for 'map_view.new_map', id=pkg.name, resource_id=res.id %}"><i class="fa fa-map"></i>
-                  {{ _('Map') }}</a>
-              </li>
-            </ul>
-          </div>
+          <a href="{% url_for 'chart_view.new_chart', id=pkg.name, resource_id=res.id %}"><i
+              class="fa fa-line-chart"></i>
+            {{ _('Chart') }}</a>
         </li>
-      {% endif %}
-
-      {% if res.url and h.is_url(res.url) %}
         <li>
-          <div class="btn-group">
-            <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
-              {% if res.resource_type in ('listing', 'service') %}
-                <i class="fa fa-eye"></i> {{ _('View') }}
-              {% elif  res.resource_type == 'api' %}
-                <i class="fa fa-key"></i> {{ _('API Endpoint') }}
-              {% elif (not res.has_views or not res.can_be_previewed) and not res.url_type == 'upload' %}
-                <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
-              {% else %}
-                <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
-              {% endif %}
-            </a>
-            {% block download_resource_button %}
-              {{ super() }}
-            {% endblock %}
-          </div>
+          <a href="{% url_for 'table_view.new_table', id=pkg.name, resource_id=res.id %}"><i class="fa fa-table"></i>
+            {{ _('Table') }}</a>
         </li>
-      {% endif %}
+        <li>
+          <a href="{% url_for 'map_view.new_map', id=pkg.name, resource_id=res.id %}"><i class="fa fa-map"></i>
+            {{ _('Map') }}</a>
+        </li>
+      </ul>
+    </div>
+  </li>
+  {% endif %}
 
-      {% if res.datastore_active %}
-        <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>
-      {% endif %}
-    {% endblock %}
-  </ul>
+  {% if res.url and h.is_url(res.url) %}
+  <li>
+    <div class="btn-group">
+      <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
+        {% if res.resource_type in ('listing', 'service') %}
+        <i class="fa fa-eye"></i> {{ _('View') }}
+        {% elif  res.resource_type == 'api' %}
+        <i class="fa fa-key"></i> {{ _('API Endpoint') }}
+        {% elif (not res.has_views or not res.can_be_previewed) and not res.url_type == 'upload' %}
+        <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
+        {% else %}
+        <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
+        {% endif %}
+      </a>
+      {% block download_resource_button %}
+      {{ super() }}
+      {% endblock %}
+    </div>
+  </li>
+  {% endif %}
+
+  {% if res.datastore_active %}
+  <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>
+  {% endif %}
+  {% endblock %}
+</ul>
 {% endblock %}
 {% block resource_content %}
-          {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
-          {% block resource_read_url %}
-            {% if res.url and h.is_url(res.url) %}
-              <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ res.url }}" title="{{ res.url }}">{{ res.url }}</a></p>
-            {% elif res.url %}
-              <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
-            {% endif %}
-          {% endblock %}
-          <div class="prose notes" property="rdfs:label">
-            {% if res.description %}
-              {{ h.render_markdown(res.description) }}
-            {% endif %}
-            {% if not res.description and c.package.notes %}
-              <h3>{{ _('From the dataset abstract') }}</h3>
-              <blockquote>{{ h.markdown_extract(h.get_translated(c.package, 'notes')) }}</blockquote>
-              <p>{% trans dataset=c.package.title, url=h.url_for(controller='package', action='read', id=c.package['name']) %}Source: <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
-            {% endif %}
-          </div>
-            <div class="resource-feedback-actions">
-              <div class="resource-feedback-group">
-                <button id="btn-useful" class="btn btn-default" type="button">
-                  <i class="fa fa-thumbs-up"></i>{{ _('Useful') }} <span id="count-useful"
-                    class="badge">{{ h.resource_feedback_count('useful', res.id, res.package_id) }}</span>
-                </button>
-                <button id="btn-unuseful" class="btn btn-default" type="button">
-                  <i class="fa fa-thumbs-down"></i>{{ _('Unuseful') }} <span id="count-unuseful"
-                    class="badge">{{ h.resource_feedback_count('unuseful', res.id, res.package_id) }}</span>
-                </button>
-              </div>
-              <div class="resource-feedback-group">
-                <button id="btn-trusted" class="btn btn-default" type="button">
-                  <i class="fa fa-check-circle-o"></i>{{ _('Trusted') }} <span id="count-trusted"
-                    class="badge">{{ h.resource_feedback_count('trusted', res.id, res.package_id) }}</span>
-                </button>
-                <button id="btn-untrusted" class="btn btn-default" type="button">
-                  <i class="fa fa-times-circle-o"></i>{{ _('Untrusted') }} <span id="count-untrusted"
-                    class="badge">{{ h.resource_feedback_count('untrusted', res.id, res.package_id) }}</span>
-                </button>
-                <input id="resource" value="{{ res.id }}" type="hidden" />
-                <input id="dataset" value="{{ res.package_id }}" type="hidden" />
-              </div>
-            </div>
+{% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>
+{% endblock %}
+{% block resource_read_url %}
+{% if res.url and h.is_url(res.url) %}
+<p><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title" type="text"
+    name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
+    onclick="copyToClipBoard()"><b>Copy
+      url</b></button></p>
 
-        {% endblock %}
+{% elif res.url %}
+<p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
+{% endif %}
+{% endblock %}
+<div class="prose notes" property="rdfs:label">
+  {% if res.description %}
+  {{ h.render_markdown(res.description) }}
+  {% endif %}
+  {% if not res.description and c.package.notes %}
+  <!-- <h3>{{ _('From the dataset abstract') }}</h3> -->
+  <blockquote>{{ h.markdown_extract(h.get_translated(c.package, 'notes')) }}</blockquote>
+  <p>
+    {% trans dataset=c.package.title, url=h.url_for(controller='package', action='read', id=c.package['name']) %}Source:
+    <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
+    {% endif %}
+</div>
+<div class="resource-feedback-actions">
+  <div class="resource-feedback-group">
+    <button id="btn-useful" class="btn btn-default" type="button">
+      <i class="fa fa-thumbs-up"></i>{{ _('Useful') }} <span id="count-useful"
+        class="badge">{{ h.resource_feedback_count('useful', res.id, res.package_id) }}</span>
+    </button>
+    <button id="btn-unuseful" class="btn btn-default" type="button">
+      <i class="fa fa-thumbs-down"></i>{{ _('Unuseful') }} <span id="count-unuseful"
+        class="badge">{{ h.resource_feedback_count('unuseful', res.id, res.package_id) }}</span>
+    </button>
+  </div>
+  <div class="resource-feedback-group">
+    <button id="btn-trusted" class="btn btn-default" type="button">
+      <i class="fa fa-check-circle-o"></i>{{ _('Trusted') }} <span id="count-trusted"
+        class="badge">{{ h.resource_feedback_count('trusted', res.id, res.package_id) }}</span>
+    </button>
+    <button id="btn-untrusted" class="btn btn-default" type="button">
+      <i class="fa fa-times-circle-o"></i>{{ _('Untrusted') }} <span id="count-untrusted"
+        class="badge">{{ h.resource_feedback_count('untrusted', res.id, res.package_id) }}</span>
+    </button>
+    <input id="resource" value="{{ res.id }}" type="hidden" />
+    <input id="dataset" value="{{ res.package_id }}" type="hidden" />
+  </div>
+</div>
+
+{% endblock %}
 
 {% block resource_view_content %}
 <div class="resource-view">
   {% set views_created = res.has_views %}
   {% if views_created %}
-      {% for resource_view in resource_views %}
-        {% if resource_view == current_resource_view %}
-          {% if current_resource_view.view_type == 'chart' %}
-            {% if resource_view and resource_view.__extras %}
-              {% set colors = resource_view.__extras.color %}
-              {% set chart_id = resource_view.__extras.id %}
-              {% set x_axis = resource_view.__extras.x_axis %}
-              {% set y_axis = resource_view.__extras.y_axis %}
-              {% set additional_tornado_value = resource_view.__extras.additional_tornado_value %}
-              {% set chart_type = resource_view.__extras.type %}
-              {% set chart_subtitle = resource_view.__extras.chart_subtitle %}
-              {% set chart_description = resource_view.__extras.chart_description %}
-              {% set show_legend = resource_view.__extras.show_legend %}
-              {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
-              {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
-              {% set tooltip_name = resource_view.__extras.tooltip_name %}
-              {% set data_format = resource_view.__extras.data_format %}
-              {% set y_tick_format = resource_view.__extras.y_tick_format %}
-              {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
-              {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
-              {% set padding_bottom = resource_view.__extras.padding_bottom %}
-              {% set padding_top = resource_view.__extras.padding_top %}
-              {% set tick_count = resource_view.__extras.tick_count %}
-              {% set show_labels = resource_view.__extras.show_labels %}
-              {% set y_label = resource_view.__extras.y_label %}
-              {% set y_from_zero = resource_view.__extras.y_from_zero %}
-              {% set data_sort = resource_view.__extras.sort %}
-              {% set filters = resource_view.__extras.filters %}
-              {% set category_name = resource_view.__extras.category_name %}
-              {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
-              {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
-              {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
-              {% set sql_string = resource_view.__extras.sql_string %}
-              {% set resource_id = resource_view.resource_id %}
-              {% set chart_title = resource_view.title %}
-            {% endif %}
-            {% snippet 'ajax_snippets/chart_module.html',
+  {% for resource_view in resource_views %}
+  {% if resource_view == current_resource_view %}
+  {% if current_resource_view.view_type == 'chart' %}
+  {% if resource_view and resource_view.__extras %}
+  {% set colors = resource_view.__extras.color %}
+  {% set chart_id = resource_view.__extras.id %}
+  {% set x_axis = resource_view.__extras.x_axis %}
+  {% set y_axis = resource_view.__extras.y_axis %}
+  {% set additional_tornado_value = resource_view.__extras.additional_tornado_value %}
+  {% set chart_type = resource_view.__extras.type %}
+  {% set chart_subtitle = resource_view.__extras.chart_subtitle %}
+  {% set chart_description = resource_view.__extras.chart_description %}
+  {% set show_legend = resource_view.__extras.show_legend %}
+  {% set x_text_rotate = resource_view.__extras.x_text_rotate %}
+  {% set x_text_multiline = resource_view.__extras.x_text_multiline %}
+  {% set tooltip_name = resource_view.__extras.tooltip_name %}
+  {% set data_format = resource_view.__extras.data_format %}
+  {% set y_tick_format = resource_view.__extras.y_tick_format %}
+  {% set chart_padding_left = resource_view.__extras.chart_padding_left %}
+  {% set chart_padding_bottom = resource_view.__extras.chart_padding_bottom %}
+  {% set padding_bottom = resource_view.__extras.padding_bottom %}
+  {% set padding_top = resource_view.__extras.padding_top %}
+  {% set tick_count = resource_view.__extras.tick_count %}
+  {% set show_labels = resource_view.__extras.show_labels %}
+  {% set y_label = resource_view.__extras.y_label %}
+  {% set y_from_zero = resource_view.__extras.y_from_zero %}
+  {% set data_sort = resource_view.__extras.sort %}
+  {% set filters = resource_view.__extras.filters %}
+  {% set category_name = resource_view.__extras.category_name %}
+  {% set dynamic_reference_type = resource_view.__extras.dynamic_reference_type %}
+  {% set dynamic_reference_factor = resource_view.__extras.dynamic_reference_factor %}
+  {% set dynamic_reference_label = resource_view.__extras.dynamic_reference_label %}
+  {% set sql_string = resource_view.__extras.sql_string %}
+  {% set resource_id = resource_view.resource_id %}
+  {% set chart_title = resource_view.title %}
+  {% endif %}
+  {% snippet 'ajax_snippets/chart_module.html',
                 type='chart',
                 colors=colors,
                 chart_id = chart_id,
@@ -182,26 +192,26 @@
                 dynamic_reference_type=dynamic_reference_type,
                 dynamic_reference_factor=dynamic_reference_factor,
                 dynamic_reference_label=dynamic_reference_label %}
-              {% snippet 'ajax_snippets/visual_info_module.html',
+  {% snippet 'ajax_snippets/visual_info_module.html',
               title = chart_title,
               resource_id = resource_id %}
 
-          {% elif current_resource_view.view_type == 'table'  %}
+  {% elif current_resource_view.view_type == 'table'  %}
 
-              {% if resource_view and resource_view.__extras %}
-                {% set main_value = resource_view.__extras.main_value %}
-                {% set y_axis = resource_view.__extras.y_axis %}
-                {% set sql_string = resource_view.__extras.sql_string %}
-                {% set category_name = resource_view.__extras.category_name %}
-                {% set data_format = resource_view.__extras.data_format %}
-                {% set data_type = resource_view.__extras.data_type %}
-                {% set table_title = resource_view.title %}
-                {% set table_subtitle = resource_view.__extras.table_subtitle %}
-                {% set table_description = resource_view.__extras.table_description %}
-                {% set resource_name = resource_view.__extras.resource_name %}
-                {% set resource_id = resource_view.resource_id %}
-              {% endif %}
-                {% snippet 'ajax_snippets/table_module.html',
+  {% if resource_view and resource_view.__extras %}
+  {% set main_value = resource_view.__extras.main_value %}
+  {% set y_axis = resource_view.__extras.y_axis %}
+  {% set sql_string = resource_view.__extras.sql_string %}
+  {% set category_name = resource_view.__extras.category_name %}
+  {% set data_format = resource_view.__extras.data_format %}
+  {% set data_type = resource_view.__extras.data_type %}
+  {% set table_title = resource_view.title %}
+  {% set table_subtitle = resource_view.__extras.table_subtitle %}
+  {% set table_description = resource_view.__extras.table_description %}
+  {% set resource_name = resource_view.__extras.resource_name %}
+  {% set resource_id = resource_view.resource_id %}
+  {% endif %}
+  {% snippet 'ajax_snippets/table_module.html',
                   sql_string = sql_string,
                   resource_id = resource_id,
                   resource_name = resource_name,
@@ -213,25 +223,25 @@
                   table_subtitle = table_subtitle,
                   table_description = table_description,
                   table_title = table_title %}
-                {% snippet 'ajax_snippets/visual_info_module.html',
+  {% snippet 'ajax_snippets/visual_info_module.html',
                   title = table_title,
                   resource_id = resource_id %}
 
-          {% elif current_resource_view.view_type == 'map'  %}
+  {% elif current_resource_view.view_type == 'map'  %}
 
-              {% if resource_view and resource_view.__extras %}
-                {% set map_subtitle=resource_view.__extras.map_subtitle %}
-                {% set map_description=resource_view.__extras.map_description %}
-                {% set map_resource=resource_view.__extras.map_resource %}
-                {% set map_key_field=resource_view.__extras.map_key_field %}
-                {% set data_key_field=resource_view.__extras.data_key_field %}
-                {% set data_value_field=resource_view.__extras.data_value_field %}
-                {% set sql_string=resource_view.__extras.sql_string %}
-                {% set resource_id = resource_view.resource_id %}
-                {% set map_title = resource_view.title %}
-              {% endif %}
-                {% set map_config = h.knowledgehub_get_map_config() %}
-                {% snippet 'ajax_snippets/map_module.html',
+  {% if resource_view and resource_view.__extras %}
+  {% set map_subtitle=resource_view.__extras.map_subtitle %}
+  {% set map_description=resource_view.__extras.map_description %}
+  {% set map_resource=resource_view.__extras.map_resource %}
+  {% set map_key_field=resource_view.__extras.map_key_field %}
+  {% set data_key_field=resource_view.__extras.data_key_field %}
+  {% set data_value_field=resource_view.__extras.data_value_field %}
+  {% set sql_string=resource_view.__extras.sql_string %}
+  {% set resource_id = resource_view.resource_id %}
+  {% set map_title = resource_view.title %}
+  {% endif %}
+  {% set map_config = h.knowledgehub_get_map_config() %}
+  {% snippet 'ajax_snippets/map_module.html',
                   map_title=map_title,
                   map_subtitle=map_subtitle,
                   map_description=map_description,
@@ -242,50 +252,139 @@
                   sql_string=sql_string,
                   map_resource=map_resource %}
 
-                {% snippet 'ajax_snippets/visual_info_module.html',
+  {% snippet 'ajax_snippets/visual_info_module.html',
                   title = map_title,
                   resource_id = resource_id %}
 
-          {% else %}
+  {% else %}
 
-              {% snippet 'package/snippets/resource_view.html',
+  {% snippet 'package/snippets/resource_view.html',
                  resource_view=resource_view,
                  resource=c.resource,
                  package=c.package %}
 
 
-          {% endif %}
+  {% endif %}
 
-        {% endif %}
-      {% endfor %}
+  {% endif %}
+  {% endfor %}
   {% else %}
-    {# Views not created #}
-    <div class="data-viewer-info">
-      <p>{{ _("There are no views created for this resource yet.") }}</p>
-      {% if h.check_access('resource_view_create', {'resource_id': c.resource.id}) %}
-        <p class="text-muted">
-          <i class="fa fa-info-circle"></i>
-          {{ _("Not seeing the views you were expecting?")}}
-          <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
-            {{ _('Click here for more information.') }}</a>
-        </p>
+  {# Views not created #}
+  <div class="data-viewer-info">
+    <p>{{ _("There are no views created for this resource yet.") }}</p>
+    {% if h.check_access('resource_view_create', {'resource_id': c.resource.id}) %}
+    <p class="text-muted">
+      <i class="fa fa-info-circle"></i>
+      {{ _("Not seeing the views you were expecting?")}}
+      <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
+        {{ _('Click here for more information.') }}</a>
+    </p>
 
-        <div id="data-view-info" class="collapse">
-          <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
-          <ul>
-            <li>{{ _("No view has been created that is suitable for this resource")}}</li>
-            <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
-            <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
-          </ul>
-        </div>
-      {% endif %}
+    <div id="data-view-info" class="collapse">
+      <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
+      <ul>
+        <li>{{ _("No view has been created that is suitable for this resource")}}</li>
+        <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
+        <li>
+          {{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}
+        </li>
+      </ul>
     </div>
+    {% endif %}
+  </div>
   {% endif %}
 </div>
 {% endblock %}
 
 {% block primary_content %}
 
-  {{ super() }}
-  {{ h.disqus_comments() }}
+{%  set data_quality = h.get_resource_data_quality(res.id)  %}
+<section class="additional-info">
+  <h2>{{ _('Data Quality') }}</h2>
+  {% if data_quality.calculated_on %}
+  <p>Calculated on: {{data_quality.calculated_on}}</p>
+  {% endif %}
+  <table class="table table-striped table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th scope="col">{{ _('Field') }}</th>
+        <th scope="col">{{ _('Value') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- <label> Completeness </label> <span> {{data_quality.timeliness }} -->
+      {% if data_quality.completeness %}
+      <tr>
+        <th>Completeness</th>
+        <td>{{data_quality.completeness}}&percnt;</td>
+      </tr>
+      {% else %}
+      <tr>
+        <th>Completeness</th>
+        <td>N/A</td>
+      </tr>
+      {% endif %}
+      {% if data_quality.timeliness %}
+      <tr>
+        <th>Timeliness</th>
+        <td>{{data_quality.timeliness}}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <th>Timeliness</th>
+        <td>N/A</td>
+      </tr>
+      {% endif %}
+      {% if data_quality.validity %}
+      <tr>
+        <th>Validity</th>
+        <td>{{data_quality.validity}}&percnt;</td>
+      </tr>
+      {% else %}
+      <tr>
+        <th>Validity</th>
+        <td>N/A</td>
+      </tr>
+      {% endif %}
+      {% if data_quality.uniqueness %}
+      <tr>
+        <th>Uniqueness</th>
+        <td>{{data_quality.uniqueness}}&percnt;</td>
+      </tr>
+      {% else %}
+      <tr>
+        <th>Uniqueness</th>
+        <td>N/A</td>
+      </tr>
+      {% endif %}
+      {% if data_quality.consistency %}
+      <tr>
+        <th>Consistency</th>
+        <td>{{data_quality.consistency}}&percnt;</td>
+      </tr>
+      {% else %}
+      <tr>
+        <th>Consistency</th>
+        <td>N/A</td>
+      </tr>
+      {% endif %}
+      {% if data_quality.accuracy %}
+      <tr>
+        <th>Accuracy</th>
+        <td>{{data_quality.accuracy}}&percnt;</td>
+      </tr>
+      {% else %}
+      <tr>
+        <th>Accuracy</th>
+        <td>N/A</td>
+      </tr>
+      {% endif %}
+
+    </tbody>
+  </table>
+</section>
+
+{{ super() }}
+
+{{ h.disqus_comments() }}
 {% endblock %}

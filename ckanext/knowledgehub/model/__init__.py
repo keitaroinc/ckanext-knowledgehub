@@ -5,6 +5,10 @@ from ckanext.knowledgehub.model.dashboard import Dashboard
 from ckanext.knowledgehub.model.resource_feedback import ResourceFeedbacks
 from ckanext.knowledgehub.model.kwh_data import KWHData
 from ckanext.knowledgehub.model.rnn_corpus import RNNCorpus
+from ckanext.knowledgehub.model.visualization import Visualization
+from ckanext.knowledgehub.model.intents import UserIntents
+from ckanext.knowledgehub.model.query import UserQuery, UserQueryResult
+from ckanext.knowledgehub.model.data_quality import DataQualityMetrics
 
 
 __all__ = [
@@ -12,7 +16,14 @@ __all__ = [
     'SubThemes',
     'ResearchQuestion',
     'Dashboard',
-    'ResourceFeedbacks'
+    'DataQualityMetrics',
+    'ResourceFeedbacks',
     'KWHData',
-    'RNNCorpus'
+    'RNNCorpus',
+    'UserIntents',
+    'UserQuery',
+    'UserQueryResult',
+    'Visualization',
+    'UserQuery',
+    'UserQueryResult'
 ]

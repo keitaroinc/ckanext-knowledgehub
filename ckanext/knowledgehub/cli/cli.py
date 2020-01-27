@@ -7,7 +7,10 @@ import click
 from ckanext.knowledgehub.cli import (click_config_option,
                                       db,
                                       load_config,
-                                      predictive_search)
+                                      predictive_search,
+                                      index,
+                                      intents,
+                                      quality)
 from ckan.config.middleware import make_app
 
 log = logging.getLogger(__name__)
@@ -30,3 +33,6 @@ def knowledgehub(ctx, config, *args, **kwargs):
 
 knowledgehub.add_command(db.db)
 knowledgehub.add_command(predictive_search.predictive_search)
+knowledgehub.add_command(index.index)
+knowledgehub.add_command(intents.intents)
+knowledgehub.add_command(quality.quality)

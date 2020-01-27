@@ -213,7 +213,7 @@ ckan.module('chart', function () {
 
             options.title = {
                 text: titleVal,
-                position: "upper-right",
+                //position: "upper-right",
                 padding: {
                     left: 0,
                     right: 150,
@@ -505,43 +505,39 @@ ckan.module('chart', function () {
             }
 
             // Generate chart
+            var subtitle = (this.options.chart_subtitle === true) ? '' : this.options.chart_subtitle;
+            var chartDescription = (this.options.chart_description === true) ? '' : this.options.chart_description;
+            var info = [subtitle, chartDescription];
             if (this.options.chart_type === 'buttchart') {
-
                 var sorted_data = this.sortButtData(data, x_axis, additional_tornado_value, y_axis);
                 var chart = this.tornadoChart(x_axis, y_axis);
                 d3.select("svg").datum(sorted_data).call(chart);
             }
             else {
+                
                 var chart = c3.generate(options);
+                
                 info.map(val => {
-                    var x = $(".c3-title").attr('x');
+                    var x = $(".c3-title", chart.element).attr('x');
                     var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
                     val.length > 30 ? val = val.substring(0, 30) + "..." : null;
                     element.textContent = val;
                     element.setAttributeNS(null, 'dy', '1.2em');
                     element.setAttributeNS(null, 'x', x);
-                    $('.c3-title').append(element)
+                    $('.c3-title', chart.element).append(element)
                 });
             }
+            
+            var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+            svgimg.setAttributeNS(null, 'height', '70');
+            svgimg.setAttributeNS(null, 'width', '270');
+            svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
+            svgimg.setAttributeNS(null, 'x', '0');
+            svgimg.setAttributeNS(null, 'y', '0');
+            svgimg.setAttributeNS(null, 'visibility', 'hidden');
 
-                var subtitle = (this.options.chart_subtitle === true) ? '' : this.options.chart_subtitle;
-                var chartDescription = (this.options.chart_description === true) ? '' : this.options.chart_description;
-
-                var info = [subtitle, chartDescription];
-                //Create Image Logo and append
-                var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-                svgimg.setAttributeNS(null, 'height', '70');
-                svgimg.setAttributeNS(null, 'width', '270');
-                svgimg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/base/images/unhck-kh.svg');
-                svgimg.setAttributeNS(null, 'x', '0');
-                svgimg.setAttributeNS(null, 'y', '0');
-                svgimg.setAttributeNS(null, 'visibility', 'hidden');
-
-                var svgElement = $('.item-content').find('svg')[0];
-                $(svgElement).append(svgimg);
-
-                
-            // }
+            var svgElement = $('.item-content').find('svg')[0];
+            $(svgElement).append(svgimg);
         }
         ,
         // Get the values from dropdowns and rerender the chart.

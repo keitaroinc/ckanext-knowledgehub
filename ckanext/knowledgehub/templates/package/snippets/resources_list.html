@@ -1,0 +1,46 @@
+{#
+Renders a list of resources with icons and view links.
+
+resources - A list of resources to render
+pkg - A package object that the resources belong to.
+
+Example:
+
+  {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources %}
+
+#}
+<section id="dataset-resources" class="resources">
+  <h3>{{ _('Data and Resources') }}</h3>
+  {% block resource_list %}
+  {% if resources %}
+  <ul class="{% block resource_list_class %}resource-list{% endblock %}">
+    {% block resource_list_inner %}
+    {% set can_edit = h.check_access('package_update', {'id':pkg.id }) %}
+    {% for resource in resources %}
+    {% if resource.get('name') != system_resource.get('name') %}
+    {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource, can_edit=can_edit %}
+    {% endif %}
+    {% endfor %}
+    {% if system_resource %}
+    {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=system_resource, can_edit=can_edit %}
+    {% endif %}
+    {% endblock %}
+    {% if not hide_merge_btn %}
+    <li class="resource-item" style="text-align: end">
+      <a class="btn btn-success" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}"
+        {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
+    </li>
+    {% endif %}
+  </ul>
+  {% else %}
+  {% if h.check_access('resource_create', {'package_id': pkg['id']}) %}
+  {% trans url=h.url_for(controller='package', action='new_resource', id=pkg.name) %}
+  <p class="empty">This dataset has no data, <a href="{{ url }}">why not add some?</a></p>
+  {% endtrans %}
+  {% else %}
+  <p class="empty">{{ _('This dataset has no data') }}</p>
+  {% endif %}
+  {% endif %}
+  {% endblock %}
+
+</section>

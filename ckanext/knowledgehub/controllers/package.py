@@ -14,14 +14,23 @@ from ckan.common import config
 import ckan.plugins as p
 import ckan.lib.base as base
 
+from ckanext.knowledgehub import helpers as kwh_h
+
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
 check_access = logic.check_access
 get_action = logic.get_action
 render = base.render
+abort = base.abort
 
 log = logging.getLogger(__name__)
+
+SKIP_SEARCH_FOR = [
+    'research-questions',
+    'dashboards',
+    'visualizations'
+]
 
 
 def _encode_params(params):
@@ -60,23 +69,39 @@ class KWHPackageController(PackageController):
 
         # unicode format (decoded from utf8)
         q = c.q = request.params.get('q', u'')
+        search_for = request.params.get('_search-for', u'datasets')
+
         # Store search query in KWH data
         try:
             if q:
                 sysadmin = get_sysadmins()[0].name
-                kwh_data_context = {
+                sysadmin_context = {
                     'user': sysadmin,
                     'ignore_auth': True
                 }
+
                 kwh_data = {
                     'type': 'search',
                     'content': q
                 }
                 logic.get_action(u'kwh_data_create')(
-                    kwh_data_context, kwh_data
+                    sysadmin_context, kwh_data
                 )
+
+                if search_for not in SKIP_SEARCH_FOR:
+                    query_ctx = {
+                        'ignore_auth': True
+                    }
+                    query_ctx.update(context)
+                    query_data = {
+                        'query_text': q,
+                        'query_type': 'dataset'
+                    }
+                    logic.get_action('user_query_create')(
+                        query_ctx, query_data
+                    )
         except Exception as e:
-            log.debug('Error while storing KWH data: %s' % str(e))
+            log.debug('Error while storing data: %s' % str(e))
 
         c.query_error = False
         page = h.get_page_number(request.params)
@@ -260,3 +285,86 @@ class KWHPackageController(PackageController):
 
         return render(self._search_template(package_type),
                       extra_vars={'dataset_type': package_type})
+
+    def read(self, id):
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user, 'for_view': True,
+                   'auth_user_obj': c.userobj}
+        data_dict = {'id': id, 'include_tracking': True}
+
+        # interpret @<revision_id> or @<date> suffix
+        split = id.split('@')
+        if len(split) == 2:
+            data_dict['id'], revision_ref = split
+            if model.is_id(revision_ref):
+                context['revision_id'] = revision_ref
+            else:
+                try:
+                    date = h.date_str_to_datetime(revision_ref)
+                    context['revision_date'] = date
+                except TypeError as e:
+                    abort(400, _('Invalid revision format: %r') % e.args)
+                except ValueError as e:
+                    abort(400, _('Invalid revision format: %r') % e.args)
+        elif len(split) > 2:
+            abort(400, _('Invalid revision format: %r') %
+                  'Too many "@" symbols')
+
+        # check if package exists
+        try:
+            c.pkg_dict = get_action('package_show')(context, data_dict)
+            c.pkg = context['package']
+        except (NotFound, NotAuthorized):
+            abort(404, _('Dataset not found'))
+
+        # used by disqus plugin
+        c.current_package_id = c.pkg.id
+
+        system_resource = {}
+        active_upload = False
+        # can the resources be previewed?
+        for resource in c.pkg_dict['resources']:
+            # Backwards compatibility with preview interface
+            resource['can_be_previewed'] = self._resource_preview(
+                {'resource': resource, 'package': c.pkg_dict})
+            # Check if there is a system created resource
+            if resource['resource_type'] == kwh_h.SYSTEM_RESOURCE_TYPE:
+                system_resource = resource
+            # Check if some data resource is not uploaded to the Datastore yet
+            if not active_upload:
+                active_upload = not kwh_h.is_rsc_upload_datastore(resource)
+
+            resource_views = get_action('resource_view_list')(
+                context, {'id': resource['id']})
+            resource['has_views'] = len(resource_views) > 0
+
+        hide_merge_btn = False
+        access = check_access('package_update', context, data_dict)
+        if access and (len(c.pkg_dict['resources']) == 1 and system_resource):
+            hide_merge_btn = True
+
+        error_message = request.params.get('error_message', u'')
+        package_type = c.pkg_dict['type'] or 'dataset'
+        self._setup_template_variables(context, {'id': id},
+                                       package_type=package_type)
+
+        template = self._read_template(package_type)
+        try:
+            return render(template,
+                          extra_vars={
+                              'dataset_type': package_type,
+                              'error_message': error_message,
+                              'system_resource': system_resource,
+                              'active_upload': active_upload,
+                              'hide_merge_btn': hide_merge_btn})
+        except ckan.lib.render.TemplateNotFound as e:
+            msg = _(
+                "Viewing datasets of type \"{package_type}\" is "
+                "not supported ({file_!r}).".format(
+                    package_type=package_type,
+                    file_=e.message
+                )
+            )
+            abort(404, msg)
+
+        assert False, "We should never get here"

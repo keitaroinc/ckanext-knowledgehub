@@ -19,6 +19,7 @@ import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.create import package_create as ckan_package_create
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
+from ckanext.knowledgehub.logic.action.get import user_query_show
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
@@ -26,20 +27,25 @@ from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
+from ckanext.knowledgehub.model import Visualization
+from ckanext.knowledgehub.model import UserIntents
+from ckanext.knowledgehub.model import UserQuery
+from ckanext.knowledgehub.model import UserQueryResult
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
-
 
 log = logging.getLogger(__name__)
 
 _df = lib.navl.dictization_functions
 _table_dictize = lib.dictization.table_dictize
 check_access = toolkit.check_access
+get_action = toolkit.get_action
 _get_or_bust = logic.get_or_bust
 NotFound = logic.NotFound
 ValidationError = toolkit.ValidationError
 NotAuthorized = toolkit.NotAuthorized
+Invalid = _df.Invalid
 
 
 def theme_create(context, data_dict):
@@ -171,9 +177,18 @@ def research_question_create(context, data_dict):
         state=state,
         modified_at=modified_at
     )
+
     research_question.save()
 
-    return _table_dictize(research_question, context)
+    research_question_data = _table_dictize(research_question, context)
+    # Add to index
+    try:
+        ResearchQuestion.add_to_index(research_question_data)
+    except Exception as e:
+        ResearchQuestion.delete(research_question.id)
+        raise e
+
+    return research_question_data
 
 
 def resource_create(context, data_dict):
@@ -202,10 +217,10 @@ def resource_create(context, data_dict):
     :type validation_options: string
     '''
 
-    if (data_dict['schema'] == ''):
+    if (data_dict.get('schema') == ''):
         del data_dict['schema']
 
-    if (data_dict['validation_options'] == ''):
+    if (data_dict.get('validation_options') == ''):
         del data_dict['validation_options']
 
     if data_dict.get('db_type') is not None:
@@ -224,7 +239,6 @@ def resource_create(context, data_dict):
                                        data.get('records'),
                                        ',')
 
-            print('FIELDS: %s' % data.get('fields'))
             filename = '{}_{}.{}'.format(
                 data_dict.get('db_type'),
                 str(datetime.datetime.utcnow()),
@@ -235,7 +249,7 @@ def resource_create(context, data_dict):
                 data_dict['name'] = filename
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
-            
+
     return ckan_rsc_create(context, data_dict)
 
 
@@ -285,7 +299,17 @@ def resource_view_create(context, data_dict):
     resource_view = model_save.resource_view_dict_save(data, context)
     if not context.get('defer_commit'):
         model.repo.commit()
-    return model_dictize.resource_view_dictize(resource_view, context)
+    rv_data = model_dictize.resource_view_dictize(resource_view, context)
+
+    # Add to index
+    Visualization.add_to_index(rv_data)    
+
+    # this check is because of the unit tests
+    if rv_data.get('__extras'):
+        ext = rv_data['__extras']
+        if ext.get('research_questions'):
+            plugin_helpers.add_rqs_to_dataset(rv_data)
+    return rv_data
 
 
 def dashboard_create(context, data_dict):
@@ -300,7 +324,6 @@ def dashboard_create(context, data_dict):
         :param indicators
     '''
     check_access('dashboard_create', context)
-
     session = context['session']
 
     data, errors = _df.validate(data_dict,
@@ -337,29 +360,15 @@ def dashboard_create(context, data_dict):
     session.add(dashboard)
     session.commit()
 
-    return _table_dictize(dashboard, context)
+    dashboard_data = _table_dictize(dashboard, context)
+
+    # Add to index
+    Dashboard.add_to_index(dashboard_data)
+
+    return dashboard_data
 
 
 def package_create(context, data_dict):
-    
-    research_questions = data_dict.get('research_question')
-    rq_options = plugin_helpers.get_rq_options()
-    rq_ids = []
-
-    if research_questions:
-        if isinstance(research_questions, list):
-            for rq in research_questions:
-                for rq_opt in rq_options:
-                    if rq == rq_opt.get('text'):
-                        rq_ids.append(rq_opt.get('id'))
-                        break
-            data_dict['research_question'] = rq_ids
-        elif isinstance(research_questions, unicode):
-            for rq in rq_options:
-                if rq.get('text') == research_questions:
-                    data_dict['research_question'] = [rq.get('id')]
-                    break
-
     return ckan_package_create(context, data_dict)
 
 
@@ -492,3 +501,193 @@ def run_command(context, data_dict):
         return 'Error: %s' % str(e)
 
     return 'Successfully run command: %s' % ' '.join(cmd)
+
+
+def user_intent_create(context, data_dict):
+    ''' Creates a new intent
+
+    :param user_query_id: the ID of the user query
+    :type user_query_id: string
+    :param primary_category: the category of the intent (optional)
+    :type primary_category: styring
+    :param theme: the ID of the theme (optional)
+    :type theme: string
+    :param sub_theme: the ID of the sub-theme (optional)
+    :type sub_theme: string
+    :param research_question: the ID of the research question (optional)
+    :type research_question: string
+    :param inferred_transactional: the intent of transactional
+    searching (optional)
+    :type inferred_transactional: string
+    :param inferred_navigational: the intent of naviagational
+    searching (optional)
+    :type inferred_navigational: string
+    :param inferred_informational: the intent of informational
+    searching (optional)
+    :type inferred_informational: string
+    :param curated: indicate whether the classification is curated (optional)
+    :type curated: bool
+    :param accurate: indicate whether the classification is accurate (optional)
+    :type accurate: bool
+
+    :returns: the newly created intent
+    :rtype: dictionary
+    '''
+
+    try:
+        check_access('user_intent_create', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.user_intent_schema(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
+
+    intent = UserIntents(**data)
+    intent.save()
+
+    return intent.as_dict()
+
+
+def user_query_create(context, data_dict):
+    ''' Save user query
+
+    :param query_text: the user search query
+    :type query_text: string
+    :param query_type: the type of the search query
+    :type query_type: string
+
+    :returns: the newly created user query
+    :rtype:dictionary
+    '''
+
+    try:
+        check_access('user_query_create', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.user_query_schema(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
+
+    def save_user_query(data):
+        query = UserQuery(**data)
+        query.save()
+        return query.as_dict()
+
+    if data.get('user_id'):
+        try:
+            query = user_query_show(
+                context,
+                {
+                    'query_text': data.get('query_text'),
+                    'query_type': data.get('query_type'),
+                    'user_id': data.get('user_id')
+                }
+            )
+
+            raise Invalid(_('User query already exists'))
+        except NotFound:
+            return save_user_query(data)
+
+    return save_user_query(data)
+
+
+def user_query_result_create(context, data_dict):
+    ''' Save user query result
+
+    :param query_id: the ID of the search query
+    :type query_id: string
+    :param result_type: the type of search (dataset, visualization,
+    research_question etc)
+    :type result_type: string
+    :param result_id: the ID of the dataset/visualization/rq etc
+    :type result_id: string
+
+    :returns: the newly created user query result
+    :rtype: dictionary
+    '''
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.user_query_result_schema(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    user = context.get('user')
+    if user:
+        data['user_id'] = model.User.by_name(user.decode('utf8')).id
+
+    query_result = UserQueryResult(**data)
+    query_result.save()
+
+    return query_result.as_dict()
+
+
+def merge_all_data(context, data_dict):
+    u''' Merge data resources that belongs to the dataset and create
+    new data resource with the whole data
+
+    :param id: the dataset ID
+    :type id: string
+
+    :returns: the resource created/updated or error message
+    :rtype: dict
+    '''
+
+    package_id = data_dict.get('id')
+
+    if not package_id:
+        raise ValidationError({'id': _('Missing value')})
+
+    data_dict = plugin_helpers.get_dataset_data(package_id)
+
+    if data_dict.get('records') and not data_dict.get('err_msg'):
+        writer = WriterService()
+        stream = writer.csv_writer(
+            data_dict.get('fields'), data_dict['records'], ',')
+
+        package_name = data_dict.get('package_name')
+        filename = '{}_{}.{}'.format(
+            package_name,
+            str(datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')),
+            'csv'
+        )
+
+        rsc_dict = {
+            'package_id': package_id,
+            'name': '{}_{}'.format(
+                package_name,
+                plugin_helpers.SYSTEM_RESOURCE_TYPE
+            ),
+            'upload':  FlaskFileStorage(stream, filename),
+            'resource_type': plugin_helpers.SYSTEM_RESOURCE_TYPE
+        }
+
+        if data_dict.get('system_resource'):
+            rsc_dict['id'] = data_dict['system_resource']['id']
+            rsc_dict['name'] = data_dict['system_resource']['name']
+            toolkit.get_action('resource_update')(
+                context, rsc_dict)
+            return {}
+        else:
+            return toolkit.get_action('resource_create')(
+                context, rsc_dict)
+
+    return {
+        'err_msg': data_dict['err_msg']
+    }
