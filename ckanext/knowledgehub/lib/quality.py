@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 import ckan.plugins.toolkit as toolkit
 import ckan.lib.uploader as uploader
 from ckanext.knowledgehub.model.data_quality import (
@@ -126,6 +128,9 @@ class DataQualityMetrics(object):
     def _get_metrics_record(self, ref_type, ref_id):
         metrics = DataQualityMetricsModel.get(ref_type, ref_id)
         return metrics
+    
+    def _new_metrics_record(self, ref_type, ref_id):
+        return DataQualityMetricsModel(type=ref_type, ref_id=ref_id)
 
     def calculate_metrics_for_dataset(self, package_id):
         self.logger.debug('Calculating data quality for dataset: %s',
@@ -180,13 +185,15 @@ class DataQualityMetrics(object):
                 else:
                     self.logger.debug('Data Quality not calculated for all dimensions.')
             else:
+                data_quality = self._new_metrics_record('resource', resource['id'])
+                data_quality.resource_last_modified = last_modified
                 self.logger.debug('Resource changed since last calculated. '
                             'Calculating data quality again.')
         else:
-            data_quality = DataQualityMetricsModel(type='resource',
-                                                   ref_id=resource['id'])
+            data_quality = self._new_metrics_record('resource', resource['id'])
             data_quality.resource_last_modified = last_modified
             self.logger.debug('First data quality calculation.')
+
         data_quality.ref_id = resource['id']
 
         data_quality.resource_last_modified = last_modified
@@ -233,8 +240,7 @@ class DataQualityMetrics(object):
                           package_id)
         data_quality = self._get_metrics_record('package', package_id)
         if not data_quality:
-            data_quality = DataQualityMetricsModel(type='package')
-            data_quality.ref_id = package_id
+            data_quality = self._new_metrics_record('package', package_id)
         cumulative = {}
         dataset_results = data_quality.metrics or {}
         for metric in self.metrics:
@@ -248,6 +254,9 @@ class DataQualityMetrics(object):
                 resources,
                 metric_results
             )
+
+        if cumulative != dataset_results:
+            data_quality = self._new_metrics_record('package', package_id)
 
         for metric, result in cumulative.items():
             if result.get('value') is not None:
@@ -371,7 +380,7 @@ class Timeliness(DimensionMetric):
         if dt_format:
             parse_date_column = lambda ds: datetime.strptime(ds, dt_format)
         
-        created = dateutil.parser.parse(resource['created'])
+        created = dateutil.parser.parse(resource.get('last_modified') or resource.get('created'))
 
         measured_count = 0
         total_delta = 0
@@ -396,6 +405,7 @@ class Timeliness(DimensionMetric):
                 'average': 0,
                 'records': 0,
             }
+        total_delta = round(total_delta)
         avg_delay = timedelta(seconds=int(total_delta/measured_count))
 
         self.logger.debug('Measured records: %d of %d.', measured_count, data.get('total', 0))
@@ -485,7 +495,7 @@ class Validity(DimensionMetric):
             }
         
         return {
-            'value': float(total)/float(valid) * 100.0,
+            'value': float(valid)/float(total) * 100.0,
             'total': total,
             'valid': valid,
         }
@@ -595,7 +605,7 @@ class Consistency(DimensionMetric):
                     field_report['count'] += 1
         
         for field, field_report in report.items():
-            most_consistent = max([count for _,count in field_report['formats'].items()])
+            most_consistent = max([count if fmt != 'unknown' else 0 for fmt, count in field_report['formats'].items()])
             field_report['consistent'] = most_consistent
 
         total = sum([f.get('count', 0) for _, f in report.items()])
@@ -622,23 +632,52 @@ class Consistency(DimensionMetric):
 # Date format utils
 
 _all_date_formats = [
-    '%Y-%m-%dT%H:%M:%S',
-    '%Y-%m-%dT%H:%M:%S.%f',
-    '%Y-%m-%dT%H:%M:%SZ',
-    '%Y-%m-%dT%H:%M:%S.%fZ',
-    '%Y-%m-%dT%H:%M:%S%Z',
-    '%Y-%m-%dT%H:%M:%S.%f%Z',
+    '%Y-%m-%d',
+    '%y-%m-%d',
+    '%Y/%m/%d',
+    '%y/%m/%d',
+    '%Y.%m.%d',
+    '%y.%m.%d',
+    '%d-%m-%Y',
+    '%d-%m-%y',
+    '%d/%m/%Y',
+    '%d/%m/%y',
+    '%d.%m.%Y',
+    '%d.%m.%y',
+    '%m-%d-%Y',
+    '%m-%d-%y',
+    '%m/%d/%Y',
+    '%m/%d/%y',
+    '%m.%d.%Y',
+    '%m.%d.%y',
 ]
 
+
+def _generate_time_formats():
+    additional = []
+    for time_sep in ['T', ' ', ', ', '']:
+        if time_sep:
+            for date_fmt in _all_date_formats:
+                for time_fmt in ['%H:%M:%S',
+                                 '%H:%M:%S.%f',
+                                 '%H:%M:%S.%fZ',
+                                 '%H:%M:%S.%f%Z',
+                                 '%H:%M:%S.%f%z']:
+                    additional.append(date_fmt + time_sep + time_fmt)
+    return additional
+
+_all_date_formats += _generate_time_formats()
+
+
 _all_numeric_formats = [
-    r'$\d+^',
-    r'$[+-]\d+^',
-    r'$(\d{1,3},)+^',
-    r'$(\d{1,3},)+\.\d+^',
-    r'$[+-](\d{1,3},)+^',
-    r'$[+-](\d{1,3},)+\.\d+^',
-    r'$\d+\.\d+^',
-    r'$[+-]\d+\.\d+^',
+    r'^\d+$',
+    r'^[+-]\d+$',
+    r'^(\d{1,3},)+(\d{3})$',
+    r'^(\d{1,3},)+(\d{3})\.\d+$',
+    r'^[+-](\d{1,3},)(\d{3})+$',
+    r'^[+-](\d{1,3},)+(\d{3})\.\d+$',
+    r'^\d+\.\d+$',
+    r'^[+-]\d+\.\d+$',
 ]
 
 def detect_date_format(datestr):
@@ -665,10 +704,10 @@ def detect_numeric_format(numstr):
             pass
     
     for num_format in _all_numeric_formats:
-        m = re.match(num_format, numstr)
+        m = re.match(num_format, str(numstr))
         if m:
             return num_format
-        return None
+    return None
 
 # resource validation
 def validate_resource_data(resource):

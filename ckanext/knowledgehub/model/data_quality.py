@@ -36,7 +36,10 @@ class DataQualityMetrics(DomainObject):
 
     @classmethod
     def get(cls, _type, ref_id):
-        return Session.query(cls).filter_by(type=_type, ref_id=ref_id).first()
+        return (Session.query(cls)
+                       .filter_by(type=_type, ref_id=ref_id)
+                       .order_by(data_quality_metrics_table.c.modified_at.desc())
+                       .first())
 
     @classmethod
     def get_dataset_metrics(cls, ref_id):
