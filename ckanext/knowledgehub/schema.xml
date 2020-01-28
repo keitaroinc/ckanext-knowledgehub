@@ -110,6 +110,7 @@ schema. In this case the version should be set to the next CKAN version number.
     <field name="tags" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="groups" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="organization" type="string" indexed="true" stored="true" multiValued="false"/>
+    <field name="organizations" type="string" indexed="true" stored="true" multiValued="true"/>
 
     <!--extra package fields -->
     <field name="theme" type="string" indexed="true" stored="true" multiValued="true"/>
@@ -161,7 +162,7 @@ schema. In this case the version should be set to the next CKAN version number.
 
     <!-- Knowledge Hub Extended entities (dashboard, research question etc) ID -->
     <field name="entity_id" type="string" indexed="true" stored="true" multiValued="false"/>
-    
+
     <dynamicField name="*_date" type="date" indexed="true" stored="true" multiValued="false"/>
 
     <dynamicField name="extras_*" type="text" indexed="true" stored="true" multiValued="false"/>
@@ -191,6 +192,7 @@ schema. In this case the version should be set to the next CKAN version number.
 <copyField source="tags" dest="text"/>
 <copyField source="groups" dest="text"/>
 <copyField source="organization" dest="text"/>
+<copyField source="organizations" dest="text"/>
 <copyField source="res_name" dest="text"/>
 <copyField source="res_description" dest="text"/>
 <copyField source="maintainer" dest="text"/>

@@ -21,6 +21,7 @@ from ckanext.knowledgehub.model.dashboard import (
     setup as dashboard_db_setup,
     Dashboard,
 )
+from ckanext.knowledgehub.model.visualization import Visualization
 from ckanext.knowledgehub.model.rnn_corpus import setup as rnn_corpus_setup
 from ckanext.knowledgehub.model.resource_feedback import (
     setup as resource_feedback_setup
@@ -221,7 +222,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(last_visuals), 1)
 
-    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
     def test_get_rqs_dashboards(self):
         user = factories.Sysadmin()
         context = {
@@ -439,7 +440,7 @@ class TestKWHHelpers(ActionsBase):
         }
         dashboard = create_actions.dashboard_create(context, data_dict)
 
-        dashboards = kwh_helpers.get_dashboards()
+        dashboards = kwh_helpers.get_dashboards(ctx=context)
 
         assert_equals(len(dashboards), 1)
 
@@ -862,3 +863,57 @@ class TestKWHHelpers(ActionsBase):
     def test_is_rsc_upload_datastore_exception(self):
         b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
+
+    @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
+    def test_views_dashboards_groups_update(self):
+        dataset = create_dataset()
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'description': 'Visualization description',
+            'view_type': 'chart',
+            'config': {
+                "color": "#59a14f",
+                "y_label": "Usage",
+                "show_legend": "Yes"
+            }
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict)
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard',
+            'description': 'Dashboard description',
+            'type': 'internal',
+            'indicators': [
+                {"research_question": "54be129c-9e6f-4a0b-938a-bb6f2493dc91",
+                 "resource_view_id": rsc_view['id'],
+                 "order": 1,
+                 "size": "small"}
+            ]
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+
+        kwh_helpers.views_dashboards_groups_update(dataset['id'])
+
+        d = get_actions.dashboard_show(context, {'id': dashboard['id']})
+
+        assert_equals(d['name'], data_dict['name'])
+        assert_equals(d['type'], data_dict['type'])

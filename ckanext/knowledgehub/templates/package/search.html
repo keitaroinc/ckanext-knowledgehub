@@ -100,7 +100,7 @@
                                             <small>{{ h.truncate(description, truncate_description) }}</small></p>
                                         <div class="dashboard-created">
                                             <i class="fa fa-table"></i>
-                                            {{ dashboard.created_at.strftime('%Y-%m-%d')  }}
+                                            {{ h.format_date(dashboard.created_at) }}
                                         </div>
                                     </div>
                                 </a>
