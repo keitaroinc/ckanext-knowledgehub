@@ -53,13 +53,25 @@
 {% endif %}
 
 {% if package.country_code_displacement %}
+{% if ',' in package.country_code_displacement %}
+{% set country_code_displacement = package.country_code_displacement[1:-1] %}
+{% else %}
+{% set country_code_displacement = package.country_code_displacement %}
+{% endif %}
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country of displacement:
-</span><span class="text-muted">{{ package.country_code_displacement }}</span></h5></a>
+</span><span class="text-muted">{{ country_code_displacement }}</span></h5></a>
 {% endif %}
 
 {% if package.country_code_origin %}
+
+{% if ',' in package.country_code_origin %}
+{% set country_code_origin = package.country_code_origin[1:-1] %}
+{% else %}
+{% set country_code_origin = package.country_code_origin %}
+{% endif %}
+
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country of origin:
-</span><span class="text-muted">{{ package.country_code_origin }}</span></h5></a>
+</span><span class="text-muted">{{ country_code_origin }}</span></h5></a>
 {% endif %}
 
 {% if package.organization %}
