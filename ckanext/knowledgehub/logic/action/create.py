@@ -25,6 +25,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
+from ckanext.knowledgehub.model import ResourceValidation
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.model import Visualization
@@ -302,7 +303,7 @@ def resource_view_create(context, data_dict):
     rv_data = model_dictize.resource_view_dictize(resource_view, context)
 
     # Add to index
-    Visualization.add_to_index(rv_data)    
+    Visualization.add_to_index(rv_data)
 
     # this check is because of the unit tests
     if rv_data.get('__extras'):
@@ -416,6 +417,67 @@ def resource_feedback(context, data_dict):
         rf = ResourceFeedbacks.update(filter, data)
 
         return rf.as_dict()
+
+
+def resource_validation_create(context, data_dict):
+    '''
+    Resource validation mechanism
+
+        :param dataset
+        :param resource
+        :param user
+        :param admin
+        :param admin_email
+        :param status
+    '''
+    check_access('resource_validation_create', context, data_dict)
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.resource_validation_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    usr = context.get('user')
+
+    sep = '/download'
+    rurl = data_dict.get('url')
+
+    dataset = data_dict.get('package_id')
+    resource = data_dict.get('id')
+    resource_url = rurl.split(sep, 1)[0]
+    status = 'not_validated'
+
+    if data.get('admin'):
+        user = model.User.by_name(usr.decode('utf8')).id
+        admin = data.get('admin')
+        admin_email = model.User.by_name(admin).email
+        requested_at = datetime.datetime.utcnow()
+
+        rv = ResourceValidation(
+            dataset=dataset,
+            resource=resource,
+            resource_url=resource_url,
+            user=user,
+            admin=admin,
+            admin_email=admin_email,
+            status=status,
+            requested_at=requested_at
+        )
+
+        rv.save()
+        return _table_dictize(rv, context)
+    else:
+        rv = ResourceValidation(
+            dataset=dataset,
+            resource=resource,
+            resource_url=resource_url,
+            status=status
+        )
+
+        rv.save()
+        return _table_dictize(rv, context)
 
 
 def kwh_data_create(context, data_dict):

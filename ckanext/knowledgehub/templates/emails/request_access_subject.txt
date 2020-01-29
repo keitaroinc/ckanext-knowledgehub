@@ -1,1 +1,1 @@
-Validation is requested on {{ site_title }}
+Request for data resource validation from {{ site_title }}

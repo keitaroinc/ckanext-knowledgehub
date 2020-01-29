@@ -44,6 +44,14 @@ def resource_feedback(context, data_dict):
     return {'success': True}
 
 
+def resource_validation_create(context, data_dict):
+    '''
+        Authorization check for resource validation
+    '''
+    # all users
+    return {'success': True}
+
+
 def package_create(context, data_dict=None):
     # This auth function must be overriden like this, otherwise a recursion
     # error is thrown when the /dataset page is accessed by a regular user
