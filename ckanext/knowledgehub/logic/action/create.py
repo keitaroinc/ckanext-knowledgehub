@@ -761,3 +761,43 @@ def member_create(context, data_dict=None):
         plugin_helpers.views_dashboards_groups_update(data_dict.get('object'))
 
     return model_dictize.member_dictize(member, context)
+
+
+def tag_create(context, data_dict):
+    '''Create a new vocabulary tag.
+
+    You must be a sysadmin to create vocabulary tags.
+
+    You can only use this function to create tags that belong to a vocabulary,
+    not to create free tags. (To create a new free tag simply add the tag to
+    a package, e.g. using the
+    :py:func:`~ckan.logic.action.update.package_update` function.)
+
+    :param name: the name for the new tag, a string between 2 and 100
+        characters long containing only alphanumeric characters and ``-``,
+        ``_`` and ``.``, e.g. ``'Jazz'``
+    :type name: string
+    :param vocabulary_id: the id of the vocabulary that the new tag
+        should be added to, e.g. the id of vocabulary ``'Genre'``
+    :type vocabulary_id: string
+
+    :returns: the newly-created tag
+    :rtype: dictionary
+
+    '''
+    model = context['model']
+
+    check_access('tag_create', context, data_dict)
+
+    schema = context.get('schema') or knowledgehub_schema.tag_create_schema()
+    data, errors = _df.validate(data_dict, schema, context)
+    if errors:
+        raise ValidationError(errors)
+
+    tag = model_save.tag_dict_save(data_dict, context)
+
+    if not context.get('defer_commit'):
+        model.repo.commit()
+
+    log.debug("Created tag '%s' " % tag)
+    return model_dictize.tag_dictize(tag, context)
