@@ -487,7 +487,7 @@ _dq_validators = {
         'records': int,
         'average': int,
         'total': int,
-        'value': float,
+        'value': str,
     },
     'validity': {
         'valid': int,
@@ -539,7 +539,7 @@ def _patch_data_quality(context, data_dict, _type):
                     try:
                         _ftype(value)
                     except Exception as e:
-                        raise ValidationError({field: _('Invalid Value')})
+                        raise ValidationError({field: _('Invalid Value' + "(%s) '%s'" % (dimension, value))})
                 else:
                     try:
                         values[field] = _ftype(value)
