@@ -422,6 +422,8 @@ def dashboard_show(context, data_dict):
     :returns: single dashboard dict
     :rtype: dictionary
     '''
+    check_access('dashboard_show', context, data_dict)
+
     name_or_id = data_dict.get("id") or data_dict.get("name")
 
     if name_or_id is None:
@@ -463,21 +465,35 @@ def dashboard_list(context, data_dict):
     sort = data_dict.get(u'sort', u'name asc')
     q = data_dict.get(u'q', u'')
 
+    def result_iter(limit=100):
+        offset = 0
+        while True:
+            dashboards = Dashboard.search(q=q,
+                                          limit=limit,
+                                          offset=offset,
+                                          order_by=sort).all()
+            if not dashboards:
+                break
+            for dashboard in dashboards:
+                yield dashboard
+            offset += limit
+
     dashboards = []
+    for dashboard in result_iter():
+        try:
+            check_access('dashboard_show', context, {'name': dashboard.name})
+        except NotAuthorized:
+            continue
 
-    t_db_list = Dashboard.search(q=q,
-                                 limit=limit,
-                                 offset=offset,
-                                 order_by=sort)\
-        .all()
+        if len(dashboards) == limit + offset:
+            break
 
-    for dashboard in t_db_list:
         dashboards.append(_table_dictize(dashboard, context))
 
-    total = len(Dashboard.search().all())
-
-    return {u'total': total, u'page': page,
-            u'items_per_page': limit, u'data': dashboards}
+    return {u'total': len(Dashboard.search().all()),
+            u'page': page,
+            u'items_per_page': limit,
+            u'data': dashboards[offset:offset+limit]}
 
 
 @toolkit.side_effect_free

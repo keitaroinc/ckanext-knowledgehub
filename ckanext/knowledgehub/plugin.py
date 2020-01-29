@@ -156,7 +156,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         defaults = [toolkit.get_validator('ignore_missing')]
         package_defaults = [toolkit.get_converter('convert_from_extras'),
                             toolkit.get_validator('ignore_missing')]
-        mandatory_defaults = [toolkit.get_validator('not_missing')]
 
         schema.update({
             'unit_supported': package_defaults,

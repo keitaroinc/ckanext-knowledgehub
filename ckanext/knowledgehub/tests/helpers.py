@@ -19,11 +19,17 @@ def create_dataset(**kwargs):
     }
 
     data_dict = {
+        'name': 'org1'
+    }
+    org = toolkit.get_action('organization_create')(context, data_dict)
+
+    data_dict = {
         'name': str(uuid.uuid4()),
         'title': 'title',
         'notes': 'notes',
         'maintainer': 'John',
-        'research_question': ['rq', 'rq1']
+        'research_question': ['rq', 'rq1'],
+        'owner_org': org['name']
     }
     data_dict.update(kwargs)
     return toolkit.get_action('package_create')(context, data_dict)
