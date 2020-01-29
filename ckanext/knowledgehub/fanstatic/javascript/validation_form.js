@@ -14,34 +14,26 @@ function showValidationForm() {
 
  function editComment() {
     document.getElementById('editComment').style.display = "block";
-    document.getElementById('hideIfEdit').style.display = "display:none";
  }
 
 (function (_, jQuery) {
    'use strict';
 
    var api = {
-       post: function (action, data) {
-          console.log(data)
+       post: function (action, params) {
+          console.log(params, "data")
            var api_ver = 3;
            var base_url = ckan.sandbox().client.endpoint;
-           var url = base_url + '/api/' + api_ver + '/action/' + action;
-           return $.post(url, data, 'json');
+           var url = base_url + '/api/' + api_ver + '/action/' + action + '?' + params;
+           return $.post(url, params, 'json');
        },
-       delete: function(action, data) {
-         console.log(data)
-         console.log(action)
-         var api_ver = 3;
-         var base_url = ckan.sandbox().client.endpoint;
-         var url = base_url + '/api/' + api_ver + '/action/' + action;
-         return $.ajax({
-            url: url,
-            type: 'DELETE',
-            success: function(result) {
-                console.log(result)
-            }
-        })
-       },
+        delete: function (action, params) {
+            var api_ver = 3;
+            var base_url = ckan.sandbox().client.endpoint;
+            params = $.param(params);
+            var url = base_url + '/api/' + api_ver + '/action/' + action;
+            return $.post(url, params, 'json');
+        },
        update: function(action, data) {
         var api_ver = 3;
         var base_url = ckan.sandbox().client.endpoint;
@@ -60,7 +52,6 @@ function showValidationForm() {
       var resource = $('#resource').val();
        var validationWhat = $('#comment').val();
        var btn = $(this);
-       console.log(btn)
        api.post('resource_validate_create', {
            what: validationWhat,
            resource: resource
@@ -75,21 +66,20 @@ function showValidationForm() {
            });
    };
 
-   function resourceValidationDelete() {
-      var resource = $('#resource').val();
-       var btn = $(this);
-       console.log(btn)
-       console.log(resource)
-       api.delete('resource_validate_delete', {
-           id: resource
-       })
-           .done(function () {
-              console.log("OKKK")
-           })
-           .fail(function (error) {
-               console.log("Delete validation report: " + error.statusText);
-           });
-   };
+   function resourceValidationDelete(tr) {
+    var resource = $('#resource').val();
+     api.delete('resource_validate_delete', {
+         id: resource
+     })
+        .done(function () {
+            if(data.success) {
+                tr.detach();
+            }
+        })
+        .fail(function (error) {
+             console.log("Delete validation report: " + error.statusText);
+        });
+ };
 
    function resourceValidationEdit() {
     var resource = $('#resource').val();
@@ -110,18 +100,15 @@ function showValidationForm() {
  };
 
    $(document).ready(function () {
-       var resource = $('#resource').val();
+       var resource = $('#resource').val(); 
        var validationWhat = $('#comment').val();
        var validationDescription = $('#commentInput').val();
-       console.log(validationWhat)
-       console.log(resource)
        var validationBtn = $('#validationSubmitSuccess');
        var deleteBtn = $('#delete_validation')
        var editBtn = $('#validationEdited')
        validationBtn.click(resourceValidationReport.bind(validationBtn, validationWhat , resource));
        deleteBtn.click(resourceValidationDelete.bind(deleteBtn, resource));
        editBtn.click(resourceValidationEdit.bind(editBtn, resource , validationDescription));
-       console.log(validationBtn)
    });
 
 

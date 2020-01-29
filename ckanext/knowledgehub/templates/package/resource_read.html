@@ -71,62 +71,52 @@
   {% else %}
     <div id='validationForm' style="display:none">
       <div class="row">
-      <div class="col-md-12">
-          <div id="what" class="form-row">
-            <textarea cols = '50' rows = '3' name = "comment" placeholder = "  Validation Status" id = "comment" ></textarea>
-          </div>
-          <a href="#"><input type="submit" name="ysubmit" id="validationSubmitSuccess" value="Submit Validation"></a>
-      </div>
+        <div class="col-md-12">
+            <div id="what" class="form-row">
+              <textarea cols = '50' rows = '3' name = "comment" placeholder = "  Validation Status" id = "comment" ></textarea>
+            </div>
+            <a href="#"><input type="submit" name="ysubmit" id="validationSubmitSuccess" value="Submit Validation"></a>
+        </div>
       </div>
     </div>
   </form>
-    <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit" onclick="showValidationForm()">{{ _('Validation Report') }}</button>
+  <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit" onclick="showValidationForm()">{{ _('Validation Report') }}</button>
   {% endif %}
 
   <div>
       <section class="validation-info">
         {% if validation_data.what %}
         <h4>{{ _('Validation Report') }}</h4>
-      <div id="hideIfEdit" style="display:block">
-        <div class="comment_body">
-          <p>{{validation_data.what}}</p>
+        <div id="validation_comment" style="display:block">
+          <div class="comment_body">
+            <p>{{validation_data.what}}</p>
+          </div>
+          <div class="comment_details">
+            <ul>
+              <li><i class="fa fa-calendar">{{validation_data.when}}</i></li>
+              <li><i class="fa fa-pencil"></i> <span class="user">{{validation_data.who}}</span></li>
+            </ul>
+          </div>
         </div>
-        <div class="comment_details">
-          <ul>
-            <li><i class="fa fa-calendar">{{validation_data.when}}</i></li>
-            <li><i class="fa fa-pencil"></i> <span class="user">{{validation_data.who}}</span></li>
-          </ul>
-        </div>
-      </div>
 
         <div>  
           <div id='editComment' style="display:none">
             <div class="row">
-            <div class="col-md-12">
-                <div id="description" class="form-row">
-                  <textarea cols = '50' rows = '3' name = "comment" id = "commentInput" placeholder = "{{ validation_data.what }}"></textarea>
-                </div>
-                <a href="#"><input type="submit" name="ysubmit" id="validationEdited" value="Edit Validation"></a>
-            </div>
+              <div class="col-md-12">
+                  <div id="description" class="form-row">
+                    <textarea cols = '50' rows = '3' name = "comment" id = "commentInput" placeholder = "{{ validation_data.what }}"></textarea>
+                  </div>
+                  <a href="#"><input type="submit" name="ysubmit" id="validationEdited" value="Edit Validation"></a>
+              </div>
             </div>
           </div>
-          
-          <button id="update_validation" class="btn btn-primary" name="update_validation_report" type="submit" onclick="editComment()">{{ _('Edit') }}</button>
-          <button id="delete_validation" class="btn btn-danger pull-left" name="delete_validation_report" type="submit" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this Validation Report?') }}">
-            {{ _('Delete') }}
-          </button>
-
-          <!-- <div class="form-actions">
-            {% block delete_button %}
-            {%  set validation_data = h.get_resource_validation_data(res.id) %}
-              {% if h.check_access('resource_validate_create')  %}
-                <a class="btn btn-danger pull-left" href="{% url_for 'h.resource_validate_delete(res.id)' %}" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this Validation Report?') }}">{% block delete_button_text %}{{ _('Delete') }}{% endblock %}</a>
-              {% endif %}
-            {% endblock %}
-          </div> -->
-
+          <div>
+            <button id="update_validation" class="btn btn-primary" name="update_validation_report" type="submit" onclick="editComment()">{{ _('Edit') }}</button>
+            <button id="delete_validation" class="btn btn-danger pull-left" name="delete_validation_report" type="submit">
+              {{ _('Delete') }}
+            </button>
+          </div>
         </div>
-
         {% else %}
         <p></p>
         {% endif %} 
