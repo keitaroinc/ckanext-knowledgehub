@@ -13,6 +13,7 @@ import ckan.lib.helpers as h
 from ckan.common import config
 import ckan.plugins as p
 import ckan.lib.base as base
+from ckan.lib.render import TemplateNotFound
 
 from ckanext.knowledgehub import helpers as kwh_h
 
@@ -315,8 +316,10 @@ class KWHPackageController(PackageController):
         try:
             c.pkg_dict = get_action('package_show')(context, data_dict)
             c.pkg = context['package']
-        except (NotFound, NotAuthorized):
+        except NotFound:
             abort(404, _('Dataset not found'))
+        except NotAuthorized:
+            abort(403, _('Not authorize to see the page'))
 
         # used by disqus plugin
         c.current_package_id = c.pkg.id
@@ -340,8 +343,11 @@ class KWHPackageController(PackageController):
             resource['has_views'] = len(resource_views) > 0
 
         hide_merge_btn = False
-        access = check_access('package_update', context, data_dict)
-        if access and (len(c.pkg_dict['resources']) == 1 and system_resource):
+        try:
+            check_access('package_update', context, data_dict)
+            if (len(c.pkg_dict['resources']) == 1 and system_resource):
+                hide_merge_btn = True
+        except NotAuthorized:
             hide_merge_btn = True
 
         error_message = request.params.get('error_message', u'')
@@ -358,7 +364,7 @@ class KWHPackageController(PackageController):
                               'system_resource': system_resource,
                               'active_upload': active_upload,
                               'hide_merge_btn': hide_merge_btn})
-        except ckan.lib.render.TemplateNotFound as e:
+        except TemplateNotFound as e:
             msg = _(
                 "Viewing datasets of type \"{package_type}\" is "
                 "not supported ({file_!r}).".format(

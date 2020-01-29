@@ -94,15 +94,6 @@ def view(name):
 
     context = _get_context()
 
-    # show dashboard for all users
-    sysadmin = get_sysadmins()[0].name
-    context = {'user': sysadmin, 'ignore_auth': True}
-
-    try:
-        check_access(u'dashboard_show', context)
-    except NotAuthorized:
-        base.abort(403, _(u'Not authorized to see this page'))
-
     extra_vars = {}
 
     data_dict = {u'name': name}
@@ -111,6 +102,8 @@ def view(name):
         dashboard_dict = get_action(u'dashboard_show')(context, data_dict)
     except NotFound:
         base.abort(404, _(u'Dashboard not found'))
+    except NotAuthorized:
+        base.abort(403, _(u'Not authorized to see this page'))
 
     if dashboard_dict.get('type') == 'internal':
         dashboard_dict['indicators'] = json.loads(dashboard_dict['indicators'])
@@ -118,7 +111,7 @@ def view(name):
         for ind in dashboard_dict['indicators']:
             res_view_id = ind.get('resource_view_id')
             if res_view_id:
-                res_view = get_action('resource_view_show')(context, {
+                res_view = get_action('resource_view_show')({'ignore_auth': True}, {
                     'id': res_view_id
                 })
                 ind['resource_view'] = res_view

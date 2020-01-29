@@ -14,13 +14,34 @@ class Visualization(ResourceView, Indexed):
         'description',
         'view_type',
         'research_questions',
-        'package_id'
+        'package_id',
+	    mapped('organization', 'organization'),
+        mapped('groups', 'groups')
     ]
 
     doctype = 'visualization'
 
     @staticmethod
     def before_index(data):
+        package_id = data.get('package_id')
+        if not package_id:
+            resource_id = data.get('resource_id')
+            resource = get_action('resource_show')({
+                'ignore_auth': True,
+            }, {
+                'id': resource_id,
+            })
+            package_id = resource['package_id']
+        package = get_action('package_show')(
+            {'ignore_auth': True},
+            {'id': package_id, 'include_tracking': True})
+        if package:
+            data['organization'] = package.get('organization', {}).get('name')
+
+            data['groups'] = []
+            for g in package.get('groups', []):
+                data['groups'].append(g['name'])
+
         if data.get('_sa_instance_state'):
             del data['_sa_instance_state']
         if data.get('description') is not None:
@@ -72,7 +93,7 @@ class Visualization(ResourceView, Indexed):
         resource_view = get_action('resource_view_show')(
             {'ignore_auth': True},
             {'id': data['id']})
-        data['package_id'] = resource_view['package_id']     
+        data['package_id'] = resource_view['package_id']
         return data
 
 

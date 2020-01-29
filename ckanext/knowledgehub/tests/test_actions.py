@@ -402,6 +402,31 @@ class TestKWHCreateActions(ActionsBase):
             kwh_helpers.SYSTEM_RESOURCE_TYPE
         )
 
+    def test_member_create(self):
+        dataset = create_dataset()
+        data_dict = {
+            'name': 'group1'
+        }
+        group = toolkit.get_action('group_create')(
+            get_context(),
+            data_dict
+        )
+
+        data_dict = {
+            'id': group['id'],
+            'object': dataset['id'],
+            'object_type': 'package',
+            'capacity': 'organization'
+        }
+        member = create_actions.member_create(
+            get_context(),
+            data_dict
+        )
+
+        assert_equals(member['group_id'], group['id'])
+        assert_equals(member['state'], 'active')
+        assert_equals(member['capacity'], member['capacity'])
+
 
 class TestKWHGetActions(ActionsBase):
 
@@ -1008,6 +1033,38 @@ class TestKWHDeleteActions(ActionsBase):
         r = delete_actions.user_intent_delete(get_context(), {'id': i['id']})
 
         assert_equals(r, 'OK')
+
+    def test_member_delete(self):
+        dataset = create_dataset()
+        data_dict = {
+            'name': 'group1'
+        }
+        group = toolkit.get_action('group_create')(
+            get_context(),
+            data_dict
+        )
+
+        data_dict = {
+            'id': group['id'],
+            'object': dataset['id'],
+            'object_type': 'package',
+            'capacity': 'organization'
+        }
+        member = create_actions.member_create(
+            get_context(),
+            data_dict
+        )
+
+        data_dict.pop('capacity')
+        delete_actions.member_delete(get_context(), data_dict)
+
+        data_dict.pop('object')
+        members = toolkit.get_action('member_list')(
+            get_context(),
+            data_dict
+        )
+
+        assert_equals(len(members), 0)
 
 
 class TestKWHUpdateActions(ActionsBase):
