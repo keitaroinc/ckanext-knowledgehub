@@ -20,6 +20,35 @@ log = getLogger(__name__)
 
 
 class LazyStreamingList(object):
+    '''Implements a buffered stream that emulates an iterable object.
+
+    It is used to fetch large data in chunks (pages/buffers). The fetch is
+    done using a buffer of predefined size. While the iterator iterates over
+    the buffer, when the end of the buffer is reached, a call is made to fetch
+    the next buffer before iterating to the next record.
+
+    :param fetch_page: `function`, a function used to fetch the next buffer
+        data. The function prototype is:
+
+            .. code-block: python
+
+                def fetch_page(page, page_size):
+                    return {
+                        'total': 100,
+                        'records': [...],
+                    }
+            
+        The function takes two parameters:
+            * `page`, `int`, the page number starting from 0
+            * `page_size`, `int`, the number of items per page. Default is 512.
+        
+        The function must return a dict containing the records. The dict must
+        have the following entries:
+            * `total` - total number of items
+            * `records` - a list (iterable) over the records fetched for this
+                page.
+    :param page_size: `int`, the size of each page (buffer). Default is 512.
+    '''
 
     def __init__(self, fetch_page, page_size=512):
         self.fetch_page = fetch_page
@@ -39,6 +68,8 @@ class LazyStreamingList(object):
         self.page += 1
 
     def iterator(self):
+        '''Returns an iterator over all of the records.
+        '''
         current = 0
         self._fetch_buffer()
         while True:
@@ -56,15 +87,80 @@ class LazyStreamingList(object):
 
 
 class DimensionMetric(object):
+    '''Makes a measurement for one of the Data Quality dimensions.
+    
+    Defines two methods for mesurement: one to measure the dimension for one
+    resource over the resource data; and then to calculate cumulative metrics
+    for multiple resources given the results of the previous calculation for
+    each resource.
 
+    In practice this would amount to something like this:
+
+        .. code-block: python
+
+            metrics = []
+            for resource in resources:
+                # calculate the dimension metric for this resource
+                data = fetch_resource_data(resource)
+                result = dimension_metric.calculate_metric(resource, data)
+                metrics.append(result)
+            
+            # now we can calculate the cumulative metrics for all resources
+            report = dimension_metric.calculate_cumulative_metric(resources,
+                                                                  metrics)
+    
+    :param name: `str`, the name of the dimension.
+    '''
     def __init__(self, name):
         self.name = name
         self.logger = getLogger('ckanext.data_quality.%s' % self.name)
 
     def calculate_metric(self, resource, data):
+        '''Calculates the dimension of the data quality for the given resource
+        over the resource data.
+
+        :param resource: `dict`, the resource as fetched from CKAN
+        :param data: `dict`, the resource data. The dict will contain the
+            following entries:
+                * `total`, `int`, total number of records.
+                * `fields`, `list` of `dict`, metadata for the fields in the
+                    tabular data.
+                * `records`, `iterable`, an iterable object over all of the
+                    records for the data of this resource.
+        
+        :returns: `dict`, a report on the dimension metric. The dict can
+            contain the following entries:
+            * `value`, populated if the calculation was successful, and it will
+                contain the calculated value for the dimension.
+            * `failed`, `boolean`, optional, if set, then it means that the
+                calculation has failed for some reason. If not present in the
+                report dict, then the calculation was successful.
+            * `error`, `str`, optional, set only if `failed` is set to `True`.
+                Contains the reason/error for the calculation failure.
+        '''
         return {}
 
     def calculate_cumulative_metric(self, resources, metrics):
+        '''Reduces the calculations of multiple resources into one report.
+
+        :param resources: `list` of CKAN resources. The resources for which 
+            a calculation has been performed
+        :param metrics: `list` of dimension metric calculations for the given
+            resources. See `DimensionMetric.calculate_metric` for the format of
+            the result `dict` for the metric calculation. The number of results
+            and resources must be the same and the order in resources must
+            correspond with the order of the results in `metrics`.
+        
+        :returns: `dict`, a cumulative (reduce) report for the metrics of all
+            resources. The report `dict` can contain the following entries:
+            * `value`, populated if the calculation was successful, and it will
+                contain the calculated value for the dimension.
+            * `failed`, `boolean`, optional, if set, then it means that the
+                calculation has failed for some reason. If not present in the
+                report dict, then the calculation was successful.
+            * `error`, `str`, optional, set only if `failed` is set to `True`.
+                Contains the reason/error for the calculation failure.
+        '''
         return {}
 
     def __str__(self):
@@ -72,7 +168,21 @@ class DimensionMetric(object):
 
 
 class DataQualityMetrics(object):
+    '''Calculates Data Quality metrics for multiple dimensions for all
+    resouces in a dataset.
 
+    The calculation is performed in two phases:
+        1. Data Quality metrics are calculated for all dimensions for each of
+        the dataset resources (map phase). The results of each calculation are
+        kept and used in the seconds phase (reduce phase).
+        2. All of the results for all resources are then processed and reduced
+        to calculate the metrics for all dimensions for the dataset.
+    Results of the calculations for all entities (resources and the dataset)
+    are stored in database.
+
+    :param metrics: `list` of `DimensionMetric`, the dimensions for which to
+    calculate Data Quality on a given dataset.
+    '''
     def __init__(self, metrics=None):
         self.metrics = metrics or []
         self.logger = getLogger('ckanext.DataQualityMetrics')
@@ -133,6 +243,23 @@ class DataQualityMetrics(object):
         return DataQualityMetricsModel(type=ref_type, ref_id=ref_id)
 
     def calculate_metrics_for_dataset(self, package_id):
+        '''Calculates the Data Qualtity for the given dataset identified with
+        `package_id`.
+
+        The metrics for the resources and dataset are calculated or reused from
+        an earlier calculation if there were no changes in the resources data
+        from the last time the calculation has been performed.
+
+        Additionaly, if some of the metrics were set manually, either for a
+        resource or the dataset, then the calculation for that dimension will
+        not be performed and the manual value will be kept intact.
+
+        The calculations for both resources and dataset are kept in a database,
+        one entry for dataset and one for each resource.
+
+        :param package_id: `str`, the ID of the dataset (package) for which to
+            calculate Data Quality metrics.
+        '''
         self.logger.debug('Calculating data quality for dataset: %s',
                           package_id)
         dataset = self._fetch_dataset(package_id)
@@ -157,6 +284,44 @@ class DataQualityMetrics(object):
                          package_id)
 
     def calculate_metrics_for_resource(self, resource):
+        '''Performs a calculation for Data Quality for a particular resource.
+
+        Data Quality is calculated for each dimension separately and a report
+        is returned containing the values for all dimensions.
+
+        The calculation will reuse the results from a previous run if the
+        resource data has not changed since the last time the calculation was
+        performed. This rule is applied for each dimension separately, so a
+        result can be cached for some of the dimensions, and will be calculated
+        a new for those dimensions that have not been calculted in the previous
+        run.
+
+        If a metric for specific dimension has been set manually, then no
+        calculation is performed for that dimension and the manual values are
+        kept.
+
+        :param resource: `dict`, CKAN resource metadata.
+
+        :returns: `dict`, a report for all calculated metrics for this resource
+            data. The report `dict` has the following structure:
+
+                .. code-block: python
+                    report = {
+                        '<dimension>': {
+                            'value': 90.0, # the calculated value
+                            '<other_data>': ...
+                        }
+                    }
+            
+            The result dict for each dimension will always contain an entry
+            with the calculated value (called `value`), but also may contain
+            any additional entries from the calculation itself, such as:
+                * `total` - total number of processed entries
+                * `failed` - if present it means that the calculation for that
+                    dimension has failed.
+                * `error` - the actual error that happened, if `failed` is set.
+            
+        '''
         last_modified = datetime.strptime((resource.get('last_modified') or
                                            resource.get('created')),
                                           '%Y-%m-%dT%H:%M:%S.%f')
@@ -236,6 +401,23 @@ class DataQualityMetrics(object):
         return results
 
     def calculate_cumulative_metrics(self, package_id, resources, results):
+        '''Calculates the cumulative metrics (reduce phase), from the results
+        calculated for each resource in the dataset.
+
+        The cumulative values for the dataset are always calculated from the
+        results, except in the case when the values for a particular dimension
+        have been set manually. In that case, the manual value is used.
+
+        The results of the calculation are stored in database in a separate
+        entry containing the valued for Data Quality metrics for the whole
+        dataset.
+
+        :param package_id: `str`, the ID of the CKAN dataset.
+        :param resources: `list` of CKAN resources for which Data Qualtiy
+            metrics have been calculated.
+        :param results: `list` of result `dict`, the results of the calculation
+            for each of the resources.
+        '''
         self.logger.debug('Cumulative data quality metrics for package: %s',
                           package_id)
         data_quality = self._get_metrics_record('package', package_id)
@@ -269,11 +451,42 @@ class DataQualityMetrics(object):
 
 
 class Completeness(DimensionMetric):
+    '''Calculates the completeness Data Qualtiy dimension.
 
+    The calculation is performed over all values in the resource data.
+    In each row, ever cell is inspected if there is a value present in it.
+    
+    The calculation is: `cells_with_value/total_numbr_of_cells * 100`, where:
+        * `cells_with_value` is the number of cells containing a value. A cell
+            contains a value if the value in the cell is not `None` or an empty
+            string or a string containing only whitespace.
+        * `total_numbr_of_cells` is the total number of cells expected to be
+            populted. This is calculated from the number of rows multiplied by
+            the number of columns in the tabular data.
+
+    The return value is a percentage of cells that are populated from the total
+    number of cells.
+    '''
     def __init__(self):
         super(Completeness, self).__init__('completeness')
 
     def calculate_metric(self, resource, data):
+        '''Calculates the completeness dimension metric for the given resource
+        from the resource data.
+
+        :param resource: `dict`, CKAN resource.
+        :param data: `dict`, the resource data as a dict with the following
+            values:
+                * `total`, `int`, total number of rows.
+                * `fields`, `list` of `dict`, column metadata - name, type.
+                * `records`, `iterable`, iterable over the rows in the resource
+                    where each row is a `dict` itself.
+        
+        :returns: `dict`, the report contaning the calculated values:
+            * `value`, `float`, the percentage of complete values in the data.
+            * `total`, `int`, total number of values expected to be populated.
+            * `complete`, `int`, number of cells that have value.
+        '''
         columns_count = len(data['fields'])
         rows_count = data['total']
         total_values_count = columns_count * rows_count
@@ -307,6 +520,25 @@ class Completeness(DimensionMetric):
         return count
 
     def calculate_cumulative_metric(self, resources, metrics):
+        '''Calculates the cumulative report for all resources from the
+        calculated results for each resource.
+
+        The calculation is done as `all_complete/all_total * 100`, where
+            * `all_complete` is the total number of completed values in all
+                resources.
+            * all_total is the number of expected values (rows*columns) in all
+                resources.
+        The final value is the percentage of completed values in all resources
+        in the dataset.
+
+        :param resources: `list` of CKAN resources.
+        :param metrics: `list` of `dict` results for each resource.
+
+        :returns: `dict`, a report for the total percentage of complete values:
+            * `value`, `float`, the percentage of complete values in the data.
+            * `total`, `int`, total number of values expected to be populated.
+            * `complete`, `int`, number of cells that have value.
+        '''
         total, complete = reduce(lambda (total, complete), result: (
             total + result.get('total', 0),
             complete + result.get('complete', 0)
@@ -319,11 +551,44 @@ class Completeness(DimensionMetric):
 
 
 class Uniqueness(DimensionMetric):
+    '''Calculates the uniqueness of the data.
 
+    The general calculation is: `unique_values/total_values * 100`, where:
+        * `unique_values` is the number of unique values
+        * `total_values` is the total number of value
+
+    The dimension value is a percentage of unique values in the data.
+    '''
     def __init__(self):
         super(Uniqueness, self).__init__('uniqueness')
     
     def calculate_metric(self, resource, data):
+        '''Calculates the uniqueness of the values in the data for the given
+        resource.
+
+        For each column of the data, the number of unique values is calculated
+        and the total number of values (basically the number of rows).
+
+        Then, to calculate the number of unique values in the data, the sum of
+        all unique values is calculated and the sum of the total number of
+        values for each column. The the percentage is calculated from those two
+        values.
+
+        :param resource: `dict`, CKAN resource.
+        :param data: `dict`, the resource data as a dict with the following
+            values:
+                * `total`, `int`, total number of rows.
+                * `fields`, `list` of `dict`, column metadata - name, type.
+                * `records`, `iterable`, iterable over the rows in the resource
+                    where each row is a `dict` itself.
+        
+        :returns: `dict`, a report on the uniqueness metrics for the given
+            resource data:
+            * `value`, `float`, the percentage of unique values in the data.
+            * `total`, `int`, total number of values in the data.
+            * `unique`, `int`, number unique values in the data.
+            * `columns`, `dict`, detailed report for each column in the data.
+        '''
         total = {}
         distinct = {}
 
