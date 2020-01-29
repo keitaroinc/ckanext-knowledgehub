@@ -1116,16 +1116,17 @@ def resource_data_quality(context, data_dict):
 
 @toolkit.side_effect_free
 def resource_validate_status(context, data_dict):
-    id = data_dict.get('id')
-    if not id:
-        raise ValidationError({'id': _(u'Missing Value')})
+
+    if not data_dict.get('id'):
+        raise ValidationError({'resource': _(u'Missing Value')})
+    resource_id = data_dict.get('id')
 
     try:
         check_access('resource_validate_show', context, data_dict)
     except NotAuthorized as e:
         raise NotAuthorized(_(str(e)))
 
-    filter = {"id": id}
+    filter = {"resource": resource_id}
     validation_status = ResourceValidate.get(**filter)
     if not validation_status:
         raise NotFound(_('Not Found'))

@@ -157,14 +157,14 @@ def user_intent_delete(context, data_dict):
 
 def resource_validate_delete(context, data_dict):
     '''
-    Deletes existing validation status of resource by id
+    Deletes existing validation report of resource by id
     :param id
     '''
-    check_access('resource_validate_delete', context)
 
+    # check_access('resource_validate_delete', context)
     if 'id' not in data_dict:
-        raise ValidationError({"id": _('Missing value')})
+        raise ValidationError({"resource": _('Missing value')})
 
-    ResourceValidate.delete({'id': data_dict['id']})
+    ResourceValidate.delete({'resource': data_dict['id']})
 
-    return {"message": _('Validation status of resource deleted.')}
+    return {"message": _('Validation report of the resource is deleted.')}

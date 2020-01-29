@@ -1186,3 +1186,13 @@ def get_resource_data_quality(id):
     except Exception:
         return {}
     return result
+
+
+def get_resource_validation_data(id):
+    context = _get_context()
+    try:
+        result = toolkit.get_action('resource_validate_status')(
+                                    context, {'id': id})
+    except Exception:
+        return {}
+    return result

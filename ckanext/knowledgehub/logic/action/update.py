@@ -300,7 +300,6 @@ def resource_view_update(context, data_dict):
         if ext_old.get('research_questions') or ext.get('research_questions'):
             plugin_helpers.update_rqs_in_dataset(old_resource_view_data, resource_view_data)
 
-
     return resource_view_data
 
 
@@ -360,7 +359,7 @@ def dashboard_update(context, data_dict):
 
 
 def package_update(context, data_dict):
-    
+
     return ckan_package_update(context, data_dict)
 
 
@@ -577,13 +576,13 @@ def resource_validate_update(context, data_dict):
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
 
-    resource_validate = ResourceValidate.get(id=id)
+    resource_validate = ResourceValidate.get(resource=id)
 
     if not resource_validate:
-        log.debug('Could not find validation status %s', id)
-        raise logic.NotFound(_('Validation status was not found.'))
+        log.debug('Could not find validation report %s', id)
+        raise logic.NotFound(_('Validation report was not found.'))
 
-    filter = {'id': id}
+    filter = {'resource': id}
     st = ResourceValidate.update(filter, data_dict)
 
     return st.as_dict()
