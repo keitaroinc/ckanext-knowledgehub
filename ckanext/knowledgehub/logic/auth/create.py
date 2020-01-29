@@ -1,4 +1,7 @@
-from ckan.logic.auth.create import package_create as ckan_package_create
+from ckan.logic.auth.create import (
+    package_create as ckan_package_create,
+    resource_create as ckan_resource_create,
+)
 
 
 def theme_create(context, data_dict):
@@ -96,3 +99,9 @@ def user_query_result_create(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+def resource_create(context, data_dict):
+    '''
+       Pass the resource_create authorization check to CKAN core auth function.
+    '''
+    return ckan_resource_create(context, data_dict)
