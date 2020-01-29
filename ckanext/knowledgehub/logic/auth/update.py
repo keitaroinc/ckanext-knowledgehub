@@ -46,5 +46,5 @@ def package_update(context, data_dict=None):
 
 def resource_update(context, data_dict=None):
     # This auth function must be overriden like this, otherwise an error is
-    # thrown a regular user is adding new resource.
+    # thrown when a regular user is adding new resource.
     return ckan_resource_update(context, data_dict)
