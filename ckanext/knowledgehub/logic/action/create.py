@@ -785,7 +785,11 @@ def tag_create(context, data_dict):
     '''
     model = context['model']
 
-    check_access('tag_create', context, data_dict)
+    try:
+        check_access('tag_create', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
 
     schema = context.get('schema') or knowledgehub_schema.tag_create_schema()
     data, errors = _df.validate(data_dict, schema, context)
