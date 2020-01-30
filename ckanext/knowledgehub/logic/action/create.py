@@ -768,10 +768,8 @@ def tag_create(context, data_dict):
 
     You must be a sysadmin to create vocabulary tags.
 
-    You can only use this function to create tags that belong to a vocabulary,
-    not to create free tags. (To create a new free tag simply add the tag to
-    a package, e.g. using the
-    :py:func:`~ckan.logic.action.update.package_update` function.)
+    You can use this function to create tags that belong to a vocabulary or
+    to create a free tags that do not belong to any vocabulary.
 
     :param name: the name for the new tag, a string between 2 and 100
         characters long containing only alphanumeric characters and ``-``,
