@@ -43,3 +43,7 @@ coverage.xml
 docs/_build/
 
 .vscode
+
+# Keras
+history.p
+keras_model.*

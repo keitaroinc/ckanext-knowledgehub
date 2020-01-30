@@ -1212,7 +1212,7 @@ class TestKWHUpdateActions(ActionsBase):
 
         rsc_updated = update_actions.resource_update(context, data_dict)
 
-        assert_equals(rsc_updated, None)
+        assert_not_equals(rsc_updated, None)
 
     @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     def test_resource_view_update(self):
