@@ -701,7 +701,7 @@ def resource_validate_create(context, data_dict):
         :param resource
     '''
 
-    # check_access('resource_validate_create', context, data_dict)
+    check_access('resource_validate_create', context, data_dict)
     user = context['user']
     session = context['session']
 

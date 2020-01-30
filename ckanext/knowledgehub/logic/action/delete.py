@@ -163,7 +163,7 @@ def resource_validate_delete(context, data_dict):
     :param id
     '''
 
-    # check_access('resource_validate_delete', context)
+    check_access('resource_validate_delete', context)
     if 'id' not in data_dict:
         raise ValidationError({"resource": _('Missing value')})
 

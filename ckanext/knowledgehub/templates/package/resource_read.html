@@ -85,7 +85,7 @@
 
   <div>
       <section class="validation-info">
-        {% if validation_data.what %}
+        {% if validation_data %}
         <h4>{{ _('Validation Report') }}</h4>
         <div id="validation_comment" style="display:block">
           <div class="comment_body">
@@ -99,27 +99,30 @@
           </div>
         </div>
 
-        <div>  
-          <div id='editComment' style="display:none">
-            <div class="row">
-              <div class="col-md-12">
-                  <div id="description" class="form-row">
-                    <textarea cols = '50' rows = '3' name = "comment" id = "commentInput" placeholder = "{{ validation_data.what }}"></textarea>
-                  </div>
-                  <a href="#"><input type="submit" name="ysubmit" id="validationEdited" value="Edit Validation"></a>
-              </div>
+        <div id='editComment' style="display:block">
+          <div class="row">
+            <div class="col-md-12">
+                <div id="whatEdited" class="form-row">
+                  <textarea cols = '50' rows = '3' name = "commentEdit" id = "commentInput" placeholder = "{{ validation_data.what }}"></textarea>
+                </div>
+                <a href="#"><input type="submit" name="ysubmitEdit" id="validationEdited" value="Edit Validation"></a>
             </div>
           </div>
-          <div>
-            <button id="update_validation" class="btn btn-primary" name="update_validation_report" type="submit" onclick="editComment()">{{ _('Edit') }}</button>
-            <button id="delete_validation" class="btn btn-danger pull-left" name="delete_validation_report" type="submit">
-              {{ _('Delete') }}
-            </button>
-          </div>
         </div>
+
+        <div>
+        <button id="update_validation" class="btn btn-primary" name="update_validation_report" type="submit" onclick="editComment()">
+          {{ _('Edit') }}
+        </button>
+        <button id="delete_validation" class="btn btn-danger pull-left" name="delete_validation_report" type="submit">
+              {{ _('Delete') }}
+        </button>
+      </div>
+        
         {% else %}
         <p></p>
         {% endif %} 
+        
       </section>
   </div>
 </div>

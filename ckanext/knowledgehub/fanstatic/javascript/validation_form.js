@@ -13,7 +13,7 @@ function showValidationForm() {
  }
 
  function editComment() {
-    document.getElementById('editComment').style.display = "block";
+    document.getElementById('editComment').style.display = "display:none";
  }
 
 (function (_, jQuery) {
@@ -21,7 +21,6 @@ function showValidationForm() {
 
    var api = {
        post: function (action, params) {
-          console.log(params, "data")
            var api_ver = 3;
            var base_url = ckan.sandbox().client.endpoint;
            var url = base_url + '/api/' + api_ver + '/action/' + action + '?' + params;
@@ -34,17 +33,12 @@ function showValidationForm() {
             var url = base_url + '/api/' + api_ver + '/action/' + action;
             return $.post(url, params, 'json');
         },
-       update: function(action, data) {
-        var api_ver = 3;
-        var base_url = ckan.sandbox().client.endpoint;
-        var url = base_url + '/api/' + api_ver + '/action/' + action;
-        return $.ajax({
-            url: url,
-            type: 'PUT',
-            success: function(result) {
-                console.log(result)
-            }
-        })
+       update: function(action, params) {
+            var api_ver = 3;
+            var base_url = ckan.sandbox().client.endpoint;
+            params = $.param(params);
+            var url = base_url + '/api/' + api_ver + '/action/' + action;
+            return $.post(url, params, 'json');
        }
    };
 
@@ -72,9 +66,7 @@ function showValidationForm() {
          id: resource
      })
         .done(function () {
-            if(data.success) {
-                tr.detach();
-            }
+            console.log("Validation Report: DELETED!");
         })
         .fail(function (error) {
              console.log("Delete validation report: " + error.statusText);
@@ -85,14 +77,12 @@ function showValidationForm() {
     var resource = $('#resource').val();
     var validationWhat = $('#commentInput').val();
     var btn = $(this);
-    console.log(btn)
-    console.log(resource)
     api.update('resource_validate_update', {
          id: resource,
          what: validationWhat
      })
          .done(function () {
-            console.log("OKKK")
+            console.log("Validation Report: UPDATED!");
          })
          .fail(function (error) {
              console.log("Edit validation report: " + error.statusText);
