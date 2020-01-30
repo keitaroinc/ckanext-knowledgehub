@@ -702,7 +702,8 @@ def resource_validate_create(context, data_dict):
     '''
 
     check_access('resource_validate_create', context, data_dict)
-    user = context['user']
+    user = context['auth_user_obj']
+    fullname = getattr(user, "fullname")
     session = context['session']
 
     context['resource_validate'] = None
@@ -720,8 +721,10 @@ def resource_validate_create(context, data_dict):
     for item in items:
         setattr(resource_validate, item, data.get(item))
 
-    resource_validate.when = datetime.datetime.utcnow()
-    resource_validate.who = user
+    resource_validate.when = datetime.datetime.utcnow().strftime(
+        '%Y-%m-%dT%H:%M:%S'
+        )
+    resource_validate.who = fullname
     resource_validate.resource = data.get('resource')
 
     resource_validate.save()
