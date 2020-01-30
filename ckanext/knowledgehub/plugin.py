@@ -126,7 +126,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'theme': package_defaults,
             'sub_theme': package_defaults,
             'research_question': package_defaults,
-            'country_code': package_defaults
+            'country_code_displacement': package_defaults,
+            'country_code_origin': package_defaults
         })
 
         schema['resources'].update({
@@ -170,7 +171,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'theme': package_defaults,
             'sub_theme': package_defaults,
             'research_question': package_defaults,
-            'country_code': package_defaults
+            'country_code_displacement': package_defaults,
+            'country_code_origin': package_defaults
         })
 
         schema['resources'].update({

@@ -1,6 +1,10 @@
 from ckan.plugins import toolkit
+from ckan.logic.schema import default_tags_schema
+
 from ckanext.knowledgehub.logic import validators
 
+
+empty = toolkit.get_validator('empty')
 not_empty = toolkit.get_validator('not_empty')
 ignore_missing = toolkit.get_validator('ignore_missing')
 name_validator = toolkit.get_validator('name_validator')
@@ -167,3 +171,10 @@ def user_query_result_schema():
         'result_type': [not_empty, unicode],
         'result_id': [not_empty, unicode]
     }
+
+
+def tag_create_schema():
+    schema = default_tags_schema()
+    # You're not allowed to specify your own ID when creating a tag.
+    schema['id'] = [empty]
+    return schema
