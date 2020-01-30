@@ -8419,7 +8419,15 @@ a.tag:hover {
 }
 
 .dt-header {
-  font-size: 200px
+  font-size: 20px;
+  font-weight: 700
+}
+
+.dt-header p {
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  text-align: center
 }
 
 #research-questions a {

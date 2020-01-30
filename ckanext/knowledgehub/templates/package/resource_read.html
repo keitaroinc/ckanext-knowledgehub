@@ -82,6 +82,7 @@
   {% endif %}
   {% endblock %}
 
+  <br />
   <div id="validationReport">
     <form>
       {%  set validation_data = h.get_resource_validation_data(res.id) %}
@@ -112,7 +113,7 @@
             <p>{{validation_data.what}}</p>
           </div>
           <div class="comment_details">
-            <p class="fa fa-calendar"> {{validation_data.when}} </p>
+            <p class="fa fa-calendar"> {{validation_data.when}} &nbsp</p>
             <p class="fa fa-pencil"> {{validation_data.who}}</p>
           </div>
         </div>
@@ -133,7 +134,7 @@
 
         <div>
           <button id="update_validation" class="btn btn-primary" name="update_validation_report" type="button"
-            onclick="editComment()">
+            onclick="editComment()"><i class="fa fa-pencil"></i>
             {{ _('Edit') }}
           </button>
           <button id="delete_validation" class="btn btn-danger pull-left" name="delete_validation_report" type="submit">
