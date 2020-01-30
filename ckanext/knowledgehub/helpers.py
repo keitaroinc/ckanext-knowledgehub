@@ -759,10 +759,15 @@ def resource_feedback_count(type, resource, dataset):
     return rf_list.get('total', 0)
 
 
-def get_dashboards(limit=5, order_by='created_by asc'):
-    dashboards = Dashboard.search(limit=limit, order_by=order_by).all()
+def get_dashboards(ctx={}, limit=5, order_by='created_by asc'):
+    if not ctx:
+        ctx = _get_context()
+    dashboards = toolkit.get_action('dashboard_list')(
+        ctx,
+        {'limit': limit, 'sort': order_by}
+    )
 
-    return dashboards
+    return dashboards.get('data', [])
 
 
 def remove_space_for_url(str):
@@ -841,18 +846,50 @@ def get_searched_rqs(query):
 
 
 def get_searched_dashboards(query):
-    context = _get_context()
-    search_query = {
-        'text': query,
-        'page': int(request.params.get('page', 1)),
+    page = int(request.params.get('page', 1))
+    limit = int(config.get('ckan.datasets_per_page', 20))
+    offset = (page -1) * limit
+    list_dash_searched = {
+        'count': 0,
+        'limit': limit,
+        'stats': {},
+        'facets': {},
+        'results': []
     }
-    sort = _get_sort()
-    if sort:
-        search_query['sort'] = sort
-    list_dash_searched = toolkit.get_action(
-        'search_dashboards')(
-            context,
-            search_query)
+
+    def result_iter(page=1):
+        search_query = {
+            'text': query,
+        }
+        sort = _get_sort()
+        if sort:
+            search_query['sort'] = sort
+        while True:
+            search_query['page'] = page
+            dashboards = toolkit.get_action('search_dashboards')(
+                _get_context(),
+                search_query)
+            results = dashboards.get('results', [])
+            if not results:
+                break
+            for r in results:
+                yield r
+            page += 1
+
+    dashboards = []
+    for dashboard in result_iter():
+        try:
+            toolkit.check_access(
+                'dashboard_show',
+                _get_context(),
+                {'name': dashboard.get('name')})
+        except toolkit.NotAuthorized:
+            continue
+
+        dashboards.append(dashboard)
+
+    list_dash_searched['count'] = len(dashboards)
+    list_dash_searched['results'] = dashboards[offset:offset+limit]
     list_dash_searched['pager'] = _get_pager(list_dash_searched, 'dashboards')
     return list_dash_searched
 
@@ -1237,3 +1274,55 @@ def get_resource_data_quality(id):
     except Exception:
         return {}
     return result
+
+
+def views_dashboards_groups_update(package_id):
+    ''' Update groups of the visualizations and dashboards
+
+    param package_id: the id or name of the package
+    type package_id: string
+    '''
+    package = toolkit.get_action('package_show')(
+        {'ignore_auth': True},
+        {'id': package_id, 'include_tracking': True}
+    )
+
+    resource_views = []
+    for resource in package.get('resources'):
+        resource_view_list = toolkit.get_action('resource_view_list')(
+            {'ignore_auth': True}, {'id': resource.get('id')})
+        for resource_view in resource_view_list:
+            if resource_view.get('view_type') == 'chart' or \
+               resource_view.get('view_type') == 'map' or \
+               resource_view.get('view_type') == 'table':
+                resource_views.append(resource_view)
+
+    for view in resource_views:
+        view_data = {
+            'id': view.get('id'),
+            'resource_id': view.get('resource_id'),
+            'title': view.get('title'),
+            'description': view.get('description'),
+            'view_type': view.get('view_type')
+        }
+        view_data.update(view.get('__extras', {}))
+        toolkit.get_action('resource_view_update')(
+            {'ignore_auth': True},
+            view_data
+        )
+
+    for view in resource_views:
+        docs = toolkit.get_action('search_dashboards')(
+            {'ignore_auth': True},
+            {'text': '*', 'fq': 'khe_indicators:' + view.get('id')}
+        )
+
+        for dashboard in docs.get('results', []):
+            data_dict = toolkit.get_action('dashboard_show')(
+                {'ignore_auth': True},
+                {'id': dashboard.get('id')}
+            )
+            toolkit.get_action('dashboard_update')(
+                {'ignore_auth': True},
+                data_dict
+            )

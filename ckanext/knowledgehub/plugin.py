@@ -129,7 +129,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'theme': package_defaults,
             'sub_theme': package_defaults,
             'research_question': package_defaults,
-            'country_code': package_defaults
+            'country_code_displacement': package_defaults,
+            'country_code_origin': package_defaults
         })
 
         schema['resources'].update({
@@ -157,7 +158,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         defaults = [toolkit.get_validator('ignore_missing')]
         package_defaults = [toolkit.get_converter('convert_from_extras'),
                             toolkit.get_validator('ignore_missing')]
-        mandatory_defaults = [toolkit.get_validator('not_missing')]
 
         schema.update({
             'unit_supported': package_defaults,
@@ -174,7 +174,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'theme': package_defaults,
             'sub_theme': package_defaults,
             'research_question': package_defaults,
-            'country_code': package_defaults
+            'country_code_displacement': package_defaults,
+            'country_code_origin': package_defaults
         })
 
         schema['resources'].update({

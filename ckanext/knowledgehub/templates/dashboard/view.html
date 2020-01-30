@@ -7,6 +7,18 @@
 
 {% extends 'page.html' %}
 
+{% block header %}
+    {% if dashboard.type == 'internal' %}
+        {{ super() }}
+    {% endif %}
+{% endblock %}
+
+{% block footer %}
+    {% if dashboard.type == 'internal' %}
+        {{ super() }}
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 <div role="main">
     <div class="container-fluid" id="container">
@@ -181,9 +193,9 @@
 
     </div>
     {% elif dashboard.type == 'external' %}
-    <iframe src="{{ dashboard.source }}" frameborder="0" class="dashboard-view-iframe"></iframe>
+        <iframe src="{{ dashboard.source }}" frameborder="0" class="dashboard-view-iframe"></iframe>
     {% else %}
-    {{ 'Dashboard type not supported.' }}
+        {{ 'Dashboard type not supported.' }}
     {% endif %}
 </div>
 {% endblock %}
