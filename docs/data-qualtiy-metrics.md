@@ -92,7 +92,7 @@ on the data.
 The actual records for Data Quality (both for Dataset and Resource) have the
 following JSON structure:
 
-```json
+```javascript
 {
     "calculated_on": "2020-01-27T21:30:37.091640",  // ISO-8601 date string
     "accuracy": 74.92682926829268, // floating point number
@@ -250,7 +250,7 @@ Two fields are available:
 
 On a resource level, the following configuration is expected by the system:
 
-```json
+```javascript
 // resource data in JSON
 {
     "id": "resource-id",
@@ -551,7 +551,7 @@ The column report would look like this:
         "consistent": 10,
         "formats": {
             "int": 5,
-            "^(\d{1,3},)+(\d{3})$": 10
+            "^(\\d{1,3},)+(\\d{3})$": 10
         }
     },
     "col3": {
@@ -722,7 +722,7 @@ Fetches the data quality values for a particular resource.
 * Response:
     * Type `JSON`
     * Response object:
-    ```json
+    ```javascript
     {
       "help": "http://localhost:5000/api/3/action/help_show?name=resource_data_quality",
       "success": true,
@@ -955,7 +955,7 @@ Updates all or a subset of a data quality values for a particular dataset. If no
 * Method: `POST`
 * Request:
     * `JSON` object of the following structure:
-    ```json
+    ```javascript
     {
         "id": "<the id of the package>",
         "<metric-name>": { // the name of the metric, like: completeness, uniqueness etc
@@ -991,7 +991,7 @@ curl -H "Authorization: $API_KEY" \
 ```
 
 The result:
-```json
+```javascript
 {
   "help": "http://localhost:5000/api/3/action/help_show?name=package_data_quality_update",
   "success": true,
@@ -1030,7 +1030,7 @@ Updates all or a subset of a data quality values for a particular resource. If n
 * Method: `POST`
 * Request:
     * `JSON` object of the following structure:
-    ```json
+    ```javascript
     {
         "id": "<the id of the resource>",
         "<metric-name>": { // the name of the metric, like: completeness, uniqueness etc
@@ -1066,7 +1066,7 @@ curl -H "Authorization: $API_KEY" \
 ```
 
 The result:
-```json
+```javascript
 {
   "help": "http://localhost:5000/api/3/action/help_show?name=resource_data_quality_update",
   "success": true,
