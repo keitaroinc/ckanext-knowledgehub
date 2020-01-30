@@ -38,7 +38,7 @@
       </ul>
     </div>
   </li>
-  
+
   {% endif %}
 
   {% if res.url and h.is_url(res.url) %}
@@ -61,29 +61,49 @@
     </div>
   </li>
   {% endif %}
- 
-<!--  -->
-<div id="validationReport">
-  <form>
-  {%  set validation_data = h.get_resource_validation_data(res.id) %}
-  {% if validation_data %}
-  <p></p>
-  {% else %}
-    <div id='validationForm' style="display:none">
-      <div class="row">
-        <div class="col-md-12">
+
+  <!--  -->
+  <!--  -->
+
+  {% if res.datastore_active %}
+  <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>
+  {% endif %}
+  {% endblock %}
+
+  {% block resource_read_url %}
+  {% if res.url and h.is_url(res.url) %}
+  <p style="margin-top:10px;"><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title"
+      type="text" name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
+      onclick="copyToClipBoard()"><b>Copy
+        url</b></button></p>
+
+  {% elif res.url %}
+  <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
+  {% endif %}
+  {% endblock %}
+
+  <div id="validationReport">
+    <form>
+      {%  set validation_data = h.get_resource_validation_data(res.id) %}
+      {% if validation_data %}
+      <p></p>
+      {% else %}
+      <div id='validationForm' style="display:none">
+        <div class="row">
+          <div class="col-md-12">
             <div id="what" class="form-row">
-              <textarea cols = '50' rows = '3' name = "comment" placeholder = "  Validation Status" id = "comment" ></textarea>
+              <textarea cols='50' rows='3' name="comment" placeholder="  Validation Status" id="comment"></textarea>
             </div>
             <a href="#"><input type="submit" name="ysubmit" id="validationSubmitSuccess" value="Submit Validation"></a>
+          </div>
         </div>
       </div>
-    </div>
-  </form>
-  <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit" onclick="showValidationForm()">{{ _('Validation Report') }}</button>
-  {% endif %}
+    </form>
+    <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit"
+      onclick="showValidationForm()">{{ _('Validation Report') }}</button>
+    {% endif %}
 
-  <div>
+    <div>
       <section class="validation-info">
         {% if validation_data %}
         <h4>{{ _('Validation Report') }}</h4>
@@ -92,62 +112,49 @@
             <p>{{validation_data.what}}</p>
           </div>
           <div class="comment_details">
-            <ul>
-              <li><i class="fa fa-calendar">{{validation_data.when}}</i></li>
-              <li><i class="fa fa-pencil"></i> <span class="user">{{validation_data.who}}</span></li>
-            </ul>
+            <p class="fa fa-calendar"> {{validation_data.when}} </p>
+            <p class="fa fa-pencil"> {{validation_data.who}}</p>
           </div>
         </div>
 
-        <div id='editComment' style="display:block">
+        <div id='editComment' class="editCommentVisible">
           <div class="row">
             <div class="col-md-12">
-                <div id="whatEdited" class="form-row">
-                  <textarea cols = '50' rows = '3' name = "commentEdit" id = "commentInput" placeholder = "{{ validation_data.what }}"></textarea>
-                </div>
-                <a href="#"><input type="submit" name="ysubmitEdit" id="validationEdited" value="Edit Validation"></a>
+              <div id="whatEdited" class="form-row">
+                <textarea cols='50' rows='3' name="commentEdit" id="commentInput"
+                  placeholder="{{ validation_data.what }}"></textarea>
+              </div>
+              <button class="btn btn-primary" id="validationEdited" name="ysubmitEdit" type="submit">Edit
+                Validation</button>
+
             </div>
           </div>
         </div>
 
         <div>
-        <button id="update_validation" class="btn btn-primary" name="update_validation_report" type="submit" onclick="editComment()">
-          {{ _('Edit') }}
-        </button>
-        <button id="delete_validation" class="btn btn-danger pull-left" name="delete_validation_report" type="submit">
-              {{ _('Delete') }}
-        </button>
-      </div>
-        
+          <button id="update_validation" class="btn btn-primary" name="update_validation_report" type="button"
+            onclick="editComment()">
+            {{ _('Edit') }}
+          </button>
+          <button id="delete_validation" class="btn btn-danger pull-left" name="delete_validation_report" type="submit">
+            {{ _('Delete') }}
+          </button>
+        </div>
+
         {% else %}
         <p></p>
-        {% endif %} 
-        
-      </section>
-  </div>
-</div>
-<!--  -->
+        {% endif %}
 
-  {% if res.datastore_active %}
-  <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>
-  {% endif %}
-  {% endblock %}
+      </section>
+    </div>
+  </div>
+
 </ul>
 {% endblock %}
 {% block resource_content %}
 {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>
 {% endblock %}
-{% block resource_read_url %}
-{% if res.url and h.is_url(res.url) %}
-<p><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title" type="text"
-    name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
-    onclick="copyToClipBoard()"><b>Copy
-      url</b></button></p>
 
-{% elif res.url %}
-<p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
-{% endif %}
-{% endblock %}
 <div class="prose notes" property="rdfs:label">
   {% if res.description %}
   {{ h.render_markdown(res.description) }}
