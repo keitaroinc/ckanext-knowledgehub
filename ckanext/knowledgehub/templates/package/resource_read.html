@@ -154,14 +154,13 @@
 {% block resource_content %}
 {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>
 {% endblock %}
-
 <div class="prose notes" property="rdfs:label">
   {% if res.description %}
   {{ h.render_markdown(res.description) }}
   {% endif %}
   {% if not res.description and c.package.notes %}
   <!-- <h3>{{ _('From the dataset abstract') }}</h3> -->
-  <blockquote>{{ h.markdown_extract(h.get_translated(c.package, 'notes')) }}</blockquote>
+  <p>{{ h.markdown_extract(h.get_translated(c.package, 'notes')) }}</p>
   <p>
     {% trans dataset=c.package.title, url=h.url_for(controller='package', action='read', id=c.package['name']) %}Source:
     <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
@@ -202,6 +201,9 @@
   {% if resource_view == current_resource_view %}
   {% if current_resource_view.view_type == 'chart' %}
   {% if resource_view and resource_view.__extras %}
+  {% if resource_view.__extras.research_questions %}
+  {% set research_questions = resource_view.__extras.research_questions %}
+  {% endif %}
   {% set colors = resource_view.__extras.color %}
   {% set chart_id = resource_view.__extras.id %}
   {% set x_axis = resource_view.__extras.x_axis %}
@@ -269,11 +271,17 @@
                 dynamic_reference_label=dynamic_reference_label %}
   {% snippet 'ajax_snippets/visual_info_module.html',
               title = chart_title,
+              subtitle = chart_subtitle,
+              description = chart_description,
+              resq = research_questions,
               resource_id = resource_id %}
 
   {% elif current_resource_view.view_type == 'table'  %}
 
   {% if resource_view and resource_view.__extras %}
+  {% if resource_view.__extras.research_questions %}
+  {% set research_questions = resource_view.__extras.research_questions %}
+  {% endif %}
   {% set main_value = resource_view.__extras.main_value %}
   {% set y_axis = resource_view.__extras.y_axis %}
   {% set sql_string = resource_view.__extras.sql_string %}
@@ -300,6 +308,9 @@
                   table_title = table_title %}
   {% snippet 'ajax_snippets/visual_info_module.html',
                   title = table_title,
+                  subtitle = table_subtitle,
+                  description = table_description,
+                  resq = research_questions,
                   resource_id = resource_id %}
 
   {% elif current_resource_view.view_type == 'map'  %}

@@ -14,7 +14,7 @@ function hideValidationForm() {
 
 function editComment() {
     document.getElementById('editComment').style.display = "block";
-    //document.getElementById('editComment').setAttribute('style', 'display:block !important')
+
 }
 
 (function (_, jQuery) {
