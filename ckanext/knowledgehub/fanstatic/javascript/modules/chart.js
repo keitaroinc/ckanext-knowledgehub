@@ -514,12 +514,12 @@ ckan.module('chart', function () {
                 d3.select("svg").datum(sorted_data).call(chart);
             }
             else {
-                
+
                 var chart = c3.generate(options);
-                
+
                 info.map(val => {
                     var x = $(".c3-title", chart.element).attr('x');
-                    var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    //var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
                     val.length > 30 ? val = val.substring(0, 30) + "..." : null;
                     element.textContent = val;
                     element.setAttributeNS(null, 'dy', '1.2em');
@@ -527,7 +527,7 @@ ckan.module('chart', function () {
                     $('.c3-title', chart.element).append(element)
                 });
             }
-            
+
             var svgimg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
             svgimg.setAttributeNS(null, 'height', '70');
             svgimg.setAttributeNS(null, 'width', '270');
@@ -806,7 +806,7 @@ ckan.module('chart', function () {
                 .orient("left")
                 .tickSize(0)
             // to clear the Loading... part
-            var m = document.getElementById("chart-module-id").innerHTML="";
+            var m = document.getElementById("chart-module-id").innerHTML = "";
 
             var svg = d3.select(".item-content").append("svg")
                 .attr("width", width + margin.left + margin.right)

@@ -31,6 +31,10 @@ Example:
         {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
     </li>
     {% endif %}
+    {% if system_resource %}
+    <h3>{{ _('System Resources') }}</h3>
+    {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=system_resource, can_edit=can_edit %}
+    {% endif %}
   </ul>
   {% else %}
   {% if h.check_access('resource_create', {'package_id': pkg['id']}) %}
