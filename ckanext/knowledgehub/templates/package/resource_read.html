@@ -61,11 +61,14 @@
       {{ super() }}
       {% endblock %}
     </div>
+    {% if h.check_access('resource_validate_create') %}
     {% if not validation_data %}
     <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit"
       onclick="showValidationForm()"><i class="fa fa-search" aria-hidden="true"></i>
 
-      {{ _('Validation Report') }}</button>
+      {{ _('Validation Report') }}
+    </button>
+    {% endif %}
     {% endif %}
   </li>
   {% endif %}
