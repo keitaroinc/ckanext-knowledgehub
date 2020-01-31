@@ -648,3 +648,44 @@ def resource_validation_status(context, data_dict):
         vr.update(filter, vru)
 
         return _table_dictize(vr, context)
+
+
+def tag_update(context, data_dict):
+    ''' Update the tag name or vocabulary
+
+    :param id: id or name of the tag
+    :type id: string
+    :param name: the name of the tag (optional)
+    :type name: string
+    :param vocabulary_id: the id of the vocabulary
+    :type vocabulary_id: string
+
+    :returns: the updated tag
+    :rtype: dictionary
+    '''
+
+    model = context['model']
+
+    try:
+        check_access('tag_create', context, data_dict)
+    except NotAuthorized:
+        raise NotAuthorized(_(u'Need to be system '
+                              u'administrator to administer'))
+
+    id = _get_or_bust(data_dict, 'id')
+
+    tag = model.Tag.get(id)
+    if not tag:
+        raise NotFound(_('Tag was not found'))
+
+    items = ['name', 'vocabulary_id']
+    for item in items:
+        if data_dict.get(item):
+            setattr(tag, item, data_dict.get(item))
+
+    session = context['session']
+    tag.save()
+    session.add(tag)
+    session.commit()
+
+    return _table_dictize(tag, context)

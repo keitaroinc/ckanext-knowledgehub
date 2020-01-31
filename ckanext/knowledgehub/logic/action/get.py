@@ -1,6 +1,7 @@
 import logging
 import os
 import json
+from six import string_types
 
 import ckan.logic as logic
 from ckan.plugins import toolkit
@@ -33,6 +34,7 @@ log = logging.getLogger(__name__)
 
 _table_dictize = lib.dictization.table_dictize
 model_dictize = lib.dictization.model_dictize
+misc = model.misc
 check_access = toolkit.check_access
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
@@ -1127,3 +1129,163 @@ def resource_data_quality(context, data_dict):
     result['calculated_on'] = calculated_on
 
     return result
+
+
+def _tag_search(context, data_dict):
+    model = context['model']
+
+    terms = data_dict.get('query') or data_dict.get('q') or []
+    if isinstance(terms, string_types):
+        terms = [terms]
+    terms = [t.strip() for t in terms if t.strip()]
+
+    if 'fields' in data_dict:
+        log.warning('"fields" parameter is deprecated.  '
+                    'Use the "query" parameter instead')
+
+    fields = data_dict.get('fields', {})
+    offset = data_dict.get('offset')
+    limit = data_dict.get('limit')
+
+    # TODO: should we check for user authentication first?
+    q = model.Session.query(model.Tag)
+
+    if 'vocabulary_id' in data_dict:
+        # Filter by vocabulary.
+        vocab = model.Vocabulary.get(_get_or_bust(data_dict, 'vocabulary_id'))
+        if not vocab:
+            raise NotFound
+        q = q.filter(model.Tag.vocabulary_id == vocab.id)
+
+    for field, value in fields.items():
+        if field in ('tag', 'tags'):
+            terms.append(value)
+
+    if not len(terms):
+        return [], 0
+
+    for term in terms:
+        escaped_term = misc.escape_sql_like_special_characters(
+            term, escape='\\')
+        q = q.filter(model.Tag.name.ilike('%' + escaped_term + '%'))
+
+    count = q.count()
+    q = q.offset(offset)
+    q = q.limit(limit)
+    return q.all(), count
+
+
+def tag_list(context, data_dict):
+    '''Return a list of the site's tags.
+
+    By default only free tags (tags that don't belong to a vocabulary) are
+    returned. If the ``vocabulary_id`` argument is given then only tags
+    belonging to that vocabulary will be returned instead.
+
+    :param query: a tag name query to search for, if given only tags whose
+        names contain this string will be returned (optional)
+    :type query: string
+    :param vocabulary_id: the id or name of a vocabulary, if give only tags
+        that belong to this vocabulary will be returned (optional)
+    :type vocabulary_id: string
+    :param all_fields: return full tag dictionaries instead of just names
+        (optional, default: ``False``)
+    :type all_fields: bool
+
+    :rtype: list of dictionaries
+
+    '''
+    model = context['model']
+
+    vocab_id_or_name = data_dict.get('vocabulary_id')
+    query = data_dict.get('query') or data_dict.get('q')
+    if query:
+        query = query.strip()
+    all_fields = data_dict.get('all_fields', None)
+
+    check_access('tag_list', context, data_dict)
+
+    if query:
+        tags, count = _tag_search(context, data_dict)
+    elif vocab_id_or_name:
+        tags = model.Tag.all(vocab_id_or_name)
+    else:
+        tags = model.Tag.all()
+
+    if tags:
+        if all_fields:
+            tag_list = model_dictize.tag_list_dictize(tags, context)
+        else:
+            tag_list = [tag.name for tag in tags]
+    else:
+        tag_list = []
+
+    return tag_list
+
+
+def tag_autocomplete(context, data_dict):
+    '''Return a list of tag names that contain a given string.
+
+    By default only free tags (tags that don't belong to any vocabulary) are
+    searched. If the ``vocabulary_id`` argument is given then only tags
+    belonging to that vocabulary will be searched instead.
+
+    :param query: the string to search for
+    :type query: string
+    :param vocabulary_id: the id or name of the tag vocabulary to search in
+      (optional)
+    :type vocabulary_id: string
+    :param fields: deprecated
+    :type fields: dictionary
+    :param limit: the maximum number of tags to return
+    :type limit: int
+    :param offset: when ``limit`` is given, the offset to start returning tags
+        from
+    :type offset: int
+
+    :rtype: list of strings
+
+    '''
+    check_access('tag_list', context, data_dict)
+    matching_tags, count = _tag_search(context, data_dict)
+    if matching_tags:
+        return [tag.name for tag in matching_tags]
+    else:
+        return []
+
+
+def tag_search(context, data_dict):
+    '''Return a list of tags whose names contain a given string.
+
+    By default only free tags (tags that don't belong to any vocabulary) are
+    searched. If the ``vocabulary_id`` argument is given then only tags
+    belonging to that vocabulary will be searched instead.
+
+    :param query: the string(s) to search for
+    :type query: string or list of strings
+    :param vocabulary_id: the id or name of the tag vocabulary to search in
+      (optional)
+    :type vocabulary_id: string
+    :param fields: deprecated
+    :type fields: dictionary
+    :param limit: the maximum number of tags to return
+    :type limit: int
+    :param offset: when ``limit`` is given, the offset to start returning tags
+        from
+    :type offset: int
+
+    :returns: A dictionary with the following keys:
+
+      ``'count'``
+        The number of tags in the result.
+
+      ``'results'``
+        The list of tags whose names contain the given string, a list of
+        dictionaries.
+
+    :rtype: dictionary
+
+    '''
+    tags, count = _tag_search(context, data_dict)
+    return {'count': count,
+            'results': [_table_dictize(tag, context) for tag in tags]}
