@@ -100,6 +100,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_resource_filtered_data': h.get_resource_filtered_data,
             'get_package_data_quality': h.get_package_data_quality,
             'get_resource_data_quality': h.get_resource_data_quality,
+            'vocabulary_list': h.vocabulary_list
         }
 
     # IDatasetForm
@@ -299,7 +300,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     # IPackageController
     def before_index(self, pkg_dict):
         research_question = pkg_dict.get('research_question')
-        
+
         pkg_dict['research_question'] = research_question
         pkg_dict['extras_research_question'] = research_question
         return pkg_dict

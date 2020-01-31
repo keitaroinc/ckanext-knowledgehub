@@ -1277,3 +1277,15 @@ def views_dashboards_groups_update(package_id):
                 {'ignore_auth': True},
                 data_dict
             )
+
+
+def vocabulary_list():
+    '''Return vocabulary name for given ID
+    :param id: the vocabulary d
+    :type id: string
+
+    :returns: the vocabulary name
+    :rtype: string
+    '''
+
+    return toolkit.get_action('vocabulary_list')({'ignore_auth': True}, {})
