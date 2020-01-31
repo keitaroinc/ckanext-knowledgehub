@@ -18,15 +18,13 @@
         {% for t in tags %}
         <tr>
             <td class="hidden">{{ t.get('id') }}</td>
-            <td>{{ h.tag_link(t) }}</td>
+            <td>{{ h.link_to(t.get('name'), h.url_for(controller='package', action='search', tags=t.get('name'))) }}</td>
             <td>
                 {% set vocabs = h.vocabulary_list() %}
                 {% set vocab_id = t.get('vocabulary_id') %}
                 {% if vocabs %}
                     <select id="keyword-select" class="custom-select">
-                        {% if not vocab_id %}
-                            <option selected>Choose the keyword</option>
-                        {% endif %}
+                        <option value="" {{ 'selected' if not vocab_id }}>Free tag</option>
                         {% for v in vocabs %}
                             <option value="{{ v.get('id') }}" {{ 'selected' if v.get('id') == vocab_id }}>
                                 {{ v.get('name') }}
@@ -36,6 +34,7 @@
                 {% else %}
                     Free tag
                 {% endif %}
+                <div id="loader" style="display: none;">Loading...</div>
             </td>
             <td id="remove-td">
                 <span class="table-remove">
@@ -45,14 +44,6 @@
         </tr>
         {% endfor %}
     </tbody>
-    <tfoot>
-        <tr id="tags-footer">
-            <th class="hidden">ID</th>
-            <th>Tag</th>
-            <th>Keyword</th>
-            <th class="remove-th">Remove</th>
-        </tr>
-    </tfoot>
 </table>
 
 <div class="modal fade" id="modalDelete" tabindex="-1" role="dialog" aria-labelledby="modalDelete" aria-hidden="true">

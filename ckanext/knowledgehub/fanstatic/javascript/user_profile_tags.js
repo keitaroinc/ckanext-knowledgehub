@@ -33,6 +33,32 @@
         });
     };
 
+    function updateTag(tagID, vocabularyID, loader) {
+        loader.css("display", "block");
+        api.get('tag_show', {
+            id: tagID
+        })
+        .done(function (data) {
+            if (data.success) {
+               var name = data.result.name
+               api.post('tag_update', {
+                   id: tagID,
+                   name: name,
+                   vocabulary_id: vocabularyID
+               })
+               .fail(function (error) {
+                   console.log("Tag update: " + error.statusText);
+               })
+            }
+        })
+        .fail(function (error) {
+            console.log("Tag show: " + error.statusText);
+        });
+        setTimeout(function () {
+            loader.css("display", "none");
+        }, 500);
+    }
+
     $(document).ready(function () {
         var $table = $('#tags');
         $table.DataTable({
@@ -61,7 +87,6 @@
                 callback(false, tr);
                 modalDelete.modal('hide');
             })
-
         }
 
         modalConfirm(function (confirm, tr) {
@@ -72,7 +97,11 @@
 
         document.querySelectorAll('#keyword-select').forEach(item => {
             item.addEventListener('change', event => {
-                alert(this.value)
+                var vocabularyID = event.target.value;
+                var parentRow = event.target.parentElement.parentElement;
+                var tagID = parentRow.cells[0].innerHTML;
+                var loader = $(event.target).closest('td').find('#loader');
+                updateTag(tagID, vocabularyID, loader);
             })
         })
     });
