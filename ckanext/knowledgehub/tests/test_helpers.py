@@ -41,6 +41,7 @@ from ckanext.datastore.logic.action import datastore_search
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
+raises = nose.tools.raises
 
 
 class _monkey_patch:
@@ -917,3 +918,30 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(d['name'], data_dict['name'])
         assert_equals(d['type'], data_dict['type'])
+
+    @raises
+    def test_get_resource_validation_options(self):
+        mock_pylons()
+        dataset = create_dataset()
+        pkg_name = dataset['name']
+        opts = kwh_helpers.get_resource_validation_options(pkg_name)
+
+        raise AttributeError()
+
+    @raises
+    def test_check_resource_status(self):
+        mock_pylons()
+        dataset = create_dataset()
+        resource_id = dataset['id']
+        status = kwh_helpers.check_resource_status(resource_id)
+
+        raise AttributeError()
+
+    @raises
+    def test_check_validation_admin(self):
+        mock_pylons()
+        dataset = create_dataset()
+        resource_id = dataset['id']
+        validator = kwh_helpers.check_validation_admin(resource_id)
+
+        raise AttributeError()

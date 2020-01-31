@@ -9,6 +9,7 @@ from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
 from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
 from ckanext.knowledgehub.model.dashboard import setup as dashboard_db_setup
 from ckanext.knowledgehub.model.rnn_corpus import setup as rnn_corpus_setup
+from ckanext.knowledgehub.model.resource_validation import setup as resource_validation_setup
 from ckanext.knowledgehub.model.resource_feedback import (
     setup as resource_feedback_setup
 )
@@ -42,6 +43,7 @@ def init():
         rq_db_setup()
         dashboard_db_setup()
         resource_feedback_setup()
+        resource_validation_setup()
         kwh_data_setup()
         rnn_corpus_setup()
         intents_db_setup()

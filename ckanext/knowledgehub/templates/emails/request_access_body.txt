@@ -1,0 +1,8 @@
+Greetings {{ user_name }},
+
+You have been asked to validate a data resource from a member of your organization.
+
+Please check the following link of the data resource: {{ resource_url }}.
+
+Thank you,
+{{ site_title }}

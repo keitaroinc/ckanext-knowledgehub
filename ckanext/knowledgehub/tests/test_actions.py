@@ -262,6 +262,29 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(rf.get('dataset'), dataset.get('id'))
         assert_equals(rf.get('resource'), resource.get('id'))
+ 
+    def test_resource_validation_create(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'ignore_auth': True
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'url': resource['url'],
+            'admin': user['name']
+        }
+        val = create_actions.resource_validation_create(context, data_dict)
+
+        assert_equals(val.get('resource'), data_dict.get('id'))
 
     def test_kwh_data_create(self):
         user = factories.Sysadmin()
@@ -1307,7 +1330,84 @@ class TestKWHUpdateActions(ActionsBase):
 
         rsc_updated = update_actions.resource_update(context, data_dict)
 
-        assert_equals(rsc_updated, None)
+        assert_not_equals(rsc_updated, None)
+    
+    def test_resource_validation_update(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'url': resource['url'],
+            'admin': user['name']
+        }
+        val = create_actions.resource_validation_create(context, data_dict)
+
+        new_user = factories.Sysadmin()
+        context = {
+            'user': new_user.get('name'),
+            'auth_user_obj': User(new_user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'user': user['name'],
+            'admin': new_user['name']
+        }
+
+        val_updated = update_actions.resource_validation_update(context, data_dict)
+
+        assert_equals(val_updated.get('admin'), data_dict.get('admin'))
+    
+    def test_resource_validation_status(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'url': resource['url'],
+            'admin': user['name']
+        }
+        val = create_actions.resource_validation_create(context, data_dict)
+
+        data_dict = {
+            'resource': resource['id']
+        }
+
+        val_updated = update_actions.resource_validation_status(
+            context, data_dict)
+
+        assert_equals(val_updated.get('status'), 'validated')
 
     @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     def test_resource_view_update(self):
