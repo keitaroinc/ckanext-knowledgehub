@@ -17,6 +17,7 @@ from ckan.logic.action.create import resource_create as ckan_rsc_create
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.create import package_create as ckan_package_create
+from ckan.lib.helpers import url_for
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.logic.action.get import user_query_show
@@ -442,12 +443,15 @@ def resource_validation_create(context, data_dict):
 
     usr = context.get('user')
 
-    sep = '/download'
-    rurl = data_dict.get('url')
-
     dataset = data_dict.get('package_id')
     resource = data_dict.get('id')
-    resource_url = rurl.split(sep, 1)[0]
+    resource_url = url_for(
+        controller='package',
+        action='resource_read',
+        id=dataset,
+        resource_id=resource,
+        qualified=True
+        )
     status = 'not_validated'
 
     if data.get('admin'):
@@ -766,6 +770,7 @@ def resource_validate_create(context, data_dict):
     check_access('resource_validate_create', context, data_dict)
     user = context['auth_user_obj']
     fullname = getattr(user, "fullname")
+
     session = context['session']
 
     context['resource_validate'] = None

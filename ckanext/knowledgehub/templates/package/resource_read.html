@@ -10,21 +10,26 @@
 {% block resource_actions %}
 <ul>
   {% block resource_actions_inner %}
+  {%  set validation_data = h.get_resource_validation_data(res.id) %}
   {% if h.check_access('package_update', {'id':pkg.id }) %}
     {% if h.check_resource_status(res.id) == 'validated' %}
         <li><span class="badge badge-primary"><i class="fa fa-check-square"></i> VALIDATED</span></li>
-    {% elif h.check_resource_status(res.id) == 'not_validated' and h.check_validation_admin(res.id) %}
+    {% elif h.check_resource_status(res.id) == 'not_validated' and h.check_validation_admin(res.id) and h.check_access('resource_validate_create') and not validation_data%}
         <li>
-          <a href="{% url_for 'resource_validation_status', id=pkg.name, resource_id=res.id %}" class="btn btn-warning">
-            <i class="fa fa-check-square"></i>
-            {{ _('Validate Resource') }}</a>
+            <button id="validation_report" class="btn btn-warning" name="resource_validate" type="submit"
+            onclick="showValidationForm()">
+            <i class="fa fa-check-square" aria-hidden="true"></i>
+            {{ _('Validate Resource') }}
+          </button>
         </li>
     {% elif h.check_resource_status(res.id) == 'not_validated' %}
         <li><span class="badge badge-primary"><i class="fa fa-minus-square"></i> NOT VALIDATED</span></li>
     {% endif %}
+
   <li>
     {% link_for _('Manage'), controller='package', action='resource_edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}
   </li>
+  
   <li>
     <div class="btn-group">
       <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
@@ -53,7 +58,6 @@
   {% endif %}
 
   {% if res.url and h.is_url(res.url) %}
-  {%  set validation_data = h.get_resource_validation_data(res.id) %}
   <li>
     <div class="btn-group">
       <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
@@ -72,15 +76,6 @@
       {{ super() }}
       {% endblock %}
     </div>
-    {% if h.check_access('resource_validate_create') %}
-    {% if not validation_data %}
-    <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit"
-      onclick="showValidationForm()"><i class="fa fa-search" aria-hidden="true"></i>
-
-      {{ _('Validation Report') }}
-    </button>
-    {% endif %}
-    {% endif %}
   </li>
   {% endif %}
 
@@ -89,18 +84,6 @@
 
   {% if res.datastore_active %}
   <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>
-  {% endif %}
-  {% endblock %}
-
-  {% block resource_read_url %}
-  {% if res.url and h.is_url(res.url) %}
-  <p style="margin-top:10px;"><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title"
-      type="text" name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
-      onclick="copyToClipBoard()"><b>Copy
-        url</b></button></p>
-
-  {% elif res.url %}
-  <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
   {% endif %}
   {% endblock %}
 
@@ -117,15 +100,16 @@
             <div id="what" class="form-row">
               <textarea cols='50' rows='3' name="comment" placeholder="  Validation Status" id="comment"></textarea>
             </div>
-            <button class="btn btn-primary" type="submit" name="ysubmit" id="validationSubmitSuccess">Submit
-              Validation</button>
+            <!-- <button class="btn btn-primary" type="submit" name="ysubmit" id="validationSubmitSuccess">Submit
+              Validation</button> -->
+              <a href="{% url_for 'resource_validation_status', id=pkg.name, resource_id=res.id %}" class="btn btn-primary" id="validationSubmitSuccess">
+                <!-- <i class="fa fa-check-square"></i> -->
+                {{ _('Submit') }}</a>
             <!-- <a href="#"><input type="submit" name="ysubmit" id="validationSubmitSuccess" value="Submit Validation"></a> -->
           </div>
         </div>
       </div>
     </form>
-    <!-- <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit"
-      onclick="showValidationForm()">{{ _('Validation Report') }}</button> -->
     {% endif %}
 
     <div>
@@ -140,6 +124,7 @@
             <p class="fa fa-calendar"> {{validation_data.when}} &nbsp</p>
             <span> {{validation_data.who}}</span>
 
+            {% if h.check_validation_admin(res.id)%}
             <button title="Edit validation" class="btn btn-edit" id="update_validation" name="update_validation_report"
               type="button" onclick="editComment()">
               <i class="fa fa-pencil-square-o fa-lg"></i>
@@ -148,6 +133,7 @@
               name="delete_validation_report" type="submit">
               <i class="fa fa-remove fa-lg validation-icons"></i>
             </button>
+            {% endif %}
 
           </div>
         </div>
@@ -183,6 +169,20 @@
       </section>
     </div>
   </div>
+  
+  <br />
+  {% block resource_read_url %}
+  {% if res.url and h.is_url(res.url) %}
+  <p style="margin-top:10px;"><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title"
+      type="text" name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
+      onclick="copyToClipBoard()"><b>Copy
+        url</b></button></p>
+
+  {% elif res.url %}
+  <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
+  {% endif %}
+  {% endblock %}
+
 
 </ul>
 {% endblock %}
