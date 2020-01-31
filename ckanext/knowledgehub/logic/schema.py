@@ -112,6 +112,18 @@ def resource_feedback_schema():
     }
 
 
+def resource_validation_schema():
+    return {
+        'dataset': [ignore_missing, unicode],
+        'resource': [ignore_missing, unicode],
+        'user': [ignore_missing, unicode],
+        'resource_url': [ignore_missing, unicode],
+        'admin': [ignore_missing, unicode],
+        'admin_email': [ignore_missing, unicode],
+        'status': [ignore_missing, unicode],
+    }
+
+
 def kwh_data_schema():
     return {
         'type': [not_empty, validators.kwh_data_type_validator],

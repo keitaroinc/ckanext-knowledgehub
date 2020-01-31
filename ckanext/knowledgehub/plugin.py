@@ -10,6 +10,7 @@ import ckanext.knowledgehub.helpers as h
 from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 
+
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IBlueprint)
@@ -100,6 +101,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_resource_filtered_data': h.get_resource_filtered_data,
             'get_package_data_quality': h.get_package_data_quality,
             'get_resource_data_quality': h.get_resource_data_quality,
+            'get_resource_validation_options': h.get_resource_validation_options,
+            'check_resource_status': h.check_resource_status,
+            'check_validation_admin': h.check_validation_admin
         }
 
     # IDatasetForm
@@ -108,7 +112,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         package_defaults = [toolkit.get_validator('ignore_missing'),
                             toolkit.get_converter('convert_to_extras')]
         mandatory_defaults = [toolkit.get_validator('not_empty')]
-
 
         schema.update({
             'unit_supported': package_defaults,
@@ -205,73 +208,76 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
                       highlight_actions='index search')
             m.connect('dataset_new', '/dataset/new', action='new')
             m.connect('/dataset/{action}',
-                    requirements=dict(action='|'.join([
-                        'list',
-                        'autocomplete',
-                        'search'
-                    ])))
+                      requirements=dict(action='|'.join([
+                          'list',
+                          'autocomplete',
+                          'search'
+                      ])))
 
             m.connect('/dataset/{action}/{id}/{revision}', action='read_ajax',
-                    requirements=dict(action='|'.join([
-                        'read',
-                        'edit',
-                        'history',
-                    ])))
+                      requirements=dict(action='|'.join([
+                          'read',
+                          'edit',
+                          'history',
+                      ])))
             m.connect('/dataset/{action}/{id}',
-                    requirements=dict(action='|'.join([
-                        'new_resource',
-                        'history',
-                        'read_ajax',
-                        'history_ajax',
-                        'follow',
-                        'activity',
-                        'groups',
-                        'unfollow',
-                        'delete',
-                        'api_data',
-                    ])))
+                      requirements=dict(action='|'.join([
+                          'new_resource',
+                          'history',
+                          'read_ajax',
+                          'history_ajax',
+                          'follow',
+                          'activity',
+                          'groups',
+                          'unfollow',
+                          'delete',
+                          'api_data',
+                      ])))
             m.connect('dataset_edit', '/dataset/edit/{id}', action='edit',
-                    ckan_icon='pencil-square-o')
+                      ckan_icon='pencil-square-o')
             m.connect('dataset_followers', '/dataset/followers/{id}',
-                    action='followers', ckan_icon='users')
+                      action='followers', ckan_icon='users')
             m.connect('dataset_activity', '/dataset/activity/{id}',
-                    action='activity', ckan_icon='clock-o')
+                      action='activity', ckan_icon='clock-o')
             m.connect('/dataset/activity/{id}/{offset}', action='activity')
             m.connect('dataset_groups', '/dataset/groups/{id}',
-                    action='groups', ckan_icon='users')
+                      action='groups', ckan_icon='users')
             m.connect('dataset_resources', '/dataset/resources/{id}',
-                    action='resources', ckan_icon='bars')
+                      action='resources', ckan_icon='bars')
             m.connect('dataset_read', '/dataset/{id}', action='read',
-                    ckan_icon='sitemap')
+                      ckan_icon='sitemap')
             m.connect('/dataset/{id}/resource/{resource_id}',
-                    action='resource_read')
+                      action='resource_read')
+            m.connect('resource_validation_status',
+                      '/dataset/{id}/resource/{resource_id}/validate-resource',
+                      action='resource_validation_status')
             m.connect('/dataset/{id}/resource_delete/{resource_id}',
-                    action='resource_delete')
+                      action='resource_delete')
             m.connect('resource_edit', '/dataset/{id}/resource_edit/{resource_id}',
-                    action='resource_edit', ckan_icon='pencil-square-o')
+                      action='resource_edit', ckan_icon='pencil-square-o')
             m.connect('/dataset/{id}/resource/{resource_id}/download',
-                    action='resource_download')
+                      action='resource_download')
             m.connect('/dataset/{id}/resource/{resource_id}/download/{filename}',
-                    action='resource_download')
+                      action='resource_download')
             m.connect('/dataset/{id}/resource/{resource_id}/embed',
-                    action='resource_embedded_dataviewer')
+                      action='resource_embedded_dataviewer')
             m.connect('/dataset/{id}/resource/{resource_id}/viewer',
-                    action='resource_embedded_dataviewer', width="960",
-                    height="800")
+                      action='resource_embedded_dataviewer', width="960",
+                      height="800")
             m.connect('/dataset/{id}/resource/{resource_id}/preview',
-                    action='resource_datapreview')
+                      action='resource_datapreview')
             m.connect('views', '/dataset/{id}/resource/{resource_id}/views',
-                    action='resource_views', ckan_icon='bars')
+                      action='resource_views', ckan_icon='bars')
             m.connect('new_view', '/dataset/{id}/resource/{resource_id}/new_view',
-                    action='edit_view', ckan_icon='pencil-square-o')
+                      action='edit_view', ckan_icon='pencil-square-o')
             m.connect('edit_view',
-                    '/dataset/{id}/resource/{resource_id}/edit_view/{view_id}',
-                    action='edit_view', ckan_icon='pencil-square-o')
+                      '/dataset/{id}/resource/{resource_id}/edit_view/{view_id}',
+                      action='edit_view', ckan_icon='pencil-square-o')
             m.connect('resource_view',
-                    '/dataset/{id}/resource/{resource_id}/view/{view_id}',
-                    action='resource_view')
+                      '/dataset/{id}/resource/{resource_id}/view/{view_id}',
+                      action='resource_view')
             m.connect('/dataset/{id}/resource/{resource_id}/view/',
-                    action='resource_view')
+                      action='resource_view')
 
         # Override read action, for changing the titles in facets and tell CKAN where to look for
         # new and list actions.
@@ -282,7 +288,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         ) as m:
             m.connect('group_list', '/group/list', action='list')
             m.connect('group_new', '/group/new', action='new')
-            m.connect('group_delete' , '/group/delete' + '/{id}', action='delete')
+            m.connect('group_delete', '/group/delete' +
+                      '/{id}', action='delete')
             m.connect('group_read', '/group/{id}', action='read')
 
         with SubMapper(
@@ -290,16 +297,18 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             controller='ckanext.knowledgehub.controllers:KWHOrganizationController'
         ) as m:
             m.connect('organization_new', '/organization/new', action='new')
-            m.connect('organization_delete' , '/organization/delete' + '/{id}', action='delete')
+            m.connect('organization_delete',
+                      '/organization/delete' + '/{id}', action='delete')
 
             m.connect('organization_read', '/organization/{id}', action='read')
-            m.connect('organization_bulk_process','/organization/bulk_process/{id}', action='bulk_process')
+            m.connect('organization_bulk_process',
+                      '/organization/bulk_process/{id}', action='bulk_process')
         return map
 
     # IPackageController
     def before_index(self, pkg_dict):
         research_question = pkg_dict.get('research_question')
-        
+
         pkg_dict['research_question'] = research_question
         pkg_dict['extras_research_question'] = research_question
         return pkg_dict
