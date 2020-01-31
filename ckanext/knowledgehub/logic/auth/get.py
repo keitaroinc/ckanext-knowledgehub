@@ -1,5 +1,6 @@
 import ckan.plugins.toolkit as toolkit
 import ckan.lib.helpers as h
+from ckan.logic.auth.get import tag_list as ckan_tag_list
 
 
 @toolkit.auth_allow_anonymous_access
@@ -86,3 +87,9 @@ def user_query_result_search(context, data_dict):
 def resource_validate_show(context, data_dict):
     # sysadmins only
     return {'success': False}
+
+
+def tag_list(context, data_dict):
+    ''' CKAN tag_list auth function must be override
+    because it enters in infinite recursion'''
+    return ckan_tag_list(context, data_dict)
