@@ -1328,11 +1328,9 @@ def views_dashboards_groups_update(package_id):
 
 
 def vocabulary_list():
-    '''Return vocabulary name for given ID
-    :param id: the vocabulary d
-    :type id: string
+    '''Return a list of all vocabularies
 
-    :returns: the vocabulary name
+    :returns: the list of all vocabularies
     :rtype: string
     '''
 

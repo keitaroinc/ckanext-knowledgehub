@@ -945,3 +945,22 @@ class TestKWHHelpers(ActionsBase):
         validator = kwh_helpers.check_validation_admin(resource_id)
 
         raise AttributeError()
+
+    def test_vocabulary_list(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        toolkit.get_action('vocabulary_create')(
+            context,
+            {'name': 'test'}
+        )
+
+        vocab_list = kwh_helpers.vocabulary_list()
+
+        assert_equals(len(vocab_list), 1)
