@@ -129,10 +129,9 @@
               type="button" onclick="editComment()">
               <i class="fa fa-pencil-square-o fa-lg"></i>
             </button>
-            <button title="Delete validation" class="btn btn-delete" id="delete_validation"
-              name="delete_validation_report" type="submit">
+            <a href="{% url_for 'resource_validation_revert', id=pkg.name, resource_id=res.id %}" class="btn btn-delete" id="delete_validation">
               <i class="fa fa-remove fa-lg validation-icons"></i>
-            </button>
+            </a>
             {% endif %}
 
           </div>
