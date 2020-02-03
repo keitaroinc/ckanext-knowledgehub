@@ -101,6 +101,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_resource_filtered_data': h.get_resource_filtered_data,
             'get_package_data_quality': h.get_package_data_quality,
             'get_resource_data_quality': h.get_resource_data_quality,
+            'get_resource_validation_data': h.get_resource_validation_data,
             'get_resource_validation_options': h.get_resource_validation_options,
             'check_resource_status': h.check_resource_status,
             'check_validation_admin': h.check_validation_admin
@@ -251,6 +252,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             m.connect('resource_validation_status',
                       '/dataset/{id}/resource/{resource_id}/validate-resource',
                       action='resource_validation_status')
+            m.connect('resource_validation_revert',
+                      '/dataset/{id}/resource/{resource_id}/invalidate-resource',
+                      action='resource_validation_revert')
             m.connect('/dataset/{id}/resource_delete/{resource_id}',
                       action='resource_delete')
             m.connect('resource_edit', '/dataset/{id}/resource_edit/{resource_id}',

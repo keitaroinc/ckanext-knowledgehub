@@ -17,6 +17,7 @@ from ckan.logic.action.create import resource_create as ckan_rsc_create
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.create import package_create as ckan_package_create
+from ckan.lib.helpers import url_for
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.logic.action.get import user_query_show
@@ -25,6 +26,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
+from ckanext.knowledgehub.model import ResourceValidate
 from ckanext.knowledgehub.model import ResourceValidation
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
@@ -441,12 +443,15 @@ def resource_validation_create(context, data_dict):
 
     usr = context.get('user')
 
-    sep = '/download'
-    rurl = data_dict.get('url')
-
     dataset = data_dict.get('package_id')
     resource = data_dict.get('id')
-    resource_url = rurl.split(sep, 1)[0]
+    resource_url = url_for(
+        controller='package',
+        action='resource_read',
+        id=dataset,
+        resource_id=resource,
+        qualified=True
+        )
     status = 'not_validated'
 
     if data.get('admin'):
@@ -753,6 +758,51 @@ def merge_all_data(context, data_dict):
     return {
         'err_msg': data_dict['err_msg']
     }
+
+
+def resource_validate_create(context, data_dict):
+    '''
+    Saves user validation report
+        :param what
+        :param resource
+    '''
+
+    check_access('resource_validate_create', context, data_dict)
+    user = context['auth_user_obj']
+    name = getattr(user, "fullname")
+
+    if not name:
+        name = context['user']
+
+    session = context['session']
+
+    context['resource_validate'] = None
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.resource_validate_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    resource_validate = ResourceValidate()
+
+    items = ['what']
+
+    for item in items:
+        setattr(resource_validate, item, data.get(item))
+
+    resource_validate.when = datetime.datetime.utcnow().strftime(
+        '%Y-%m-%dT%H:%M:%S'
+        )
+    resource_validate.who = name
+    resource_validate.resource = data.get('resource')
+
+    resource_validate.save()
+
+    session.add(resource_validate)
+    session.commit()
+
+    return _table_dictize(resource_validate, context)
 
 
 def member_create(context, data_dict=None):

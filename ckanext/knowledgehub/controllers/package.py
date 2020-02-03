@@ -19,6 +19,7 @@ from ckan.lib.render import TemplateNotFound
 
 from ckanext.knowledgehub import helpers as kwh_h
 from ckanext.knowledgehub.lib.email import request_validation
+from ckanext.knowledgehub.model import ResourceValidation
 
 
 NotFound = logic.NotFound
@@ -445,20 +446,26 @@ class KWHPackageController(PackageController):
 
             data['package_id'] = id
             try:
+                result = {}
                 if resource_id:
                     data['id'] = resource_id
                     result = get_action('resource_update')(context, data)
-                    validate = get_action(
-                        'resource_validation_update')(context, result)
-                    if validate:
-                        if validate['status'] == 'not_validated':
-                            admin = validate.get('admin')
-                            admin_email = validate.get('admin_email')
-                            resource_url = validate.get('resource_url')
-                            request_validation(
-                                admin, admin_email, resource_url)
                 else:
                     result = get_action('resource_create')(context, data)
+
+                rv = ResourceValidation.get(resource=resource_id).first()
+                if rv:
+                    if not rv.admin == result.get('admin'):
+                        validate = get_action(
+                            'resource_validation_update')(context, result)
+                        if validate:
+                            if validate['status'] == 'not_validated':
+                                admin = validate.get('admin')
+                                admin_email = validate.get('admin_email')
+                                resource_url = validate.get('resource_url')
+                                request_validation(
+                                    admin, admin_email, resource_url)
+                else:
                     validate = get_action(
                         'resource_validation_create')(context, result)
                     if validate['admin']:
@@ -609,6 +616,25 @@ class KWHPackageController(PackageController):
 
         c.form_action = h.url_for(controller='package',
                                   action='resource_validation_status',
+                                  resource_id=resource_id,
+                                  id=id)
+
+        return h.redirect_to(controller='package', action='resource_read', id=id,
+                             resource_id=resource_id)
+
+    def resource_validation_revert(self, id, resource_id):
+        context = {'model': model, 'session': model.Session,
+                   'api_version': 3, 'for_view': True,
+                   'user': c.user, 'auth_user_obj': c.userobj}
+
+        try:
+            get_action('resource_validation_revert')(
+                context, {'resource': resource_id})
+        except NotFound:
+            abort(404, _('Resource not found'))
+
+        c.form_action = h.url_for(controller='package',
+                                  action='resource_validation_revert',
                                   resource_id=resource_id,
                                   id=id)
 

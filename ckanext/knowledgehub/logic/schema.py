@@ -112,6 +112,13 @@ def resource_feedback_schema():
     }
 
 
+def resource_validate_schema():
+    return {
+        'what': [not_empty, unicode],
+        'resource': [not_empty, resource_id_exists]
+    }
+
+   
 def resource_validation_schema():
     return {
         'dataset': [ignore_missing, unicode],

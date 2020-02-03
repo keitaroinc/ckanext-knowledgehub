@@ -108,6 +108,25 @@ Create new analytical framework Theme
 
 > :param name :param title :param description
 
+`resource_validate_create`(_context_, _data\_dict_)
+
+Creates a new validation report
+
+
+
+Parameters:
+
+*   **what** (_string_) – the validation comment
+*   **resource** (_string_) – the ID of the resource
+
+Returns:
+
+the newly created validation report
+
+Return type:
+
+dictionary
+
 action.delete module
 --------------------
 
@@ -146,6 +165,16 @@ string
 `theme_delete`(_context_, _data\_dict_)
 
 Deletes existing analytical framework Theme by id :param id
+
+`resource_validate_delete`(_context_, _data\_dict_)
+
+Delete validation report.
+
+
+
+Parameters:
+
+**id** (_string_) – Resource database id.
 
 action.get module
 -----------------
@@ -483,6 +512,24 @@ Return type:
 
 list
 
+`resource_validate_status`(_context_, _data\_dict_)
+
+Returns the validation report of a resource
+
+
+
+Parameters:
+
+**id** – resource ID
+
+Returns:
+
+a validation report as dictionary
+
+Return type:
+
+dictionary
+
 
 `search_dashboards`(_context_, _data\_dict_)
 
@@ -620,3 +667,22 @@ dictionary
 Updates existing analytical framework Theme
 
 > :param id :param name :param description
+
+`resource_validate_update`(_context_, _data\_dict_)
+
+Update validation report.
+
+
+
+Parameters:
+
+*   **what** (_string_) – The validation comment.
+*   **id** (_string_) – the ID of the resource.
+
+Returns:
+
+the updated validation report
+
+Return type:
+
+dictionary

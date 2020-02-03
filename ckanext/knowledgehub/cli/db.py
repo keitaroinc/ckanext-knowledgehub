@@ -20,6 +20,10 @@ from ckanext.knowledgehub.model.intents import setup as intents_db_setup
 from ckanext.knowledgehub.model.query import setup as query_db_setup
 from ckanext.knowledgehub.model.ml import setup as ml_db_setup
 from ckanext.knowledgehub.model.data_quality import setup as data_quality_setup
+from ckanext.knowledgehub.model.resource_validate import (
+    setup as resource_validate_setup
+)
+
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +50,7 @@ def init():
         query_db_setup()
         ml_db_setup()
         data_quality_setup()
+        resource_validate_setup()
     except Exception as e:
         error_shout(e)
     else:

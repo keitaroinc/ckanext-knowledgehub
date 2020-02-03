@@ -3,7 +3,9 @@ import logging
 from ckan.model.meta import Session
 
 import ckan.logic as logic
-from ckan.logic.action.delete import resource_view_delete as _resource_view_delete
+from ckan.logic.action.delete import (
+    resource_view_delete as _resource_view_delete
+)
 from ckan.plugins import toolkit
 from ckan.common import _
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -15,6 +17,7 @@ from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents
+from ckanext.knowledgehub.model import ResourceValidate
 from ckanext.knowledgehub import helpers as kwh_helpers
 
 
@@ -152,6 +155,21 @@ def user_intent_delete(context, data_dict):
     UserIntents.delete({'id': id})
 
     return 'OK'
+
+
+def resource_validate_delete(context, data_dict):
+    '''
+    Deletes existing validation report of resource by id
+    :param id
+    '''
+
+    check_access('resource_validate_delete', context)
+    if 'id' not in data_dict:
+        raise ValidationError({"resource": _('Missing value')})
+
+    ResourceValidate.delete({'resource': data_dict['id']})
+
+    return {"message": _('Validation report of the resource is deleted.')}
 
 
 def member_delete(context, data_dict=None):

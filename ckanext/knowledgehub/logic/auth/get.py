@@ -84,6 +84,11 @@ def user_query_result_search(context, data_dict):
     return {'success': False}
 
 
+def resource_validate_show(context, data_dict):
+    # sysadmins only
+    return {'success': False}
+
+
 def tag_list(context, data_dict):
     ''' CKAN tag_list auth function must be override
     because it enters in infinite recursion'''
