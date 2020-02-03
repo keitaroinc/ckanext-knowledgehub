@@ -1,4 +1,5 @@
 import logging
+import cgi
 
 from urllib import urlencode
 from six import string_types
@@ -9,6 +10,7 @@ from ckan.controllers.admin import get_sysadmins
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import c, request, OrderedDict, _
+import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.lib.helpers as h
 from ckan.common import config
 import ckan.plugins as p
@@ -16,12 +18,18 @@ import ckan.lib.base as base
 from ckan.lib.render import TemplateNotFound
 
 from ckanext.knowledgehub import helpers as kwh_h
+from ckanext.knowledgehub.lib.email import request_validation
+from ckanext.knowledgehub.model import ResourceValidation
 
 
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
+ValidationError = logic.ValidationError
 check_access = logic.check_access
 get_action = logic.get_action
+tuplize_dict = logic.tuplize_dict
+clean_dict = logic.clean_dict
+parse_params = logic.parse_params
 render = base.render
 abort = base.abort
 
@@ -186,7 +194,7 @@ class KWHPackageController(PackageController):
             # types any search page. Potential alternatives are do show them
             # on the default search page (dataset) or on one other search page
             search_all_type = config.get(
-                                  'ckan.search.show_all_types', 'dataset')
+                'ckan.search.show_all_types', 'dataset')
             search_all = False
 
             try:
@@ -214,7 +222,7 @@ class KWHPackageController(PackageController):
                 'tags': _('Tags'),
                 'res_format': _('Formats'),
                 'license_id': _('Licenses'),
-                }
+            }
 
             for facet in h.facets():
                 if facet in default_facet_titles:
@@ -274,7 +282,7 @@ class KWHPackageController(PackageController):
         for facet in c.search_facets.keys():
             try:
                 limit = int(request.params.get('_%s_limit' % facet,
-                            int(config.get('search.facets.default', 10))))
+                                               int(config.get('search.facets.default', 10))))
             except ValueError:
                 abort(400, _('Parameter "{parameter_name}" is not '
                              'an integer').format(
@@ -286,6 +294,226 @@ class KWHPackageController(PackageController):
 
         return render(self._search_template(package_type),
                       extra_vars={'dataset_type': package_type})
+
+    def new_resource(self, id, data=None, errors=None, error_summary=None):
+        ''' FIXME: This is a temporary action to allow styling of the
+        forms. '''
+        if request.method == 'POST' and not data:
+            save_action = request.params.get('save')
+            data = data or \
+                clean_dict(dict_fns.unflatten(tuplize_dict(parse_params(
+                                                           request.POST))))
+            # we don't want to include save as it is part of the form
+            del data['save']
+            resource_id = data['id']
+            del data['id']
+
+            context = {'model': model, 'session': model.Session,
+                       'user': c.user, 'auth_user_obj': c.userobj}
+
+            # see if we have any data that we are trying to save
+            data_provided = False
+            for key, value in data.iteritems():
+                if ((value or isinstance(value, cgi.FieldStorage))
+                        and key != 'resource_type'):
+                    data_provided = True
+                    break
+
+            if not data_provided and save_action != "go-dataset-complete":
+                if save_action == 'go-dataset':
+                    # go to final stage of adddataset
+                    h.redirect_to(controller='package', action='edit', id=id)
+                # see if we have added any resources
+                try:
+                    data_dict = get_action('package_show')(context, {'id': id})
+                except NotAuthorized:
+                    abort(403, _('Unauthorized to update dataset'))
+                except NotFound:
+                    abort(404, _('The dataset {id} could not be found.'
+                                 ).format(id=id))
+                if not len(data_dict['resources']):
+                    # no data so keep on page
+                    msg = _('You must add at least one data resource')
+                    # On new templates do not use flash message
+
+                    if asbool(config.get('ckan.legacy_templates')):
+                        h.flash_error(msg)
+                        h.redirect_to(controller='package',
+                                      action='new_resource', id=id)
+                    else:
+                        errors = {}
+                        error_summary = {_('Error'): msg}
+                        return self.new_resource(id, data, errors,
+                                                 error_summary)
+                # XXX race condition if another user edits/deletes
+                data_dict = get_action('package_show')(context, {'id': id})
+                get_action('package_update')(
+                    dict(context, allow_state_change=True),
+                    dict(data_dict, state='active'))
+                h.redirect_to(controller='package', action='read', id=id)
+
+            data['package_id'] = id
+            try:
+                if resource_id:
+                    data['id'] = resource_id
+                    result = get_action('resource_update')(context, data)
+                    get_action('resource_validation_update')(context, result)
+                else:
+                    result = get_action('resource_create')(context, data)
+                    validate = get_action(
+                        'resource_validation_create')(context, result)
+                    if validate['admin']:
+                        admin = validate.get('admin')
+                        admin_email = validate.get('admin_email')
+                        resource_url = validate.get('resource_url')
+                        request_validation(admin, admin_email, resource_url)
+            except ValidationError as e:
+                errors = e.error_dict
+                error_summary = e.error_summary
+                return self.new_resource(id, data, errors, error_summary)
+            except NotAuthorized:
+                abort(403, _('Unauthorized to create a resource'))
+            except NotFound:
+                abort(404, _('The dataset {id} could not be found.'
+                             ).format(id=id))
+            if save_action == 'go-metadata':
+                # XXX race condition if another user edits/deletes
+                data_dict = get_action('package_show')(context, {'id': id})
+                get_action('package_update')(
+                    dict(context, allow_state_change=True),
+                    dict(data_dict, state='active'))
+                h.redirect_to(controller='package', action='read', id=id)
+            elif save_action == 'go-dataset':
+                # go to first stage of add dataset
+                h.redirect_to(controller='package', action='edit', id=id)
+            elif save_action == 'go-dataset-complete':
+                # go to first stage of add dataset
+                h.redirect_to(controller='package', action='read', id=id)
+            else:
+                # add more resources
+                h.redirect_to(controller='package', action='new_resource',
+                              id=id)
+
+        # get resources for sidebar
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user, 'auth_user_obj': c.userobj}
+        try:
+            pkg_dict = get_action('package_show')(context, {'id': id})
+        except NotFound:
+            abort(404, _('The dataset {id} could not be found.').format(id=id))
+        try:
+            check_access(
+                'resource_create', context, {"package_id": pkg_dict["id"]})
+        except NotAuthorized:
+            abort(403, _('Unauthorized to create a resource for this package'))
+
+        package_type = pkg_dict['type'] or 'dataset'
+
+        errors = errors or {}
+        error_summary = error_summary or {}
+        vars = {'data': data, 'errors': errors,
+                'error_summary': error_summary, 'action': 'new',
+                'resource_form_snippet': self._resource_form(package_type),
+                'dataset_type': package_type}
+        vars['pkg_name'] = id
+        # required for nav menu
+        vars['pkg_dict'] = pkg_dict
+        template = 'package/new_resource_not_draft.html'
+        if pkg_dict['state'].startswith('draft'):
+            vars['stage'] = ['complete', 'active']
+            template = 'package/new_resource.html'
+        return render(template, extra_vars=vars)
+
+    def resource_edit(self, id, resource_id, data=None, errors=None,
+                      error_summary=None):
+
+        context = {'model': model, 'session': model.Session,
+                   'api_version': 3, 'for_edit': True,
+                   'user': c.user, 'auth_user_obj': c.userobj}
+        data_dict = {'id': id}
+
+        try:
+            check_access('package_update', context, data_dict)
+        except NotAuthorized:
+            abort(403, _('User %r not authorized to edit %s') % (c.user, id))
+
+        if request.method == 'POST' and not data:
+            data = data or \
+                clean_dict(dict_fns.unflatten(tuplize_dict(parse_params(
+                                                           request.POST))))
+            # we don't want to include save as it is part of the form
+            del data['save']
+
+            data['package_id'] = id
+            try:
+                result = {}
+                if resource_id:
+                    data['id'] = resource_id
+                    result = get_action('resource_update')(context, data)
+                else:
+                    result = get_action('resource_create')(context, data)
+
+                rv = ResourceValidation.get(resource=resource_id).first()
+                if rv:
+                    if not rv.admin == result.get('admin'):
+                        validate = get_action(
+                            'resource_validation_update')(context, result)
+                        if validate:
+                            if validate['status'] == 'not_validated':
+                                admin = validate.get('admin')
+                                admin_email = validate.get('admin_email')
+                                resource_url = validate.get('resource_url')
+                                request_validation(
+                                    admin, admin_email, resource_url)
+                else:
+                    validate = get_action(
+                        'resource_validation_create')(context, result)
+                    if validate['admin']:
+                        admin = validate.get('admin')
+                        admin_email = validate.get('admin_email')
+                        resource_url = validate.get('resource_url')
+                        request_validation(admin, admin_email, resource_url)
+            except ValidationError as e:
+                errors = e.error_dict
+                error_summary = e.error_summary
+                return self.resource_edit(id, resource_id, data,
+                                          errors, error_summary)
+            except NotAuthorized:
+                abort(403, _('Unauthorized to edit this resource'))
+            h.redirect_to(controller='package', action='resource_read', id=id,
+                          resource_id=resource_id)
+
+        pkg_dict = get_action('package_show')(context, {'id': id})
+        if pkg_dict['state'].startswith('draft'):
+            # dataset has not yet been fully created
+            resource_dict = get_action('resource_show')(context,
+                                                        {'id': resource_id})
+            return self.new_resource(id, data=resource_dict)
+        # resource is fully created
+        try:
+            resource_dict = get_action('resource_show')(context,
+                                                        {'id': resource_id})
+        except NotFound:
+            abort(404, _('Resource not found'))
+        c.pkg_dict = pkg_dict
+        c.resource = resource_dict
+        # set the form action
+        c.form_action = h.url_for(controller='package',
+                                  action='resource_edit',
+                                  resource_id=resource_id,
+                                  id=id)
+        if not data:
+            data = resource_dict
+
+        package_type = pkg_dict['type'] or 'dataset'
+
+        errors = errors or {}
+        error_summary = error_summary or {}
+        vars = {'data': data, 'errors': errors,
+                'error_summary': error_summary, 'action': 'edit',
+                'resource_form_snippet': self._resource_form(package_type),
+                'dataset_type': package_type}
+        return render('package/resource_edit.html', extra_vars=vars)
 
     def read(self, id):
         context = {'model': model, 'session': model.Session,
@@ -374,3 +602,22 @@ class KWHPackageController(PackageController):
             abort(404, msg)
 
         assert False, "We should never get here"
+
+    def resource_validation_status(self, id, resource_id):
+        context = {'model': model, 'session': model.Session,
+                   'api_version': 3, 'for_view': True,
+                   'user': c.user, 'auth_user_obj': c.userobj}
+
+        try:
+            get_action('resource_validation_status')(
+                context, {'resource': resource_id})
+        except NotFound:
+            abort(404, _('Resource not found'))
+
+        c.form_action = h.url_for(controller='package',
+                                  action='resource_validation_status',
+                                  resource_id=resource_id,
+                                  id=id)
+
+        return h.redirect_to(controller='package', action='resource_read', id=id,
+                             resource_id=resource_id)

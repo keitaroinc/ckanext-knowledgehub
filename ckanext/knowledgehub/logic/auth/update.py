@@ -2,6 +2,7 @@ from ckan.logic.auth.update import package_update as ckan_package_update
 from ckan.logic.auth.update import resource_update as ckan_resource_update
 
 
+
 def theme_update(context, data_dict):
     '''
         Authorization check for updating
@@ -36,6 +37,24 @@ def dashboard_update(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def resource_validation_update(context, data_dict):
+    '''
+        Authorization check for updating
+        a resource validation
+    '''
+    # sysadmins only
+    return {'success': True}
+
+
+def resource_validation_status(context, data_dict):
+    '''
+        Authorization check for updating
+        a resource validation status
+    '''
+    # sysadmins only
+    return {'success': True}
 
 
 def package_update(context, data_dict=None):
