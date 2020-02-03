@@ -145,20 +145,19 @@ def check_resource_status(resource_id):
     rv = ResourceValidation.get(
         resource=resource_id
     ).first()
-    return rv.status
+
+    return rv.status if rv else 'not_validated'
 
 
 def check_validation_admin(resource_id):
     context = _get_context()
-    validator = False
     usr = context.get('user')
     user = model.User.by_name(usr.decode('utf8')).name
     rv = ResourceValidation.get(
         resource=resource_id
     ).first()
-    if user == rv.admin:
-        validator = True
-    return validator
+
+    return user == rv.admin if rv else False
 
 
 def get_sub_theme_options():
