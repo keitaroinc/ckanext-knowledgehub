@@ -252,7 +252,7 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(rf.get('dataset'), dataset.get('id'))
         assert_equals(rf.get('resource'), resource.get('id'))
-    
+
     def test_resource_validation_create(self):
         user = factories.Sysadmin()
         context = {
@@ -1114,6 +1114,22 @@ class TestKWHDeleteActions(ActionsBase):
 
         assert_equals(len(members), 0)
 
+    def test_tag_create(self):
+        ctx = get_context()
+        vocab = toolkit.get_action('vocabulary_create')(
+            ctx, {'name': 'test-vocab'}
+        )
+
+        tag1 = create_actions.tag_create(
+            ctx, {'name': 'tag1'}
+        )
+        tag2 = create_actions.tag_create    (
+            ctx, {'name': 'tag2', 'vocabulary_id': vocab.get('id')}
+        )
+
+        assert_equals(tag1['name'], 'tag1')
+        assert_equals(tag2['name'], 'tag2')
+
 
 class TestKWHUpdateActions(ActionsBase):
 
@@ -1236,7 +1252,7 @@ class TestKWHUpdateActions(ActionsBase):
         rsc_updated = update_actions.resource_update(context, data_dict)
 
         assert_not_equals(rsc_updated, None)
-    
+
     def test_resource_validation_update(self):
         user = factories.Sysadmin()
         context = {
@@ -1280,7 +1296,7 @@ class TestKWHUpdateActions(ActionsBase):
         val_updated = update_actions.resource_validation_update(context, data_dict)
 
         assert_equals(val_updated.get('admin'), data_dict.get('admin'))
-    
+
     def test_resource_validation_status(self):
         user = factories.Sysadmin()
         context = {
