@@ -1275,6 +1275,16 @@ def get_resource_data_quality(id):
     return result
 
 
+def get_resource_validation_data(id):
+    context = _get_context()
+    try:
+        result = toolkit.get_action('resource_validate_status')(
+                                    context, {'id': id})
+    except Exception:
+        return {}
+    return result
+
+
 def views_dashboards_groups_update(package_id):
     ''' Update groups of the visualizations and dashboards
 
