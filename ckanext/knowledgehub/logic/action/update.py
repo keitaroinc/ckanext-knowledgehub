@@ -575,6 +575,16 @@ def resource_validate_update(context, data_dict):
         raise logic.NotAuthorized(_(u'Need to be system '
                                     u'administrator to administer'))
 
+    status = data_dict['what']
+    user = context['auth_user_obj']
+
+    name = getattr(user, "fullname")
+    if not name:
+        name = context['user']
+
+    when = datetime.datetime.utcnow().strftime(
+        '%Y-%m-%dT%H:%M:%S'
+        )
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
 
@@ -585,7 +595,12 @@ def resource_validate_update(context, data_dict):
         raise logic.NotFound(_('Validation report was not found.'))
 
     filter = {'resource': id}
-    st = ResourceValidate.update(filter, data_dict)
+    rvu = {
+            'what': status,
+            'when': when,
+            'who': name
+        }
+    st = ResourceValidate.update(filter, rvu)
 
     return st.as_dict()
 
