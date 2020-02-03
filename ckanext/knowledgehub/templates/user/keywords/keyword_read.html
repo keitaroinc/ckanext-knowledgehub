@@ -1,0 +1,24 @@
+{% extends "user/read_base.html" %}
+
+{% block primary_content_inner %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>{{ _('Keyword') }} {{ data.name }}</h3>
+        </div>
+        <div class="col-sm-4">
+            <a href="{{ h.url_for('.keyword_update_read', id=data.name) }}" class="btn btn-primary pull-right">
+                <i class="fa fa fa-wrench"></i> {{_('Manage Keyword') }}</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h4>{{ _('Tags') }}</h4>
+            {% for tag in data.tags%}
+                <span class="label label-info">{{ tag.display_name }}</span>
+            {% endfor%}
+        </div>
+    </div>
+</div>
+{% endblock %}
