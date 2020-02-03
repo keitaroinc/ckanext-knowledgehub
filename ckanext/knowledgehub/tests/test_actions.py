@@ -1408,6 +1408,42 @@ class TestKWHUpdateActions(ActionsBase):
             context, data_dict)
 
         assert_equals(val_updated.get('status'), 'validated')
+    
+    def test_resource_validation_revert(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'url': resource['url'],
+            'admin': user['name']
+        }
+        val = create_actions.resource_validation_create(context, data_dict)
+
+        data_dict = {
+            'resource': resource['id']
+        }
+
+        val_updated = update_actions.resource_validation_status(
+            context, data_dict)
+
+        val_reverted = update_actions.resource_validation_revert(
+            context, data_dict)
+
+        assert_equals(val_reverted.get('status'), 'not_validated')
 
     @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     def test_resource_view_update(self):

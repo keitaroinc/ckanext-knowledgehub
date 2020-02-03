@@ -614,3 +614,22 @@ class KWHPackageController(PackageController):
 
         return h.redirect_to(controller='package', action='resource_read', id=id,
                              resource_id=resource_id)
+
+    def resource_validation_revert(self, id, resource_id):
+        context = {'model': model, 'session': model.Session,
+                   'api_version': 3, 'for_view': True,
+                   'user': c.user, 'auth_user_obj': c.userobj}
+
+        try:
+            get_action('resource_validation_revert')(
+                context, {'resource': resource_id})
+        except NotFound:
+            abort(404, _('Resource not found'))
+
+        c.form_action = h.url_for(controller='package',
+                                  action='resource_validation_revert',
+                                  resource_id=resource_id,
+                                  id=id)
+
+        return h.redirect_to(controller='package', action='resource_read', id=id,
+                             resource_id=resource_id)

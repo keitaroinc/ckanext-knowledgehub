@@ -252,6 +252,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             m.connect('resource_validation_status',
                       '/dataset/{id}/resource/{resource_id}/validate-resource',
                       action='resource_validation_status')
+            m.connect('resource_validation_revert',
+                      '/dataset/{id}/resource/{resource_id}/invalidate-resource',
+                      action='resource_validation_revert')
             m.connect('/dataset/{id}/resource_delete/{resource_id}',
                       action='resource_delete')
             m.connect('resource_edit', '/dataset/{id}/resource_edit/{resource_id}',
