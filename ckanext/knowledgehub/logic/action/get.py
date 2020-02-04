@@ -8,6 +8,7 @@ from ckan.plugins import toolkit
 from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
+from ckan.model.meta import Session
 
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
@@ -1231,7 +1232,7 @@ def tag_list(context, data_dict):
     elif vocab_id_or_name:
         tags = model.Tag.all(vocab_id_or_name)
     else:
-        tags = model.Tag.all()
+        tags = Session.query(model.Tag).autoflush(False).all()
 
     if tags:
         if all_fields:

@@ -747,9 +747,9 @@ def tag_update(context, data_dict):
 
     :param id: id or name of the tag
     :type id: string
-    :param name: the name of the tag (optional)
+    :param name: the name of the tag
     :type name: string
-    :param vocabulary_id: the id of the vocabulary
+    :param vocabulary_id: the id of the vocabulary (optional)
     :type vocabulary_id: string
 
     :returns: the updated tag
@@ -764,16 +764,21 @@ def tag_update(context, data_dict):
         raise NotAuthorized(_(u'Need to be system '
                               u'administrator to administer'))
 
-    id = _get_or_bust(data_dict, 'id')
+    schema = knowledgehub_schema.tag_update_schema()
+    data, errors = _df.validate(data_dict, schema, context)
+    if errors:
+        raise ValidationError(errors)
 
-    tag = model.Tag.get(id)
+    tag = model.Tag.get(data.get('id'))
     if not tag:
         raise NotFound(_('Tag was not found'))
 
     items = ['name', 'vocabulary_id']
     for item in items:
-        if data_dict.get(item):
-            setattr(tag, item, data_dict.get(item))
+        if data.get(item):
+            setattr(tag, item, data.get(item))
+        else:
+            setattr(tag, item, None)
 
     session = context['session']
     tag.save()
