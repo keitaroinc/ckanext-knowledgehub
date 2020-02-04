@@ -1114,22 +1114,6 @@ class TestKWHDeleteActions(ActionsBase):
 
         assert_equals(len(members), 0)
 
-    def test_tag_create(self):
-        ctx = get_context()
-        vocab = toolkit.get_action('vocabulary_create')(
-            ctx, {'name': 'test-vocab'}
-        )
-
-        tag1 = create_actions.tag_create(
-            ctx, {'name': 'tag1'}
-        )
-        tag2 = create_actions.tag_create    (
-            ctx, {'name': 'tag2', 'vocabulary_id': vocab.get('id')}
-        )
-
-        assert_equals(tag1['name'], 'tag1')
-        assert_equals(tag2['name'], 'tag2')
-
 
 class TestKWHUpdateActions(ActionsBase):
 
@@ -1726,3 +1710,68 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
         })
         assert_equals(1, len(results))
         Visualization.search_index.called_once_with(q='text:aaa', rows=500)
+
+
+class TestTagsActions(ActionsBase):
+
+    __ctx = get_context()
+
+    def _tag_create(self, name, vocabulary_id=None):
+        return create_actions.tag_create(
+            self.__ctx,
+            {
+                'name': name,
+                'vocabulary_id': vocabulary_id
+            }
+        )
+
+    def _vocabulary_create(self, name=None):
+        return toolkit.get_action('vocabulary_create')(
+            self.__ctx,
+            {'name': name}
+        )
+
+    def test_tag_create(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+        tag2 = self._tag_create('tag2', vocab.get('id'))
+
+        assert_equals(tag1['name'], 'tag1')
+        assert_equals(tag2['name'], 'tag2')
+
+    def test_tag_list(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+        tag2 = self._tag_create('tag2', vocab.get('id'))
+
+        tags = get_actions.tag_list(self.__ctx, {})
+
+        assert_equals(len(tags), 2)
+
+        tags = get_actions.tag_list(
+            self.__ctx,
+            {'vocabulary_id': vocab.get('id')}
+        )
+
+        assert_equals(len(tags), 1)
+
+    def test_tag_autocomplete(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+        tag2 = self._tag_create('tag2')
+
+        tags = get_actions.tag_autocomplete(self.__ctx, {'query': 'tag'})
+
+        assert_equals(len(tags), 2)
+
+    def test_tag_search(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+        tag2 = self._tag_create('tag2')
+
+        tags_dict = get_actions.tag_search(
+            self.__ctx,
+            {'query': 'tag'}
+        )
+
+        assert_equals(tags_dict.get('count'), 2)
