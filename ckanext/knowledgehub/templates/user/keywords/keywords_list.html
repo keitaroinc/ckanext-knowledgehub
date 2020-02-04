@@ -8,7 +8,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-8">
-            <h3>{{ _('Keywords') }}</h3>
+            <h2 id="keywords-header-id">{{ _('Keywords') }}</h2>
         </div>
         <div class="col-sm-4">
             <a href="{{ h.url('/user/keywords/new') }}" class="btn btn-primary pull-right">
@@ -17,12 +17,14 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <table id="intents" class="table table-hover dataTables_wrapper" cellspacing="0" width="100%">
+            <table id="keywords" class="table table-hover dataTables_wrapper" cellspacing="0" width="100%">
                 <thead>
-                    <td>{{ _('Keyword') }}</td>
-                    <td>{{ _('Tags') }}</td>
-                    <td>{{ _('Manage') }}</td>
-                    <td>{{ _('Remove') }}</td>
+                    <tr id="keywords-header">
+                        <th>{{ _('Keyword') }}</th>
+                        <th>{{ _('Tags') }}</th>
+                        <th>{{ _('Manage') }}</th>
+                        <th class="remove-th">{{ _('Remove') }}</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for keyword in keywords%}
@@ -34,20 +36,21 @@
                             {% endfor%}
                         </td>
                         <td>
-                            <a  class="btn btn-default"
+                            <a class="btn btn-default btn-sm my-0"
                                 href="{{ h.url_for('.keyword_update_read', id=keyword.name) }}">
                                 <i class="fa fa-wrench"></i>
                                 {{ _('Manage') }}
                             </a>
                         </td>
-                        <td>
-                            <a class="btn btn-danger pull-left"  
-                            data-module="confirm-action" 
-                            data-module-content="{{ _('Are you sure you want to delete this keyword?') }}"
-                            href="{{ h.url_for('.keyword_delete', id=keyword.id) }}">
-                                <i class="fa fa-trash"></i>
-                                {{ _('Remove') }}
-                            </a>
+                        <td id="remove-td">
+                            <span>
+                                <button class="btn btn-danger btn-rounded btn-sm my-0" data-module="confirm-action"
+                                    data-module-content="{{ _('Are you sure you want to delete this keyword?') }}"
+                                    href="{{ h.url_for('.keyword_delete', id=keyword.id) }}">
+                                    <i class="fa fa-trash"></i>
+                                    {{ _('Remove') }}
+                                </button>
+                            </span>
                         </td>
                     </tr>
                     {% endfor%}
