@@ -22,7 +22,6 @@ def _extra_template_variables(context, data_dict):
     try:
         user_dict = logic.get_action(u'user_show')(context, data_dict)
     except logic.NotFound:
-        print 'TUKA?'
         h.flash_error(_(u'Not authorized to see this page'))
         return
     except logic.NotAuthorized:
@@ -120,10 +119,11 @@ def keyword_create_update(show, create, id=None, data_dict=None):
     )
 
     errors = {}
-    if not data_dict.get('name'):
-        errors['name'] = [_('Missing Value')]
-    if not data_dict.get('tags'):
-        errors['tags'] = [_('Missing Value')]
+    if not show:
+        if not data_dict.get('name'):
+            errors['name'] = [_('Missing Value')]
+        if not data_dict.get('tags'):
+            errors['tags'] = [_('Missing Value')]
 
     if not errors:
         if create:
@@ -145,7 +145,10 @@ def keyword_create_update(show, create, id=None, data_dict=None):
                         tag = logic.get_action('tag_show')(context, {
                             'id': tag.strip()
                         })
-                        keyword['tags'].append(tag)
+                        keyword['tags'].append({
+                            'name': tag.get('name'),
+                            'id': tag.get('id'),
+                        })
                     except logic.NotFound:
                         pass
                 try:
@@ -176,7 +179,10 @@ def keyword_create_update(show, create, id=None, data_dict=None):
                         tag = logic.get_action('tag_show')(context, {
                             'id': tag.strip()
                         })
-                        keyword['tags'].append(tag)
+                        keyword['tags'].append({
+                            'name': tag.get('name'),
+                            'id': tag.get('id'),
+                        })
                     except logic.NotFound:
                         pass
                 try:
