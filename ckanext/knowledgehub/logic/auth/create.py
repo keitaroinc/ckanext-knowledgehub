@@ -111,3 +111,11 @@ def user_query_result_create(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def resource_validate_create(context, data_dict):
+    '''
+        Authorization check for validation status of resource
+    '''
+    # sysadmins only
+    return {'success': False}
