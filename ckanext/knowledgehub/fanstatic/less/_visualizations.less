@@ -75,16 +75,24 @@
   }
 }
 
-#tags {
-  text-align: center
-}
-
 #intents {
   text-align: center;
 }
 
+#keywords {
+  text-align: center;
+}
+
+#tags {
+  text-align: center
+}
+
 #intents-header-id {
   padding-bottom: 20px
+}
+
+#keywords-header th {
+  text-align: center;
 }
 
 #tags-header-id {
@@ -129,6 +137,10 @@
 }
 
 #intents thead {
+  background-color: #bfdcee;
+}
+
+#keywords thead {
   background-color: #bfdcee;
 }
 
@@ -224,6 +236,29 @@
   margin-bottom: 30px;
 }
 
+.editCommentVisible {
+  display: none;
+  margin-bottom: 10px;
+}
+
+.btn-delete {
+  background: transparent;
+  padding: 0;
+  margin: 5px;
+  color: #ff0000 !important
+}
+
+.btn-delete :hover {
+  color: #ff0000
+}
+
+
+.btn-edit {
+  background-color: transparent;
+  padding: 0;
+  margin: 5px;
+}
+
 #loader {
   border: 5px solid #c5cdd9;
   border-radius: 50%;
@@ -257,4 +292,8 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+#keywords-header-id {
+  padding-bottom: 20px
 }

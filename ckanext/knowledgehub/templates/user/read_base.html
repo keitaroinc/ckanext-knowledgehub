@@ -7,6 +7,7 @@
 
     {% if user_is_sysadmin %}
         {{ h.build_nav_icon('kwh_user.intents', _('Intents'), id=user.name) }}
+        {{ h.build_nav_icon('kwh_user.keywords', _('Keywords')) }}
         {{ h.build_nav_icon('kwh_user.tags', _('Tags'), id=user.name) }}
     {% endif %}
 
