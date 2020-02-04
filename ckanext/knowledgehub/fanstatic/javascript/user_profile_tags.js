@@ -23,39 +23,39 @@
         api.post('tag_delete', {
             id: tagID
         })
-        .done(function (data) {
-            if (data.success) {
-                tr.detach();
-            }
-        })
-        .fail(function (error) {
-            console.log("Tag delete: " + error.statusText);
-        });
+            .done(function (data) {
+                if (data.success) {
+                    tr.detach();
+                }
+            })
+            .fail(function (error) {
+                console.log("Tag delete: " + error.statusText);
+            });
     };
 
     function updateTag(tagID, vocabularyID, loader) {
-        loader.css("display", "block");
+        loader.css("visibility", "visible");
         api.get('tag_show', {
             id: tagID
         })
-        .done(function (data) {
-            if (data.success) {
-               var name = data.result.name
-               api.post('tag_update', {
-                   id: tagID,
-                   name: name,
-                   vocabulary_id: vocabularyID
-               })
-               .fail(function (error) {
-                   console.log("Tag update: " + error.statusText);
-               })
-            }
-        })
-        .fail(function (error) {
-            console.log("Tag show: " + error.statusText);
-        });
+            .done(function (data) {
+                if (data.success) {
+                    var name = data.result.name
+                    api.post('tag_update', {
+                        id: tagID,
+                        name: name,
+                        vocabulary_id: vocabularyID
+                    })
+                        .fail(function (error) {
+                            console.log("Tag update: " + error.statusText);
+                        })
+                }
+            })
+            .fail(function (error) {
+                console.log("Tag show: " + error.statusText);
+            });
         setTimeout(function () {
-            loader.css("display", "none");
+            loader.css("visibility", "hidden");
         }, 500);
     }
 
