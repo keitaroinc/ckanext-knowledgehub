@@ -51,6 +51,11 @@ assert_not_equals = nose.tools.assert_not_equals
 assert_true = nose.tools.assert_true
 
 
+class _test_user:
+
+    fullname = 'Joe Bloggs'
+
+
 class ActionsBase(helpers.FunctionalTestBase):
     def setup(self):
         helpers.reset_db()
