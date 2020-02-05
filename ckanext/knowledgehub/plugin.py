@@ -104,7 +104,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_resource_validation_data': h.get_resource_validation_data,
             'get_resource_validation_options': h.get_resource_validation_options,
             'check_resource_status': h.check_resource_status,
-            'check_validation_admin': h.check_validation_admin
+            'check_validation_admin': h.check_validation_admin,
+            'vocabulary_list': h.vocabulary_list		
         }
 
     # IDatasetForm
@@ -113,6 +114,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         package_defaults = [toolkit.get_validator('ignore_missing'),
                             toolkit.get_converter('convert_to_extras')]
         mandatory_defaults = [toolkit.get_validator('not_empty')]
+
 
         schema.update({
             'unit_supported': package_defaults,

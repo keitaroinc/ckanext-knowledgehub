@@ -1335,3 +1335,13 @@ def views_dashboards_groups_update(package_id):
                 {'ignore_auth': True},
                 data_dict
             )
+
+
+def vocabulary_list():
+    '''Return a list of all vocabularies
+
+    :returns: the list of all vocabularies
+    :rtype: string
+    '''
+
+    return toolkit.get_action('vocabulary_list')({'ignore_auth': True}, {})
