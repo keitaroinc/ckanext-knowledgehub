@@ -154,13 +154,24 @@ def keyword_create_update(show, create, id=None, data_dict=None):
                 'name': tag.strip(),
             } for tag in data_dict.get('tags', '').split(',')]
 
-            keyword = _save_keyword(context, keyword)
+            try:
+                keyword['name'] = data_dict['name']
+                keyword = _save_keyword(context, keyword)
+            except logic.ValidationError as e:
+                keyword = data_dict
+                errors.update(e.error_dict)
 
     else:
         # There were errors, so just return the dict
         keyword = data_dict
 
     extra_vars = _extra_template_variables(context, user_page_data)
+
+    if (isinstance(keyword.get('tags'), str) or isinstance(keyword.get('tags'),
+                                                           unicode)):
+        keyword['tags'] = [{
+            'name': tag.strip()
+        } for tag in keyword.get('tags', '').split(',')]
 
     kwd_tags = []
     for tag in keyword.get('tags', []):
@@ -183,12 +194,12 @@ def keyword_create_update(show, create, id=None, data_dict=None):
 
 def _save_keyword(context, keyword_dict):
     update = False
-    if keyword_dict.get('id'):
+    try:
         keyword = logic.get_action('vocabulary_show')(context, {
-            'id': keyword_dict.get('id'),
+            'id': keyword_dict.get('id') or keyword_dict.get('name'),
         })
         update = True
-    else:
+    except logic.NotFound:
         keyword = logic.get_action('vocabulary_create')(context, {
             'name': keyword_dict['name'],
             'tags': [],
@@ -203,7 +214,7 @@ def _save_keyword(context, keyword_dict):
     if update:
         keyword = logic.get_action('vocabulary_update')(context, {
             'id': keyword['id'],
-            'name': keyword['name'],
+            'name': keyword_dict['name'],
             'tags': [],
         })
 
@@ -218,6 +229,7 @@ def _save_keyword(context, keyword_dict):
 
         logic.get_action('tag_update')(context, {
             'id': tag['id'],
+            'name': tag['name'],
             'vocabulary_id': keyword['id'],
         })
 
