@@ -9,6 +9,7 @@ from ckan import plugins
 from ckan.tests import helpers
 from ckan.plugins import toolkit
 from ckan import model
+from datetime import datetime
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
@@ -33,50 +34,26 @@ from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons,
                                                 get_context)
-from ckanext.knowledgehub.model import (Dashboard,
-                                        ResearchQuestion,
-                                        Visualization,
-                                        ResourceValidate)
+from ckanext.knowledgehub.model import (
+    Dashboard,
+    ResearchQuestion,
+    Visualization,
+    DataQualityMetrics as DataQualityMetricsModel,
+    ResourceValidate,
+)
+from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.datastore.logic.action import datastore_create
 from pysolr import Results
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
+assert_true = nose.tools.assert_true
 
 
 class _test_user:
 
     fullname = 'Joe Bloggs'
-
-
-class _monkey_patch:
-
-    def __init__(self, obj, prop, patch_with):
-        self.obj = obj
-        self.prop = prop
-        self.patch_with = patch_with
-
-    def __call__(self, method):
-        original_prop = None
-        if hasattr(self.obj, self.prop):
-            original_prop = getattr(self.obj, self.prop)
-
-        def _with_patched(*args, **kwargs):
-            # patch
-            setattr(self.obj, self.prop, self.patch_with)
-            try:
-                return method(*args, **kwargs)
-            finally:
-                # unpatch
-                if original_prop is not None:
-                    setattr(self.obj, self.prop, original_prop)
-                else:
-                    delattr(self.obj, self.prop)
-        _with_patched.__name__ = method.__name__
-        _with_patched.__module__ = method.__module__
-        _with_patched.__doc__ = method.__doc__
-        return _with_patched
 
 
 class ActionsBase(helpers.FunctionalTestBase):
@@ -145,7 +122,7 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(sub_theme.get('name'), data_dict.get('name'))
 
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_research_question_create(self):
         user = factories.Sysadmin()
         context = {
@@ -181,7 +158,7 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(rq.get('name'), data_dict.get('name'))
         ResearchQuestion.add_to_index.assert_called_once()
 
-    @_monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
     def test_resource_view_create(self):
 
         dataset = create_dataset()
@@ -215,7 +192,7 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(rsc_view.get('package_id'), dataset.get('id'))
         Visualization.add_to_index.assert_called_once()
 
-    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_create(self):
         user = factories.Sysadmin()
         context = {
@@ -662,7 +639,7 @@ class TestKWHGetActions(ActionsBase):
             data_dict.get('title')
         )
 
-    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_show_list(self):
         user = factories.Sysadmin()
         context = {
@@ -1046,7 +1023,7 @@ class TestKWHDeleteActions(ActionsBase):
 
         assert_equals(result, 'OK')
 
-    @_monkey_patch(ResearchQuestion, 'delete_from_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'delete_from_index', mock.Mock())
     def test_research_question_delete(self):
         user = factories.Sysadmin()
         context = {
@@ -1087,8 +1064,8 @@ class TestKWHDeleteActions(ActionsBase):
         assert_equals(result, None)
         ResearchQuestion.delete_from_index.assert_called_once()
 
-    @_monkey_patch(Dashboard, 'delete_from_index', mock.Mock())
-    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'delete_from_index', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_delete(self):
         user = factories.Sysadmin()
         context = {
@@ -1261,7 +1238,7 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(sub_theme_updated.get('title'), data_dict.get('title'))
 
-    @_monkey_patch(ResearchQuestion, 'update_index_doc', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'update_index_doc', mock.Mock())
     def test_research_question_update(self):
         user = factories.Sysadmin()
         context = {
@@ -1445,7 +1422,7 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(val_reverted.get('status'), 'not_validated')
 
-    @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
+    @monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     def test_resource_view_update(self):
         dataset = create_dataset()
         resource = factories.Resource(
@@ -1488,8 +1465,8 @@ class TestKWHUpdateActions(ActionsBase):
         )
         Visualization.update_index_doc.assert_called_once()
 
-    @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
-    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_dashboard_update(self):
         user = factories.Sysadmin()
         context = {
@@ -1818,9 +1795,9 @@ class TestKWHUpdateActions(ActionsBase):
     #     assert_equals(res, "")
 
 
-class SearchIndexActionsTest(helpers.FunctionalTestBase):
+class TestSearchIndexActions(helpers.FunctionalTestBase):
 
-    @_monkey_patch(Dashboard, 'search_index', mock.Mock())
+    @monkey_patch(Dashboard, 'search_index', mock.Mock())
     def test_search_dashboards(self):
         Dashboard.search_index.return_value = Results({
             'response': {
@@ -1835,10 +1812,11 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
         results = get_actions.search_dashboards({}, {
             'text': 'aaa',
         })
-        assert_equals(1, len(results))
+        assert_true(results is not None)
+        assert_equals(1, len(results.get('results')))
         Dashboard.search_index.called_once_with(q='text:aaa', rows=500)
 
-    @_monkey_patch(ResearchQuestion, 'search_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'search_index', mock.Mock())
     def test_search_research_questions(self):
         ResearchQuestion.search_index.return_value = Results({
             'response': {
@@ -1853,10 +1831,11 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
         results = get_actions.search_research_questions({}, {
             'text': 'aaa',
         })
-        assert_equals(1, len(results))
+        assert_true(results is not None)
+        assert_equals(1, len(results.get('results')))
         ResearchQuestion.search_index.called_once_with(q='text:aaa', rows=500)
 
-    @_monkey_patch(Visualization, 'search_index', mock.Mock())
+    @monkey_patch(Visualization, 'search_index', mock.Mock())
     def test_search_visualizations(self):
         Visualization.search_index.return_value = Results({
             'response': {
@@ -1871,10 +1850,304 @@ class SearchIndexActionsTest(helpers.FunctionalTestBase):
         results = get_actions.search_visualizations({}, {
             'text': 'aaa',
         })
-        assert_equals(1, len(results))
+        assert_true(results is not None)
+        assert_equals(1, len(results.get('results')))
         Visualization.search_index.called_once_with(q='text:aaa', rows=500)
 
 
+class TestDataQualityActions(helpers.FunctionalTestBase):
+
+    @monkey_patch(DataQualityMetricsModel, 'get_resource_metrics', mock.Mock())
+    def test_get_resource_data_quality(self):
+        now = datetime.now()
+        dq = DataQualityMetricsModel(
+            type='resource',
+            ref_id='dq-1',
+            created_at=now,
+            accuracy=10.5,
+            completeness=99.9,
+            consistency=90.8,
+            timeliness='+01:00:00',
+            uniqueness=30.0,
+            validity=80.0,
+            metrics={'key': 'val'},
+        )
+
+        DataQualityMetricsModel.get_resource_metrics.return_value = dq
+
+        result = get_actions.resource_data_quality({
+            'ignore_auth': True,
+        }, {
+            'id': 'dq-1',
+        })
+        assert_true(result is not None)
+        assert_equals(result, {
+            'calculated_on': now.isoformat(),
+            'resource_id': 'dq-1',
+            'accuracy': 10.5,
+            'completeness': 99.9,
+            'consistency': 90.8,
+            'timeliness': '+01:00:00',
+            'uniqueness': 30.0,
+            'validity': 80.0,
+            'details': {'key': 'val'},
+        })
+
+    @monkey_patch(DataQualityMetricsModel, 'get_dataset_metrics', mock.Mock())
+    def test_get_package_data_quality(self):
+        now = datetime.now()
+        dq = DataQualityMetricsModel(
+            type='package',
+            ref_id='dq-1',
+            created_at=now,
+            accuracy=10.5,
+            completeness=99.9,
+            consistency=90.8,
+            timeliness='+01:00:00',
+            uniqueness=30.0,
+            validity=80.0,
+            metrics={'key': 'val'},
+        )
+
+        DataQualityMetricsModel.get_dataset_metrics.return_value = dq
+
+        result = get_actions.package_data_quality({
+            'ignore_auth': True,
+        }, {
+            'id': 'dq-1',
+        })
+        assert_true(result is not None)
+        assert_equals(result, {
+            'calculated_on': now.isoformat(),
+            'package_id': 'dq-1',
+            'accuracy': 10.5,
+            'completeness': 99.9,
+            'consistency': 90.8,
+            'timeliness': '+01:00:00',
+            'uniqueness': 30.0,
+            'validity': 80.0,
+            'details': {'key': 'val'},
+        })
+
+    @monkey_patch(DataQualityMetricsModel, 'get', mock.Mock())
+    def test_resource_data_quality_update(self):
+        now = datetime.now()
+        dq = DataQualityMetricsModel(
+            type='resource',
+            ref_id='dq-1',
+            created_at=now,
+            accuracy=10.5,
+            completeness=99.9,
+            consistency=90.8,
+            timeliness='+01:00:00',
+            uniqueness=30.0,
+            validity=80.0,
+            metrics={'key': 'val'},
+        )
+
+        dq.save = mock.Mock()
+
+        DataQualityMetricsModel.get.return_value = dq
+
+        result = update_actions.resource_data_quality_update({
+            'ignore_auth': True,
+        }, {
+            'id': 'dq-1',
+            'accuracy': {
+                'value': 10.0,
+                'total': 10,
+                'accurate': 1,
+                'inaccurate': 9,
+            },
+            'completeness': {
+                'value': 90.0,
+                'total': 100,
+                'complete': 90,
+            }, 
+            'consistency': {
+                'value': 80.0,
+                'total': 100,
+                'consistent': 80,
+            },
+            'timeliness': {
+                'value': '+10:00:00',
+                'total': 100*3600,
+                'average': 10*3600,
+                'records': 10,
+            },
+            'uniqueness': {
+                'value': 70.0,
+                'total': 100,
+                'unique': 70,
+            },
+            'validity': {
+                'value': 60.0,
+                'total': 100,
+                'valid': 60,
+            }
+        })
+
+        assert_true(result is not None)
+        assert_not_equals(result, {
+            'calculated_on': now.isoformat(),
+            'resource_id': 'dq-1',
+            'accuracy': 10.0,
+            'completeness': 90.0,
+            'consistency': 80.0,
+            'timeliness': '+10:00:00',
+            'uniqueness': 70.0,
+            'validity': 60.0,
+            'details': {
+                'accuracy': {
+                    'value': 10.0,
+                    'total': 10,
+                    'accurate': 1,
+                    'inaccurate': 9,
+                    'manual': True,
+                },
+                'completeness': {
+                    'value': 90.0,
+                    'total': 100,
+                    'complete': 90,
+                    'manual': True,
+                }, 
+                'consistency': {
+                    'value': 80.0,
+                    'total': 100,
+                    'consistent': 80,
+                    'manual': True,
+                },
+                'timeliness': {
+                    'value': '+10:00:00',
+                    'total': 100*3600,
+                    'average': 10*3600,
+                    'records': 10,
+                    'manual': True,
+                },
+                'uniqueness': {
+                    'value': 70.0,
+                    'total': 100,
+                    'unique': 70,
+                    'manual': True,
+                },
+                'validity': {
+                    'value': 60.0,
+                    'total': 100,
+                    'valid': 60,
+                    'manual': True,
+                }
+            },
+        })
+
+    @monkey_patch(DataQualityMetricsModel, 'get', mock.Mock())
+    def test_package_data_quality_update(self):
+        now = datetime.now()
+        dq = DataQualityMetricsModel(
+            type='package',
+            ref_id='dq-1',
+            created_at=now,
+            accuracy=10.5,
+            completeness=99.9,
+            consistency=90.8,
+            timeliness='+01:00:00',
+            uniqueness=30.0,
+            validity=80.0,
+            metrics={'key': 'val'},
+        )
+
+        dq.save = mock.Mock()
+
+        DataQualityMetricsModel.get.return_value = dq
+
+        result = update_actions.package_data_quality_update({
+            'ignore_auth': True,
+        }, {
+            'id': 'dq-1',
+            'accuracy': {
+                'value': 10.0,
+                'total': 10,
+                'accurate': 1,
+                'inaccurate': 9,
+            },
+            'completeness': {
+                'value': 90.0,
+                'total': 100,
+                'complete': 90,
+            }, 
+            'consistency': {
+                'value': 80.0,
+                'total': 100,
+                'consistent': 80,
+            },
+            'timeliness': {
+                'value': '+10:00:00',
+                'total': 100*3600,
+                'average': 10*3600,
+                'records': 10,
+            },
+            'uniqueness': {
+                'value': 70.0,
+                'total': 100,
+                'unique': 70,
+            },
+            'validity': {
+                'value': 60.0,
+                'total': 100,
+                'valid': 60,
+            }
+        })
+
+        assert_true(result is not None)
+        assert_not_equals(result, {
+            'calculated_on': now.isoformat(),
+            'package_id': 'dq-1',
+            'accuracy': 10.0,
+            'completeness': 90.0,
+            'consistency': 80.0,
+            'timeliness': '+10:00:00',
+            'uniqueness': 70.0,
+            'validity': 60.0,
+            'details': {
+                'accuracy': {
+                    'value': 10.0,
+                    'total': 10,
+                    'accurate': 1,
+                    'inaccurate': 9,
+                    'manual': True,
+                },
+                'completeness': {
+                    'value': 90.0,
+                    'total': 100,
+                    'complete': 90,
+                    'manual': True,
+                }, 
+                'consistency': {
+                    'value': 80.0,
+                    'total': 100,
+                    'consistent': 80,
+                    'manual': True,
+                },
+                'timeliness': {
+                    'value': '+10:00:00',
+                    'total': 100*3600,
+                    'average': 10*3600,
+                    'records': 10,
+                    'manual': True,
+                },
+                'uniqueness': {
+                    'value': 70.0,
+                    'total': 100,
+                    'unique': 70,
+                    'manual': True,
+                },
+                'validity': {
+                    'value': 60.0,
+                    'total': 100,
+                    'valid': 60,
+                    'manual': True,
+                }
+            },
+        })
 class TestTagsActions(ActionsBase):
 
     __ctx = get_context()

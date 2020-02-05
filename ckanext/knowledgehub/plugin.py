@@ -188,7 +188,10 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'port': defaults,
             'username': defaults,
             'password': defaults,
-            'sql': defaults
+            'sql': defaults,
+            'dq_timeliness_column': defaults,
+            'dq_timeliness_date_format': defaults,
+            'dq_accuracy_column': defaults,
         })
         return schema
 

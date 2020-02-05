@@ -422,7 +422,7 @@
 <section class="additional-info">
   <h2>{{ _('Data Quality') }}</h2>
   {% if data_quality.calculated_on %}
-  <p>Calculated on: {{data_quality.calculated_on}}</p>
+  <p>Calculated on: {{ h.render_datetime(data_quality.calculated_on, with_hours=True) }}</p>
   {% endif %}
   <table class="table table-striped table-bordered table-condensed">
     <thead>
@@ -436,7 +436,7 @@
       {% if data_quality.completeness %}
       <tr>
         <th>Completeness</th>
-        <td>{{data_quality.completeness}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.completeness | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
@@ -458,7 +458,7 @@
       {% if data_quality.validity %}
       <tr>
         <th>Validity</th>
-        <td>{{data_quality.validity}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.validity | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
@@ -469,7 +469,7 @@
       {% if data_quality.uniqueness %}
       <tr>
         <th>Uniqueness</th>
-        <td>{{data_quality.uniqueness}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.uniqueness | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
@@ -480,7 +480,7 @@
       {% if data_quality.consistency %}
       <tr>
         <th>Consistency</th>
-        <td>{{data_quality.consistency}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.consistency | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>
@@ -491,7 +491,7 @@
       {% if data_quality.accuracy %}
       <tr>
         <th>Accuracy</th>
-        <td>{{data_quality.accuracy}}&percnt;</td>
+        <td>{{'%0.2f' % data_quality.accuracy | float}}&percnt;</td>
       </tr>
       {% else %}
       <tr>

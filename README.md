@@ -248,3 +248,9 @@ The crontab should look something like this:
 ```cron
 0 0 * * * knowledgehub -c /etc/ckan/default/production.ini intents update >/dev/null 2>&1
 ```
+
+# Data Quality
+
+Data Quality is measured across the six primary dimensions for data quality assessment.
+
+A lot more details are available in the dedicated [documentation section](docs/data-qualtiy-metrics.md).

@@ -23,8 +23,8 @@ data_quality_metrics_table = Table(
     Column('ref_id', types.UnicodeText, nullable=False),
     Column('resource_last_modified', types.DateTime),
     Column('completeness', types.Float),
-    Column('uniqueness', types.Integer),
-    Column('timeliness', types.Float),
+    Column('uniqueness', types.Float),
+    Column('timeliness', types.String),
     Column('validity', types.Float),
     Column('accuracy', types.Float),
     Column('consistency', types.Float),
@@ -36,7 +36,10 @@ class DataQualityMetrics(DomainObject):
 
     @classmethod
     def get(cls, _type, ref_id):
-        return Session.query(cls).filter_by(type=_type, ref_id=ref_id).first()
+        return (Session.query(cls)
+                       .filter_by(type=_type, ref_id=ref_id)
+                       .order_by(data_quality_metrics_table.c.modified_at.desc())
+                       .first())
 
     @classmethod
     def get_dataset_metrics(cls, ref_id):
