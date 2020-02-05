@@ -112,6 +112,25 @@ def resource_feedback_schema():
     }
 
 
+def resource_validate_schema():
+    return {
+        'what': [not_empty, unicode],
+        'resource': [not_empty, resource_id_exists]
+    }
+
+   
+def resource_validation_schema():
+    return {
+        'dataset': [ignore_missing, unicode],
+        'resource': [ignore_missing, unicode],
+        'user': [ignore_missing, unicode],
+        'resource_url': [ignore_missing, unicode],
+        'admin': [ignore_missing, unicode],
+        'admin_email': [ignore_missing, unicode],
+        'status': [ignore_missing, unicode],
+    }
+
+
 def kwh_data_schema():
     return {
         'type': [not_empty, validators.kwh_data_type_validator],
@@ -178,3 +197,11 @@ def tag_create_schema():
     # You're not allowed to specify your own ID when creating a tag.
     schema['id'] = [empty]
     return schema
+
+
+def tag_update_schema():
+    return {
+        'id': [not_empty, unicode],
+        'name': [not_empty, unicode],
+        'vocabulary_id': [ignore_missing, unicode]
+    }

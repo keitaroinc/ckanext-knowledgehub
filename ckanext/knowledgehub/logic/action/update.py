@@ -19,6 +19,8 @@ from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
+from ckanext.knowledgehub.model import ResourceValidate
+from ckanext.knowledgehub.model import ResourceValidation
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
@@ -282,7 +284,7 @@ def resource_view_update(context, data_dict):
     # check_access('resource_view_update', context, data_dict)
 
     old_resource_view_data = model_dictize.resource_view_dictize(resource_view,
-                                                             context)
+                                                                 context)
 
     # before update
 
@@ -300,8 +302,8 @@ def resource_view_update(context, data_dict):
         ext = resource_view_data['__extras']
         ext_old = resource_view_data['__extras']
         if ext_old.get('research_questions') or ext.get('research_questions'):
-            plugin_helpers.update_rqs_in_dataset(old_resource_view_data, resource_view_data)
-
+            plugin_helpers.update_rqs_in_dataset(
+                old_resource_view_data, resource_view_data)
 
     return resource_view_data
 
@@ -579,14 +581,198 @@ def resource_data_quality_update(context, data_dict):
     return _patch_data_quality(context, data_dict, 'resource')
 
 
+@toolkit.side_effect_free
+def resource_validate_update(context, data_dict):
+    ''' Updates an existing validation status of resource
+
+    :param what: validation status of the resource
+    :type name: string
+
+    :returns: the updated validation status
+    :rtype: dictionary
+    '''
+
+    try:
+        logic.check_access('resource_validate_update', context, data_dict)
+    except logic.NotAuthorized:
+        raise logic.NotAuthorized(_(u'Need to be system '
+                                    u'administrator to administer'))
+
+    status = data_dict['what']
+    user = context['auth_user_obj']
+
+    name = getattr(user, "fullname")
+    if not name:
+        name = context['user']
+
+    when = datetime.datetime.utcnow().strftime(
+        '%Y-%m-%dT%H:%M:%S'
+        )
+    id = logic.get_or_bust(data_dict, 'id')
+    data_dict.pop('id')
+
+    resource_validate = ResourceValidate.get(resource=id)
+
+    if not resource_validate:
+        log.debug('Could not find validation report %s', id)
+        raise logic.NotFound(_('Validation report was not found.'))
+
+    filter = {'resource': id}
+    rvu = {
+            'what': status,
+            'when': when,
+            'who': name
+        }
+    st = ResourceValidate.update(filter, rvu)
+
+    return st.as_dict()
+
+
+def resource_validation_update(context, data_dict):
+    '''
+    Update resource validation asignee
+
+    :param dataset
+    :param resource
+    :param user
+    :param admin
+    :param admin_email
+    '''
+    check_access('resource_validation_update', context, data_dict)
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.resource_validation_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    if data.get('admin'):
+        usr = context.get('user')
+
+        dataset = data_dict.get('package_id')
+        resource = data_dict.get('id')
+        user = model.User.by_name(usr.decode('utf8')).id
+        admin = data_dict.get('admin')
+        admin_email = model.User.by_name(admin).email
+        requested_at = datetime.datetime.utcnow()
+
+        rv = ResourceValidation.get(
+            dataset=dataset,
+            resource=resource
+        ).first()
+
+        if not rv:
+            raise NotFound
+        else:
+            filter = {'id': rv.id}
+            rvu = {
+                'user': user,
+                'admin': admin,
+                'admin_email': admin_email,
+                'requested_at': requested_at
+            }
+            rv.update(filter, rvu)
+
+            return _table_dictize(rv, context)
+
+
+def resource_validation_status(context, data_dict):
+    '''
+    Update resource validation status
+
+    :param dataset
+    :param resource
+    :param user
+    :param admin
+    :param admin_email
+    '''
+    check_access('resource_validation_status', context, data_dict)
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.resource_validation_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    usr = context.get('user')
+
+    resource = data_dict.get('resource')
+    admin = model.User.by_name(usr.decode('utf8')).name
+    status = 'validated'
+    validated_at = datetime.datetime.utcnow()
+
+    vr = ResourceValidation.get(
+        resource=resource,
+        admin=admin
+    ).first()
+
+    if not vr:
+        raise NotFound
+    else:
+        filter = {'id': vr.id}
+        vru = {
+            'status': status,
+            'validated_at': validated_at
+        }
+        vr.update(filter, vru)
+
+        return _table_dictize(vr, context)
+
+
+def resource_validation_revert(context, data_dict):
+    '''
+    Revert resource validation status
+
+    :param dataset
+    :param resource
+    :param user
+    :param admin
+    :param admin_email
+    '''
+    check_access('resource_validation_revert', context, data_dict)
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.resource_validation_schema(),
+                                context)
+
+    if errors:
+        raise ValidationError(errors)
+
+    usr = context.get('user')
+
+    resource = data_dict.get('resource')
+    admin = model.User.by_name(usr.decode('utf8')).name
+    status = 'not_validated'
+    validated_at = None
+
+    vr = ResourceValidation.get(
+        resource=resource,
+        admin=admin
+    ).first()
+
+    if not vr:
+        raise NotFound
+    else:
+        filter = {'id': vr.id}
+        vru = {
+            'status': status,
+            'validated_at': validated_at
+        }
+        vr.update(filter, vru)
+
+        return _table_dictize(vr, context)
+
+
 def tag_update(context, data_dict):
     ''' Update the tag name or vocabulary
 
     :param id: id or name of the tag
     :type id: string
-    :param name: the name of the tag (optional)
+    :param name: the name of the tag
     :type name: string
-    :param vocabulary_id: the id of the vocabulary
+    :param vocabulary_id: the id of the vocabulary (optional)
     :type vocabulary_id: string
 
     :returns: the updated tag
@@ -601,16 +787,21 @@ def tag_update(context, data_dict):
         raise NotAuthorized(_(u'Need to be system '
                               u'administrator to administer'))
 
-    id = _get_or_bust(data_dict, 'id')
+    schema = knowledgehub_schema.tag_update_schema()
+    data, errors = _df.validate(data_dict, schema, context)
+    if errors:
+        raise ValidationError(errors)
 
-    tag = model.Tag.get(id)
+    tag = model.Tag.get(data.get('id'))
     if not tag:
         raise NotFound(_('Tag was not found'))
 
     items = ['name', 'vocabulary_id']
     for item in items:
-        if data_dict.get(item):
-            setattr(tag, item, data_dict.get(item))
+        if data.get(item):
+            setattr(tag, item, data.get(item))
+        else:
+            setattr(tag, item, None)
 
     session = context['session']
     tag.save()

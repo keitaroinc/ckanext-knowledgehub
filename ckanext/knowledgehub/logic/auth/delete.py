@@ -40,3 +40,11 @@ def user_intent_delete(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def resource_validate_delete(context, data_dict):
+    '''
+        Authorization check for deleting a validation status of resource
+    '''
+    # sysadmins only
+    return {'success': False}

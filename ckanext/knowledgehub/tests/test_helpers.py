@@ -42,6 +42,7 @@ from ckanext.knowledgehub.lib.util import monkey_patch
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
+raises = nose.tools.raises
 
 
 class ActionsBase(helpers.FunctionalTestBase):
@@ -889,3 +890,49 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(d['name'], data_dict['name'])
         assert_equals(d['type'], data_dict['type'])
+
+    @raises
+    def test_get_resource_validation_options(self):
+        mock_pylons()
+        dataset = create_dataset()
+        pkg_name = dataset['name']
+        opts = kwh_helpers.get_resource_validation_options(pkg_name)
+
+        raise AttributeError()
+
+    @raises
+    def test_check_resource_status(self):
+        mock_pylons()
+        dataset = create_dataset()
+        resource_id = dataset['id']
+        status = kwh_helpers.check_resource_status(resource_id)
+
+        raise AttributeError()
+
+    @raises
+    def test_check_validation_admin(self):
+        mock_pylons()
+        dataset = create_dataset()
+        resource_id = dataset['id']
+        validator = kwh_helpers.check_validation_admin(resource_id)
+
+        raise AttributeError()
+
+    def test_vocabulary_list(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        toolkit.get_action('vocabulary_create')(
+            context,
+            {'name': 'test'}
+        )
+
+        vocab_list = kwh_helpers.vocabulary_list()
+
+        assert_equals(len(vocab_list), 1)

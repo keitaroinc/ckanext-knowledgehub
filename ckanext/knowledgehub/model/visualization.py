@@ -23,18 +23,14 @@ class Visualization(ResourceView, Indexed):
 
     @staticmethod
     def before_index(data):
-        package_id = data.get('package_id')
-        if not package_id:
-            resource_id = data.get('resource_id')
-            resource = get_action('resource_show')({
-                'ignore_auth': True,
-            }, {
-                'id': resource_id,
-            })
-            package_id = resource['package_id']
+        resource_view = get_action('resource_view_show')(
+            {'ignore_auth': True},
+            {'id': data['id']})
+
+        data['package_id'] = resource_view['package_id']
         package = get_action('package_show')(
             {'ignore_auth': True},
-            {'id': package_id, 'include_tracking': True})
+            {'id': data['package_id'], 'include_tracking': True})
         if package:
             data['organization'] = package.get('organization', {}).get('name')
 
@@ -64,9 +60,6 @@ class Visualization(ResourceView, Indexed):
                         return value
 
         if not data.get('__extras'):
-            resource_view = get_action('resource_view_show')(
-                {'ignore_auth': True},
-                {'id': data['id']})
             if resource_view.get('description') is not None:
                 data['description'] = resource_view['description']
             else:
@@ -89,11 +82,6 @@ class Visualization(ResourceView, Indexed):
                     data_rq = json.dumps(ext.get('research_questions'))
                     data['research_questions'] = data_rq
 
-        # get package_id
-        resource_view = get_action('resource_view_show')(
-            {'ignore_auth': True},
-            {'id': data['id']})
-        data['package_id'] = resource_view['package_id']
         return data
 
 

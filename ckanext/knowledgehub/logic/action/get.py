@@ -8,12 +8,14 @@ from ckan.plugins import toolkit
 from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
+from ckan.model.meta import Session
 
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
 from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceFeedbacks
+from ckanext.knowledgehub.model import ResourceValidate
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import RNNCorpus
 from ckanext.knowledgehub.model import Visualization
@@ -1132,6 +1134,26 @@ def resource_data_quality(context, data_dict):
     return result
 
 
+@toolkit.side_effect_free
+def resource_validate_status(context, data_dict):
+
+    if not data_dict.get('id'):
+        raise ValidationError({'resource': _(u'Missing Value')})
+    resource_id = data_dict.get('id')
+
+    try:
+        check_access('resource_validate_show', context, data_dict)
+    except NotAuthorized as e:
+        raise NotAuthorized(_(str(e)))
+
+    filter = {"resource": resource_id}
+    validation_status = ResourceValidate.get(**filter)
+    if not validation_status:
+        raise NotFound(_('Not Found'))
+
+    return validation_status.as_dict()
+
+
 def _tag_search(context, data_dict):
     model = context['model']
 
@@ -1211,7 +1233,7 @@ def tag_list(context, data_dict):
     elif vocab_id_or_name:
         tags = model.Tag.all(vocab_id_or_name)
     else:
-        tags = model.Tag.all()
+        tags = Session.query(model.Tag).autoflush(False).all()
 
     if tags:
         if all_fields:

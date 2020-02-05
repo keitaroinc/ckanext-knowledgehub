@@ -22,6 +22,9 @@ from ckanext.knowledgehub.model.resource_feedback import (
 from ckanext.knowledgehub.model.kwh_data import (
     setup as kwh_data_setup
 )
+from ckanext.knowledgehub.model.resource_validate import (
+    setup as resource_validate_setup
+)
 from ckanext.knowledgehub.logic.action import create as create_actions
 from ckanext.knowledgehub.logic.action import get as get_actions
 from ckanext.knowledgehub.logic.action import delete as delete_actions
@@ -31,10 +34,13 @@ from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons,
                                                 get_context)
-from ckanext.knowledgehub.model import (Dashboard,
-                                        ResearchQuestion,
-                                        Visualization,
-                                        DataQualityMetrics as DataQualityMetricsModel)
+from ckanext.knowledgehub.model import (
+    Dashboard,
+    ResearchQuestion,
+    Visualization,
+    DataQualityMetrics as DataQualityMetricsModel,
+    ResourceValidate,
+)
 from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.datastore.logic.action import datastore_create
 from pysolr import Results
@@ -55,6 +61,7 @@ class ActionsBase(helpers.FunctionalTestBase):
         resource_feedback_setup()
         kwh_data_setup()
         rnn_corpus_setup()
+        resource_validate_setup()
         os.environ["CKAN_INI"] = './test.ini'
         if not plugins.plugin_loaded('datastore'):
             plugins.load('datastore')
@@ -227,6 +234,29 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(rf.get('dataset'), dataset.get('id'))
         assert_equals(rf.get('resource'), resource.get('id'))
+ 
+    def test_resource_validation_create(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'ignore_auth': True
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'url': resource['url'],
+            'admin': user['name']
+        }
+        val = create_actions.resource_validation_create(context, data_dict)
+
+        assert_equals(val.get('resource'), data_dict.get('id'))
 
     def test_kwh_data_create(self):
         user = factories.Sysadmin()
@@ -426,6 +456,32 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(member['group_id'], group['id'])
         assert_equals(member['state'], 'active')
         assert_equals(member['capacity'], member['capacity'])
+
+    def test_resource_validate_create(self):
+        user = factories.Sysadmin()
+        test_auth_user = _test_user()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': test_auth_user,
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'what': 'The resource is invalid!',
+            'resource': resource.get('id')
+        }
+        rv = create_actions.resource_validate_create(context, data_dict)
+
+        assert_equals(rv.get('what'), 'The resource is invalid!')
+        assert_equals(rv.get('resource'), resource.get('id'))
 
 
 class TestKWHGetActions(ActionsBase):
@@ -881,6 +937,35 @@ class TestKWHGetActions(ActionsBase):
         assert_equals(r_search['size'], 10)
         assert_equals(len(r_search['items']), 1)
 
+    def test_resource_validate_status(self):
+        user = factories.Sysadmin()
+        test_auth_user = _test_user()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': test_auth_user,
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+        data_dict = {
+            'what': 'The resource is invalid!',
+            'resource': resource.get('id')
+        }
+        rv = create_actions.resource_validate_create(context, data_dict)
+
+        resource_validate_show = get_actions.resource_validate_status(
+            context, {'id': rv.get('resource')}
+            )
+
+        assert_equals(
+            resource_validate_show.get('what'), data_dict.get('what')
+            )
+
 
 class TestKWHDeleteActions(ActionsBase):
 
@@ -1066,6 +1151,36 @@ class TestKWHDeleteActions(ActionsBase):
 
         assert_equals(len(members), 0)
 
+    def test_resource_validate_delete(self):
+        user = factories.Sysadmin()
+        test_auth_user = _test_user()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': test_auth_user,
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+        data_dict = {
+            'what': 'The resource is invalid!',
+            'resource': resource.get('id')
+        }
+        rv = create_actions.resource_validate_create(context, data_dict)
+
+        result = delete_actions.resource_validate_delete(
+            context, {'id': rv.get('resource')}
+            )
+
+        assert_equals(
+            result.get('message'),
+            'Validation report of the resource is deleted.'
+            )
+
 
 class TestKWHUpdateActions(ActionsBase):
 
@@ -1187,7 +1302,120 @@ class TestKWHUpdateActions(ActionsBase):
 
         rsc_updated = update_actions.resource_update(context, data_dict)
 
-        assert_true(rsc_updated is not None)
+        assert_not_equals(rsc_updated, None)
+    
+    def test_resource_validation_update(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'url': resource['url'],
+            'admin': user['name']
+        }
+        val = create_actions.resource_validation_create(context, data_dict)
+
+        new_user = factories.Sysadmin()
+        context = {
+            'user': new_user.get('name'),
+            'auth_user_obj': User(new_user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'user': user['name'],
+            'admin': new_user['name']
+        }
+
+        val_updated = update_actions.resource_validation_update(context, data_dict)
+
+        assert_equals(val_updated.get('admin'), data_dict.get('admin'))
+    
+    def test_resource_validation_status(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'url': resource['url'],
+            'admin': user['name']
+        }
+        val = create_actions.resource_validation_create(context, data_dict)
+
+        data_dict = {
+            'resource': resource['id']
+        }
+
+        val_updated = update_actions.resource_validation_status(
+            context, data_dict)
+
+        assert_equals(val_updated.get('status'), 'validated')
+    
+    def test_resource_validation_revert(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'package_id': dataset['id'],
+            'id': resource['id'],
+            'url': resource['url'],
+            'admin': user['name']
+        }
+        val = create_actions.resource_validation_create(context, data_dict)
+
+        data_dict = {
+            'resource': resource['id']
+        }
+
+        val_updated = update_actions.resource_validation_status(
+            context, data_dict)
+
+        val_reverted = update_actions.resource_validation_revert(
+            context, data_dict)
+
+        assert_equals(val_reverted.get('status'), 'not_validated')
 
     @monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     def test_resource_view_update(self):
@@ -1299,6 +1527,38 @@ class TestKWHUpdateActions(ActionsBase):
             kwh_data_updated.get('content'),
             data_dict.get('new_content')
         )
+
+    def test_resource_validate_update(self):
+        user = factories.Sysadmin()
+        test_auth_user = _test_user()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': test_auth_user,
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        data_dict = {
+            'what': 'The resource is invalid!',
+            'resource': resource.get('id')
+        }
+        rv = create_actions.resource_validate_create(context, data_dict)
+
+        data_dict['id'] = rv.get('resource')
+        data_dict['what'] = 'The resource is valid'
+        rv_updated = update_actions.resource_validate_update(
+            context,
+            data_dict
+        )
+
+        assert_equals(rv_updated.get('what'), data_dict.get('what'))
 
     def test_user_intent_update(self):
         data_dict = {
@@ -1883,3 +2143,66 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                 }
             },
         })
+class TestTagsActions(ActionsBase):
+
+    __ctx = get_context()
+
+    def _tag_create(self, name, vocabulary_id=None):
+        return create_actions.tag_create(
+            self.__ctx,
+            {
+                'name': name,
+                'vocabulary_id': vocabulary_id
+            }
+        )
+
+    def _vocabulary_create(self, name=None):
+        return toolkit.get_action('vocabulary_create')(
+            self.__ctx,
+            {'name': name}
+        )
+
+    def test_tag_create(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+        tag2 = self._tag_create('tag2', vocab.get('id'))
+
+        assert_equals(tag1['name'], 'tag1')
+        assert_equals(tag2['name'], 'tag2')
+
+    def test_tag_list(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+        tag2 = self._tag_create('tag2', vocab.get('id'))
+
+        tags = get_actions.tag_list(self.__ctx, {})
+
+        assert_equals(len(tags), 2)
+
+        tags = get_actions.tag_list(
+            self.__ctx,
+            {'vocabulary_id': vocab.get('id')}
+        )
+
+        assert_equals(len(tags), 1)
+
+    def test_tag_autocomplete(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+        tag2 = self._tag_create('tag2')
+
+        tags = get_actions.tag_autocomplete(self.__ctx, {'query': 'tag'})
+
+        assert_equals(len(tags), 2)
+
+    def test_tag_search(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+        tag2 = self._tag_create('tag2')
+
+        tags_dict = get_actions.tag_search(
+            self.__ctx,
+            {'query': 'tag'}
+        )
+
+        assert_equals(tags_dict.get('count'), 2)

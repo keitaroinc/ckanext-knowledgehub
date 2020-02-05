@@ -38,10 +38,46 @@ def dashboard_update(context, data_dict):
     return {'success': False}
 
 
+def resource_validation_update(context, data_dict):
+    '''
+        Authorization check for updating
+        a resource validation
+    '''
+    # sysadmins only
+    return {'success': True}
+
+
+def resource_validation_status(context, data_dict):
+    '''
+        Authorization check for updating
+        a resource validation status
+    '''
+    # sysadmins only
+    return {'success': True}
+
+
+def resource_validation_revert(context, data_dict):
+    '''
+        Authorization check for updating
+        a resource validation revert
+    '''
+    # sysadmins only
+    return {'success': True}
+
+
 def package_update(context, data_dict=None):
     # This auth function must be overriden like this, otherwise an error is
     # thrown in a dataset page for a regular user.
     return ckan_package_update(context, data_dict)
+
+
+def resource_validate_update(context, data_dict):
+    '''
+        Authorization check for updating
+        a validation status
+    '''
+    # sysadmins only
+    return {'success': False}
 
 
 def resource_update(context, data_dict=None):
