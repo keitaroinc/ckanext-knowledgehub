@@ -773,12 +773,10 @@ def tag_update(context, data_dict):
     if not tag:
         raise NotFound(_('Tag was not found'))
 
-    items = ['name', 'vocabulary_id']
-    for item in items:
-        if data.get(item):
-            setattr(tag, item, data.get(item))
-        else:
-            setattr(tag, item, None)
+    tag.name = data_dict.get('name', tag.name)
+
+    # Force the vocabulary id update always.
+    tag.vocabulary_id = data_dict.get('vocabulary_id')
 
     session = context['session']
     tag.save()

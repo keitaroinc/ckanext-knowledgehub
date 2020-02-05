@@ -112,6 +112,11 @@ def keyword_create_update(show, create, id=None, data_dict=None):
         u'include_num_followers': True
     }
 
+    if not _check_action_access(context, 'vocabulary_show',
+                                         'vocabulary_create',
+                                         'vocabulary_update'):
+        return
+
     data_dict = logic.clean_dict(
         dict_fns.unflatten(logic.tuplize_dict(
             logic.parse_params(request.form)
@@ -125,75 +130,48 @@ def keyword_create_update(show, create, id=None, data_dict=None):
         if not data_dict.get('tags'):
             errors['tags'] = [_('Missing Value')]
 
+    keyword = {}
     if not errors:
-        if create:
-            try:
-                logic.check_access(u'vocabulary_create', context)
-            except logic.NotAuthorized:
-                base.abort(403, _(u'Not authorized to see this page'))
-            if show:
-                keyword = {}
-            else:
-                keyword = {
-                    'name': data_dict['name'],
-                    'display_name': data_dict['name'],
-                    'tags': [],
-                }
+        # If there are not validation errors, try to create/update the keyword
 
-                for tag in data_dict.get('tags', '').split(','):
-                    try:
-                        tag = logic.get_action('tag_show')(context, {
-                            'id': tag.strip()
-                        })
-                        keyword['tags'].append({
-                            'name': tag.get('name'),
-                            'id': tag.get('id'),
-                        })
-                    except logic.NotFound:
-                        pass
-                try:
-                    keyword = logic.get_action('vocabulary_create')(context,
-                                                                    keyword)
-                except:
-                    base.abort(500, _('Server error'))
-        else:
-            try:
-                logic.check_access(u'vocabulary_update', context)
-            except logic.NotAuthorized:
-                base.abort(403, _(u'Not authorized to see this page'))
-
-            try:
+        if show:
+            # We're populating the data to render on the create/update page
+            if not create:
                 keyword = logic.get_action('vocabulary_show')(context, {
                     'id': id,
                 })
-            except logic.NotFound:
-                base.abort(404, _(u'Keyword not found.'))
+        else:
+            # Handle the keyword update
+            if create:
+                keyword = {}
+                keyword.update(data_dict)
+            else:
+                keyword = logic.get_action('vocabulary_show')(context, {
+                    'id': id,
+                })
 
-            if not show:
+            keyword['tags'] = [{
+                'name': tag.strip(),
+            } for tag in data_dict.get('tags', '').split(',')]
+
+            try:
                 keyword['name'] = data_dict['name']
-                keyword['display_name'] = data_dict['name']
-                keyword['tags'] = []
+                keyword = _save_keyword(context, keyword)
+            except logic.ValidationError as e:
+                keyword = data_dict
+                errors.update(e.error_dict)
 
-                for tag in data_dict.get('tags', '').split(','):
-                    try:
-                        tag = logic.get_action('tag_show')(context, {
-                            'id': tag.strip()
-                        })
-                        keyword['tags'].append({
-                            'name': tag.get('name'),
-                            'id': tag.get('id'),
-                        })
-                    except logic.NotFound:
-                        pass
-                try:
-                    keyword = logic.get_action('vocabulary_update')(context,
-                                                                    keyword)
-                except:
-                    base.abort(500, _('Server error'))
     else:
+        # There were errors, so just return the dict
         keyword = data_dict
 
     extra_vars = _extra_template_variables(context, user_page_data)
+
+    if (isinstance(keyword.get('tags'), str) or isinstance(keyword.get('tags'),
+                                                           unicode)):
+        keyword['tags'] = [{
+            'name': tag.strip()
+        } for tag in keyword.get('tags', '').split(',')]
 
     kwd_tags = []
     for tag in keyword.get('tags', []):
@@ -212,6 +190,62 @@ def keyword_create_update(show, create, id=None, data_dict=None):
         if errors:
             return base.render('user/keywords/keyword_edit.html', extra_vars)
         return h.redirect_to('/user/keywords')
+
+
+def _save_keyword(context, keyword_dict):
+    update = False
+    try:
+        keyword = logic.get_action('vocabulary_show')(context, {
+            'id': keyword_dict.get('id') or keyword_dict.get('name'),
+        })
+        update = True
+    except logic.NotFound:
+        keyword = logic.get_action('vocabulary_create')(context, {
+            'name': keyword_dict['name'],
+            'tags': [],
+        })
+    for tag in keyword.get('tags', []):
+        logic.get_action('tag_update')(context, {
+            'id': tag.get('id'),
+            'name': tag.get('name'),
+            'vocabulary_id': None,  # delete the FK to vocabulary
+        })
+
+    if update:
+        keyword = logic.get_action('vocabulary_update')(context, {
+            'id': keyword['id'],
+            'name': keyword_dict['name'],
+            'tags': [],
+        })
+
+    for tag in keyword_dict.get('tags', []):
+        try:
+            tag = logic.get_action('tag_show')(context, {'id': tag['name']})
+        except logic.NotFound:
+            tag = logic.get_action('tag_create')(context, {
+                'name': tag['name'],
+                'display_name': tag['name'],
+            })
+
+        logic.get_action('tag_update')(context, {
+            'id': tag['id'],
+            'name': tag['name'],
+            'vocabulary_id': keyword['id'],
+        })
+
+    return logic.get_action('vocabulary_show')(context, {
+        'id': keyword['id'],
+    })
+
+
+def _check_action_access(context, *args):
+    try:
+        for action in args:
+            logic.check_access(action, context)
+    except logic.NotAuthorized:
+        base.abort(403, _('Not authorized to see this page'))
+        return False
+    return True
 
 
 def keyword_create_read():
@@ -294,10 +328,7 @@ def keyword_delete(id):
         keyword = logic.get_action('vocabulary_show')(context, {'id': id})
     except logic.NotFound:
         base.abort(404, _('Keyword not found'))
-    keyword['tags'] = []
     try:
-        logic.get_action('vocabulary_update')(context, keyword)
-
         logic.get_action('vocabulary_delete')(context, {
             'id': id,
         })
