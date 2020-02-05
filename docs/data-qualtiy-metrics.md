@@ -40,7 +40,7 @@ automatic value will not be calculated.
     + [Configuring the timeliness settings for automatic calculation](#configuring-the-timeliness-settings-for-automatic-calculation)
     + [Calculation](#calculation)
   * [Validity](#validity)
-    + [Configuring the validit](#configuring-the-validit)
+    + [Configuring the validity](#configuring-the-validity)
   * [Accuracy](#accuracy)
     + [Configuring the accuracy settings](#configuring-the-accuracy-settings)
   * [Consistency](#consistency)
@@ -281,8 +281,8 @@ Calculated values are:
 
 Given the data:
 
-| col1 | col2 | recorded_at                |
-|---   |---   |---                         |
+| col1 | col2 | recorded_at         |
+|---   |---   |---                  |
 | 1    | val  | 2020-01-20T15:36:16 |
 | 2    | val2 | 2020-01-21T15:36:16 |
 | 3    | val3 | 2020-01-22T15:36:16 |
@@ -325,7 +325,7 @@ This metric produces report with the following values:
 * `valid` - number of valid records.
 * `value` - ratio `valid/total` as percentage (0-100%).
 
-### Configuring the validit
+### Configuring the validity
 
 To configure and run the automatic validity calculation, you must set the data schema.
 This is set up in *Resource Update*/*Resource Create* page, in the *Schema* field.
@@ -378,6 +378,7 @@ More can be read on the [goodtables site](https://github.com/frictionlessdata/go
 ### Example
 
 Given this data:
+
 | col1 | col2 |
 |------|------|
 | val0 | 10   |
