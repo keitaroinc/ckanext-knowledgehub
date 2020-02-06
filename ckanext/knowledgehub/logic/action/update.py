@@ -28,6 +28,7 @@ from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
+from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
 
 
 log = logging.getLogger(__name__)
@@ -240,7 +241,9 @@ def resource_update(context, data_dict):
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
-    return ckan_rsc_update(context, data_dict)
+    result = ckan_rsc_update(context, data_dict)
+    schedule_data_quality_check(result['package_id'])
+    return result
 
 
 # Overwrite of the original 'resource_view_update'
@@ -361,8 +364,9 @@ def dashboard_update(context, data_dict):
 
 
 def package_update(context, data_dict):
-
-    return ckan_package_update(context, data_dict)
+    result = ckan_package_update(context, data_dict)
+    schedule_data_quality_check(result['id'])
+    return result
 
 
 def kwh_data_update(context, data_dict):
@@ -475,87 +479,106 @@ def user_intent_update(context, data_dict):
     return _table_dictize(intent, context)
 
 
-def package_data_quality_update(context, data_dict):
+_dq_validators = {
+    'completeness': {
+        'total': int,
+        'complete': int,
+        'value': float,
+    },
+    'timeliness': {
+        'records': int,
+        'average': int,
+        'total': int,
+        'value': str,
+    },
+    'validity': {
+        'valid': int,
+        'total': int,
+        'value': float,
+    },
+    'uniqueness': {
+        'unique': int,
+        'total': int,
+        'value': float,
+    },
+    'consistency': {
+        'consistent': int,
+        'total': int,
+        'value': int,
+    },
+    'accuracy': {
+        'accurate': int,
+        'inaccurate': int,
+        'total': int,
+        'value': float,
+    }
+}
+
+
+def _patch_data_quality(context, data_dict, _type):
     if not data_dict.get('id'):
         raise ValidationError({'id': _(u'Missing Value')})
-
+    action = 'package_show' if _type == 'package' else 'resource_show'
     try:
-        check_access('package_show', context, data_dict)
+        check_access(action, context, data_dict)
     except NotAuthorized as e:
         raise NotAuthorized(_(str(e)))
 
-    db_metric = DataQualityMetrics.get_dataset_metrics(data_dict['id'])
-    if not db_metric:
-        db_metric = DataQualityMetrics(type='package', ref_id=data_dict['id'])
-
-    results = {}
-    result_dict = {}
+    # validate input
     dimensions = ['completeness', 'uniqueness', 'timeliness', 'validity',
                   'accuracy', 'consistency']
-    for dimension in dimensions:
-        value = data_dict.get(dimension)
-        results[dimension] = value or {}
-        if value is not None:
-            if value.get('value') is None:
-                field = '%s.value' % dimension
-                raise ValidationError({field: _('Missing Value')})
-            setattr(db_metric, dimension, value['value'])
-            result_dict[dimension] = value
+    for dimension in  dimensions:
+        values = data_dict.get(dimension)
+        if values:
+            validators = _dq_validators[dimension]
+            for field, _ftype in validators.items():
+                value = values.get(field)
+                if _type == 'package' and field != 'value':
+                    continue
+                if value is None:
+                    raise ValidationError({field: _('Missing Value')})
+                if isinstance(value, str) or isinstance(value, unicode):
+                    try:
+                        _ftype(value)
+                    except Exception as e:
+                        raise ValidationError({field: _('Invalid Value' + "(%s) '%s'" % (dimension, value))})
+                else:
+                    try:
+                        values[field] = _ftype(value)
+                    except:
+                        raise ValidationError({field: _('Invalid Value Type')})
+    db_metric = DataQualityMetrics.get(_type, data_dict['id'])
+    if not db_metric:
+        db_metric = DataQualityMetrics(type=_type, ref_id=data_dict['id'])
+    
+    db_metric.metrics = db_metric.metrics or {}
+    
+    for field, values in data_dict.items():
+        if not field in dimensions:
+            continue
+        setattr(db_metric, field, values['value']) # set the main metric
+        db_metric.metrics[field] = values
+        db_metric.metrics[field]['manual'] = values.get('manual', True)
 
-    db_metric.metrics = results
     db_metric.modified_at = datetime.datetime.now()
     db_metric.save()
 
-    result_dict['calculated_on'] = db_metric.modified_at.isoformat()
+    results = {}
+    for dimension in dimensions:
+        results[dimension] = getattr(db_metric, dimension)
+    
+    results['calculated_on'] = db_metric.modified_at.isoformat()
+    results['details'] = db_metric.metrics
 
-    return result_dict
+    return results
+
+
+def package_data_quality_update(context, data_dict):
+    return _patch_data_quality(context, data_dict, 'package')
 
 
 def resource_data_quality_update(context, data_dict):
-    if not data_dict.get('id'):
-        raise ValidationError({'id': _(u'Missing Value')})
-
-    try:
-        check_access('resource_show', context, data_dict)
-    except NotAuthorized as e:
-        raise NotAuthorized(_(str(e)))
-
-    db_metric = DataQualityMetrics.get_dataset_metrics(data_dict['id'])
-    if not db_metric:
-        db_metric = DataQualityMetrics(type='package', ref_id=data_dict['id'])
-
-    results = {}
-    result_dict = {}
-    dimensions = {
-        'completeness': ['value', 'total', 'complete'],
-        'uniqueness': ['value'],
-        'timeliness': ['value'],
-        'validity': ['value'],
-        'accuracy': ['value'],
-        'consistency': ['value'],
-    }
-
-    for dimension, required_fields in dimensions:
-        value = data_dict.get(dimension)
-        results[dimension] = value or {}
-        if value is not None:
-            # validate
-            errors = {}
-            for field in required_fields:
-                if value.get(field) is None:
-                    errors['%s.%s' % (dimension, field)] = _('Missing Value')
-            if errors:
-                raise ValidationError(errors)
-            setattr(db_metric, dimension, value['value'])
-            result_dict[dimension] = value
-
-    db_metric.metrics = results
-    db_metric.modified_at = datetime.datetime.now()
-    db_metric.save()
-
-    result_dict['calculated_on'] = db_metric.modified_at.isoformat()
-
-    return result_dict
+    return _patch_data_quality(context, data_dict, 'resource')
 
 
 @toolkit.side_effect_free
@@ -773,12 +796,10 @@ def tag_update(context, data_dict):
     if not tag:
         raise NotFound(_('Tag was not found'))
 
-    items = ['name', 'vocabulary_id']
-    for item in items:
-        if data.get(item):
-            setattr(tag, item, data.get(item))
-        else:
-            setattr(tag, item, None)
+    tag.name = data_dict.get('name', tag.name)
+
+    # Force the vocabulary id update always.
+    tag.vocabulary_id = data_dict.get('vocabulary_id')
 
     session = context['session']
     tag.save()

@@ -39,40 +39,12 @@ from ckanext.knowledgehub.tests.helpers import (User,
                                                 mock_pylons)
 from ckanext.datastore.logic.action import datastore_create
 from ckanext.datastore.logic.action import datastore_search
+from ckanext.knowledgehub.lib.util import monkey_patch
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
 raises = nose.tools.raises
-
-
-class _monkey_patch:
-
-    def __init__(self, obj, prop, patch_with):
-        self.obj = obj
-        self.prop = prop
-        self.patch_with = patch_with
-
-    def __call__(self, method):
-        original_prop = None
-        if hasattr(self.obj, self.prop):
-            original_prop = getattr(self.obj, self.prop)
-
-        def _with_patched(*args, **kwargs):
-            # patch
-            setattr(self.obj, self.prop, self.patch_with)
-            try:
-                return method(*args, **kwargs)
-            finally:
-                # unpatch
-                if original_prop is not None:
-                    setattr(self.obj, self.prop, original_prop)
-                else:
-                    delattr(self.obj, self.prop)
-        _with_patched.__name__ = method.__name__
-        _with_patched.__module__ = method.__module__
-        _with_patched.__doc__ = method.__doc__
-        return _with_patched
 
 
 class ActionsBase(helpers.FunctionalTestBase):
@@ -224,7 +196,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(last_visuals), 1)
 
-    @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_get_rqs_dashboards(self):
         user = factories.Sysadmin()
         context = {
@@ -247,7 +219,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(dashboards), 0)
 
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq(self):
         user = factories.Sysadmin()
         context = {
@@ -311,7 +283,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(isinstance(config, str), True)
 
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_single_rq(self):
         user = factories.Sysadmin()
         context = {
@@ -348,7 +320,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(rq_show.get('title'), rq.get('title'))
 
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_rq_ids_to_titles(self):
         user = factories.Sysadmin()
         context = {
@@ -423,7 +395,7 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(total, 1)
 
-    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_get_dashboards(self):
         user = factories.Sysadmin()
         context = {
@@ -453,7 +425,7 @@ class TestKWHHelpers(ActionsBase):
         assert_equals(new_url, 'http://host:port/lang/data-set')
 
 
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq_options(self):
 
         user = factories.Sysadmin()
@@ -514,7 +486,7 @@ class TestKWHHelpers(ActionsBase):
         resources = kwh_helpers.get_geojson_resources()
         assert_equals(len(resources), 1)
 
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq_titles_from_res(self):
 
         user = factories.Sysadmin()
@@ -865,8 +837,8 @@ class TestKWHHelpers(ActionsBase):
         b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
 
-    # @_monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
-    # @_monkey_patch(Visualization, 'update_index_doc', mock.Mock())
+    # @monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    # @monkey_patch(Visualization, 'update_index_doc', mock.Mock())
     # def test_views_dashboards_groups_update(self):
     #     dataset = create_dataset()
     #     resource = factories.Resource(
@@ -965,9 +937,9 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(vocab_list), 1)
 
-    @_monkey_patch(Dashboard, 'add_to_index', mock.Mock())
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
-    @_monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
     def test_dashboard_research_questions(self):
         user = factories.Sysadmin()
         context = {
@@ -1057,8 +1029,8 @@ class TestKWHHelpers(ActionsBase):
           dashboard.get('indicators')[0].get('research_question')
         )
 
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
-    @_monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
     def test_add_rqs_to_dataset(self):
         dataset = create_dataset()
         resource = factories.Resource(
@@ -1127,8 +1099,8 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(rsc_view.get('title'), data_dict3['title'])
 
-    @_monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
-    @_monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
     def test_update_rqs_in_dataset(self):
         dataset = create_dataset()
         resource = factories.Resource(

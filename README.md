@@ -49,7 +49,7 @@ pip install ckanext-knowledgehub
 ```
 3. Initialize the tables:
 ```
-     knowledgehub -c /etc/ckan/default/production.ini db init
+knowledgehub -c /etc/ckan/default/production.ini db init
 ```
 4. Add ``knowledgehub`` to the ``ckan.plugins`` setting in your CKAN
    config file (by default the config file is located at
@@ -194,7 +194,18 @@ nosetests --ckan --with-pylons=test.ini
 To run the tests and produce a coverage report, first make sure you have coverage installed in your virtualenv (pip install coverage) then run:
 
 ```
-nosetests --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.knowledgehub --cover-inclusive --cover-erase --cover-tests
+nosetests \
+    -v \
+    -s \
+    --ckan \
+    --with-coverage \
+    --with-pylons=test.ini  \
+    --cover-package=ckanext.knowledgehub \
+    --cover-inclusive \
+    --cover-erase \
+    --cover-tests \
+    --cover-html \
+    ckanext/knowledgehub/tests
 ```
 
 # Search Index Rebuilding
@@ -204,13 +215,13 @@ The installed extension offers rebuilding of the Solr index for multiple types o
 To rebuild the full index (CKAN core search index and the other document types such as dashboards, visualizations and research questions), run the following command:
 
 ```bash
-nowledgehub -c /etc/ckan/default/production.ini search-index rebuild
+knowledgehub -c /etc/ckan/default/production.ini search-index rebuild
 ```
 
 If you need to rebuild the index for specific document type (model), then you specify the `--model` parameter:
 
 ```bash
-nowledgehub -c /etc/ckan/default/production.ini search-index rebuild --model dashboard
+knowledgehub -c /etc/ckan/default/production.ini search-index rebuild --model dashboard
 ```
 
 This would rebuild the index for dashboards.
@@ -248,3 +259,9 @@ The crontab should look something like this:
 ```cron
 0 0 * * * knowledgehub -c /etc/ckan/default/production.ini intents update >/dev/null 2>&1
 ```
+
+# Data Quality
+
+Data Quality is measured across the six primary dimensions for data quality assessment.
+
+A lot more details are available in the dedicated [documentation section](docs/data-qualtiy-metrics.md).

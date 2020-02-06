@@ -16,7 +16,9 @@ from ckan import model
 from ckan.logic.action.create import resource_create as ckan_rsc_create
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
-from ckan.logic.action.create import package_create as ckan_package_create
+from ckan.logic.action.create import (
+    package_create as ckan_package_create,
+)
 from ckan.lib.helpers import url_for
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema

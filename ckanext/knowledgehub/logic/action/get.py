@@ -1083,6 +1083,7 @@ def _metrics_to_data_dict(metrics):
     for metric in ['completeness', 'uniqueness', 'timeliness', 'accuracy',
                    'validity', 'consistency']:
         result[metric] = getattr(metrics, metric) if metrics else None
+    result['details'] = metrics.metrics
     return result
 
 

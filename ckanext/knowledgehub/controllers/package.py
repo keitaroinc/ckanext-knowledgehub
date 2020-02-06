@@ -516,6 +516,7 @@ class KWHPackageController(PackageController):
         return render('package/resource_edit.html', extra_vars=vars)
 
     def read(self, id):
+        print 'READ: ___'
         context = {'model': model, 'session': model.Session,
                    'user': c.user, 'for_view': True,
                    'auth_user_obj': c.userobj}
