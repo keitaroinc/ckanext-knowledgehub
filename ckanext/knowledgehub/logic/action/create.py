@@ -311,7 +311,8 @@ def resource_view_create(context, data_dict):
     if rv_data.get('__extras'):
         ext = rv_data['__extras']
         if ext.get('research_questions'):
-            plugin_helpers.add_rqs_to_dataset(rv_data)
+            plugin_helpers.add_rqs_to_dataset(context, rv_data)
+
     return rv_data
 
 

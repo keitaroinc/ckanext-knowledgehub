@@ -158,7 +158,7 @@
 
             {# RQs List #}
             {% set dict = {} %}
-            {% for k in h.get_rq_options() %}
+            {% for k in h.get_rq_options(context) %}
               {% if chart %}
                 {% if chart.research_questions is iterable and chart.research_questions is not string %}
                   {% for m in chart.research_questions %}
