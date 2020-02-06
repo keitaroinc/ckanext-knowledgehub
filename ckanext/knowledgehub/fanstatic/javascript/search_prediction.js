@@ -95,7 +95,7 @@
                                 console.log("Get predictions: " + error.statusText);
                             });
                         }
-                    }, 500);
+                    }, 300);
                 }
             })
     });
