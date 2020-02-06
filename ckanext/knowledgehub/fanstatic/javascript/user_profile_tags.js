@@ -33,7 +33,7 @@
             });
     };
 
-    function updateTag(tagID, vocabularyID, loader) {
+    function updateTag(tagID, keywordId, loader) {
         loader.css("visibility", "visible");
         api.get('tag_show', {
             id: tagID
@@ -44,7 +44,7 @@
                     api.post('tag_update', {
                         id: tagID,
                         name: name,
-                        vocabulary_id: vocabularyID
+                        keyword_id: keywordId
                     })
                         .fail(function (error) {
                             console.log("Tag update: " + error.statusText);
@@ -97,11 +97,11 @@
 
         document.querySelectorAll('#keyword-select').forEach(item => {
             item.addEventListener('change', event => {
-                var vocabularyID = event.target.value;
+                var keywordId = event.target.value;
                 var parentRow = event.target.parentElement.parentElement;
                 var tagID = parentRow.cells[0].innerHTML;
                 var loader = $(event.target).closest('td').find('#loader');
-                updateTag(tagID, vocabularyID, loader);
+                updateTag(tagID, keywordId, loader);
             })
         })
     });

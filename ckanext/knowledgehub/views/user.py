@@ -83,13 +83,13 @@ def keywords():
         u'include_num_followers': True
     }
     try:
-        logic.check_access(u'vocabulary_list', context)
+        logic.check_access(u'keyword_list', context)
     except logic.NotAuthorized:
         base.abort(403, _(u'Not authorized to see this page'))
 
     extra_vars = _extra_template_variables(context, data_dict)
 
-    result = logic.get_action('vocabulary_list')(context, data_dict)
+    result = logic.get_action('keyword_list')(context, data_dict)
     extra_vars['keywords'] = result
     extra_vars['total'] = len(result)
 
@@ -112,9 +112,9 @@ def keyword_create_update(show, create, id=None, data_dict=None):
         u'include_num_followers': True
     }
 
-    if not _check_action_access(context, 'vocabulary_show',
-                                         'vocabulary_create',
-                                         'vocabulary_update'):
+    if not _check_action_access(context, 'keyword_show',
+                                         'keyword_create',
+                                         'keyword_update'):
         return
 
     data_dict = logic.clean_dict(
@@ -137,7 +137,7 @@ def keyword_create_update(show, create, id=None, data_dict=None):
         if show:
             # We're populating the data to render on the create/update page
             if not create:
-                keyword = logic.get_action('vocabulary_show')(context, {
+                keyword = logic.get_action('keyword_show')(context, {
                     'id': id,
                 })
         else:
@@ -146,13 +146,11 @@ def keyword_create_update(show, create, id=None, data_dict=None):
                 keyword = {}
                 keyword.update(data_dict)
             else:
-                keyword = logic.get_action('vocabulary_show')(context, {
+                keyword = logic.get_action('keyword_show')(context, {
                     'id': id,
                 })
 
-            keyword['tags'] = [{
-                'name': tag.strip(),
-            } for tag in data_dict.get('tags', '').split(',')]
+            keyword['tags'] = data_dict.get('tags', '')
 
             try:
                 keyword['name'] = data_dict['name']
@@ -194,46 +192,26 @@ def keyword_create_update(show, create, id=None, data_dict=None):
 
 def _save_keyword(context, keyword_dict):
     update = False
+    tags_list = filter(lambda t: t.strip(), keyword_dict.get('tags', '').split(','))
     try:
-        keyword = logic.get_action('vocabulary_show')(context, {
+        keyword = logic.get_action('keyword_show')(context, {
             'id': keyword_dict.get('id') or keyword_dict.get('name'),
         })
         update = True
     except logic.NotFound:
-        keyword = logic.get_action('vocabulary_create')(context, {
+        keyword = logic.get_action('keyword_create')(context, {
             'name': keyword_dict['name'],
-            'tags': [],
+            'tags': tags_list,
         })
-    for tag in keyword.get('tags', []):
-        logic.get_action('tag_update')(context, {
-            'id': tag.get('id'),
-            'name': tag.get('name'),
-            'vocabulary_id': None,  # delete the FK to vocabulary
-        })
-
+    
     if update:
-        keyword = logic.get_action('vocabulary_update')(context, {
+        keyword = logic.get_action('keyword_update')(context, {
             'id': keyword['id'],
             'name': keyword_dict['name'],
-            'tags': [],
+            'tags': tags_list,
         })
 
-    for tag in keyword_dict.get('tags', []):
-        try:
-            tag = logic.get_action('tag_show')(context, {'id': tag['name']})
-        except logic.NotFound:
-            tag = logic.get_action('tag_create')(context, {
-                'name': tag['name'],
-                'display_name': tag['name'],
-            })
-
-        logic.get_action('tag_update')(context, {
-            'id': tag['id'],
-            'name': tag['name'],
-            'vocabulary_id': keyword['id'],
-        })
-
-    return logic.get_action('vocabulary_show')(context, {
+    return logic.get_action('keyword_show')(context, {
         'id': keyword['id'],
     })
 
@@ -288,14 +266,14 @@ def keyword_read(id):
     }
 
     try:
-        logic.check_access(u'vocabulary_show', context, {
+        logic.check_access(u'keyword_show', context, {
             'id': id,
         })
     except logic.NotAuthorized:
         base.abort(403, _(u'Not authorized to see this page'))
 
     try:
-        keyword = logic.get_action('vocabulary_show')(context, {'id': id})
+        keyword = logic.get_action('keyword_show')(context, {'id': id})
     except logic.NotFound:
         base.abort(404, _('Keyword not found'))
 
@@ -318,18 +296,18 @@ def keyword_delete(id):
         u'for_view': True
     }
     try:
-        logic.check_access(u'vocabulary_delete', context, {
+        logic.check_access(u'keyword_delete', context, {
             'id': id,
         })
     except logic.NotAuthorized:
         base.abort(403, _(u'Not authorized to see this page'))
 
     try:
-        keyword = logic.get_action('vocabulary_show')(context, {'id': id})
+        keyword = logic.get_action('keyword_show')(context, {'id': id})
     except logic.NotFound:
         base.abort(404, _('Keyword not found'))
     try:
-        logic.get_action('vocabulary_delete')(context, {
+        logic.get_action('keyword_delete')(context, {
             'id': id,
         })
     except:

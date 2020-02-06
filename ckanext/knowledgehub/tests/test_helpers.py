@@ -918,7 +918,7 @@ class TestKWHHelpers(ActionsBase):
 
         raise AttributeError()
 
-    def test_vocabulary_list(self):
+    def test_keyword_list(self):
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -928,11 +928,11 @@ class TestKWHHelpers(ActionsBase):
             'session': model.Session
         }
 
-        toolkit.get_action('vocabulary_create')(
+        toolkit.get_action('keyword_create')(
             context,
             {'name': 'test'}
         )
 
-        vocab_list = kwh_helpers.vocabulary_list()
+        vocab_list = kwh_helpers.keyword_list()
 
         assert_equals(len(vocab_list), 1)

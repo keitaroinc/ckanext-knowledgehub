@@ -203,5 +203,5 @@ def tag_update_schema():
     return {
         'id': [not_empty, unicode],
         'name': [not_empty, unicode],
-        'vocabulary_id': [ignore_missing, unicode]
+        'keyword_id': [ignore_missing, unicode]
     }
