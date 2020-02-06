@@ -170,6 +170,11 @@ def research_question_update(context, data_dict):
         raise logic.ValidationError(errors)
 
     user = context.get('user')
+
+    tags = data_dict.get('tags')
+    if tags is not None:
+        research_question.tags = tags
+
     data['modified_by'] = model.User.by_name(user.decode('utf8')).id
 
     filter = {'id': id}
@@ -317,6 +322,7 @@ def dashboard_update(context, data_dict):
         :param description
         :param title
         :param indicators
+        :param tags
     '''
     check_access('dashboard_update', context)
 
@@ -340,10 +346,14 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description', 'indicators', 'source', 'type']
+    items = ['name', 'title', 'description', 'indicators', 'source', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
+    
+    tags = data_dict.get('tags')
+    if tags is not None:
+        dashboard.tags = tags
 
     dashboard_type = data.get('type')
     if dashboard_type != 'external':

@@ -1,6 +1,7 @@
 import ckan.plugins.toolkit as toolkit
 from ckan.model.meta import metadata, mapper, Session, engine
 from ckan.model.types import make_uuid
+from ckan.logic import get_action
 from ckan.model.domain_object import DomainObject
 
 from ckanext.knowledgehub.lib.solr import Indexed, mapped
@@ -38,6 +39,8 @@ research_question = Table(
            types.UnicodeText),
     Column('author',
            types.UnicodeText),
+    Column('tags',
+           types.UnicodeText),
     Column('created_at',
            types.DateTime,
            default=datetime.datetime.utcnow),
@@ -67,6 +70,8 @@ class ResearchQuestion(DomainObject, Indexed):
         'sub_theme_name',
         'sub_theme_title',
         'image_url',
+        'tags',
+        'keywords'
     ]
 
     @classmethod
@@ -145,6 +150,34 @@ class ResearchQuestion(DomainObject, Indexed):
             data['sub_theme_id'] = sub_theme.id
             data['sub_theme_name'] = sub_theme.name
             data['sub_theme_title'] = sub_theme.title
+        
+        keywords = set()
+        if data.get('tags'):
+            for tag in data.get('tags', '').split(','):
+                vocab_id = None
+                vocabs = get_action('vocabulary_list')(
+                    {'ignore_auth': True, }, {})
+                for vocab in vocabs:
+                    tag_list = vocab.get('tags')
+                    for tg in tag_list:
+                        if tg.get('name') == tag:
+                            vocab_id = tg.get('vocabulary_id')
+                            break
+                    if vocab_id:
+                        break
+                tag_obj = get_action('tag_show')(
+                    {'ignore_auth': True, },
+                    {'id': tag, 'vocabulary_id': vocab_id}
+                )
+                if tag_obj.get('vocabulary_id'):
+                    vocabulary = get_action('vocabulary_show')(
+                        {'ignore_auth': True, },
+                        {'id': tag_obj.get('vocabulary_id')}
+                    )
+                    keywords.add(vocabulary.get('name'))
+                    if keywords:
+                        data['keywords'] = ','.join(keywords)
+
         return data
 
     def __repr__(self):

@@ -36,6 +36,7 @@ dashboard_table = Table(
     Column('type', types.UnicodeText, nullable=False),
     Column('source', types.UnicodeText),
     Column('indicators', types.UnicodeText),
+    Column('tags', types.UnicodeText),
     Column('created_at', types.DateTime,
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,
@@ -56,6 +57,8 @@ class Dashboard(DomainObject, Indexed):
         'indicators',
         'research_questions',
         'datasets',
+        'tags',
+        'keywords',
         mapped('groups', 'groups'),
         mapped('organizations', 'organizations')
     ]
@@ -92,6 +95,32 @@ class Dashboard(DomainObject, Indexed):
                 package_id = v.get('package_id')
                 if package_id:
                     datasets.append(package_id)
+
+        keywords = set()
+        if data.get('tags'):
+            for tag in data.get('tags', '').split(','):
+                vocab_id = None
+                vocabs = get_action('vocabulary_list')({'ignore_auth': True,}, {})
+                for vocab in vocabs:
+                    tag_list = vocab.get('tags')
+                    for tg in tag_list:
+                        if tg.get('name') == tag:
+                            vocab_id = tg.get('vocabulary_id')
+                            break
+                    if vocab_id:
+                        break
+                tag_obj = get_action('tag_show')(
+                    {'ignore_auth': True,},
+                    {'id': tag, 'vocabulary_id': vocab_id}
+                )
+                if tag_obj.get('vocabulary_id'):
+                    vocabulary = get_action('vocabulary_show')(
+                        {'ignore_auth': True,},
+                        {'id': tag_obj.get('vocabulary_id')}
+                    )
+                    keywords.add(vocabulary.get('name'))
+                    if keywords:
+                        data['keywords'] = ','.join(keywords)
 
         data['research_questions'] = ','.join(list_rqs)
         data['organizations'] = list(set(organizations))
