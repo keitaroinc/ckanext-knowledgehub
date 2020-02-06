@@ -915,3 +915,7 @@ def tag_create(context, data_dict):
 
     log.debug("Created tag '%s' " % tag)
     return model_dictize.tag_dictize(tag, context)
+
+
+def user_profile_create(context, data_dict):
+    pass
