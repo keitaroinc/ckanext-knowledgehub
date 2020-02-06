@@ -108,7 +108,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_resource_validation_options': h.get_resource_validation_options,
             'check_resource_status': h.check_resource_status,
             'check_validation_admin': h.check_validation_admin,
-            'vocabulary_list': h.vocabulary_list		
+            'keyword_list': h.keyword_list,
         }
 
     # IDatasetForm

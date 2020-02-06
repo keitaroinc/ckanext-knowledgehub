@@ -800,11 +800,10 @@ def tag_update(context, data_dict):
     tag.name = data_dict.get('name', tag.name)
 
     # Force the vocabulary id update always.
-    tag.vocabulary_id = data_dict.get('vocabulary_id')
+    tag.keyword_id = data_dict.get('keyword_id')
 
     session = context['session']
     tag.save()
-    session.add(tag)
     session.commit()
 
     return _table_dictize(tag, context)

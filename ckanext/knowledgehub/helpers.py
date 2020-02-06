@@ -1337,11 +1337,11 @@ def views_dashboards_groups_update(package_id):
             )
 
 
-def vocabulary_list():
-    '''Return a list of all vocabularies
+def keyword_list():
+    '''Return a list of all keywords
 
-    :returns: the list of all vocabularies
+    :returns: the list of all keywords
     :rtype: string
     '''
 
-    return toolkit.get_action('vocabulary_list')({'ignore_auth': True}, {})
+    return toolkit.get_action('keyword_list')({'ignore_auth': True}, {})

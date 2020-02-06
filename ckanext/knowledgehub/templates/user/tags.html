@@ -22,14 +22,13 @@
             <td>{{ h.link_to(t.get('name'), h.url_for(controller='package', action='search', tags=t.get('name'))) }}
             </td>
             <td>
-                {% set vocabs = h.vocabulary_list() %}
-                {% set vocab_id = t.get('vocabulary_id') %}
-
-                {% if vocabs %}
+                {% set keywords = h.keyword_list() %}
+                {% set keyword_id = t.get('keyword_id') %}
+                {% if keywords %}
                 <select id="keyword-select" class="custom-select">
-                    <option value="" {{ 'selected' if not vocab_id }}>Free tag</option>
-                    {% for v in vocabs %}
-                    <option value="{{ v.get('id') }}" {{ 'selected' if v.get('id') == vocab_id }}>
+                    <option value="" {{ 'selected' if not keyword_id }}>Free tag</option>
+                    {% for v in keywords %}
+                    <option value="{{ v.get('id') }}" {{ 'selected' if v.get('id') == keyword_id }}>
                         {{ v.get('name') }}
                     </option>
                     {% endfor %}
