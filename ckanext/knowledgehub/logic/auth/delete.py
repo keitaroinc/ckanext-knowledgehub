@@ -48,3 +48,7 @@ def resource_validate_delete(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def keyword_delete(context, data_dict=None):
+    return {'success': False}

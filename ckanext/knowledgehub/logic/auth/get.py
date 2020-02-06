@@ -92,3 +92,13 @@ def resource_validate_show(context, data_dict):
 def tag_list(context, data_dict):
     # sysadmins only
     return {'success': False}
+
+
+def keyword_show(context, data_dict):
+    # sysadmins only
+    return {'success': False}
+
+
+def keyword_list(context, data_dict):
+
+    return {'success': True}

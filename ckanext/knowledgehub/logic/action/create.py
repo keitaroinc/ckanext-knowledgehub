@@ -36,6 +36,7 @@ from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import UserQuery
 from ckanext.knowledgehub.model import UserQueryResult
+from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -917,3 +918,38 @@ def tag_create(context, data_dict):
 
     log.debug("Created tag '%s' " % tag)
     return model_dictize.tag_dictize(tag, context)
+
+
+def keyword_create(context, data_dict):
+    check_access('keyword_create', context)
+    if 'name' not in data_dict:
+        raise ValidationError({'name': _('Missing Value')})
+    
+    existing = Keyword.by_name(data_dict['name'])
+    if existing:
+        raise ValidationError({
+            'name': _('Keyword with that name already exists.')
+        })
+
+    keyword = Keyword(name=data_dict['name'])
+    keyword.save()
+
+    kwd_dict = _table_dictize(keyword, context)
+    kwd_dict['tags'] = []
+    for tag in data_dict.get('tags', []):
+        try:
+            check_access('tag_show', context)
+            tag_dict = toolkit.get_action('tag_show')(context, {'id': tag})
+        except logic.NotFound:
+            check_access('tag_create', context)
+            tag_dict = toolkit.get_action('tag_create')(context, {
+                'name': tag,
+            })
+        
+        db_tag = model.Tag.get(tag_dict['id'])
+        db_tag.keyword_id = keyword.id
+        db_tag.save()
+        tag_dict = _table_dictize(db_tag, context)
+        kwd_dict['tags'].append(tag_dict)
+
+    return kwd_dict

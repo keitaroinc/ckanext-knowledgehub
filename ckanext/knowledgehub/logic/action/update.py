@@ -25,6 +25,7 @@ from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
+from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -807,3 +808,40 @@ def tag_update(context, data_dict):
     session.commit()
 
     return _table_dictize(tag, context)
+
+
+def keyword_update(context, data_dict):
+    check_access('keyword_update', context)
+    if 'name' not in data_dict:
+        raise ValidationError({'name': _('Missing Value')})
+    
+    existing = Keyword.by_name(data_dict['name'])
+    if not existing:
+        raise logic.NotFound(_('Not found'))
+
+    existing.modified_at = datetime.datetime.utcnow()
+    existing.save()
+
+    for tag in Keyword.get_tags(existing.id):
+        tag.keyword_id = None
+        tag.save()
+
+    kwd_dict = _table_dictize(existing, context)
+    kwd_dict['tags'] = []
+    for tag in data_dict.get('tags', []):
+        try:
+            check_access('tag_show', context)
+            tag_dict = toolkit.get_action('tag_show')(context, {'id': tag})
+        except logic.NotFound:
+            check_access('tag_create', context)
+            tag_dict = toolkit.get_action('tag_create')(context, {
+                'name': tag,
+            })
+        
+        db_tag = model.Tag.get(tag_dict['id'])
+        db_tag.keyword_id = existing.id
+        db_tag.save()
+        tag_dict = _table_dictize(db_tag, context)
+        kwd_dict['tags'].append(tag_dict)
+
+    return kwd_dict

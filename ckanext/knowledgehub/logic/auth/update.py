@@ -84,3 +84,7 @@ def resource_update(context, data_dict=None):
     # This auth function must be overriden like this, otherwise an error is
     # thrown when a regular user is adding new resource.
     return ckan_resource_update(context, data_dict)
+
+
+def keyword_update(context, data_dict=None):
+    return {'success': False}

@@ -8,6 +8,7 @@ from ckan.logic.action.delete import (
 )
 from ckan.plugins import toolkit
 from ckan.common import _
+from ckan.model import Session
 from ckan.logic.action.delete import (
     vocabulary_delete as ckan_vocabulary_delete
 )
@@ -21,6 +22,7 @@ from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import ResourceValidate
+from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub import helpers as kwh_helpers
 
 
@@ -236,3 +238,19 @@ def vocabulary_delete(context, data_dict):
         })
 
     return ckan_vocabulary_delete(context, data_dict)
+
+
+def keyword_delete(context, data_dict):
+    check_access('keyword_delete', context)
+    if 'id' not in data_dict:
+        raise ValidationError({'id': _('Missing Value')})
+    
+    keyword = toolkit.get_action('keyword_show')(context, data_dict)
+
+    for tag in Keyword.get_tags(keyword['id']):
+        tag.keyword_id = None
+        tag.save()
+    
+    Session.delete(Keyword.get(keyword['id']))
+    Session.commit()
+

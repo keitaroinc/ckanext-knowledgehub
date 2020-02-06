@@ -119,3 +119,8 @@ def resource_validate_create(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def keyword_create(context, data_dict):
+    # sysadmins only
+    return {'success': False}

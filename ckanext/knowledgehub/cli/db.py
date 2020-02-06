@@ -23,6 +23,7 @@ from ckanext.knowledgehub.model.data_quality import setup as data_quality_setup
 from ckanext.knowledgehub.model.resource_validate import (
     setup as resource_validate_setup
 )
+from ckanext.knowledgehub.model.keyword import setup as keyword_setup
 
 
 log = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ def init():
         ml_db_setup()
         data_quality_setup()
         resource_validate_setup()
+        keyword_setup()
     except Exception as e:
         error_shout(e)
     else:
