@@ -811,6 +811,16 @@ def tag_update(context, data_dict):
 
 
 def keyword_update(context, data_dict):
+    '''Updates the tags for a keyword.
+
+    :param name: `str`, the name of the keyword to update.
+    :param tags: `list` of `str`, the tags that this keyword should contain. If
+        the tag does not exist, it will be created and added to this keyword.
+        The tags that were removed from this keyword will be set as free tags
+        and will not be removed.
+    
+    :returns: `dict`, the updated keyword.
+    '''
     check_access('keyword_update', context)
     if 'name' not in data_dict:
         raise ValidationError({'name': _('Missing Value')})

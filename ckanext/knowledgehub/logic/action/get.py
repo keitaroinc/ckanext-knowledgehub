@@ -1316,6 +1316,12 @@ def tag_search(context, data_dict):
 
 
 def keyword_show(context, data_dict):
+    '''Find a keyword by its name or id.
+
+    :param id: `str`, the id or the name of the keyword to show.
+
+    :returns: `dict`, the keyword data.
+    '''
     check_access('keyword_show', context)
     if 'id' not in data_dict:
         raise ValidationError({
@@ -1337,6 +1343,8 @@ def keyword_show(context, data_dict):
 
 
 def keyword_list(context, data_dict):
+    '''Returns all keywords defined for this system.
+    '''
     check_access('keyword_list', context)
 
     page = data_dict.get('page')

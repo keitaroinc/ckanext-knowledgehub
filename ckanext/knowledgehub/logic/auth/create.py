@@ -122,5 +122,8 @@ def resource_validate_create(context, data_dict):
 
 
 def keyword_create(context, data_dict):
+    '''
+        Authorization check for creation of a keyword. Sysadmin only.
+    '''
     # sysadmins only
     return {'success': False}

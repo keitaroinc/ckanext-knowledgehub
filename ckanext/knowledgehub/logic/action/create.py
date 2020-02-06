@@ -921,6 +921,14 @@ def tag_create(context, data_dict):
 
 
 def keyword_create(context, data_dict):
+    u'''Creates new keyword with name and tags.
+    
+    :param name: `str`, required, the name for the keyword
+    :param tags: `list` of `str`, the names of the tags that this keyword
+        contains. If a tag does not exist, it will be created.
+    
+    :returns: `dict`, the new keyword.
+    '''
     check_access('keyword_create', context)
     if 'name' not in data_dict:
         raise ValidationError({'name': _('Missing Value')})

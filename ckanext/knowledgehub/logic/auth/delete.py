@@ -51,4 +51,7 @@ def resource_validate_delete(context, data_dict):
 
 
 def keyword_delete(context, data_dict=None):
+    '''
+        Authorization check for deletion of a keyword. Sysadmin only.
+    '''
     return {'success': False}

@@ -9,9 +9,6 @@ from ckan.logic.action.delete import (
 from ckan.plugins import toolkit
 from ckan.common import _
 from ckan.model import Session
-from ckan.logic.action.delete import (
-    vocabulary_delete as ckan_vocabulary_delete
-)
 from ckanext.knowledgehub import helpers as plugin_helpers
 
 
@@ -223,24 +220,14 @@ def member_delete(context, data_dict=None):
         kwh_helpers.views_dashboards_groups_update(data_dict.get('object'))
 
 
-def vocabulary_delete(context, data_dict):
-    check_access('vocabulary_delete', context)
-    if 'id' not in data_dict:
-        raise ValidationError({"id": _('Missing value')})
-
-    vocabulary = toolkit.get_action('vocabulary_show')(context, data_dict)
-
-    for tag in vocabulary.get('tags', []):
-        toolkit.get_action('tag_update')(context, {
-            'id': tag['id'],
-            'name': tag['name'],
-            'vocabulary_id': None,
-        })
-
-    return ckan_vocabulary_delete(context, data_dict)
-
-
 def keyword_delete(context, data_dict):
+    '''Remove a keyword by its id or name.
+
+    If the keyword contains tags, those will be set as free tags and will not
+    be removed from the system.
+
+    :param id: `str`, the id or the name of the keyword to remove.
+    '''
     check_access('keyword_delete', context)
     if 'id' not in data_dict:
         raise ValidationError({'id': _('Missing Value')})

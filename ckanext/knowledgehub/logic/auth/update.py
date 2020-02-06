@@ -87,4 +87,7 @@ def resource_update(context, data_dict=None):
 
 
 def keyword_update(context, data_dict=None):
+    '''
+        Authorization check for updating a keyword. Sysadmin only.
+    '''
     return {'success': False}
