@@ -170,6 +170,7 @@ def research_question_create(context, data_dict):
 
     title = data.get('title')
     image_url = data.get('image_url')
+    tags = data_dict.get('tags')
     state = data.get('state', 'active')
     modified_at = datetime.datetime.utcnow()
     # FIXME if theme or subtheme id not exists, return notfound
@@ -183,6 +184,9 @@ def research_question_create(context, data_dict):
         state=state,
         modified_at=modified_at
     )
+
+    if tags is not None:
+        research_question.tags = tags
 
     research_question.save()
 
@@ -328,6 +332,7 @@ def dashboard_create(context, data_dict):
         :param type
         :param source
         :param indicators
+        :param tags
     '''
     check_access('dashboard_create', context)
     session = context['session']
@@ -341,7 +346,7 @@ def dashboard_create(context, data_dict):
 
     dashboard = Dashboard()
 
-    items = ['name', 'title', 'description', 'type']
+    items = ['name', 'title', 'description', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
@@ -351,12 +356,16 @@ def dashboard_create(context, data_dict):
 
     source = data.get('source')
     indicators = data.get('indicators')
+    tags = data_dict.get('tags')
 
     if source is not None:
         dashboard.source = source
 
     if indicators is not None:
         dashboard.indicators = indicators
+    
+    if tags is not None:
+        dashboard.tags = tags
 
     user = context.get('user')
     dashboard.created_by = model.User.by_name(user.decode('utf8')).id
