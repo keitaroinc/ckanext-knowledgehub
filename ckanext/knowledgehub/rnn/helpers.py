@@ -4,7 +4,7 @@ import os
 import heapq
 import numpy as np
 import tensorflow as tf
-from keras.models import load_model
+from keras.models import load_model, model_from_json
 from filelock import FileLock
 
 from ckan.plugins import toolkit
@@ -85,38 +85,57 @@ def predict_completions(text):
 
     text = text[-sequence_length:].lower()
 
-    model_path = config.get(
-        u'ckanext.knowledgehub.rnn.model',
-        './keras_model.h5'
+    model_weigths_path = config.get(
+        u'ckanext.knowledgehub.rnn.model_weights',
+        './keras_model_weights.h5'
     )
-    if not os.path.isfile(model_path):
-        log.debug('Error: RNN model does not exist!')
+    model_network_path = config.get(
+        u'ckanext.knowledgehub.rnn.model_weights',
+        './keras_model_network.h5'
+    )
+
+    if not os.path.isfile(model_weigths_path):
+        log.debug('Error: RNN model weights does not exist!')
+        return []
+    if not os.path.isfile(model_network_path):
+        log.debug('Error: RNN model network does not exist!')
         return []
 
     try:
-        lock_model_path = '%s.lock' % model_path
-        lock = FileLock(lock_model_path)
-        with lock.acquire(timeout=1):
-            n = int(
-                config.get(u'ckanext.knowledgehub.rnn.number_prediction', 3)
-            )
-            graph = tf.Graph()
-            with graph.as_default():
-                session = tf.Session()
-                with session.as_default():
-                    model = load_model(model_path)
-                    x = prepare_input(text, unique_chars, char_indices)
-                    preds = model.predict(x, verbose=0)[0]
-                    next_indices = sample(preds, n)
-                    return [
-                        indices_char[idx] +
-                        predict_completion(
-                            model,
-                            text[1:] + indices_char[idx],
-                            unique_chars,
-                            char_indices,
-                            indices_char
-                        ) for idx in next_indices]
+        lock_model_network = FileLock('%s.lock' % model_network_path)
+        lock_model_weigths = FileLock('%s.lock' % model_weigths_path)
+
+        with lock_model_network.acquire(timeout=1000):
+            with lock_model_weigths.acquire(timeout=1000):
+                n = int(
+                    config.get(
+                        u'ckanext.knowledgehub.rnn.number_predictions',
+                        3
+                    )
+                )
+                graph = tf.Graph()
+                with graph.as_default():
+                    session = tf.Session()
+                    with session.as_default():
+                        json_file = open(model_network_path, 'r')
+                        loaded_model_json = json_file.read()
+                        json_file.close()
+
+                        model = model_from_json(loaded_model_json)
+                        model.load_weights(model_weigths_path)
+
+                        x = prepare_input(text, unique_chars, char_indices)
+                        preds = model.predict(x, verbose=0)[0]
+                        next_indices = sample(preds, n)
+                        return [
+                            indices_char[idx] +
+                            predict_completion(
+                                model,
+                                text[1:] + indices_char[idx],
+                                unique_chars,
+                                char_indices,
+                                indices_char
+                            ) for idx in next_indices]
     except Exception as e:
         log.debug('Error while prediction: %s' % str(e))
         return []

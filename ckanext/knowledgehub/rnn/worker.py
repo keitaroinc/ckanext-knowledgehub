@@ -89,14 +89,18 @@ def learn():
             optimizer=optimizer,
             metrics=['accuracy'])
 
-        model_path = config.get(
-            u'ckanext.knowledgehub.rnn.model',
-            './keras_model.h5'
+        model_weigths_path = config.get(
+            u'ckanext.knowledgehub.rnn.model_weights',
+            './keras_model_weights.h5'
+        )
+        model_network_path = config.get(
+            u'ckanext.knowledgehub.rnn.model_weights',
+            './keras_model_network.h5'
         )
 
-        model_dir = os.path.dirname(model_path)
-        train_module_path = os.path.join(
-            model_dir, 'keras_module_%s.h5' % time.time()
+        model_dir = os.path.dirname(model_weigths_path)
+        train_model_weigths_path = os.path.join(
+            model_dir, 'keras_model_%s.h5' % time.time()
         )
         if not os.path.exists(model_dir):
             try:
@@ -114,8 +118,9 @@ def learn():
             mode='min'
         )
         mcp_save = ModelCheckpoint(
-            train_module_path,
+            train_model_weigths_path,
             save_best_only=True,
+            save_weights_only=True,
             monitor='val_loss',
             mode='min'
         )
@@ -145,22 +150,33 @@ def learn():
         return
 
     try:
-        sysadmin = get_sysadmins()[0].name
-        context = {'user': sysadmin, 'ignore_auth': True}
-        # model.save(model_path)
-        toolkit.get_action('corpus_create')(context, {
-            'corpus': original_data
-        })
+        lock_model_network = FileLock('%s.lock' % model_network_path)
+        lock_model_weigths = FileLock('%s.lock' % model_weigths_path)
 
-        lock_model_path = '%s.lock' % model_path
-        lock = FileLock(lock_model_path)
-        with lock.acquire(timeout=1000):
-            if os.path.exists(model_path):
-                os.remove(model_path)
-            os.rename(train_module_path, model_path)
+        with lock_model_network.acquire(timeout=1000):
+            with lock_model_weigths.acquire(timeout=1000):
+                # store weights in separate file
+                # to increase load speed of the model
+                if os.path.exists(model_weigths_path):
+                    os.remove(model_weigths_path)
+                os.rename(train_model_weigths_path, model_weigths_path)
+
+                # store network info in separate file
+                # to increase load speed of the model
+                with open(model_network_path, "w") as json_file:
+                    model_json = model.to_json()
+                    json_file.write(model_json)
+
+                toolkit.get_action('corpus_create')(
+                    {'ignore_auth': True},
+                    {'corpus': original_data}
+                )
     except Exception as e:
         log.debug('Error while saving RNN model: %s' % str(e))
         return
+    finally:
+        os.remove('%s.lock' % model_network_path)
+        os.remove('%s.lock' % model_weigths_path)
 
     history_path = config.get(
         u'ckanext.knowledgehub.rnn.history',
