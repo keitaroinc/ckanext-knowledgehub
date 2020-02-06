@@ -25,6 +25,7 @@ from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
+from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -799,11 +800,57 @@ def tag_update(context, data_dict):
     tag.name = data_dict.get('name', tag.name)
 
     # Force the vocabulary id update always.
-    tag.vocabulary_id = data_dict.get('vocabulary_id')
+    tag.keyword_id = data_dict.get('keyword_id')
 
     session = context['session']
     tag.save()
-    session.add(tag)
     session.commit()
 
     return _table_dictize(tag, context)
+
+
+def keyword_update(context, data_dict):
+    '''Updates the tags for a keyword.
+
+    :param name: `str`, the name of the keyword to update.
+    :param tags: `list` of `str`, the tags that this keyword should contain. If
+        the tag does not exist, it will be created and added to this keyword.
+        The tags that were removed from this keyword will be set as free tags
+        and will not be removed.
+    
+    :returns: `dict`, the updated keyword.
+    '''
+    check_access('keyword_update', context)
+    if 'name' not in data_dict:
+        raise ValidationError({'name': _('Missing Value')})
+    
+    existing = Keyword.by_name(data_dict['name'])
+    if not existing:
+        raise logic.NotFound(_('Not found'))
+
+    existing.modified_at = datetime.datetime.utcnow()
+    existing.save()
+
+    for tag in Keyword.get_tags(existing.id):
+        tag.keyword_id = None
+        tag.save()
+
+    kwd_dict = _table_dictize(existing, context)
+    kwd_dict['tags'] = []
+    for tag in data_dict.get('tags', []):
+        try:
+            check_access('tag_show', context)
+            tag_dict = toolkit.get_action('tag_show')(context, {'id': tag})
+        except logic.NotFound:
+            check_access('tag_create', context)
+            tag_dict = toolkit.get_action('tag_create')(context, {
+                'name': tag,
+            })
+        
+        db_tag = model.Tag.get(tag_dict['id'])
+        db_tag.keyword_id = existing.id
+        db_tag.save()
+        tag_dict = _table_dictize(db_tag, context)
+        kwd_dict['tags'].append(tag_dict)
+
+    return kwd_dict

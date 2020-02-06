@@ -31,8 +31,9 @@
                     <tr>
                         <td><a href="{{ h.url_for('.keyword_read', id=keyword.name) }}">{{ keyword.name }}</a></td>
                         <td>
+                            
                             {% for tag in keyword.tags%}
-                            <span class="label label-info">{{ tag.display_name }}</span>
+                            <span class="label label-info">{{ tag.name }}</span>
                             {% endfor%}
                         </td>
                         <td>
