@@ -26,6 +26,7 @@ from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -854,3 +855,26 @@ def keyword_update(context, data_dict):
         kwd_dict['tags'].append(tag_dict)
 
     return kwd_dict
+
+
+def user_profile_update(context, data_dict):
+    check_access('user_profile_update', context, data_dict)
+    user = context.get('auth_user_obj')
+    user_id = user.id
+
+    if user.sysadmin and data_dict.get('user_id'):
+        user_id = data_dict['user_id']
+
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
+        profile = UserProfile(user_id=user_id, user_notified=True)
+        profile.interests = {}
+    
+    for interest_type in ['research_questions', 'keywords', 'tags']:
+        if data_dict.get(interest_type):
+            profile.interests[interest_type] = data_dict[interest_type]
+    
+    profile.save()
+    model.Session.flush()
+
+    return _table_dictize(profile, context)

@@ -23,6 +23,7 @@ from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import UserQuery
 from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
@@ -1356,5 +1357,42 @@ def keyword_list(context, data_dict):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
+    
+    return results
+
+
+def _show_user_profile(context, user_id):
+    user = UserProfile.by_user_id(user_id)
+    if not user:
+        raise logic.NotFound(_('No such user profile'))
+
+    return _table_dictize(user, context)
+
+
+@toolkit.side_effect_free
+def user_profile_show(context, data_dict):
+    check_access('user_profile_show', context)
+
+    user = context.get('auth_user_obj')
+    if user.sysadmin:
+        if data_dict.get('user_id'):
+            return _show_user_profile(context, data_dict['user_id'])
+    
+    return _show_user_profile(context, user.id)
+
+
+def user_profile_list(context, data_dict):
+    check_access('user_profile_list')
+    page = data_dict.get('page', 1)
+    limit = data_dict.get('limit', 20)
+
+    order_by = data_dict.get('order')
+
+    profiles = UserProfile.get_list(page, limit, order_by)
+
+    results = []
+
+    for profile in profiles:
+        results.append(_table_dictize(profile, context))
     
     return results

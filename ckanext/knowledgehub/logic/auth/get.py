@@ -107,3 +107,21 @@ def keyword_list(context, data_dict):
         Authorization check for getting the list of keywords. Sysadmin only.
     '''
     return {'success': True}
+
+
+def user_profile_show(context, data_dict):
+    user = context.get('user_auth_obj')
+    if not user:
+        return {'success': False}
+    if data_dict.get('user_id'):
+        if user.sysadmin:
+            # Sysadmin can read all profiles
+            return {'success': True}
+        # Must be sysadmin to see all profiles
+        return {'suceess': False}
+    # User can view its own profile
+    return {'success': True}
+
+
+def user_profile_list(context, data_dict=None):
+    return {'success': False}

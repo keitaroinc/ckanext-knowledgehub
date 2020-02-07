@@ -9,7 +9,7 @@ from sqlalchemy import func
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
 from ckan import logic
-from ckan.common import _
+from ckan.common import _, g
 from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
@@ -37,6 +37,7 @@ from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import UserQuery
 from ckanext.knowledgehub.model import UserQueryResult
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -964,4 +965,28 @@ def keyword_create(context, data_dict):
 
 
 def user_profile_create(context, data_dict):
-    pass
+    check_access('user_profile_create', context)
+
+    user = toolkit.get_action('user_show')({
+        'ignore_auth': True,
+    }, {
+        'id': g.user,
+    })
+
+    profile = UserProfile.by_user_id(user['id'])
+    if profile:
+        raise ValidationError({
+            'user_id': _('Profile already created.')
+        })
+    
+    profile = UserProfile(user_id=user['id'], user_notified=False, interests={})
+
+    for interest_type in ['research_questions', 'tags', 'keywords']:
+        if data_dict.get(interest_type):
+            profile.interests[interest_type] = data_dict[interest_type]
+
+    profile.save()
+    model.Session.flush()
+
+    profile_dict = _table_dictize(profile, context)
+    return profile_dict
