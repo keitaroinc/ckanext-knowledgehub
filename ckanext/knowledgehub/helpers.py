@@ -1335,3 +1335,13 @@ def views_dashboards_groups_update(package_id):
                 {'ignore_auth': True},
                 data_dict
             )
+
+
+def keyword_list():
+    '''Return a list of all keywords
+
+    :returns: the list of all keywords
+    :rtype: string
+    '''
+
+    return toolkit.get_action('keyword_list')({'ignore_auth': True}, {})

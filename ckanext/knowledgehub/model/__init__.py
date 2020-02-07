@@ -12,6 +12,7 @@ from ckanext.knowledgehub.model.query import UserQuery, UserQueryResult
 from ckanext.knowledgehub.model.data_quality import DataQualityMetrics
 from ckanext.knowledgehub.model.resource_validate import ResourceValidate
 from ckanext.knowledgehub.model.user_profile import UserProfile
+from ckanext.knowledgehub.model.keyword import Keyword
 
 
 __all__ = [
@@ -20,16 +21,17 @@ __all__ = [
     'ResearchQuestion',
     'Dashboard',
     'DataQualityMetrics',
-    'ResourceFeedbacks',
-    'ResourceValidation',
+    'Keyword',
     'KWHData',
+    'ResourceFeedbacks',
+    'ResourceValidate',
+    'ResourceValidation',
     'RNNCorpus',
     'UserIntents',
     'UserQuery',
     'UserQueryResult',
-    'Visualization',
     'UserQuery',
     'UserQueryResult',
-    'ResourceValidate',
     'UserProfile',
+    'Visualization',
 ]

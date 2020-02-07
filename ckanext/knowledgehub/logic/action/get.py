@@ -8,6 +8,7 @@ from ckan.plugins import toolkit
 from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
+from ckan.model.meta import Session
 
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
@@ -21,6 +22,7 @@ from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import UserQuery
 from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
+from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
@@ -1082,6 +1084,7 @@ def _metrics_to_data_dict(metrics):
     for metric in ['completeness', 'uniqueness', 'timeliness', 'accuracy',
                    'validity', 'consistency']:
         result[metric] = getattr(metrics, metric) if metrics else None
+    result['details'] = metrics.metrics
     return result
 
 
@@ -1231,7 +1234,7 @@ def tag_list(context, data_dict):
     elif vocab_id_or_name:
         tags = model.Tag.all(vocab_id_or_name)
     else:
-        tags = model.Tag.all()
+        tags = Session.query(model.Tag).autoflush(False).all()
 
     if tags:
         if all_fields:
@@ -1310,3 +1313,48 @@ def tag_search(context, data_dict):
     tags, count = _tag_search(context, data_dict)
     return {'count': count,
             'results': [_table_dictize(tag, context) for tag in tags]}
+
+
+def keyword_show(context, data_dict):
+    '''Find a keyword by its name or id.
+
+    :param id: `str`, the id or the name of the keyword to show.
+
+    :returns: `dict`, the keyword data.
+    '''
+    check_access('keyword_show', context)
+    if 'id' not in data_dict:
+        raise ValidationError({
+            'id': _('Missing Value')
+        })
+    keyword = Keyword.get(data_dict['id'])
+    if not keyword:
+        keyword = Keyword.by_name(data_dict['id'])
+    
+    if not keyword:
+        raise logic.NotFound(_('No such keyword'))
+    
+    keyword_dict = _table_dictize(keyword, context)
+    keyword_dict['tags'] = []
+    for tag in Keyword.get_tags(keyword.id):
+        keyword_dict['tags'].append(_table_dictize(tag, context))
+    
+    return keyword_dict
+
+
+def keyword_list(context, data_dict):
+    '''Returns all keywords defined for this system.
+    '''
+    check_access('keyword_list', context)
+
+    page = data_dict.get('page')
+    limit = data_dict.get('limit')
+
+    results = []
+
+    for keyword in Keyword.get_list(page, limit):
+        results.append(toolkit.get_action('keyword_show')(context, {
+            'id': keyword.id,
+        }))
+    
+    return results

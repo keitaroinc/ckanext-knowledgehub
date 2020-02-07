@@ -8,6 +8,7 @@ from ckan.logic.action.delete import (
 )
 from ckan.plugins import toolkit
 from ckan.common import _
+from ckan.model import Session
 from ckanext.knowledgehub import helpers as plugin_helpers
 
 
@@ -18,6 +19,7 @@ from ckanext.knowledgehub.model import ResearchQuestion
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import ResourceValidate
+from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub import helpers as kwh_helpers
 
 
@@ -216,3 +218,26 @@ def member_delete(context, data_dict=None):
 
     if obj_type == 'package':
         kwh_helpers.views_dashboards_groups_update(data_dict.get('object'))
+
+
+def keyword_delete(context, data_dict):
+    '''Remove a keyword by its id or name.
+
+    If the keyword contains tags, those will be set as free tags and will not
+    be removed from the system.
+
+    :param id: `str`, the id or the name of the keyword to remove.
+    '''
+    check_access('keyword_delete', context)
+    if 'id' not in data_dict:
+        raise ValidationError({'id': _('Missing Value')})
+    
+    keyword = toolkit.get_action('keyword_show')(context, data_dict)
+
+    for tag in Keyword.get_tags(keyword['id']):
+        tag.keyword_id = None
+        tag.save()
+    
+    Session.delete(Keyword.get(keyword['id']))
+    Session.commit()
+

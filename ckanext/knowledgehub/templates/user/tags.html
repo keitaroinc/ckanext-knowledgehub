@@ -1,0 +1,82 @@
+{% resource 'knowledgehub/table' %}
+{% resource 'knowledgehub/javascript/user_profile_tags.js' %}
+
+{% extends "user/read_base.html" %}
+
+{% block primary_content_inner %}
+<h2 id="tags-header-id">Tags</h2>
+<table id="tags" class="table table-hover dataTables_wrapper" cellspacing="0" width="100%">
+    <thead>
+        <tr id="tags-header">
+            <th class="hidden">ID</th>
+            <th>Tag</th>
+            <th>Keyword</th>
+
+            <th class="remove-th">Remove</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in tags %}
+        <tr>
+            <td class="hidden">{{ t.get('id') }}</td>
+            <td>{{ h.link_to(t.get('name'), h.url_for(controller='package', action='search', tags=t.get('name'))) }}
+            </td>
+            <td>
+                {% set keywords = h.keyword_list() %}
+                {% set keyword_id = t.get('keyword_id') %}
+                {% if keywords %}
+                <select id="keyword-select" class="custom-select">
+                    <option value="" {{ 'selected' if not keyword_id }}>Free tag</option>
+                    {% for v in keywords %}
+                    <option value="{{ v.get('id') }}" {{ 'selected' if v.get('id') == keyword_id }}>
+                        {{ v.get('name') }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                Free tag
+                {% endif %}
+                <div id="loader"></div>
+            </td>
+
+
+
+            <td id="remove-td">
+                <span class="table-remove">
+                    <button type="button" class="btn btn-danger btn-rounded btn-sm my-0">Remove</button>
+                </span>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr id="tags-footer">
+            <th class="hidden">ID</th>
+            <th>Tags</th>
+            <th>Keyword</th>
+            <th class="remove-th">Remove</th>
+        </tr>
+    </tfoot>
+</table>
+
+<div class="modal fade" id="modalDelete" tabindex="-1" role="dialog" aria-labelledby="modalDelete" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h4 class="modal-title w-100 font-weight-bold ml-5 text-danger">Delete</h4>
+                <button type="button" class="close text-danger" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body mx-3">
+                <p class="text-center h4">Are you sure to delete selected row?</p>
+
+            </div>
+            <div class="modal-footer d-flex justify-content-center deleteButtonsWrapper">
+                <button type="button" class="btn btn-danger btnYesClass" id="btnYes" data-dismiss="modal">Yes</button>
+                <button type="button" class="btn btn-primary btnNoClass" id="btnNo" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

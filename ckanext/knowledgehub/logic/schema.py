@@ -197,3 +197,11 @@ def tag_create_schema():
     # You're not allowed to specify your own ID when creating a tag.
     schema['id'] = [empty]
     return schema
+
+
+def tag_update_schema():
+    return {
+        'id': [not_empty, unicode],
+        'name': [not_empty, unicode],
+        'keyword_id': [ignore_missing, unicode]
+    }

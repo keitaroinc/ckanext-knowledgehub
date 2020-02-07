@@ -80,6 +80,45 @@
     {% endif %}
   {% endblock %}
 
+  {% block data_quality_fields %}
+  <div class="data-quality-settings panel">
+    <div class="panel-head">
+      <h3>{{_('Data Quality Settings')}}</h3>
+    </div>
+    <h4 class="panel-body">
+      <div class="timeliness-settings">
+        <h4>{{_('Timeliness Settings')}}</h4>
+        {{ form.input('dq_timeliness_column',
+                      id='dq_timeliness_column',
+                      label=_('Record Date Column Name'),
+                      placeholder=_('eg. date_of_entry'),
+                      value=data.dq_timeliness_column,
+                      error=errors.dq_timeliness_column,
+                      classes=[]) }}
+        
+        {{ form.input('dq_timeliness_date_format',
+                      id='dq_timeliness_date_format',
+                      label=_('Date Format'),
+                      placeholder=_('eg. %Y-%m-%dT%H:%M:%S.%fZ'),
+                      value=data.dq_timeliness_date_format,
+                      error=errors.dq_timeliness_date_format,
+                      classes=[]) }}
+      </div>
+      <div class="accuracy-settings">
+        <h4>{{_('Accuracy Settings')}}</h4>
+        {{ form.input('dq_accuracy_column',
+                      id='dq_accuracy_column',
+                      label=_('Column with flag if the record is accurate'),
+                      placeholder=_('eg. is_accurate'),
+                      value=data.dq_accuracy_column,
+                      error=errors.dq_accuracy_column,
+                      classes=[]) }}
+      </div>
+    </div>
+  </div>
+  
+  {% endblock%}
+
   <div class="form-actions">
     {% block delete_button %}
       {% if data.id %}

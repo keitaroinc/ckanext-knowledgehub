@@ -1,0 +1,32 @@
+{% extends "user/read_base.html" %}
+
+{% import 'macros/form.html' as form %}
+
+{% block primary_content_inner %}
+<form id='keyword-edit-form' class="dataset-form" method="post" data-module="basic-form">
+  {% block error_summary %}
+    {{ form.errors(error_summary) }}
+  {% endblock %}
+  
+  {% block base_fields %}
+  {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
+  {{ form.input('name', label=_('Name'), id='field-name', placeholder=_('Keyword'), value=data.name, error=errors.name, classes=['control-full'], attrs=attrs, is_required=true) }}
+  {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
+  {{ form.input('tags', id='field-tags', label=_('Tags'), placeholder=_('eg. economy, mental health, government'), value=data.tags, error=errors.tags, classes=['control-full'], attrs=tag_attrs) }}
+ 
+  {% endblock %}
+  <div class="form-actions">
+    {% block delete_button %}
+      {% if h.check_access('vocabulary_delete')  %}
+        <a class="btn btn-danger pull-left"  
+           data-module="confirm-action" 
+           data-module-content="{{ _('Are you sure you want to delete this keyword?') }}"
+           href="{{ h.url_for('.keyword_delete', id=data.id) }}">
+            {{ _('Delete Keyword') }}
+        </a>
+      {% endif %}
+    {% endblock %}
+    <button class="btn btn-primary" name="save" type="submit">{% block save_text %}{{ _('Save Keyword') }}{% endblock %}</button>
+  </div>
+</form>
+{% endblock %}

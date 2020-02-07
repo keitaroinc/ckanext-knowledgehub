@@ -90,6 +90,20 @@ def resource_validate_show(context, data_dict):
 
 
 def tag_list(context, data_dict):
-    ''' CKAN tag_list auth function must be override
-    because it enters in infinite recursion'''
-    return ckan_tag_list(context, data_dict)
+    # sysadmins only
+    return {'success': False}
+
+
+def keyword_show(context, data_dict):
+    '''
+    Authorization check for fetching a keyword. Sysadmin only.
+    '''
+    # sysadmins only
+    return {'success': False}
+
+
+def keyword_list(context, data_dict):
+    '''
+        Authorization check for getting the list of keywords. Sysadmin only.
+    '''
+    return {'success': True}
