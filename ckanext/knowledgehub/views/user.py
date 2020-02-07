@@ -345,6 +345,28 @@ def tags(id):
     return base.render(u'user/tags.html', extra_vars)
 
 
+def profile():
+    context = {
+        u'model': model,
+        u'session': model.Session,
+        u'user': g.user,
+        u'auth_user_obj': g.userobj,
+        u'for_view': True
+    }
+    data_dict = {
+        u'user_obj': g.userobj,
+        u'include_num_followers': True
+    }
+    try:
+        logic.check_access(u'user_profile_show', context)
+    except logic.NotAuthorized:
+        base.abort(403, _(u'Not authorized to see this page'))
+
+    extra_vars = _extra_template_variables(context, data_dict)
+
+    return base.render('user/profile/user_profile.html', extra_vars)
+
+
 kwh_user.add_url_rule(u'/intents/<id>', view_func=intents)
 kwh_user.add_url_rule(u'/keywords', view_func=keywords)
 kwh_user.add_url_rule(u'/keywords/delete/<id>', methods=['GET', 'POST'],
@@ -359,3 +381,4 @@ kwh_user.add_url_rule(u'/keywords/new', methods=['POST'],
                       view_func=keyword_create_save)
 kwh_user.add_url_rule(u'/keywords/<id>', view_func=keyword_read)
 kwh_user.add_url_rule(u'/tags/<id>', view_func=tags)
+kwh_user.add_url_rule(u'/profile', view_func=profile)
