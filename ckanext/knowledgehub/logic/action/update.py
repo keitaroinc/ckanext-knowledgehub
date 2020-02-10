@@ -822,12 +822,16 @@ def keyword_update(context, data_dict):
     :returns: `dict`, the updated keyword.
     '''
     check_access('keyword_update', context)
-    if 'name' not in data_dict:
-        raise ValidationError({'name': _('Missing Value')})
-    
-    existing = Keyword.by_name(data_dict['name'])
+    if 'id' not in data_dict:
+        raise ValidationError({'id': _('Missing Value')})
+    existing = Keyword.get(data_dict['id'])
+    if not existing:
+        existing = Keyword.by_name(data_dict['id'])
     if not existing:
         raise logic.NotFound(_('Not found'))
+
+    if data_dict.get('name', '').strip():
+        existing.name = data_dict['name'].strip()
 
     existing.modified_at = datetime.datetime.utcnow()
     existing.save()
