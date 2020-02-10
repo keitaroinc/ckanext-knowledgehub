@@ -5,6 +5,7 @@ import logging
 
 from ckanext.knowledgehub.cli import error_shout
 from ckanext.knowledgehub.rnn.worker import learn
+from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +20,8 @@ def train():
     u'''Initialising the Knowledgehub tables'''
     log.info(u"Initialize Knowledgehub tables")
     try:
-        learn()
+        worker = PredictiveSearchWorker()
+        worker.run()
     except Exception as e:
         error_shout(e)
     else:
