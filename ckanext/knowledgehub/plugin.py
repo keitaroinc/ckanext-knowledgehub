@@ -9,6 +9,7 @@ import ckanext.knowledgehub.helpers as h
 
 from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.lib.search import patch_ckan_core_search
+from ckanext.knowledgehub.model.keyword import extend_tag_table
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
@@ -28,6 +29,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         toolkit.add_resource('fanstatic', 'knowledgehub')
         # patch the CKAN core functionality
         patch_ckan_core_search()
+        # Extend CKAN Tag table
+        extend_tag_table()
 
     # IBlueprint
     def get_blueprint(self):
@@ -105,7 +108,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'get_resource_validation_options': h.get_resource_validation_options,
             'check_resource_status': h.check_resource_status,
             'check_validation_admin': h.check_validation_admin,
-            'vocabulary_list': h.vocabulary_list		
+            'keyword_list': h.keyword_list,
         }
 
     # IDatasetForm
