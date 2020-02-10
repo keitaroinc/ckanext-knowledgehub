@@ -1257,6 +1257,6 @@ class TestKWHHelpers(ActionsBase):
           'id': '854e6190-f2a1-4854-80a2-51d38e9c5c81',
           'package_id': dataset['id']
         }
-        h_rm_rqs = kwh_helpers.remove_rqs_from_dataset(context, rsc_view)
+        h_rm_rqs = kwh_helpers.remove_rqs_from_dataset(rsc_view)
 
         assert_equals(h_rm_rqs.get('message'), 'OK')

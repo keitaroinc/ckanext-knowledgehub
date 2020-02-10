@@ -303,7 +303,7 @@ def resource_view_update(context, data_dict):
         ext_old = resource_view_data['__extras']
         if ext_old.get('research_questions') or ext.get('research_questions'):
             plugin_helpers.update_rqs_in_dataset(
-                context, old_resource_view_data, resource_view_data)
+                old_resource_view_data, resource_view_data)
 
     return resource_view_data
 

@@ -983,10 +983,9 @@ def add_rqs_to_dataset(context, res_view):
             raise logic.ValidationError(e.error_dict)
 
 
-def remove_rqs_from_dataset(context, res_view):
+def remove_rqs_from_dataset(res_view):
 
-    if not context:
-        context = _get_context()
+    context = _get_context()
     pkg_id = res_view.get('package_id')
     if res_view.get('__extras'):
         ext = res_view.get('__extras')
@@ -1033,10 +1032,10 @@ def remove_rqs_from_dataset(context, res_view):
                     raise ValidationError(e.error_dict)
 
 
-def update_rqs_in_dataset(context, old_data, res_view):
+def update_rqs_in_dataset(old_data, res_view):
 
-    if not context:
-        context = _get_context()
+    context = _get_context()
+    context['ignore_auth'] = True
     pkg_dict = toolkit.get_action('package_show')(
         dict({'ignore_auth': True}, return_type='dict'),
         {'id': res_view['package_id']})
