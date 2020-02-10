@@ -1362,11 +1362,33 @@ def keyword_list(context, data_dict):
 
 
 def _show_user_profile(context, user_id):
-    user = UserProfile.by_user_id(user_id)
-    if not user:
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
         raise logic.NotFound(_('No such user profile'))
 
-    return _table_dictize(user, context)
+    interests = {
+        'research_questions': [],
+        'keywords': [],
+        'tags': [],
+    }
+    for interest, show_action in {
+        'research_questions': 'research_question_show',
+        'keywords': 'keyword_show',
+        'tags': 'tag_show',
+    }.items():
+        for value in (profile.interests or {}).get(interest, []):
+            print 'VALUE ->', interest, show_action, value
+            try:
+                entity = toolkit.get_action(show_action)(context, {
+                    'id': value,
+                })
+                interests[interest].append(entity)
+            except logic.NotFound:
+                log.debug('Not found "%s" with id %s', interest, value)
+
+    profile_dict = _table_dictize(profile, context)
+    profile_dict['interests'] = interests
+    return profile_dict
 
 
 @toolkit.side_effect_free

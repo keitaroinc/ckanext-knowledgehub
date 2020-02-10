@@ -32,6 +32,8 @@ from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
 
+from sqlalchemy.orm.attributes import flag_modified
+
 
 log = logging.getLogger(__name__)
 
@@ -873,11 +875,14 @@ def user_profile_update(context, data_dict):
     if not profile:
         profile = UserProfile(user_id=user_id, user_notified=True)
         profile.interests = {}
-    
+
     for interest_type in ['research_questions', 'keywords', 'tags']:
         if data_dict.get(interest_type):
             profile.interests[interest_type] = data_dict[interest_type]
-    
+
+    if profile.interests:
+        flag_modified(profile, 'interests')
+
     profile.save()
     model.Session.flush()
 

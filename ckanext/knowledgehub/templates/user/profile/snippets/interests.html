@@ -1,19 +1,62 @@
 {% block user_interests %}
     <div class="container-fluid">
         <div class="row">
+            <div class="col-sm-12">
+                <h3>{{ _('Research Questions') }}</h3>
+            </div>
             {% block interests_research_questions %}
+            <div class="research-question-list">
 
+            </div>
             {% endblock %}
         </div>
         <div class="row">
+            <div class="col-sm-12">
+                <h3>{{ _('Keywords') }}</h3>
+            </div>
             {% block interests_keywords %}
 
             {% endblock %}
         </div>
         <div class="row">
+            <div class="col-sm-12">
+                <h3>{{ _('Tags') }}</h3>
+            </div>
             {% block interests_tags %}
 
             {% endblock %}            
         </div>
     </div>
+    <div class="research-question-template col-md-4" style="">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <a href="#" class="panel-title research-question-title">Research Question</a>
+                <button class="btn btn-danger pull-right research-question-remove"><i class="fa fa-close"></i></button>
+            </div>
+            <div class="panel-body research-question-content">
+                <img class="research-question-image img-thumbnail">
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" tabindex="-1" role="dialog" id="modal-delete-interest">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">{{ _('Please Confirm')}}
+              <button type="button" class="close pull-right" data-dismiss="modal" aria-label="{{ _('Close') }}">
+                <span aria-hidden="true">&times;</span>
+              </button>
+                </h5>
+            </div>
+            <div class="modal-body">
+              <p>{{ _('Are you sure you want to delete') }}
+                  &quot;<span class="delete-user-interes"></span>&quot;?</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center deleteButtonsWrapper">
+                <button type="button" class="btn btn-danger btnYesClass" id="btnYes" data-dismiss="modal">{{ _('Yes') }}</button>
+                <button type="button" class="btn btn-primary btnNoClass" id="btnNo" data-dismiss="modal">{{ _('No') }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
 {% endblock%}

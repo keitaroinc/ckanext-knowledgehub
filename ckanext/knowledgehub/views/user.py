@@ -151,7 +151,6 @@ def keyword_create_update(show, create, id=None, data_dict=None):
                 })
 
             keyword['tags'] = data_dict.get('tags', '')
-
             try:
                 keyword['name'] = data_dict['name']
                 keyword = _save_keyword(context, keyword)
