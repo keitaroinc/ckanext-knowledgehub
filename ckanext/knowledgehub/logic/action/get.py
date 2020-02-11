@@ -24,7 +24,7 @@ from ckanext.knowledgehub.model import UserQuery
 from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub import helpers as kh_helpers
-from ckanext.knowledgehub.rnn import helpers as rnn_helpers
+from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
@@ -779,7 +779,8 @@ def get_predictions(context, data_dict):
     if not text:
         raise ValidationError({'text': _('Missing value')})
 
-    return rnn_helpers.predict_completions(text)
+    model = PredictiveSearchModel()
+    return model.predict(text)
 
 
 def _search_entity(index, ctx, data_dict):
@@ -1330,15 +1331,15 @@ def keyword_show(context, data_dict):
     keyword = Keyword.get(data_dict['id'])
     if not keyword:
         keyword = Keyword.by_name(data_dict['id'])
-    
+
     if not keyword:
         raise logic.NotFound(_('No such keyword'))
-    
+
     keyword_dict = _table_dictize(keyword, context)
     keyword_dict['tags'] = []
     for tag in Keyword.get_tags(keyword.id):
         keyword_dict['tags'].append(_table_dictize(tag, context))
-    
+
     return keyword_dict
 
 
@@ -1356,5 +1357,5 @@ def keyword_list(context, data_dict):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
-    
+
     return results
