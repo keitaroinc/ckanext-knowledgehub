@@ -4,7 +4,6 @@ import click
 import logging
 
 from ckanext.knowledgehub.cli import error_shout
-from ckanext.knowledgehub.rnn.worker import learn
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
 
 log = logging.getLogger(__name__)
