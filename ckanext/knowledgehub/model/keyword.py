@@ -48,12 +48,19 @@ class Keyword(DomainObject):
         return query.all()
     
     @classmethod
-    def get_list(cls, page=None, limit=None, order_by='created_at desc'):
+    def get_list(cls,
+                 page=None,
+                 limit=None,
+                 search=None,
+                 order_by='created_at desc'):
         offset = None
         if page and limit:
             offset = (page - 1) * limit
 
         query = Session.query(cls).autoflush(False)
+
+        if search:
+            query = query.filter(keyword_table.c.name.like('%{}%'.format(search)))
 
         if order_by:
             query = query.order_by(order_by)

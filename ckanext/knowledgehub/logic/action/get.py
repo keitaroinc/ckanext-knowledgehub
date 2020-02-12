@@ -1343,6 +1343,7 @@ def keyword_show(context, data_dict):
     return keyword_dict
 
 
+@toolkit.side_effect_free
 def keyword_list(context, data_dict):
     '''Returns all keywords defined for this system.
     '''
@@ -1350,10 +1351,11 @@ def keyword_list(context, data_dict):
 
     page = data_dict.get('page')
     limit = data_dict.get('limit')
+    search = data_dict.get('q')
 
     results = []
 
-    for keyword in Keyword.get_list(page, limit):
+    for keyword in Keyword.get_list(page, limit, search=search):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
@@ -1418,3 +1420,15 @@ def user_profile_list(context, data_dict):
         results.append(_table_dictize(profile, context))
     
     return results
+
+
+@toolkit.side_effect_free
+def tag_list_search(context, data_dict):
+    results = toolkit.get_action('tag_list')(context, data_dict)
+    tags = []
+    for tag_name in results:
+        tags.append(
+            toolkit.get_action('tag_show')(context, {'id': tag_name})
+        )
+    
+    return tags

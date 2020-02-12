@@ -876,9 +876,10 @@ def user_profile_update(context, data_dict):
         profile = UserProfile(user_id=user_id, user_notified=True)
         profile.interests = {}
 
+    interests = data_dict.get('interests', {})
     for interest_type in ['research_questions', 'keywords', 'tags']:
-        if data_dict.get(interest_type):
-            profile.interests[interest_type] = data_dict[interest_type]
+        if interests.get(interest_type) is not None:
+            profile.interests[interest_type] = interests[interest_type]
 
     if profile.interests:
         flag_modified(profile, 'interests')
