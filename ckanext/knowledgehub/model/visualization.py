@@ -85,6 +85,22 @@ class Visualization(ResourceView, Indexed):
                 if ext.get('research_questions'):
                     data_rq = json.dumps(ext.get('research_questions'))
                     data['research_questions'] = data_rq
+        
+        keywords = set()
+        if data.get('tags'):
+            for tag in data.get('tags', '').split(','):
+                tag_obj = get_action('tag_show')(
+                    {'ignore_auth': True},
+                    {'id': tag}
+                )
+                if tag_obj.get('keyword_id'):
+                    keyword_obj = get_action('keyword_show')(
+                        {'ignore_auth': True},
+                        {'id': tag_obj.get('keyword_id')}
+                    )
+                    keywords.add(keyword_obj.get('name'))
+                    if keywords:
+                        data['keywords'] = ','.join(keywords)
 
         return data
 
