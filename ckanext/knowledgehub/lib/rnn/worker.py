@@ -52,6 +52,8 @@ class PredictiveSearchWorker(PredictiveSearchConfig):
     def __set_corpus(self):
         self.corpus = DataManager.get_corpus()
         self.training_data = self.corpus.lower()
+        self.training_data = ''.join(
+            ch for ch in self.training_data if ch.isalnum() or ch == ' ')
         return self
 
     def __validate_corpus(self):
