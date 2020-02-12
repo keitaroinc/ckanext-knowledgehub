@@ -99,7 +99,11 @@ def theme_create(context, data_dict):
     session.add(theme)
     session.commit()
 
-    return _table_dictize(theme, context)
+    theme_data = _table_dictize(theme, context)
+
+    Theme.add_to_kwh_data(context, theme_data)
+
+    return theme_data
 
 
 @toolkit.side_effect_free
@@ -535,9 +539,8 @@ def kwh_data_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    user_data = model.User.by_name(user.decode('utf8'))
-    if user_data:
-        data['user'] = user_data.id
+    if user:
+        data['user'] = model.User.by_name(user.decode('utf8')).id
 
     kwh_data = KWHData.get(
         user=data.get('user'),

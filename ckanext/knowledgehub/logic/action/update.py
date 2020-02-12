@@ -67,6 +67,8 @@ def theme_update(context, data_dict):
 
     # we need the old theme name in the context for name validation
     context['theme'] = theme.name
+    context['title'] = theme.title
+    context['description'] = theme.description
     session = context['session']
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.theme_schema(),
@@ -88,7 +90,11 @@ def theme_update(context, data_dict):
     session.add(theme)
     session.commit()
 
-    return _table_dictize(theme, context)
+    theme_data = _table_dictize(theme, context)
+
+    Theme.update_kwh_data(context, theme_data)
+
+    return theme_data
 
 
 @toolkit.side_effect_free
@@ -422,12 +428,13 @@ def kwh_data_update(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user'] = model.User.by_name(user.decode('utf8')).id
 
     kwh_data = KWHData.get(
-        user=data['user'],
-        content=data['old_content'],
-        type=data['type']
+        user=data.get('user'),
+        content=data.get('old_content'),
+        type=data.get('type')
     ).first()
 
     if kwh_data:
@@ -584,9 +591,9 @@ def _patch_data_quality(context, data_dict, _type):
     db_metric = DataQualityMetrics.get(_type, data_dict['id'])
     if not db_metric:
         db_metric = DataQualityMetrics(type=_type, ref_id=data_dict['id'])
-    
+
     db_metric.metrics = db_metric.metrics or {}
-    
+
     for field, values in data_dict.items():
         if not field in dimensions:
             continue
@@ -600,7 +607,7 @@ def _patch_data_quality(context, data_dict, _type):
     results = {}
     for dimension in dimensions:
         results[dimension] = getattr(db_metric, dimension)
-    
+
     results['calculated_on'] = db_metric.modified_at.isoformat()
     results['details'] = db_metric.metrics
 
@@ -850,13 +857,13 @@ def keyword_update(context, data_dict):
         the tag does not exist, it will be created and added to this keyword.
         The tags that were removed from this keyword will be set as free tags
         and will not be removed.
-    
+
     :returns: `dict`, the updated keyword.
     '''
     check_access('keyword_update', context)
     if 'name' not in data_dict:
         raise ValidationError({'name': _('Missing Value')})
-    
+
     existing = Keyword.by_name(data_dict['name'])
     if not existing:
         raise logic.NotFound(_('Not found'))
@@ -879,7 +886,7 @@ def keyword_update(context, data_dict):
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
-        
+
         db_tag = model.Tag.get(tag_dict['id'])
         db_tag.keyword_id = existing.id
         db_tag.save()
