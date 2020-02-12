@@ -99,26 +99,16 @@ class Dashboard(DomainObject, Indexed):
         keywords = set()
         if data.get('tags'):
             for tag in data.get('tags', '').split(','):
-                vocab_id = None
-                vocabs = get_action('vocabulary_list')({'ignore_auth': True,}, {})
-                for vocab in vocabs:
-                    tag_list = vocab.get('tags')
-                    for tg in tag_list:
-                        if tg.get('name') == tag:
-                            vocab_id = tg.get('vocabulary_id')
-                            break
-                    if vocab_id:
-                        break
                 tag_obj = get_action('tag_show')(
-                    {'ignore_auth': True,},
-                    {'id': tag, 'vocabulary_id': vocab_id}
+                    {'ignore_auth': True},
+                    {'id': tag}
                 )
-                if tag_obj.get('vocabulary_id'):
-                    vocabulary = get_action('vocabulary_show')(
-                        {'ignore_auth': True,},
-                        {'id': tag_obj.get('vocabulary_id')}
+                if tag_obj.get('keyword_id'):
+                    keyword_obj = get_action('keyword_show')(
+                        {'ignore_auth': True},
+                        {'id': tag_obj.get('keyword_id')}
                     )
-                    keywords.add(vocabulary.get('name'))
+                    keywords.add(keyword_obj.get('name'))
                     if keywords:
                         data['keywords'] = ','.join(keywords)
 
