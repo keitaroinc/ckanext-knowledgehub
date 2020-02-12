@@ -103,9 +103,21 @@ kwh_data_table = Table(
         types.UnicodeText,
         ForeignKey('sub_themes.id', ondelete='CASCADE')),
     Column(
-        'rq',
+        'research_question',
         types.UnicodeText,
         ForeignKey('research_question.id', ondelete='CASCADE')),
+    Column(
+        'dataset',
+        types.UnicodeText,
+        ForeignKey('package.id', ondelete='CASCADE')),
+    Column(
+        'visualization',
+        types.UnicodeText,
+        ForeignKey('resource_view.id', ondelete='CASCADE')),
+    Column(
+        'dashboard',
+        types.UnicodeText,
+        ForeignKey('ckanext_knowledgehub_dashboard.id', ondelete='CASCADE')),
     Column(
         'created_at',
         types.DateTime,
