@@ -24,6 +24,7 @@ from ckanext.knowledgehub.model.resource_validate import (
     setup as resource_validate_setup
 )
 from ckanext.knowledgehub.model.keyword import setup as keyword_setup
+from ckanext.knowledgehub.model.visualization import setup as extend_resource_view_setup
 
 
 log = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ def init():
         data_quality_setup()
         resource_validate_setup()
         keyword_setup()
+        extend_resource_view_setup()
     except Exception as e:
         error_shout(e)
     else:

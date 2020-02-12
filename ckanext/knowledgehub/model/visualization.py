@@ -2,6 +2,8 @@ from ckan.model import ResourceView, resource_view_table
 from ckan.model.meta import mapper
 from ckan.logic import get_action
 
+from sqlalchemy import Column, types
+
 from ckanext.knowledgehub.lib.solr import Indexed, mapped
 import json
 
@@ -15,6 +17,8 @@ class Visualization(ResourceView, Indexed):
         'view_type',
         'research_questions',
         'package_id',
+        'tags',
+        'keywords',
 	    mapped('organization', 'organization'),
         mapped('groups', 'groups')
     ]
@@ -86,3 +90,41 @@ class Visualization(ResourceView, Indexed):
 
 
 mapper(Visualization, resource_view_table)
+
+
+def column_exists_in_db(column_name, table_name, engine):
+    for result in engine.execute('select column_name '
+                                 'from information_schema.columns '
+                                 'where table_name=\'%s\'' % table_name):
+        column = result[0]
+        if column == column_name:
+            return True
+    return False
+
+
+def extend_resource_view_table():
+    from ckan import model
+    engine = model.meta.engine
+
+    resource_view_table.append_column(Column(
+        'tags',
+        types.UnicodeText,
+    ))
+
+    #ResourceView.tags = property(column_property(tag_table.c.tags))
+    from sqlalchemy.orm import configure_mappers
+
+    # Hack to update the mapper for the class ResourceView that was already mapped
+    delattr(ResourceView, '_sa_class_manager')
+    mapper(ResourceView, resource_view_table)  # Remap the ResourceView class again
+
+    if column_exists_in_db('tags', 'resource_view', engine):
+        return
+
+    # Add the column in DB
+    engine.execute('alter table resource_view '
+                   'add column tags character varying(100)')
+
+
+def setup():
+    extend_resource_view_table()
