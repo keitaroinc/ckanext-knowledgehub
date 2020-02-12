@@ -172,8 +172,18 @@ def research_question_update(context, data_dict):
 
     user = context.get('user')
 
-    tags = data_dict.get('tags')
-    if tags is not None:
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
         research_question.tags = tags
 
     data['modified_by'] = model.User.by_name(user.decode('utf8')).id
@@ -352,8 +362,18 @@ def dashboard_update(context, data_dict):
     for item in items:
         setattr(dashboard, item, data.get(item))
     
-    tags = data_dict.get('tags')
-    if tags is not None:
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
         dashboard.tags = tags
 
     dashboard_type = data.get('type')

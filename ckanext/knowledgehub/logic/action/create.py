@@ -170,7 +170,6 @@ def research_question_create(context, data_dict):
 
     title = data.get('title')
     image_url = data.get('image_url')
-    tags = data_dict.get('tags')
     state = data.get('state', 'active')
     modified_at = datetime.datetime.utcnow()
     # FIXME if theme or subtheme id not exists, return notfound
@@ -185,7 +184,18 @@ def research_question_create(context, data_dict):
         modified_at=modified_at
     )
 
-    if tags is not None:
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
         research_question.tags = tags
 
     research_question.save()
@@ -356,15 +366,25 @@ def dashboard_create(context, data_dict):
 
     source = data.get('source')
     indicators = data.get('indicators')
-    tags = data_dict.get('tags')
 
     if source is not None:
         dashboard.source = source
 
     if indicators is not None:
         dashboard.indicators = indicators
-    
-    if tags is not None:
+
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
         dashboard.tags = tags
 
     user = context.get('user')
@@ -463,7 +483,7 @@ def resource_validation_create(context, data_dict):
         id=dataset,
         resource_id=resource,
         qualified=True
-        )
+    )
     status = 'not_validated'
 
     if data.get('admin'):
@@ -805,7 +825,7 @@ def resource_validate_create(context, data_dict):
 
     resource_validate.when = datetime.datetime.utcnow().strftime(
         '%Y-%m-%dT%H:%M:%S'
-        )
+    )
     resource_validate.who = name
     resource_validate.resource = data.get('resource')
 
@@ -931,17 +951,17 @@ def tag_create(context, data_dict):
 
 def keyword_create(context, data_dict):
     u'''Creates new keyword with name and tags.
-    
+
     :param name: `str`, required, the name for the keyword
     :param tags: `list` of `str`, the names of the tags that this keyword
         contains. If a tag does not exist, it will be created.
-    
+
     :returns: `dict`, the new keyword.
     '''
     check_access('keyword_create', context)
     if 'name' not in data_dict:
         raise ValidationError({'name': _('Missing Value')})
-    
+
     existing = Keyword.by_name(data_dict['name'])
     if existing:
         raise ValidationError({
@@ -962,7 +982,7 @@ def keyword_create(context, data_dict):
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
-        
+
         db_tag = model.Tag.get(tag_dict['id'])
         db_tag.keyword_id = keyword.id
         db_tag.save()
