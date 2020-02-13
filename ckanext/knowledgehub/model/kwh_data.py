@@ -36,13 +36,15 @@ class KWHData(DomainObject):
 
         if id_or_name:
             query = query.filter(
-                or_(cls.id == id_or_name, cls.content == id_or_name)
+                or_(cls.id == id_or_name, cls.title == id_or_name)
             )
 
         if q:
             query = query.filter(
-                or_(cls.content.contains(q),
-                    cls.content.ilike(r"%{}%".format(q)))
+                or_(cls.title.contains(q),
+                    cls.title.ilike(r"%{}%".format(q)),
+                    cls.description.contains(q),
+                    cls.description.ilike(r"%{}%".format(q)))
             )
 
         if order_by:
@@ -87,9 +89,12 @@ kwh_data_table = Table(
         types.UnicodeText,
         nullable=False),
     Column(
-        'content',
+        'title',
         types.UnicodeText,
         nullable=False),
+    Column(
+        'description',
+        types.UnicodeText),
     Column(
         'user',
         types.UnicodeText,
