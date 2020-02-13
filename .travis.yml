@@ -8,7 +8,6 @@ services:
 install:
     - bash bin/travis-build.bash
     - pip install coveralls
-    - pip install --ignore-installed nose
 script: sh bin/travis-run.sh
 after_success:
     - coveralls
