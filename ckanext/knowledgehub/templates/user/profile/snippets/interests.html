@@ -59,29 +59,30 @@
             </div>
         </div>
     </div>
-    <div style="display: none;">
     
-        <div class="modal fade" tabindex="-1" role="dialog" id="modal-delete-interest">
-            <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                <h5 class="modal-title">{{ _('Please Confirm')}}
-                <button type="button" class="close pull-right" data-dismiss="modal" aria-label="{{ _('Close') }}">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                    </h5>
-                </div>
-                <div class="modal-body">
-                <p>{{ _('Are you sure you want to delete') }}
-                    &quot;<span class="delete-user-interes"></span>&quot;?</p>
-                </div>
-                <div class="modal-footer d-flex justify-content-center deleteButtonsWrapper">
-                    <button type="button" class="btn btn-danger btnYesClass" id="btnYes" data-dismiss="modal">{{ _('Yes') }}</button>
-                    <button type="button" class="btn btn-primary btnNoClass" id="btnNo" data-dismiss="modal">{{ _('No') }}</button>
-                </div>
+    
+    <div class="modal fade" tabindex="-1" role="dialog" id="modal-delete-interest" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title">{{ _('Please Confirm')}}
+            <button type="button" class="close pull-right" data-dismiss="modal" aria-label="{{ _('Close') }}">
+                <span aria-hidden="true">&times;</span>
+            </button>
+                </h5>
             </div>
+            <div class="modal-body">
+            <p>{{ _('Are you sure you want to delete') }}
+                &quot;<span class="delete-user-interes"></span>&quot;?</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center deleteButtonsWrapper">
+                <button type="button" class="btn btn-danger btnYesClass" id="btnYes" data-dismiss="modal">{{ _('Yes') }}</button>
+                <button type="button" class="btn btn-primary btnNoClass" id="btnNo" data-dismiss="modal">{{ _('No') }}</button>
             </div>
         </div>
+        </div>
+    </div>
+    <div style="display: none;">
         <div class="research-question-template col-md-4">
             <div class="panel panel-default">
                 <div class="panel-heading">
