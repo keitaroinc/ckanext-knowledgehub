@@ -280,24 +280,32 @@
                                 {% for dashboard in dashes %}
 
                                 <li class="dataset-item">
-                                    <div id="tabs-dashboards">
+                                    <div id="tabs-dashboards" class="dataset-content">
                                         {% set additional_info_dash = h.get_single_dash(dashboard) %}
-                                        <a class="dashboard-link"
-                                            href="{{  h.url_for('dashboards.view', name=dashboard.name) }}">
-                                            <div style="text-align: center">
-                                                <h4>{{dashboard.title}}</h4>
+                                            <h3 class="dataset-heading text-ellipsis">
+                                                <a href="{{ h.url_for('dashboards.view', name=dashboard.name) }}">{{ dashboard.title }}</a>
+                                            </h3>
                                                 {% set truncate = truncate or 180 %}
                                                 {% set truncate_description = truncate_description or 150 %}
                                                 {% set description = dashboard['description'] %}
                                                 <p class="text-muted">
                                                     <small>{{ h.truncate(description, truncate_description) }}</small>
                                                 </p>
-                                                <div class="dashboard-created">
-                                                    <i class="fa fa-table"></i>
-                                                    {{ h.format_date(additional_info_dash.created_at)  }}
+                                                <h5 class="dataset-text-wrap text-muted">
+                                                    <span style="color: #000">Date created:</span>
+                                                    <span class="text-muted">{{ h.format_date(additional_info_dash.created_at) }}</span>
+                                                </h5>
+                                                <h5 class="dataset-text-wrap text-muted">
+                                                    <span style="color: #000">Type:</span>
+                                                    <span class="text-muted text-capitalize">{{ additional_info_dash.type }}</span>
+                                                </h5>
+                                                {% if additional_info_dash.tags %}
+                                                <div class="row flex flex-wrap dataset-tag-wrapper" style="border-bottom: 0;">
+                                                    {% for tag in additional_info_dash.get('tags', '').split(',') %}
+                                                    <div class="dataset-tag mr-2">{{ tag }}</div>
+                                                    {% endfor %}
                                                 </div>
-                                            </div>
-                                        </a>
+                                                {% endif %}
                                         <input type="hidden" id="dashboard-id" name="dashboard-id" value="{{ dashboard.id }}">
                                     </div>
                                 </li>
