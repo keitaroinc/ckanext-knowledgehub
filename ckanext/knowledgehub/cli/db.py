@@ -23,12 +23,9 @@ from ckanext.knowledgehub.model.data_quality import setup as data_quality_setup
 from ckanext.knowledgehub.model.resource_validate import (
     setup as resource_validate_setup
 )
-<<<<<<< HEAD
 from ckanext.knowledgehub.model.user_profile import setup as user_profile_setup
-=======
 from ckanext.knowledgehub.model.keyword import setup as keyword_setup
 
->>>>>>> origin/master
 
 log = logging.getLogger(__name__)
 
