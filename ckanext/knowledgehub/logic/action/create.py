@@ -101,6 +101,7 @@ def theme_create(context, data_dict):
 
     theme_data = _table_dictize(theme, context)
 
+    # Add to kwh data
     try:
         data_dict = {
             'type': 'theme',
@@ -154,6 +155,7 @@ def sub_theme_create(context, data_dict):
 
     sub_theme_data = st.as_dict()
 
+    # Add to kwh data
     try:
         data_dict = {
             'type': 'sub_theme',
@@ -239,6 +241,7 @@ def research_question_create(context, data_dict):
         ResearchQuestion.delete(research_question.id)
         raise e
 
+    # Add to kwh data
     try:
         data_dict = {
             'type': 'research_question',
@@ -249,7 +252,7 @@ def research_question_create(context, data_dict):
     except Exception as e:
         log.debug(
             'Unable to store research question %s to knowledgehub data: %s'
-            % (research_question_data.get('id'), str(e))
+                % (research_question_data.get('id'), str(e))
         )
 
     return research_question_data
@@ -368,7 +371,7 @@ def resource_view_create(context, data_dict):
     # Add to index
     Visualization.add_to_index(rv_data)
 
-    # Add to KWH data
+    # Add to kwh data
     try:
         data_dict = {
             'type': 'visualization',
@@ -491,7 +494,7 @@ def package_create(context, data_dict):
     except Exception as e:
         log.debug(
             'Unable to store dataset %s to knowledgehub data: %s'
-            % (dataset.get('id'), str(e))
+                % (dataset.get('id'), str(e))
         )
 
     return dataset

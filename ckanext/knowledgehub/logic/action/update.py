@@ -92,6 +92,7 @@ def theme_update(context, data_dict):
 
     theme_data = _table_dictize(theme, context)
 
+    # Update kwh data
     try:
         data_dict = {
             'type': 'theme',
@@ -101,7 +102,7 @@ def theme_update(context, data_dict):
         }
         logic.get_action(u'kwh_data_update')(context, data_dict)
     except Exception as e:
-        log.debug('Unable to update theme {} to knowledgehub data: {}'.format(
+        log.debug('Unable to update theme {} in knowledgehub data: {}'.format(
             theme_data.get('id'), str(e)
         ))
 
@@ -156,6 +157,7 @@ def sub_theme_update(context, data_dict):
 
     sub_theme_data = st.as_dict()
 
+    # Update kwh data
     try:
         data_dict = {
             'type': 'sub_theme',
@@ -166,7 +168,7 @@ def sub_theme_update(context, data_dict):
         logic.get_action(u'kwh_data_update')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to update sub-theme {} to knowledgehub data: {}'.format(
+            'Unable to update sub-theme {} in knowledgehub data: {}'.format(
             sub_theme_data.get('id'), str(e)
         ))
 
@@ -231,6 +233,7 @@ def research_question_update(context, data_dict):
     # Update index
     ResearchQuestion.update_index_doc(rq_data)
 
+    # Update kwh data
     try:
         data_dict = {
             'type': 'research_question',
@@ -240,7 +243,7 @@ def research_question_update(context, data_dict):
         logic.get_action(u'kwh_data_update')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to update sub-theme {} to knowledgehub data: {}'.format(
+            'Unable to update sub-theme {} in knowledgehub data: {}'.format(
                 rq_data.get('id'), str(e)
         ))
 
@@ -375,7 +378,7 @@ def resource_view_update(context, data_dict):
         logic.get_action(u'kwh_data_update')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to update visualization %s to knowledgehub data: %s'
+            'Unable to update visualization %s in knowledgehub data: %s'
                 % (resource_view_data.get('id'), str(e))
             )
 
@@ -468,7 +471,7 @@ def dashboard_update(context, data_dict):
         logic.get_action(u'kwh_data_update')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to update dashboard %s to knowledgehub data: %s'
+            'Unable to update dashboard %s in knowledgehub data: %s'
             % (dashboard_data.get('id'), str(e))
         )
 
