@@ -21,15 +21,10 @@ class KWHData(DomainObject):
 
     @classmethod
     def get(cls, id_or_name=None, **kwargs):
-        q = kwargs.get('q')
-        limit = kwargs.get('limit')
-        offset = kwargs.get('offset')
-        order_by = kwargs.get('order_by')
-
-        kwargs.pop('q', None)
-        kwargs.pop('limit', None)
-        kwargs.pop('offset', None)
-        kwargs.pop('order_by', None)
+        q = kwargs.pop('q', None)
+        limit = kwargs.pop('limit', None)
+        offset = kwargs.pop('offset', None)
+        order_by = kwargs.pop('order_by', None)
 
         query = Session.query(cls).autoflush(False)
         query = query.filter_by(**kwargs)
