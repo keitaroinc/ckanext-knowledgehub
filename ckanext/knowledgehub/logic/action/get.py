@@ -702,36 +702,16 @@ def kwh_data_list(context, data_dict):
      page number, items per page and data(KnowledgeHub data)
     :rtype: dictionary
     '''
-    data_type = data_dict.get('type', '')
-    content = data_dict.get('content', '')
-    user = data_dict.get('user', '')
-    theme = data_dict.get('theme', '')
-    sub_theme = data_dict.get('sub_theme', '')
-    rq = data_dict.get('rq', '')
 
     q = data_dict.get('q', '')
-    page_size = int(data_dict.get('pageSize', 1000000))
+    limit = int(data_dict.get('limit', 1000000))
     page = int(data_dict.get('page', 1))
     order_by = data_dict.get('order_by', None)
-    offset = (page - 1) * page_size
+    offset = (page - 1) * limit
 
     kwargs = {}
-
-    if data_type:
-        kwargs['type'] = data_type
-    if content:
-        kwargs['content'] = content
-    if user:
-        kwargs['user'] = user
-    if theme:
-        kwargs['theme'] = theme
-    if sub_theme:
-        kwargs['sub_theme'] = sub_theme
-    if rq:
-        kwargs['rq'] = rq
-
     kwargs['q'] = q
-    kwargs['limit'] = page_size
+    kwargs['limit'] = limit
     kwargs['offset'] = offset
     kwargs['order_by'] = order_by
 
@@ -739,9 +719,10 @@ def kwh_data_list(context, data_dict):
 
     try:
         db_data = KWHData.get(**kwargs).all()
-    except Exception:
+    except Exception as e:
+        log.debug('Knowledge hub data list: %s' % str(e))
         return {'total': 0, 'page': page,
-                'pageSize': page_size, 'data': []}
+                'limit': limit, 'data': []}
 
     for entry in db_data:
         kwh_data.append(_table_dictize(entry, context))
@@ -749,7 +730,7 @@ def kwh_data_list(context, data_dict):
     total = len(kwh_data)
 
     return {'total': total, 'page': page,
-            'pageSize': page_size, 'data': kwh_data}
+            'limit': limit, 'data': kwh_data}
 
 
 @toolkit.side_effect_free
@@ -768,7 +749,9 @@ def get_last_rnn_corpus(context, data_dict):
 
 @toolkit.side_effect_free
 def get_predictions(context, data_dict):
-    ''' Returns a list of predictions
+    ''' Returns a list of predictions from RNN model and DB based
+    on data store in knowledge hub
+
     :param text: the text for which predictions have to be made
     :type text: string
     :returns: predictions
@@ -779,8 +762,34 @@ def get_predictions(context, data_dict):
     if not text:
         raise ValidationError({'text': _('Missing value')})
 
+    predictions = []
+
+    data_dict = {
+        'q': text,
+        'limit': 3,
+        'order_by': 'created_at desc'
+    }
+    kwh_data = toolkit.get_action('kwh_data_list')(context, data_dict)
+    for data in kwh_data.get('data', []):
+        text = text.lower()
+        title = data.get('title').lower()
+        index = title.find(text)
+        if index != -1:
+            index = index + len(text)
+            predict = ''
+            for ch in title[index:]:
+                if ch.isalnum() or ch == ' ':
+                    predict += ch
+                else:
+                    break
+
+            if predict != '':
+                predictions.append(predict)
+
     model = PredictiveSearchModel()
-    return model.predict(text)
+    predictions.extend(model.predict(text))
+
+    return list(set(predictions))
 
 
 def _search_entity(index, ctx, data_dict):
