@@ -18,7 +18,9 @@ class DataManager:
         if kwh_data.get('total'):
             data = kwh_data.get('data', [])
             for entry in data:
-                corpus += ' %s' % entry.get('content')
+                corpus += ' %s' % entry.get('title')
+                if entry.get('description'):
+                    corpus += ' %s' % entry.get('description')
 
         return corpus
 

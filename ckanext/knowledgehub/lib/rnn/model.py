@@ -53,7 +53,7 @@ class PredictiveSearchModel(PredictiveSearchConfig):
 
     def predict(self, search_text):
         self.unique_chars, self.char_indices, self.indices_char = \
-            DataManager.prepare_corpus(DataManager.get_last_corpus().lower())
+            DataManager.prepare_corpus(DataManager.get_last_corpus())
 
         text = search_text[-self.sequence_length:].lower()
         unique_chars_text = sorted(list(set(text)))
