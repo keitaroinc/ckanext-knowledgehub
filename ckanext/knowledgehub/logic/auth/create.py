@@ -69,7 +69,7 @@ def kwh_data(context, data_dict):
     '''
         Authorization check for storing KWH data
     '''
-    # all users
+    # all login users
     return {'success': True}
 
 

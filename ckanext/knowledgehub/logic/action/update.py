@@ -521,7 +521,6 @@ def kwh_data_update(context, data_dict):
     :returns: the updated data
     :rtype: dict
     '''
-    check_access('kwh_data', context, data_dict)
 
     session = context['session']
 

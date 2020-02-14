@@ -610,6 +610,7 @@ def resource_validation_create(context, data_dict):
         return _table_dictize(rv, context)
 
 
+@toolkit.side_effect_free
 def kwh_data_create(context, data_dict):
     ''' Store Knowledge Hub data needed for predictove search.
     It keeps the title and description of KWH entities: themes, sub-themes, research
@@ -646,7 +647,6 @@ def kwh_data_create(context, data_dict):
     returns: the newly created data
     :rtype: dict
     '''
-    check_access('kwh_data', context, data_dict)
 
     session = context['session']
 
