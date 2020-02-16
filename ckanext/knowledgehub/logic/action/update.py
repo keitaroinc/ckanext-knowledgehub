@@ -368,6 +368,9 @@ def dashboard_update(context, data_dict):
 
 
 def package_update(context, data_dict):
+    u'''Wraps the CKAN's core 'package_update' function to schedule a check for
+    Data Quality metrics calculation when the package has been updated.
+    '''
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
     return result
@@ -531,7 +534,7 @@ def _patch_data_quality(context, data_dict, _type):
     # validate input
     dimensions = ['completeness', 'uniqueness', 'timeliness', 'validity',
                   'accuracy', 'consistency']
-    for dimension in  dimensions:
+    for dimension in dimensions:
         values = data_dict.get(dimension)
         if values:
             validators = _dq_validators[dimension]
@@ -545,7 +548,10 @@ def _patch_data_quality(context, data_dict, _type):
                     try:
                         _ftype(value)
                     except Exception as e:
-                        raise ValidationError({field: _('Invalid Value' + "(%s) '%s'" % (dimension, value))})
+                        raise ValidationError({
+                            field: _('Invalid Value' +
+                                     "(%s) '%s'" % (dimension, value))
+                        })
                 else:
                     try:
                         values[field] = _ftype(value)
@@ -554,13 +560,13 @@ def _patch_data_quality(context, data_dict, _type):
     db_metric = DataQualityMetrics.get(_type, data_dict['id'])
     if not db_metric:
         db_metric = DataQualityMetrics(type=_type, ref_id=data_dict['id'])
-    
+
     db_metric.metrics = db_metric.metrics or {}
-    
+
     for field, values in data_dict.items():
-        if not field in dimensions:
+        if field not in dimensions:
             continue
-        setattr(db_metric, field, values['value']) # set the main metric
+        setattr(db_metric, field, values['value'])  # set the main metric
         db_metric.metrics[field] = values
         db_metric.metrics[field]['manual'] = values.get('manual', True)
 
@@ -570,7 +576,7 @@ def _patch_data_quality(context, data_dict, _type):
     results = {}
     for dimension in dimensions:
         results[dimension] = getattr(db_metric, dimension)
-    
+
     results['calculated_on'] = db_metric.modified_at.isoformat()
     results['details'] = db_metric.metrics
 
@@ -644,8 +650,9 @@ def resource_validation_update(context, data_dict):
     '''
     check_access('resource_validation_update', context, data_dict)
 
+    resource_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                resource_schema,
                                 context)
 
     if errors:
@@ -693,8 +700,9 @@ def resource_validation_status(context, data_dict):
     '''
     check_access('resource_validation_status', context, data_dict)
 
+    rc_validation_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                rc_validation_schema,
                                 context)
 
     if errors:
@@ -737,8 +745,9 @@ def resource_validation_revert(context, data_dict):
     '''
     check_access('resource_validation_revert', context, data_dict)
 
+    rc_validation_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                rc_validation_schema,
                                 context)
 
     if errors:
@@ -820,7 +829,7 @@ def keyword_update(context, data_dict):
         the tag does not exist, it will be created and added to this keyword.
         The tags that were removed from this keyword will be set as free tags
         and will not be removed.
-    
+
     :returns: `dict`, the updated keyword.
     '''
     check_access('keyword_update', context)
@@ -853,7 +862,7 @@ def keyword_update(context, data_dict):
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
-        
+
         db_tag = model.Tag.get(tag_dict['id'])
         db_tag.keyword_id = existing.id
         db_tag.save()
@@ -864,6 +873,25 @@ def keyword_update(context, data_dict):
 
 
 def user_profile_update(context, data_dict):
+    u'''Updates the user profile data.
+
+    For regular users, this action updates the user profile data for the
+    currently authenticated user.
+
+    For a sysadmin user, an additional parameter (user_id) can be set to update
+    the profile data for another user.
+
+    :param user_id: `str`, the id of the user to update the user profile data.
+        This parameter is available for sysadmins only, otherwise it will be
+        ignored.
+    :param user_notified: `bool`, set the flag for user flash notification.
+    :param research_questions: `list`, list of research questions IDs to set as
+        interests.
+    :param keywords: `list`, list of research questions IDs to set as
+        interests.
+    :param tags: `list`, list of research questions IDs to set as
+        interests.
+    '''
     check_access('user_profile_update', context, data_dict)
     user = context.get('auth_user_obj')
     user_id = user.id
@@ -883,6 +911,9 @@ def user_profile_update(context, data_dict):
 
     if profile.interests:
         flag_modified(profile, 'interests')
+
+    if data_dict.get('user_notified'):
+        profile.user_notified = data_dict.get('user_notified')
 
     profile.save()
     model.Session.flush()

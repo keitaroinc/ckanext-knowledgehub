@@ -923,17 +923,17 @@ def tag_create(context, data_dict):
 
 def keyword_create(context, data_dict):
     u'''Creates new keyword with name and tags.
-    
+
     :param name: `str`, required, the name for the keyword
     :param tags: `list` of `str`, the names of the tags that this keyword
         contains. If a tag does not exist, it will be created.
-    
+
     :returns: `dict`, the new keyword.
     '''
     check_access('keyword_create', context)
     if 'name' not in data_dict:
         raise ValidationError({'name': _('Missing Value')})
-    
+
     existing = Keyword.by_name(data_dict['name'])
     if existing:
         raise ValidationError({
@@ -954,7 +954,7 @@ def keyword_create(context, data_dict):
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
-        
+
         db_tag = model.Tag.get(tag_dict['id'])
         db_tag.keyword_id = keyword.id
         db_tag.save()
@@ -965,12 +965,31 @@ def keyword_create(context, data_dict):
 
 
 def user_profile_create(context, data_dict):
+    u'''Creates a user profile record for the currently authorized user.
+
+    :param research_questions: `list`, list of research question ID's that are
+        of interest.
+    :param tags: `list`, list of tag ID's that are
+        of interest.
+    :param keywords: `list`, list of keyword ID's that are
+        of interest.
+    '''
     check_access('user_profile_create', context)
+
+    username = None
+    if hasattr(g, 'user'):
+        username = g.user
+
+    if not username:
+        username = context.get('user')
+
+    if not username:
+        raise logic.NotAuthorized(_('Must be authroized to use this action'))
 
     user = toolkit.get_action('user_show')({
         'ignore_auth': True,
     }, {
-        'id': g.user,
+        'id': username,
     })
 
     profile = UserProfile.by_user_id(user['id'])
@@ -978,8 +997,10 @@ def user_profile_create(context, data_dict):
         raise ValidationError({
             'user_id': _('Profile already created.')
         })
-    
-    profile = UserProfile(user_id=user['id'], user_notified=False, interests={})
+
+    profile = UserProfile(user_id=user['id'],
+                          user_notified=False,
+                          interests={})
 
     for interest_type in ['research_questions', 'tags', 'keywords']:
         if data_dict.get(interest_type):

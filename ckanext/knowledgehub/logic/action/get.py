@@ -1331,15 +1331,15 @@ def keyword_show(context, data_dict):
     keyword = Keyword.get(data_dict['id'])
     if not keyword:
         keyword = Keyword.by_name(data_dict['id'])
-    
+
     if not keyword:
         raise logic.NotFound(_('No such keyword'))
-    
+
     keyword_dict = _table_dictize(keyword, context)
     keyword_dict['tags'] = []
     for tag in Keyword.get_tags(keyword.id):
         keyword_dict['tags'].append(_table_dictize(tag, context))
-    
+
     return keyword_dict
 
 
@@ -1359,7 +1359,7 @@ def keyword_list(context, data_dict):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
-    
+
     return results
 
 
@@ -1395,17 +1395,31 @@ def _show_user_profile(context, user_id):
 
 @toolkit.side_effect_free
 def user_profile_show(context, data_dict):
+    u'''Returns the data for the user profile for the currently authenticated
+    user.
+
+    If the user is a sysadmin, it can provide a specific user_id to get the
+    user profile for a particular user besides his own user account.
+
+    :param user_id: `str`, the ID of the user to display the user profile. The
+        parameter is available only if the current user is a sysadmin,
+        otherwise this parameter is ignored.
+    '''
     check_access('user_profile_show', context)
 
     user = context.get('auth_user_obj')
     if user.sysadmin:
         if data_dict.get('user_id'):
             return _show_user_profile(context, data_dict['user_id'])
-    
+
     return _show_user_profile(context, user.id)
 
 
 def user_profile_list(context, data_dict):
+    u'''Returns a list of all user profiles.
+
+    Available only for sysadmin users.
+    '''
     check_access('user_profile_list')
     page = data_dict.get('page', 1)
     limit = data_dict.get('limit', 20)
@@ -1418,17 +1432,20 @@ def user_profile_list(context, data_dict):
 
     for profile in profiles:
         results.append(_table_dictize(profile, context))
-    
+
     return results
 
 
 @toolkit.side_effect_free
 def tag_list_search(context, data_dict):
+    u'''Performs a search for tags, similar to tag_search, however it returns
+    the full data for the found tags.
+    '''
     results = toolkit.get_action('tag_list')(context, data_dict)
     tags = []
     for tag_name in results:
         tags.append(
             toolkit.get_action('tag_show')(context, {'id': tag_name})
         )
-    
+
     return tags
