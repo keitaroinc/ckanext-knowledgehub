@@ -174,6 +174,21 @@ def research_question_update(context, data_dict):
         raise logic.ValidationError(errors)
 
     user = context.get('user')
+
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        research_question.tags = tags
+
     data['modified_by'] = model.User.by_name(user.decode('utf8')).id
 
     filter = {'id': id}
@@ -282,6 +297,9 @@ def resource_view_update(context, data_dict):
         model.Session.rollback()
         raise ValidationError(errors)
 
+    if not data_dict['tags']:
+        data['tags'] = None
+
     context['resource_view'] = resource_view
     context['resource'] = model.Resource.get(resource_view.resource_id)
     # TODO need to implement custom authorization actions
@@ -321,6 +339,7 @@ def dashboard_update(context, data_dict):
         :param description
         :param title
         :param indicators
+        :param tags
     '''
     check_access('dashboard_update', context)
 
@@ -344,10 +363,24 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description', 'indicators', 'source', 'type']
+    items = ['name', 'title', 'description', 'indicators', 'source', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
+    
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        dashboard.tags = tags
 
     dashboard_type = data.get('type')
     if dashboard_type != 'external':

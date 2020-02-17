@@ -185,6 +185,20 @@ def research_question_create(context, data_dict):
         modified_at=modified_at
     )
 
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        research_question.tags = tags
+
     research_question.save()
 
     research_question_data = _table_dictize(research_question, context)
@@ -329,6 +343,7 @@ def dashboard_create(context, data_dict):
         :param type
         :param source
         :param indicators
+        :param tags
     '''
     check_access('dashboard_create', context)
     session = context['session']
@@ -342,7 +357,7 @@ def dashboard_create(context, data_dict):
 
     dashboard = Dashboard()
 
-    items = ['name', 'title', 'description', 'type']
+    items = ['name', 'title', 'description', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
@@ -358,6 +373,20 @@ def dashboard_create(context, data_dict):
 
     if indicators is not None:
         dashboard.indicators = indicators
+
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        dashboard.tags = tags
 
     user = context.get('user')
     dashboard.created_by = model.User.by_name(user.decode('utf8')).id
@@ -455,7 +484,7 @@ def resource_validation_create(context, data_dict):
         id=dataset,
         resource_id=resource,
         qualified=True
-        )
+    )
     status = 'not_validated'
 
     if data.get('admin'):
@@ -797,7 +826,7 @@ def resource_validate_create(context, data_dict):
 
     resource_validate.when = datetime.datetime.utcnow().strftime(
         '%Y-%m-%dT%H:%M:%S'
-        )
+    )
     resource_validate.who = name
     resource_validate.resource = data.get('resource')
 

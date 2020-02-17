@@ -25,6 +25,7 @@ from ckanext.knowledgehub.model.resource_validate import (
 )
 from ckanext.knowledgehub.model.user_profile import setup as user_profile_setup
 from ckanext.knowledgehub.model.keyword import setup as keyword_setup
+from ckanext.knowledgehub.model.visualization import setup as extend_resource_view_setup
 
 
 log = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ def init():
         resource_validate_setup()
         user_profile_setup()
         keyword_setup()
+        extend_resource_view_setup()
     except Exception as e:
         error_shout(e)
     else:

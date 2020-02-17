@@ -80,7 +80,8 @@ def resource_view_schema():
         'resource_id': [not_empty],
         'title': [not_empty, unicode],
         'description': [ignore_missing, unicode],
-        'view_type': [not_empty, unicode]
+        'view_type': [not_empty, unicode],
+        'tags': [ignore_missing, unicode],
     }
 
 
