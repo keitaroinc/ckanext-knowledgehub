@@ -114,7 +114,7 @@ def user_profile_show(context, data_dict):
     if not user:
         return {'success': False}
     if data_dict.get('user_id'):
-        if user.sysadmin:
+        if getattr(user, 'sysadmin', False):
             # Sysadmin can read all profiles
             return {'success': True}
         # Must be sysadmin to see all profiles

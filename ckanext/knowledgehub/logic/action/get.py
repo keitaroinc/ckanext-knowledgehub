@@ -1408,7 +1408,7 @@ def user_profile_show(context, data_dict):
     check_access('user_profile_show', context)
 
     user = context.get('auth_user_obj')
-    if user.sysadmin:
+    if getattr(user, 'sysadmin', False):
         if data_dict.get('user_id'):
             return _show_user_profile(context, data_dict['user_id'])
 
@@ -1420,7 +1420,7 @@ def user_profile_list(context, data_dict):
 
     Available only for sysadmin users.
     '''
-    check_access('user_profile_list')
+    check_access('user_profile_list', context)
     page = data_dict.get('page', 1)
     limit = data_dict.get('limit', 20)
 

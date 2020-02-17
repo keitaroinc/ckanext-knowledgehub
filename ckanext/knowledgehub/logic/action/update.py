@@ -896,7 +896,7 @@ def user_profile_update(context, data_dict):
     user = context.get('auth_user_obj')
     user_id = user.id
 
-    if user.sysadmin and data_dict.get('user_id'):
+    if getattr(user, 'sysadmin', False) and data_dict.get('user_id'):
         user_id = data_dict['user_id']
 
     profile = UserProfile.by_user_id(user_id)
