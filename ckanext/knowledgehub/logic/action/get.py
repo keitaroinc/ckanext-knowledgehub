@@ -1,4 +1,5 @@
 import logging
+import re
 import os
 import json
 from six import string_types
@@ -747,49 +748,89 @@ def get_last_rnn_corpus(context, data_dict):
         return c.corpus
 
 
+def _get_predictions_db(query):
+    number_predictions = int(
+        config.get(
+            u'ckanext.knowledgehub.rnn.number_predictions',
+            3
+        )
+    )
+
+    text = ' '.join(query.split()[-2:])
+    data_dict = {
+        'q': text,
+        'limit': 10,
+        'order_by': 'created_at desc'
+    }
+    kwh_data = toolkit.get_action('kwh_data_list')({}, data_dict)
+
+    def _get_predict(text, query, index):
+        predict = ''
+        if index != -1:
+            index = index + len(query)
+            for ch in text[index:]:
+                if ch.isalnum():
+                    predict += ch
+                else:
+                    break
+
+        return predict
+
+    def _findall(pattern, text):
+        return [
+            match.start(0) for match in re.finditer(pattern, text)
+        ]
+
+    predictions = []
+    for data in kwh_data.get('data', []):
+        if len(predictions) >= number_predictions:
+            break
+
+        title = data.get('title').lower()
+        for index in _findall(query, title):
+            predict = _get_predict(title, query, index)
+            if predict != '' and predict not in predictions:
+                predictions.append(predict)
+
+        if data.get('description'):
+            description = data.get('description').lower()
+            for index in _findall(query, description):
+                predict = _get_predict(description, query, index)
+                if predict != '' and predict not in predictions:
+                    predictions.append(predict)
+
+    return predictions[:number_predictions]
+
+
 @toolkit.side_effect_free
 def get_predictions(context, data_dict):
     ''' Returns a list of predictions from RNN model and DB based
     on data store in knowledge hub
 
-    :param text: the text for which predictions have to be made
-    :type text: string
+    :param query: the search query for which predictions have to be made
+    :type query: string
     :returns: predictions
     :rtype: list
     '''
+    query = data_dict.get('query')
+    if not query:
+        raise ValidationError({'query': _('Missing value')})
+    if len(query) < int(config.get(
+            u'ckanext.knowledgehub.rnn.sequence_length', 10)):
+        return []
 
-    text = data_dict.get('text')
-    if not text:
-        raise ValidationError({'text': _('Missing value')})
+    if query.isspace():
+        return []
+    query = query.lower()
 
-    predictions = []
-
-    data_dict = {
-        'q': text,
-        'limit': 3,
-        'order_by': 'created_at desc'
-    }
-    kwh_data = toolkit.get_action('kwh_data_list')(context, data_dict)
-    for data in kwh_data.get('data', []):
-        text = text.lower()
-        title = data.get('title').lower()
-        index = title.find(text)
-        if index != -1:
-            index = index + len(text)
-            predict = ''
-            for ch in title[index:]:
-                if ch.isalnum() or ch == ' ':
-                    predict += ch
-                else:
-                    break
-
-            if predict != '':
-                predictions.append(predict)
+    predictions = _get_predictions_db(query)
 
     model = PredictiveSearchModel()
-    predictions.extend(model.predict(text))
+    for p in model.predict(query):
+        if p not in predictions:
+            predictions.append(p)
 
-    return list(set(predictions))
+    return predictions
 
 
 def _search_entity(index, ctx, data_dict):

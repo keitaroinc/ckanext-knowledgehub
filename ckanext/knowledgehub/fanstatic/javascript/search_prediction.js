@@ -65,7 +65,7 @@
 
                         if (text !== '') {
                             api.get('get_predictions', {
-                                text: text
+                                query: text
                             }, true)
                             .done(function (data) {
                                 if (data.success) {
