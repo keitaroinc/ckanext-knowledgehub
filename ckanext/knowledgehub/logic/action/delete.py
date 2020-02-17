@@ -231,13 +231,36 @@ def keyword_delete(context, data_dict):
     check_access('keyword_delete', context)
     if 'id' not in data_dict:
         raise ValidationError({'id': _('Missing Value')})
-    
+
     keyword = toolkit.get_action('keyword_show')(context, data_dict)
 
     for tag in Keyword.get_tags(keyword['id']):
         tag.keyword_id = None
         tag.save()
-    
+
     Session.delete(Keyword.get(keyword['id']))
     Session.commit()
 
+
+def tag_delete_by_name(context, data_dict):
+    '''
+    Remove a tag by its name
+    :param name: `str`, the name of the tag to remove.
+    '''
+    model = context['model']
+
+    if not data_dict['name']:
+        raise ValidationError({'name': _('name not in data')})
+    tag_name = _get_or_bust(data_dict, 'name')
+
+    vocab_id_or_name = data_dict.get('vocabulary_id')
+
+    tag_obj = model.tag.Tag.get(tag_name, vocab_id_or_name)
+
+    if tag_obj is None:
+        raise NotFound(_('Could not find tag "%s"') % tag_name)
+
+    check_access('tag_delete_by_name', context, data_dict)
+
+    tag_obj.delete()
+    model.repo.commit()

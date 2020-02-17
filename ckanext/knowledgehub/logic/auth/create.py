@@ -117,8 +117,8 @@ def resource_validate_create(context, data_dict):
     '''
         Authorization check for validation status of resource
     '''
-    # sysadmins only
-    return {'success': False}
+    # all users
+    return {'success': True}
 
 
 def keyword_create(context, data_dict):

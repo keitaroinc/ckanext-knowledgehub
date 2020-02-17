@@ -151,6 +151,7 @@ def research_question_update(context, data_dict):
     :type state: string
     '''
     check_access('research_question_update', context)
+    print(data_dict)
 
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
@@ -280,10 +281,15 @@ def resource_view_update(context, data_dict):
     :rtype: string
 
     '''
+    print("context:")
+    print(context)
+    print("data_dict:")
+    print(data_dict)
     model = context['model']
     id = _get_or_bust(data_dict, "id")
 
     resource_view = model.ResourceView.get(id)
+    print(resource_view)
     if not resource_view:
         raise NotFound
 
@@ -360,11 +366,13 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description', 'indicators', 'source', 'type', 'tags']
+    items = [
+        'name', 'title', 'description', 'indicators', 'source', 'type', 'tags'
+        ]
 
     for item in items:
         setattr(dashboard, item, data.get(item))
-    
+
     tags = data_dict.get('tags', '')
     if tags:
         for tag in tags.split(','):
@@ -561,7 +569,7 @@ def _patch_data_quality(context, data_dict, _type):
     # validate input
     dimensions = ['completeness', 'uniqueness', 'timeliness', 'validity',
                   'accuracy', 'consistency']
-    for dimension in  dimensions:
+    for dimension in dimensions:
         values = data_dict.get(dimension)
         if values:
             validators = _dq_validators[dimension]
@@ -584,13 +592,13 @@ def _patch_data_quality(context, data_dict, _type):
     db_metric = DataQualityMetrics.get(_type, data_dict['id'])
     if not db_metric:
         db_metric = DataQualityMetrics(type=_type, ref_id=data_dict['id'])
-    
+
     db_metric.metrics = db_metric.metrics or {}
-    
+
     for field, values in data_dict.items():
         if not field in dimensions:
             continue
-        setattr(db_metric, field, values['value']) # set the main metric
+        setattr(db_metric, field, values['value'])  # set the main metric
         db_metric.metrics[field] = values
         db_metric.metrics[field]['manual'] = values.get('manual', True)
 
@@ -600,7 +608,7 @@ def _patch_data_quality(context, data_dict, _type):
     results = {}
     for dimension in dimensions:
         results[dimension] = getattr(db_metric, dimension)
-    
+
     results['calculated_on'] = db_metric.modified_at.isoformat()
     results['details'] = db_metric.metrics
 
@@ -850,13 +858,13 @@ def keyword_update(context, data_dict):
         the tag does not exist, it will be created and added to this keyword.
         The tags that were removed from this keyword will be set as free tags
         and will not be removed.
-    
+
     :returns: `dict`, the updated keyword.
     '''
     check_access('keyword_update', context)
     if 'name' not in data_dict:
         raise ValidationError({'name': _('Missing Value')})
-    
+
     existing = Keyword.by_name(data_dict['name'])
     if not existing:
         raise logic.NotFound(_('Not found'))
@@ -879,7 +887,7 @@ def keyword_update(context, data_dict):
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
-        
+
         db_tag = model.Tag.get(tag_dict['id'])
         db_tag.keyword_id = existing.id
         db_tag.save()
@@ -887,3 +895,149 @@ def keyword_update(context, data_dict):
         kwd_dict['tags'].append(tag_dict)
 
     return kwd_dict
+
+
+def update_tag_in_rq(context, data_dict):
+    '''
+    Updates the tags for a research question.
+
+    :param id: `str`, the id of the research question to update.
+    :param name: `str`, the name of the research question to update.
+    :param tag_new: `str`, the new tag of the research question.
+    :param tag_old: `str`, the old tag of the research question.
+
+    :returns: the updated research question.
+    :rtype: dictionary
+    '''
+
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+    id_or_name = data_dict.get('id') or data_dict.get('name')
+    new_tag = data_dict.get('tag_new')
+
+    research_question = ResearchQuestion.get(id_or_name=id_or_name).first()
+    if not research_question:
+        log.debug('Could not find research question %s', id)
+
+    rq_dict = research_question.as_dict()
+
+    tag_list = rq_dict.get('tags').split(',')
+    for tag in tag_list:
+        if tag == data_dict.get('tag_old'):
+            tag_list.remove(tag)
+            tag_list.append(new_tag)
+    str1 = ","
+    tags = str1.join(tag_list)
+
+    result = toolkit.get_action('research_question_update')(context, {
+                'id': rq_dict.get('id'),
+                'name': rq_dict.get('name'),
+                'title': rq_dict.get('title'),
+                'tags': tags
+                })
+
+    return result
+
+
+def update_tag_in_dash(context, data_dict):
+    '''
+    Updates the tags for a dashboard.
+
+    :param id: `str`, the id of the dashboard to update.
+    :param name: `str`, the name of the dashboard to update.
+    :param tag_new: `str`, the new tag of the dashboard.
+    :param tag_old: `str`, the old tag of the dashboard.
+
+    :returns: the updated dashboard.
+    :rtype: dictionary
+    '''
+
+    id = data_dict.get("id")
+    new_tag = data_dict.get('tag_new')
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+    name_or_id = data_dict.get("id") or data_dict.get("name")
+
+    if name_or_id is None:
+        raise ValidationError({'id': _('Missing value')})
+
+    dash = Dashboard.get(name_or_id)
+    if not dash:
+        log.debug('Could not find dashboard %s', id)
+    dash_dict = dash.as_dict()
+
+    tag_list = dash_dict.get('tags').split(',')
+    for tag in tag_list:
+        if tag == data_dict.get('tag_old'):
+            tag_list.remove(tag)
+            tag_list.append(new_tag)
+    str1 = ","
+    tags = str1.join(tag_list)
+
+    result = toolkit.get_action('dashboard_update')(context, {
+                'id': dash_dict.get('id'),
+                'name': dash_dict.get('name'),
+                'title': dash_dict.get('title'),
+                'description': dash_dict.get('description'),
+                'type': dash_dict.get('type'),
+                'source': dash_dict.get('source'),
+                'indicators': dash_dict.get('indicators'),
+                'created_by': dash_dict.get('created_by'),
+                'tags': tags
+                })
+
+    return result
+
+
+def update_tag_in_resource_view(context, data_dict):
+    '''
+    Updates the tags for a resource view.
+
+    :param id: `str`, the id of the resource view to update.
+    :param name: `str`, the name of the resource view to update.
+    :param tag_new: `str`, the new tag of the resource view.
+    :param tag_old: `str`, the old tag of the resource view.
+
+    :returns: the updated resource view.
+    :rtype: dictionary
+    '''
+
+    new_tag = data_dict.get('new_tag')
+    old_tag = data_dict.get('old_tag')
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+
+    visual = model.Session.query(model.ResourceView).filter_by(id=id)
+    if not visual:
+        log.debug('Could not find visualization %s', id)
+    visual_element = visual.order_by(model.ResourceView.order).all()[0]
+
+    visual_dict = {
+        'id': visual_element.id,
+        'resource_id': visual_element.resource_id,
+        'title': visual_element.title,
+        'description': visual_element.description,
+        'view_type': visual_element.view_type,
+        'order': visual_element.order,
+        'config': visual_element.config,
+        'tags': visual_element.tags
+    }
+
+    if visual_dict.get('tags'):
+        tag_list = visual_dict.get('tags').split(',')
+        for tag in tag_list:
+            if tag == old_tag:
+                tag_list.remove(tag)
+                tag_list.append(new_tag)
+                str1 = ","
+                tags = str1.join(tag_list)
+                visual_element.tags = tags
+                visual_element.save()
+                visual_element.commit()
+                toolkit.get_action('tag_create')(context, {
+                    'name': new_tag,
+                })
+
+                return visual_element
