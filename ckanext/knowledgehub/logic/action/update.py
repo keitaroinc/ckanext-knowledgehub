@@ -281,15 +281,11 @@ def resource_view_update(context, data_dict):
     :rtype: string
 
     '''
-    print("context:")
-    print(context)
-    print("data_dict:")
-    print(data_dict)
     model = context['model']
     id = _get_or_bust(data_dict, "id")
 
     resource_view = model.ResourceView.get(id)
-    print(resource_view)
+
     if not resource_view:
         raise NotFound
 
