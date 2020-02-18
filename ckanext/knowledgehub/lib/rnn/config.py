@@ -1,6 +1,5 @@
 import os
 import time
-import logging
 
 from ckan.common import config
 

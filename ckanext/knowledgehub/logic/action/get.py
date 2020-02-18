@@ -748,7 +748,7 @@ def get_last_rnn_corpus(context, data_dict):
         return c.corpus
 
 
-def _get_predictions_db(query):
+def _get_predictions_from_db(query):
     number_predictions = int(
         config.get(
             u'ckanext.knowledgehub.rnn.number_predictions',
@@ -756,7 +756,7 @@ def _get_predictions_db(query):
         )
     )
 
-    text = ' '.join(query.split()[-2:])
+    text = ' '.join(query.split()[-3:])
     data_dict = {
         'q': text,
         'limit': 10,
@@ -823,7 +823,7 @@ def get_predictions(context, data_dict):
         return []
     query = query.lower()
 
-    predictions = _get_predictions_db(query)
+    predictions = _get_predictions_from_db(query)
 
     model = PredictiveSearchModel()
     for p in model.predict(query):
