@@ -42,7 +42,7 @@ class PredictiveSearchModel(PredictiveSearchConfig):
             preds = self.model.predict(x, verbose=0)[0]
             next_index = self.sample(preds, top_n=1)[0]
             next_char = self.indices_char[next_index]
-            if next_char in ['?', '!', '.', ',', ' ']:
+            if not next_char.isalnum():
                 return completion
 
             text = text[1:] + next_char
