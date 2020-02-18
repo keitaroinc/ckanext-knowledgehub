@@ -9,6 +9,7 @@ from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 from ckan.model.meta import Session
+from ckan.logic.action.get import tag_show as ckan_tag_show
 
 from ckanext.knowledgehub.model import Theme
 from ckanext.knowledgehub.model import SubThemes
@@ -1219,6 +1220,8 @@ def tag_list(context, data_dict):
     :rtype: list of dictionaries
 
     '''
+    from ckanext.knowledgehub.model.keyword import ExtendedTag
+    
     model = context['model']
 
     vocab_id_or_name = data_dict.get('vocabulary_id')
@@ -1234,11 +1237,16 @@ def tag_list(context, data_dict):
     elif vocab_id_or_name:
         tags = model.Tag.all(vocab_id_or_name)
     else:
-        tags = Session.query(model.Tag).autoflush(False).all()
+        tags = ExtendedTag.get_all()
 
     if tags:
         if all_fields:
-            tag_list = model_dictize.tag_list_dictize(tags, context)
+            tag_list = [{
+                'id': tag.id,
+                'name': tag.name,
+                'vocabulary_id': tag.vocabulary_id,
+                'keyword_id': tag.keyword_id
+            } for tag in tags]
         else:
             tag_list = [tag.name for tag in tags]
     else:
@@ -1358,3 +1366,31 @@ def keyword_list(context, data_dict):
         }))
     
     return results
+
+
+@toolkit.side_effect_free
+def tag_show(context, data_dict):
+    '''Return the details of a tag and all its datasets.
+
+    :param id: the name or id of the tag
+    :type id: string
+    :param vocabulary_id: the id or name of the tag vocabulary that the tag is
+        in - if it is not specified it will assume it is a free tag.
+        (optional)
+    :type vocabulary_id: string
+    :param include_datasets: include a list of the tag's datasets. (Up to a
+        limit of 1000 - for more flexibility, use package_search - see
+        :py:func:`package_search` for an example.)
+        (optional, default: ``False``)
+    :type include_datasets: bool
+
+    :returns: the details of the tag, including a list of all of the tag's
+        datasets and their details
+    :rtype: dictionary
+    '''
+
+    tag = ckan_tag_show(context, data_dict)
+    keyword_id = Keyword.get_keyword_id_for_tag(tag['id'])
+    tag['keyword_id'] = keyword_id
+
+    return tag

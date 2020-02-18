@@ -26,6 +26,7 @@ from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model.keyword import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -817,6 +818,7 @@ def tag_update(context, data_dict):
 
     try:
         check_access('tag_create', context, data_dict)
+        check_access('keyword_show', context, {'id': data_dict.get('keyword_id')})
     except NotAuthorized:
         raise NotAuthorized(_(u'Need to be system '
                               u'administrator to administer'))
@@ -832,8 +834,25 @@ def tag_update(context, data_dict):
 
     tag.name = data_dict.get('name', tag.name)
 
+    tag_dict = toolkit.get_action('tag_show')(context, data_dict)
+    
+    if tag_dict['keyword_id'] != data_dict.get('keyword_id'):
+        old_kwd = toolkit.get_action('keyword_show')(context, {'id': tag_dict['keyword_id']})
+        old_kwd_tags = old_kwd['tags']
+
+        for tg in old_kwd_tags:
+            if tg['name'] == tag.name:
+                old_kwd_tags.remove(tg)
+
+        old_kwd_tag_list = []
+        for tg in old_kwd_tags:
+            tg_name = tg['name']
+            old_kwd_tag_list.append(tg_name)
+
+        here = keyword_update(context, {'name': old_kwd['name'], 'tags': old_kwd_tag_list})
+
     # Force the vocabulary id update always.
-    tag.keyword_id = data_dict.get('keyword_id')
+    # tag.keyword_id = 
 
     session = context['session']
     tag.save()
@@ -880,7 +899,7 @@ def keyword_update(context, data_dict):
                 'name': tag,
             })
         
-        db_tag = model.Tag.get(tag_dict['id'])
+        db_tag = ExtendedTag.get(tag_dict['id'])
         db_tag.keyword_id = existing.id
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)

@@ -985,6 +985,7 @@ def keyword_create(context, data_dict):
 
         db_tag = model.Tag.get(tag_dict['id'])
         db_tag.keyword_id = keyword.id
+        print db_tag
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)
         kwd_dict['tags'].append(tag_dict)
