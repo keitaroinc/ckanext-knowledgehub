@@ -26,6 +26,7 @@ from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model.keyword import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -296,7 +297,7 @@ def resource_view_update(context, data_dict):
         model.Session.rollback()
         raise ValidationError(errors)
 
-    if not data_dict['tags']:
+    if not data_dict.get('tags'):
         data['tags'] = None
 
     context['resource_view'] = resource_view
@@ -362,11 +363,12 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description', 'indicators', 'source', 'type', 'tags']
+    items = ['name', 'title', 'description',
+             'indicators', 'source', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
-    
+
     tags = data_dict.get('tags', '')
     if tags:
         for tag in tags.split(','):
@@ -591,7 +593,8 @@ def _patch_data_quality(context, data_dict, _type):
                     try:
                         _ftype(value)
                     except Exception as e:
-                        raise ValidationError({field: _('Invalid Value' + "(%s) '%s'" % (dimension, value))})
+                        raise ValidationError(
+                            {field: _('Invalid Value' + "(%s) '%s'" % (dimension, value))})
                 else:
                     try:
                         values[field] = _ftype(value)
@@ -657,7 +660,7 @@ def resource_validate_update(context, data_dict):
 
     when = datetime.datetime.utcnow().strftime(
         '%Y-%m-%dT%H:%M:%S'
-        )
+    )
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
 
@@ -669,10 +672,10 @@ def resource_validate_update(context, data_dict):
 
     filter = {'resource': id}
     rvu = {
-            'what': status,
-            'when': when,
-            'who': name
-        }
+        'what': status,
+        'when': when,
+        'who': name
+    }
     st = ResourceValidate.update(filter, rvu)
 
     return st.as_dict()
@@ -817,18 +820,15 @@ def resource_validation_revert(context, data_dict):
 
 def tag_update(context, data_dict):
     ''' Update the tag name or vocabulary
-
     :param id: id or name of the tag
     :type id: string
     :param name: the name of the tag
     :type name: string
     :param vocabulary_id: the id of the vocabulary (optional)
     :type vocabulary_id: string
-
     :returns: the updated tag
     :rtype: dictionary
     '''
-
     model = context['model']
 
     try:
@@ -842,7 +842,7 @@ def tag_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    tag = model.Tag.get(data.get('id'))
+    tag = ExtendedTag.get_with_keyword(data.get('id'))
     if not tag:
         raise NotFound(_('Tag was not found'))
 
@@ -896,7 +896,7 @@ def keyword_update(context, data_dict):
                 'name': tag,
             })
 
-        db_tag = model.Tag.get(tag_dict['id'])
+        db_tag = ExtendedTag.get_with_keyword(tag_dict['id'])
         db_tag.keyword_id = existing.id
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)

@@ -41,6 +41,7 @@ from ckanext.knowledgehub.model import (
     DataQualityMetrics as DataQualityMetricsModel,
     ResourceValidate,
 )
+from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.datastore.logic.action import datastore_create
 from pysolr import Results
@@ -72,6 +73,7 @@ class ActionsBase(helpers.FunctionalTestBase):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.load('datapusher')
+        extend_tag_table()
 
     @classmethod
     def teardown_class(self):
@@ -239,7 +241,7 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(rf.get('dataset'), dataset.get('id'))
         assert_equals(rf.get('resource'), resource.get('id'))
- 
+
     def test_resource_validation_create(self):
         user = factories.Sysadmin()
         context = {
@@ -1308,7 +1310,7 @@ class TestKWHUpdateActions(ActionsBase):
         rsc_updated = update_actions.resource_update(context, data_dict)
 
         assert_not_equals(rsc_updated, None)
-    
+
     def test_resource_validation_update(self):
         user = factories.Sysadmin()
         context = {
@@ -1352,7 +1354,7 @@ class TestKWHUpdateActions(ActionsBase):
         val_updated = update_actions.resource_validation_update(context, data_dict)
 
         assert_equals(val_updated.get('admin'), data_dict.get('admin'))
-    
+
     def test_resource_validation_status(self):
         user = factories.Sysadmin()
         context = {
@@ -1385,7 +1387,7 @@ class TestKWHUpdateActions(ActionsBase):
             context, data_dict)
 
         assert_equals(val_updated.get('status'), 'validated')
-    
+
     def test_resource_validation_revert(self):
         user = factories.Sysadmin()
         context = {
@@ -1963,7 +1965,7 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                 'value': 90.0,
                 'total': 100,
                 'complete': 90,
-            }, 
+            },
             'consistency': {
                 'value': 80.0,
                 'total': 100,
@@ -2010,7 +2012,7 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                     'total': 100,
                     'complete': 90,
                     'manual': True,
-                }, 
+                },
                 'consistency': {
                     'value': 80.0,
                     'total': 100,
@@ -2073,7 +2075,7 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                 'value': 90.0,
                 'total': 100,
                 'complete': 90,
-            }, 
+            },
             'consistency': {
                 'value': 80.0,
                 'total': 100,
@@ -2120,7 +2122,7 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                     'total': 100,
                     'complete': 90,
                     'manual': True,
-                }, 
+                },
                 'consistency': {
                     'value': 80.0,
                     'total': 100,
@@ -2148,6 +2150,8 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                 }
             },
         })
+
+
 class TestTagsActions(ActionsBase):
 
     __ctx = get_context()
