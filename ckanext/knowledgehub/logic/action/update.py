@@ -362,12 +362,24 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = [
-        'name', 'title', 'description', 'indicators', 'source', 'type', 'tags'
-        ]
+    items = ['name', 'title', 'description', 'indicators', 'source', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
+    
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        dashboard.tags = tags
 
     tags = data_dict.get('tags', '')
     if tags:
