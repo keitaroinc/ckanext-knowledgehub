@@ -7,7 +7,7 @@ from ckan.common import config
 class PredictiveSearchConfig(object):
     def __init__(self):
         self.corpus_length = int(config.get(
-            u'ckanext.knowledgehub.rnn.min_length_corpus', 1000))
+            u'ckanext.knowledgehub.rnn.min_length_corpus', 10000))
         self.sequence_length = config.get(
             u'ckanext.knowledgehub.rnn.sequence_length', 10)
         self.step = int(
