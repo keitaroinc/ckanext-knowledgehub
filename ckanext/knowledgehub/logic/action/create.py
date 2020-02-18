@@ -947,6 +947,7 @@ def tag_create(context, data_dict):
         model.repo.commit()
 
     log.debug("Created tag '%s' " % tag)
+    tag.__class__ = ExtendedTag
     return model_dictize.tag_dictize(tag, context)
 
 

@@ -295,7 +295,7 @@ def resource_view_update(context, data_dict):
         model.Session.rollback()
         raise ValidationError(errors)
 
-    if not data_dict['tags']:
+    if not data_dict.get('tags'):
         data['tags'] = None
 
     context['resource_view'] = resource_view

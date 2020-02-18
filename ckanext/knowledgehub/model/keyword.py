@@ -104,8 +104,15 @@ def column_exists_in_db(column_name, table_name, engine):
     return False
 
 
+_tag_column_extended = False
+
 def extend_tag_table():
     from ckan import model
+    global _tag_column_extended
+    if _tag_column_extended:
+        return
+    _tag_column_extended = True
+
     engine = model.meta.engine
 
     tag_table.append_column(Column(
