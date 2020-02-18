@@ -160,6 +160,7 @@ ckan.module('user-profile', function($){
      */
     var ResearchQuestion = function(template, data){
         Component.prototype.constructor.call(this, template);
+        $(this.el).removeClass('research-question-template')
         this.applyData(data);
         $('.research-question-remove', this.el).on('click', function(){
             new DeleteModal(ellipsis(data.title, 30), function(){
@@ -195,7 +196,9 @@ ckan.module('user-profile', function($){
      */
     var Keyword = function(template, data){
         Component.prototype.constructor.call(this, template);
+        $(this.el).removeClass('keyword-template')
         this.tagTemplate = $('.keyword-tag-template', this.el).clone()
+        $(this.tagTemplate).removeClass('keyword-tag-template')
         $('.keyword-tag-template', this.el).remove();
         this.applyData(data);
         $('.keyword-remove', this.el).on('click', function(){
@@ -224,6 +227,7 @@ ckan.module('user-profile', function($){
      */
     var Tag = function(template, data){
         Component.prototype.constructor.call(this, template);
+        $(this.el).removeClass('tag-template')
         this.applyData(data);
         $('.tag-remove', this.el).on('click', function(){
             new DeleteModal(ellipsis(data.name, 30), function(){
@@ -366,7 +370,8 @@ ckan.module('user-profile', function($){
                 .done(function(){
                     // add component
                     var component = this.newComponent(interest, data);
-                    this.components[interest] = component;
+                    this.components[interest] = this.components[interest] || {};
+                    this.components[interest][data.id] = component;
                     component.on('delete', function(_, data){
                         this.deleteInterest(interest, data)
                     }.bind(this));
