@@ -1445,7 +1445,7 @@ def visual_search_tag(context, data_dict):
 
 def group_tags(context, data_dict):
     '''
-    Groups wrongly written tags with the correct tag
+    Group wrongly written tags and replace them with the correct tag
 
     :param wrong_tags: `list` of `str`, the wrong tags to be grouped.
     :param new_tag: `str`, the correct tag.
