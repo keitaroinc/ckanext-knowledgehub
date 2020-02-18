@@ -802,62 +802,34 @@ def resource_validation_revert(context, data_dict):
 
 def tag_update(context, data_dict):
     ''' Update the tag name or vocabulary
-
     :param id: id or name of the tag
     :type id: string
     :param name: the name of the tag
     :type name: string
     :param vocabulary_id: the id of the vocabulary (optional)
     :type vocabulary_id: string
-
     :returns: the updated tag
     :rtype: dictionary
     '''
-
     model = context['model']
-
     try:
         check_access('tag_create', context, data_dict)
-        check_access('keyword_show', context, {'id': data_dict.get('keyword_id')})
     except NotAuthorized:
         raise NotAuthorized(_(u'Need to be system '
                               u'administrator to administer'))
-
     schema = knowledgehub_schema.tag_update_schema()
     data, errors = _df.validate(data_dict, schema, context)
     if errors:
         raise ValidationError(errors)
-
-    tag = model.Tag.get(data.get('id'))
+    tag = ExtendedTag.get_with_keyword(data.get('id'))
     if not tag:
         raise NotFound(_('Tag was not found'))
-
     tag.name = data_dict.get('name', tag.name)
-
-    tag_dict = toolkit.get_action('tag_show')(context, data_dict)
-    
-    if tag_dict['keyword_id'] != data_dict.get('keyword_id'):
-        old_kwd = toolkit.get_action('keyword_show')(context, {'id': tag_dict['keyword_id']})
-        old_kwd_tags = old_kwd['tags']
-
-        for tg in old_kwd_tags:
-            if tg['name'] == tag.name:
-                old_kwd_tags.remove(tg)
-
-        old_kwd_tag_list = []
-        for tg in old_kwd_tags:
-            tg_name = tg['name']
-            old_kwd_tag_list.append(tg_name)
-
-        here = keyword_update(context, {'name': old_kwd['name'], 'tags': old_kwd_tag_list})
-
     # Force the vocabulary id update always.
-    # tag.keyword_id = 
-
+    tag.keyword_id = data_dict.get('keyword_id')
     session = context['session']
     tag.save()
     session.commit()
-
     return _table_dictize(tag, context)
 
 
@@ -899,7 +871,7 @@ def keyword_update(context, data_dict):
                 'name': tag,
             })
         
-        db_tag = ExtendedTag.get(tag_dict['id'])
+        db_tag = ExtendedTag.get_with_keyword(tag_dict['id'])
         db_tag.keyword_id = existing.id
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)

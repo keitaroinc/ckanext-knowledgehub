@@ -79,15 +79,19 @@ class ExtendedTag(Tag):
 
     @classmethod
     def get_all(cls, *args, **kwargs):
-        query = Session.query(tag_table.c.id, tag_table.c.name,
-                              tag_table.c.vocabulary_id, tag_table.c.keyword_id)
+        query = Session.query(ExtendedTag)
         return query.all()
+    
+    @classmethod
+    def get_with_keyword(cls, ref):
+        tag = Tag.get(ref)
+        if tag:
+            query = Session.query(ExtendedTag).filter(tag_table.c.id == tag.id) 
+            return query.first()
+        return None
 
 
 mapper(Keyword, keyword_table)
-mapper(ExtendedTag, tag_table)
-
-Tag.keyword_id = ExtendedTag.keyword_id
 
 
 def column_exists_in_db(column_name, table_name, engine):
@@ -110,13 +114,14 @@ def extend_tag_table():
     ))
 
     if column_exists_in_db('keyword_id', 'tag', engine):
+        mapper(ExtendedTag, tag_table)
         return
 
     # Add the column in DB
     engine.execute('alter table tag '
                    'add column keyword_id character varying(100)')
+    mapper(ExtendedTag, tag_table)
 
 
 def setup():
-    extend_tag_table()
     metadata.create_all(engine)
