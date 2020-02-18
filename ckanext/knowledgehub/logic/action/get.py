@@ -1225,7 +1225,7 @@ def tag_list(context, data_dict):
 
     '''
     from ckanext.knowledgehub.model.keyword import ExtendedTag
-    
+
     model = context['model']
 
     vocab_id_or_name = data_dict.get('vocabulary_id')
@@ -1340,15 +1340,15 @@ def keyword_show(context, data_dict):
     keyword = Keyword.get(data_dict['id'])
     if not keyword:
         keyword = Keyword.by_name(data_dict['id'])
-    
+
     if not keyword:
         raise logic.NotFound(_('No such keyword'))
-    
+
     keyword_dict = _table_dictize(keyword, context)
     keyword_dict['tags'] = []
     for tag in Keyword.get_tags(keyword.id):
         keyword_dict['tags'].append(_table_dictize(tag, context))
-    
+
     return keyword_dict
 
 
@@ -1366,31 +1366,12 @@ def keyword_list(context, data_dict):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
-    
+
     return results
 
 
 @toolkit.side_effect_free
 def tag_show(context, data_dict):
-    '''Return the details of a tag and all its datasets.
-
-    :param id: the name or id of the tag
-    :type id: string
-    :param vocabulary_id: the id or name of the tag vocabulary that the tag is
-        in - if it is not specified it will assume it is a free tag.
-        (optional)
-    :type vocabulary_id: string
-    :param include_datasets: include a list of the tag's datasets. (Up to a
-        limit of 1000 - for more flexibility, use package_search - see
-        :py:func:`package_search` for an example.)
-        (optional, default: ``False``)
-    :type include_datasets: bool
-
-    :returns: the details of the tag, including a list of all of the tag's
-        datasets and their details
-    :rtype: dictionary
-    '''
-
     '''Return the details of a tag and all its datasets.
 
     :param id: the name or id of the tag
