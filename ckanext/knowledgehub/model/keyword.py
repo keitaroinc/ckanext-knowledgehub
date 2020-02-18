@@ -81,12 +81,12 @@ class ExtendedTag(Tag):
     def get_all(cls, *args, **kwargs):
         query = Session.query(ExtendedTag)
         return query.all()
-    
+
     @classmethod
     def get_with_keyword(cls, ref):
         tag = Tag.get(ref)
         if tag:
-            query = Session.query(ExtendedTag).filter(tag_table.c.id == tag.id) 
+            query = Session.query(ExtendedTag).filter(tag_table.c.id == tag.id)
             return query.first()
         return None
 
