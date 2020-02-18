@@ -768,8 +768,8 @@ def _get_predictions_db(query):
         predict = ''
         if index != -1:
             index = index + len(query)
-            for ch in text[index:]:
-                if ch.isalnum():
+            for i, ch in enumerate(text[index:]):
+                if ch.isalnum() or (i == 0 and ch == ' '):
                     predict += ch
                 else:
                     break
