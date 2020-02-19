@@ -68,7 +68,7 @@ class KWHData(DomainObject):
             Session.delete(obj)
             Session.commit()
         else:
-            raise logic.NotFound
+            raise logic.NotFound('data not found')
 
 
 kwh_data_table = Table(
