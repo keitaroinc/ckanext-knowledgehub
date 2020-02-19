@@ -277,11 +277,12 @@ class TestKWHCreateActions(ActionsBase):
 
         data_dict = {
             'type': 'theme',
-            'content': 'Refugees in Syria'
+            'title': 'Refugees in Syria',
+            'description': 'Number of refugees in Syria 2020'
         }
         kwh_data = create_actions.kwh_data_create(context, data_dict)
 
-        assert_equals(kwh_data.get('content'), data_dict.get('content'))
+        assert_equals(kwh_data.get('title'), data_dict.get('title'))
 
     def test_corpus_create(self):
         user = factories.Sysadmin()
@@ -768,9 +769,10 @@ class TestKWHGetActions(ActionsBase):
 
         data_dict = {
             'type': 'theme',
-            'content': 'Refugees in Syria'
+            'title': 'Refugees in Syria',
+            'description': 'Number of refugees in Syria 2020'
         }
-        kwh_data = create_actions.kwh_data_create(context, data_dict)
+        create_actions.kwh_data_create(context, data_dict)
 
         kwh_data_list = get_actions.kwh_data_list(context, {})
 
@@ -789,7 +791,7 @@ class TestKWHGetActions(ActionsBase):
         data_dict = {
             'corpus': 'KHW corpus'
         }
-        kwh_corpus = create_actions.corpus_create(context, data_dict)
+        create_actions.corpus_create(context, data_dict)
 
         last_rnn_corpus = get_actions.get_last_rnn_corpus(context, {})
 
@@ -1515,9 +1517,10 @@ class TestKWHUpdateActions(ActionsBase):
 
         data_dict = {
             'type': 'theme',
-            'content': 'Refugees in Syria'
+            'title': 'Refugees in Syria',
+            'description': 'Number of refugees in Syria 2020'
         }
-        kwh_data = create_actions.kwh_data_create(context, data_dict)
+        create_actions.kwh_data_create(context, data_dict)
 
         data_dict = {
             'type': 'theme',
@@ -2150,6 +2153,8 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                 }
             },
         })
+
+
 class TestTagsActions(ActionsBase):
 
     __ctx = get_context()
