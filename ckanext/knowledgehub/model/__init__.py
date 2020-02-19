@@ -12,7 +12,7 @@ from ckanext.knowledgehub.model.query import UserQuery, UserQueryResult
 from ckanext.knowledgehub.model.data_quality import DataQualityMetrics
 from ckanext.knowledgehub.model.resource_validate import ResourceValidate
 from ckanext.knowledgehub.model.user_profile import UserProfile
-from ckanext.knowledgehub.model.keyword import Keyword
+from ckanext.knowledgehub.model.keyword import Keyword, ExtendedTag
 
 
 __all__ = [
@@ -34,4 +34,5 @@ __all__ = [
     'UserQueryResult',
     'UserProfile',
     'Visualization',
+    'ExtendedTag',
 ]

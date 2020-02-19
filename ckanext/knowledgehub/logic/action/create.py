@@ -38,6 +38,7 @@ from ckanext.knowledgehub.model import UserQuery
 from ckanext.knowledgehub.model import UserQueryResult
 from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.model import UserProfile
+from ckanext.knowledgehub.model import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -947,6 +948,7 @@ def tag_create(context, data_dict):
         model.repo.commit()
 
     log.debug("Created tag '%s' " % tag)
+    tag.__class__ = ExtendedTag
     return model_dictize.tag_dictize(tag, context)
 
 
@@ -984,7 +986,7 @@ def keyword_create(context, data_dict):
                 'name': tag,
             })
 
-        db_tag = model.Tag.get(tag_dict['id'])
+        db_tag = ExtendedTag.get_with_keyword(tag_dict['id'])
         db_tag.keyword_id = keyword.id
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)

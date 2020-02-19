@@ -42,6 +42,7 @@ from ckanext.knowledgehub.model import (
     DataQualityMetrics as DataQualityMetricsModel,
     ResourceValidate,
 )
+from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.datastore.logic.action import datastore_create
 from pysolr import Results
@@ -73,6 +74,7 @@ class ActionsBase(helpers.FunctionalTestBase):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.load('datapusher')
+        extend_tag_table()
 
     @classmethod
     def teardown_class(self):
