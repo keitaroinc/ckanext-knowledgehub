@@ -77,10 +77,11 @@ class ActionsBase(helpers.FunctionalTestBase):
 
     @classmethod
     def teardown_class(self):
-        if not plugins.plugin_loaded('datastore'):
-            plugins.unload('datastore')
-        if not plugins.plugin_loaded('datapusher'):
-            plugins.unload('datapusher')
+        pass
+        # if not plugins.plugin_loaded('datastore'):
+        #     plugins.unload('datastore')
+        # if not plugins.plugin_loaded('datapusher'):
+        #     plugins.unload('datapusher')
 
 
 class TestKWHCreateActions(ActionsBase):
@@ -1516,16 +1517,25 @@ class TestKWHUpdateActions(ActionsBase):
         }
 
         data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict = {
             'type': 'theme',
             'title': 'Refugees in Syria',
-            'description': 'Number of refugees in Syria 2020'
+            'description': 'Number of refugees in Syria 2020',
+            'theme': theme['id']
         }
         create_actions.kwh_data_create(context, data_dict)
 
         data_dict = {
             'type': 'theme',
-            'old_content': 'Refugees in Syria',
-            'new_content': 'Refugees in Syria updated'
+            'entity_id': theme['id'],
+            'title': 'Refugees in Syria',
+            'description': 'Refugees in Syria updated'
         }
 
         kwh_data_updated = update_actions.kwh_data_update(
@@ -1534,8 +1544,8 @@ class TestKWHUpdateActions(ActionsBase):
         )
 
         assert_equals(
-            kwh_data_updated.get('content'),
-            data_dict.get('new_content')
+            kwh_data_updated.get('description'),
+            data_dict.get('description')
         )
 
     def test_resource_validate_update(self):

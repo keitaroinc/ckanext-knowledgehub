@@ -519,7 +519,7 @@ def kwh_data_update(context, data_dict):
     :param description: the description of the entity (optional)
     :type description: string
     :param entity_id: the ID of the entity
-    :type filter: string
+    :type entity_id: string
     :returns: the updated data
     :rtype: dict
     '''
