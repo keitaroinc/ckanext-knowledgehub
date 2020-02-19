@@ -4,26 +4,32 @@ import os
 import json
 from six import string_types
 
+from paste.deploy.converters import asbool
+
 import ckan.logic as logic
 from ckan.plugins import toolkit
 from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 from ckan.model.meta import Session
+from ckan.logic.action.get import tag_show as ckan_tag_show
 
-from ckanext.knowledgehub.model import Theme
-from ckanext.knowledgehub.model import SubThemes
-from ckanext.knowledgehub.model import ResearchQuestion
-from ckanext.knowledgehub.model import Dashboard
-from ckanext.knowledgehub.model import ResourceFeedbacks
-from ckanext.knowledgehub.model import ResourceValidate
-from ckanext.knowledgehub.model import KWHData
-from ckanext.knowledgehub.model import RNNCorpus
-from ckanext.knowledgehub.model import Visualization
-from ckanext.knowledgehub.model import UserIntents
-from ckanext.knowledgehub.model import UserQuery
-from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
-from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import (
+    Theme,
+    SubThemes,
+    ResearchQuestion,
+    Dashboard,
+    ResourceFeedbacks,
+    ResourceValidate,
+    KWHData,
+    RNNCorpus,
+    Visualization,
+    UserIntents,
+    UserQuery,
+    UserQueryResult, DataQualityMetrics,
+    Keyword,
+    ExtendedTag,
+)
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
@@ -275,7 +281,6 @@ def test_import(context, data_dict):
     stream = writer.csv_writer(data.get('fields'),
                                data.get('records'),
                                ',')
-    # print stream.getvalue()
 
     return data
 
@@ -703,6 +708,12 @@ def kwh_data_list(context, data_dict):
      page number, items per page and data(KnowledgeHub data)
     :rtype: dictionary
     '''
+    data_type = data_dict.get('type', '')
+    content = data_dict.get('content', '')
+    user = data_dict.get('user', '')
+    theme = data_dict.get('theme', '')
+    sub_theme = data_dict.get('sub_theme', '')
+    rq = data_dict.get('rq', '')
 
     q = data_dict.get('q', '')
     limit = int(data_dict.get('limit', 1000000))
@@ -711,6 +722,20 @@ def kwh_data_list(context, data_dict):
     offset = (page - 1) * limit
 
     kwargs = {}
+
+    if data_type:
+        kwargs['type'] = data_type
+    if content:
+        kwargs['content'] = content
+    if user:
+        kwargs['user'] = user
+    if theme:
+        kwargs['theme'] = theme
+    if sub_theme:
+        kwargs['sub_theme'] = sub_theme
+    if rq:
+        kwargs['rq'] = rq
+
     kwargs['q'] = q
     kwargs['limit'] = limit
     kwargs['offset'] = offset
@@ -1270,6 +1295,8 @@ def tag_list(context, data_dict):
     :rtype: list of dictionaries
 
     '''
+    from ckanext.knowledgehub.model.keyword import ExtendedTag
+
     model = context['model']
 
     vocab_id_or_name = data_dict.get('vocabulary_id')
@@ -1285,11 +1312,11 @@ def tag_list(context, data_dict):
     elif vocab_id_or_name:
         tags = model.Tag.all(vocab_id_or_name)
     else:
-        tags = Session.query(model.Tag).autoflush(False).all()
+        tags = ExtendedTag.get_all()
 
     if tags:
         if all_fields:
-            tag_list = model_dictize.tag_list_dictize(tags, context)
+            tag_list = [_table_dictize(tag, context) for tag in tags]
         else:
             tag_list = [tag.name for tag in tags]
     else:
@@ -1362,6 +1389,9 @@ def tag_search(context, data_dict):
 
     '''
     tags, count = _tag_search(context, data_dict)
+    if tags:
+        for tag in tags:
+            tag.__class__ = ExtendedTag
     return {'count': count,
             'results': [_table_dictize(tag, context) for tag in tags]}
 
@@ -1409,3 +1439,40 @@ def keyword_list(context, data_dict):
         }))
 
     return results
+
+
+@toolkit.side_effect_free
+def tag_show(context, data_dict):
+    '''Return the details of a tag and all its datasets.
+
+    :param id: the name or id of the tag
+    :type id: string
+    :param vocabulary_id: the id or name of the tag vocabulary that the tag is
+        in - if it is not specified it will assume it is a free tag.
+        (optional)
+    :type vocabulary_id: string
+    :param include_datasets: include a list of the tag's datasets. (Up to a
+        limit of 1000 - for more flexibility, use package_search - see
+        :py:func:`package_search` for an example.)
+        (optional, default: ``False``)
+    :type include_datasets: bool
+
+    :returns: the details of the tag, including a list of all of the tag's
+        datasets and their details
+    :rtype: dictionary
+    '''
+
+    model = context['model']
+    id = _get_or_bust(data_dict, 'id')
+    include_datasets = asbool(data_dict.get('include_datasets', False))
+
+    tag = ExtendedTag.get(id, vocab_id_or_name=data_dict.get('vocabulary_id'))
+    context['tag'] = tag
+
+    if tag is None:
+        raise NotFound
+    tag.__class__ = ExtendedTag
+
+    check_access('tag_show', context, data_dict)
+    return model_dictize.tag_dictize(tag, context,
+                                     include_datasets=include_datasets)
