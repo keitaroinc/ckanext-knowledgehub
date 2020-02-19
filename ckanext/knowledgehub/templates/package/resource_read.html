@@ -12,24 +12,24 @@
   {% block resource_actions_inner %}
   {%  set validation_data = h.get_resource_validation_data(res.id) %}
   {% if h.check_access('package_update', {'id':pkg.id }) %}
-    {% if h.check_resource_status(res.id) == 'validated' %}
-        <li><span class="badge badge-primary"><i class="fa fa-check-square"></i> VALIDATED</span></li>
-    {% elif h.check_resource_status(res.id) == 'not_validated' and h.check_validation_admin(res.id) and h.check_access('resource_validate_create') and not validation_data%}
-        <li>
-            <button id="validation_report" class="btn btn-warning" name="resource_validate" type="submit"
-            onclick="showValidationForm()">
-            <i class="fa fa-check-square" aria-hidden="true"></i>
-            {{ _('Validate Resource') }}
-          </button>
-        </li>
-    {% elif h.check_resource_status(res.id) == 'not_validated' %}
-        <li><span class="badge badge-primary"><i class="fa fa-minus-square"></i> NOT VALIDATED</span></li>
-    {% endif %}
+  {% if h.check_resource_status(res.id) == 'validated' %}
+  <li><span class="badge badge-primary"><i class="fa fa-check-square"></i> VALIDATED</span></li>
+  {% elif h.check_resource_status(res.id) == 'not_validated' and h.check_validation_admin(res.id) and h.check_access('resource_validate_create') and not validation_data%}
+  <li>
+    <button id="validation_report" class="btn btn-warning" name="resource_validate" type="submit"
+      onclick="showValidationForm()">
+      <i class="fa fa-check-square" aria-hidden="true"></i>
+      {{ _('Validate Resource') }}
+    </button>
+  </li>
+  {% elif h.check_resource_status(res.id) == 'not_validated' %}
+  <li><span class="badge badge-primary"><i class="fa fa-minus-square"></i> NOT VALIDATED</span></li>
+  {% endif %}
 
   <li>
     {% link_for _('Manage'), controller='package', action='resource_edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}
   </li>
-  
+
   <li>
     <div class="btn-group">
       <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
@@ -102,9 +102,10 @@
             </div>
             <!-- <button class="btn btn-primary" type="submit" name="ysubmit" id="validationSubmitSuccess">Submit
               Validation</button> -->
-              <a href="{% url_for 'resource_validation_status', id=pkg.name, resource_id=res.id %}" class="btn btn-primary" id="validationSubmitSuccess">
-                <!-- <i class="fa fa-check-square"></i> -->
-                {{ _('Submit') }}</a>
+            <a href="{% url_for 'resource_validation_status', id=pkg.name, resource_id=res.id %}"
+              class="btn btn-primary" id="validationSubmitSuccess">
+              <!-- <i class="fa fa-check-square"></i> -->
+              {{ _('Submit') }}</a>
             <!-- <a href="#"><input type="submit" name="ysubmit" id="validationSubmitSuccess" value="Submit Validation"></a> -->
           </div>
         </div>
@@ -129,7 +130,8 @@
               type="button" onclick="editComment()">
               <i class="fa fa-pencil-square-o fa-lg"></i>
             </button>
-            <a href="{% url_for 'resource_validation_revert', id=pkg.name, resource_id=res.id %}" class="btn btn-delete" id="delete_validation">
+            <a href="{% url_for 'resource_validation_revert', id=pkg.name, resource_id=res.id %}" class="btn btn-delete"
+              id="delete_validation">
               <i class="fa fa-remove fa-lg validation-icons"></i>
             </a>
             {% endif %}
@@ -168,25 +170,23 @@
       </section>
     </div>
   </div>
-  
-  <br />
-  {% block resource_read_url %}
-  {% if res.url and h.is_url(res.url) %}
-  <p style="margin-top:10px;"><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title"
-      type="text" name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
-      onclick="copyToClipBoard()"><b>Copy
-        url</b></button></p>
-
-  {% elif res.url %}
-  <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
-  {% endif %}
-  {% endblock %}
 
 
 </ul>
 {% endblock %}
 {% block resource_content %}
 {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>
+{% endblock %}
+{% block resource_read_url %}
+{% if res.url and h.is_url(res.url) %}
+<p style="margin-top:10px;"><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title"
+    type="text" name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
+    onclick="copyToClipBoard()"><b>Copy
+      url</b></button></p>
+
+{% elif res.url %}
+<p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
+{% endif %}
 {% endblock %}
 <div class="prose notes" property="rdfs:label">
   {% if res.description %}
