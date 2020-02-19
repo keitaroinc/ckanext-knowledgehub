@@ -523,14 +523,7 @@ def kwh_data_update(context, data_dict):
     :returns: the updated data
     :rtype: dict
     '''
-    Store Knowledge Hub data
-        :param type
-        :param old_content
-        :param new_content
-    '''
     check_access('kwh_data', context, data_dict)
-
-    session = context['session']
 
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.kwh_data_schema_update(),
