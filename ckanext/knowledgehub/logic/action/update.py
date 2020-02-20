@@ -152,7 +152,6 @@ def research_question_update(context, data_dict):
     :type state: string
     '''
     check_access('research_question_update', context)
-    print(data_dict)
 
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
@@ -1049,3 +1048,46 @@ def update_tag_in_resource_view(context, data_dict):
                 })
 
                 return visual_element
+
+
+def update_tag_in_dataset(context, data_dict):
+    '''
+    Updates the tags for a dataset.
+
+    :param id: `str`, the id of the dataset to update.
+    :param tag_new: `str`, the new tag of the dataset.
+    :param tag_old: `str`, the old tag of the dataset.
+
+    :returns: the updated dataset.
+    :rtype: dictionary
+    '''
+    new_tag = data_dict.get('new_tag')
+    old_tag = data_dict.get('old_tag')
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+
+    toolkit.get_action('tag_create')(context, {
+                    'name': new_tag,
+                })
+
+    new_tag_info = model.Tag.by_name(name=new_tag)
+    new_tag_dict = {
+        u'vocabulary_id': new_tag_info.vocabulary_id,
+        u'display_name': new_tag_info.name,
+        u'name': new_tag_info.name,
+        u'state': u'active',
+        u'keyword_id': '',
+        u'id': new_tag_info.id
+    }
+
+    dataset_info = toolkit.get_action('package_show')(context, {
+        'id': id
+    })
+    dataset_info['tags'].append(new_tag_dict)
+    updated_dataset = toolkit.get_action('package_update')(
+        context,
+        dataset_info
+    )
+
+    return updated_dataset

@@ -1453,6 +1453,34 @@ def visual_search_tag(context, data_dict):
     return result
 
 
+def dataset_search_tag(context, data_dict):
+    '''
+    Returns list of ids of datasets that have specific tag
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    q = model.Session.query(model.package_tag_table).all()
+    tag_id = model.Tag.by_name(name=tag).id
+    dataset_tag_list = []
+
+    for item in q:
+        element = {
+            "id": item[0],
+            "package_id": item[1],
+            "tag_id": item[2],
+            "state": item[3],
+            "revision_id": item[4]
+        }
+        dataset_tag_list.append(element)
+
+    for dataset in dataset_tag_list:
+        tags_id = dataset.get('tag_id')
+        if tags_id == tag_id:
+            result.append(dataset.get('package_id'))
+
+    return result
+
+
 def group_tags(context, data_dict):
     '''
     Group wrongly written tags and replace them with the correct tag
@@ -1468,6 +1496,11 @@ def group_tags(context, data_dict):
     wrong_tags = data_dict.get('wrong_tags')
     new_tag = data_dict.get('new_tag')
 
+    q = model.Session.query(model.tag_table).all()
+    q_list = []
+    for item in q:
+        q_list.append(item.name)
+
     # Create new tag
     correct_tag = toolkit.get_action('tag_create')(context, {
         'name': new_tag,
@@ -1475,6 +1508,11 @@ def group_tags(context, data_dict):
 
     # Update tags in research questions, dashboards and visualizations
     for tag in wrong_tags:
+
+        if tag not in q_list:
+            log.debug('No such tag: %s', str(tag))
+            raise logic.NotFound(_('Tag not found'))
+
         rq_list = toolkit.get_action('rqs_search_tag')(context, {
             'tags': tag
         })
@@ -1484,6 +1522,10 @@ def group_tags(context, data_dict):
         list_visuals = toolkit.get_action('visual_search_tag')(context, {
             'tags': tag
         })
+        list_datasets = toolkit.get_action('dataset_search_tag')(context, {
+            'tags': tag
+        })
+
         if len(rq_list):
             for rq in rq_list:
                 toolkit.get_action('update_tag_in_rq')(context, {
@@ -1502,6 +1544,13 @@ def group_tags(context, data_dict):
             for visual in list_visuals:
                 toolkit.get_action('update_tag_in_resource_view')(context, {
                     'id': visual,
+                    'new_tag': new_tag,
+                    'old_tag': tag
+                })
+        if len(list_datasets):
+            for single_dataset in list_datasets:
+                toolkit.get_action('update_tag_in_dataset')(context, {
+                    'id': single_dataset,
                     'new_tag': new_tag,
                     'old_tag': tag
                 })
