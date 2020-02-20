@@ -48,12 +48,20 @@ class Keyword(DomainObject):
         return query.all()
 
     @classmethod
-    def get_list(cls, page=None, limit=None, order_by='created_at desc'):
+    def get_list(cls,
+                 page=None,
+                 limit=None,
+                 search=None,
+                 order_by='created_at desc'):
         offset = None
         if page and limit:
             offset = (page - 1) * limit
 
         query = Session.query(cls).autoflush(False)
+
+        if search:
+            query = query.filter(
+                keyword_table.c.name.like('%{}%'.format(search)))
 
         if order_by:
             query = query.order_by(order_by)
@@ -95,6 +103,8 @@ mapper(Keyword, keyword_table)
 
 
 def column_exists_in_db(column_name, table_name, engine):
+    '''Checks if a column exists in the table in the database.
+    '''
     for result in engine.execute('select column_name '
                                  'from information_schema.columns '
                                  'where table_name=\'%s\'' % table_name):
@@ -108,6 +118,8 @@ _tag_column_extended = False
 
 
 def extend_tag_table():
+    '''Extends CKAN's Tag table to add keyword_id column.
+    '''
     from ckan import model
     global _tag_column_extended
     if _tag_column_extended:

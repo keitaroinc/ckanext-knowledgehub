@@ -127,3 +127,7 @@ def keyword_create(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def user_profile_create(context, data_dict=None):
+    return {'success': True}

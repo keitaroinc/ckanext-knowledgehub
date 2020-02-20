@@ -119,7 +119,7 @@ def resource_validate_schema():
         'resource': [not_empty, resource_id_exists]
     }
 
-   
+
 def resource_validation_schema():
     return {
         'dataset': [ignore_missing, unicode],

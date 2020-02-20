@@ -91,3 +91,7 @@ def keyword_update(context, data_dict=None):
         Authorization check for updating a keyword. Sysadmin only.
     '''
     return {'success': False}
+
+
+def user_profile_update(context, data_dict):
+    return {'success': True}

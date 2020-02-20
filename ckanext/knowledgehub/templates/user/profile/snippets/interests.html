@@ -1,0 +1,144 @@
+{% block user_interests %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            {{ _('Please select your interests bellow.') }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <section id="interests-keywords">
+                <div class="section-header">
+                    <h3>{{ _('Keywords') }}</h3>
+                    <div class="form-group">
+                        <label for="select-keywords">{{ _('Select Keywords') }}</label>
+                        <input id="select-keywords" type="hidden" class="keywords-select"
+                            data-placeholder="{{ _('Select a Keyword to add as interest.') }}'">
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="keywords-list"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <section id="interests-tags">
+                <div class="section-header">
+                    <h3>{{ _('Tags') }}</h3>
+                    <div class="form-group">
+                        <label for="select-tags">{{ _('Select Tags') }}</label>
+                        <input id="select-tags" type="hidden" class="tags-select"
+                            data-placeholder="{{ _('Select a Tag to add as interest.') }}'">
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="tags-list"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <section id="interests-research-questions">
+                <div class="section-header">
+                    <h3>{{ _('Research Questions') }}</h3>
+                    <div class="form-group">
+                        <label for="select-research-questions">{{ _('Select Research Questions') }}</label>
+                        <input id="select-research-questions" type="hidden" class="research-questions-select"
+                            data-placeholder="{{ _('Select a Research Question to add as interest.') }}'">
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="research-question-list"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal-delete-interest" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Please Confirm')}}
+                    <button type="button" class="close pull-right" data-dismiss="modal" aria-label="{{ _('Close') }}">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </h5>
+            </div>
+            <div class="modal-body">
+                <p>{{ _('Are you sure you want to delete') }}
+                    &quot;<span class="delete-user-interes"></span>&quot;?</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center deleteButtonsWrapper">
+                <button type="button" class="btn btn-danger btnYesClass" id="btnYes"
+                    data-dismiss="modal">{{ _('Yes') }}</button>
+                <button type="button" class="btn btn-primary btnNoClass" id="btnNo"
+                    data-dismiss="modal">{{ _('No') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div style="display: none;">
+
+    <div class="research-question-template col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-body research-question-content">
+                <div class="row">
+                    <div class="col-xs-4">
+                        <img class="research-question-image img-thumbnail">
+                    </div>
+                    <div class="col-xs-8">
+                        <a href="#" class="panel-title research-question-title">Research
+                            Question</a>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <button class="btn btn-default btn-sm research-question-remove"
+                    title="{{ _('Remove from interests') }}">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="research-question-dropdown-option">
+        <img class="img-thumbnail rq-img" style="width: 50px; height: 50px;">
+        <span class="rq-title"></span>
+    </div>
+
+    <div class="col-md-4 col-sm-12 col-lg-3 keyword-template">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <span class="keyword-name">Keyword</span>
+            </div>
+            <div class="panel-content">
+                <div class="keyword-tag-list">
+                    <span class="keyword-tag-template"><span class="keyword-tag-name  label label-primary">tag</span>
+                    </span>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <button class="btn btn-default btn-sm keyword-remove" title="{{ _('Remove from interest') }}">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tag-template" style="display: inline-block; margin: 10px;">
+        <div class="btn-group" role="group">
+            <span class="btn btn-primary tag-name">Tag</span>
+            <span class="btn btn-default tag-remove" title="{{ _('Remove from interest')}}"><i
+                    class="fa fa-trash"></i></span>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock%}
