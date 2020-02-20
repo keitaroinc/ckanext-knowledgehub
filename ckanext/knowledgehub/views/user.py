@@ -8,6 +8,7 @@ import ckan.lib.helpers as h
 from ckan.common import _, g, request
 from flask.views import MethodView
 import ckan.lib.navl.dictization_functions as dict_fns
+from ckanext.knowledgehub.helpers import check_user_profile_preferences
 
 
 kwh_user = Blueprint(
@@ -151,7 +152,6 @@ def keyword_create_update(show, create, id=None, data_dict=None):
                 })
 
             keyword['tags'] = data_dict.get('tags', '')
-
             try:
                 keyword['name'] = data_dict['name']
                 keyword = _save_keyword(context, keyword)
@@ -192,7 +192,8 @@ def keyword_create_update(show, create, id=None, data_dict=None):
 
 def _save_keyword(context, keyword_dict):
     update = False
-    tags_list = filter(lambda t: t.strip(), keyword_dict.get('tags', '').split(','))
+    tags_list = filter(lambda t: t.strip(),
+                       keyword_dict.get('tags', '').split(','))
     try:
         keyword = logic.get_action('keyword_show')(context, {
             'id': keyword_dict.get('id') or keyword_dict.get('name'),
@@ -203,7 +204,7 @@ def _save_keyword(context, keyword_dict):
             'name': keyword_dict['name'],
             'tags': tags_list,
         })
-    
+
     if update:
         keyword = logic.get_action('keyword_update')(context, {
             'id': keyword['id'],
@@ -345,6 +346,58 @@ def tags(id):
     return base.render(u'user/tags.html', extra_vars)
 
 
+def profile():
+    u'''Renders the User Profile Interests page.
+    '''
+    context = {
+        u'model': model,
+        u'session': model.Session,
+        u'user': g.user,
+        u'auth_user_obj': g.userobj,
+        u'for_view': True
+    }
+    data_dict = {
+        u'user_obj': g.userobj,
+        u'include_num_followers': True
+    }
+    try:
+        logic.check_access(u'user_profile_show', context)
+    except logic.NotAuthorized:
+        base.abort(403, _(u'Not authorized to see this page'))
+
+    extra_vars = _extra_template_variables(context, data_dict)
+
+    return base.render('user/profile/user_profile.html', extra_vars)
+
+
+def profile_set_interests():
+    u'''Renders the page to set the user profile interests.
+    '''
+    context = {
+        u'model': model,
+        u'session': model.Session,
+        u'user': g.user,
+        u'auth_user_obj': g.userobj,
+        u'for_view': True
+    }
+    data_dict = {
+        u'user_obj': g.userobj,
+        u'include_num_followers': True
+    }
+    try:
+        logic.check_access(u'user_profile_show', context)
+    except logic.NotAuthorized:
+        base.abort(403, _(u'Not authorized to see this page'))
+
+    logic.get_action('user_profile_update')(context, {
+        'user_notified': True,
+    })
+
+    extra_vars = _extra_template_variables(context, data_dict)
+
+    return base.render('user/profile/set_interests_page.html', extra_vars)
+
+
 kwh_user.add_url_rule(u'/intents/<id>', view_func=intents)
 kwh_user.add_url_rule(u'/keywords', view_func=keywords)
 kwh_user.add_url_rule(u'/keywords/delete/<id>', methods=['GET', 'POST'],
@@ -359,3 +412,11 @@ kwh_user.add_url_rule(u'/keywords/new', methods=['POST'],
                       view_func=keyword_create_save)
 kwh_user.add_url_rule(u'/keywords/<id>', view_func=keyword_read)
 kwh_user.add_url_rule(u'/tags/<id>', view_func=tags)
+kwh_user.add_url_rule(u'/profile', view_func=profile)
+kwh_user.add_url_rule(u'/profile/set_interests',
+                      view_func=profile_set_interests)
+
+
+@kwh_user.before_app_request
+def check_user_prefrences():
+    return check_user_profile_preferences()

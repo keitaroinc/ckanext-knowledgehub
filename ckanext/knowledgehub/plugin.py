@@ -22,6 +22,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.IAuthenticator, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -327,3 +328,10 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         pkg_dict['research_question'] = research_question
         pkg_dict['extras_research_question'] = research_question
         return pkg_dict
+
+    # IAuthenticator
+    def identify(self):
+        from ckan.common import is_flask_request
+        if not is_flask_request():
+            h.check_user_profile_preferences()
+        return super(KnowledgehubPlugin, self).identify()

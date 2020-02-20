@@ -231,13 +231,12 @@ def keyword_delete(context, data_dict):
     check_access('keyword_delete', context)
     if 'id' not in data_dict:
         raise ValidationError({'id': _('Missing Value')})
-    
+
     keyword = toolkit.get_action('keyword_show')(context, data_dict)
 
     for tag in Keyword.get_tags(keyword['id']):
         tag.keyword_id = None
         tag.save()
-    
+
     Session.delete(Keyword.get(keyword['id']))
     Session.commit()
-
