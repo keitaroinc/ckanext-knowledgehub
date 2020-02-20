@@ -940,7 +940,7 @@ def tag_update(context, data_dict):
     except NotAuthorized:
         raise NotAuthorized(_(u'Need to be system '
                               u'administrator to administer'))
-                              
+
     schema = knowledgehub_schema.tag_update_schema()
     data, errors = _df.validate(data_dict, schema, context)
     if errors:
@@ -958,7 +958,7 @@ def tag_update(context, data_dict):
     session = context['session']
     tag.save()
     session.commit()
-    
+
     return _table_dictize(tag, context)
 
 

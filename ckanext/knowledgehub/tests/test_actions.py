@@ -10,6 +10,7 @@ from ckan.tests import helpers
 from ckan.plugins import toolkit
 from ckan import model
 from datetime import datetime
+from ckan.common import config
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
@@ -42,8 +43,10 @@ from ckanext.knowledgehub.model import (
     ResourceValidate,
 )
 from ckanext.knowledgehub.model.keyword import extend_tag_table
+from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
 from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.datastore.logic.action import datastore_create
+
 from pysolr import Results
 
 assert_equals = nose.tools.assert_equals
@@ -69,19 +72,24 @@ class ActionsBase(helpers.FunctionalTestBase):
         rnn_corpus_setup()
         resource_validate_setup()
         os.environ["CKAN_INI"] = './test.ini'
+        extend_tag_table()
+        config['ckanext.knowledgehub.rnn.min_length_corpus'] = 100
+
+        if not plugins.plugin_loaded('knowledgehub'):
+            plugins.load('knowledgehub')
         if not plugins.plugin_loaded('datastore'):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.load('datapusher')
-        extend_tag_table()
 
     @classmethod
     def teardown_class(self):
-        pass
-        # if not plugins.plugin_loaded('datastore'):
-        #     plugins.unload('datastore')
-        # if not plugins.plugin_loaded('datapusher'):
-        #     plugins.unload('datapusher')
+        if not plugins.plugin_loaded('knowledgehub'):
+            plugins.unload('knowledgehub')
+        if not plugins.plugin_loaded('datastore'):
+            plugins.unload('datastore')
+        if not plugins.plugin_loaded('datapusher'):
+            plugins.unload('datapusher')
 
 
 class TestKWHCreateActions(ActionsBase):
@@ -242,7 +250,7 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(rf.get('dataset'), dataset.get('id'))
         assert_equals(rf.get('resource'), resource.get('id'))
- 
+
     def test_resource_validation_create(self):
         user = factories.Sysadmin()
         context = {
@@ -970,11 +978,56 @@ class TestKWHGetActions(ActionsBase):
 
         resource_validate_show = get_actions.resource_validate_status(
             context, {'id': rv.get('resource')}
-            )
+        )
 
         assert_equals(
             resource_validate_show.get('what'), data_dict.get('what')
+        )
+
+    def test_get_predictions(self):
+        data_dict = {
+            'type': 'theme',
+            'title': 'Returns Resettlement Protection Social',
+            'description': (
+                'Network Displacement Trends Labor Market Social '
+                'Cohesion Civil Documentation Demographics '
+                'Reception/Asylum Conditions Conditions of Return '
+                'What is the residential distribution of refugees in '
+                'COA? What is the change in total population numbers '
+                'before and after the crisis? What is the breakdown '
+                'of refugees by place of origin at governorate level?'
+                ' What are the monthly arrival trends by place of '
+                'origin at governorate level? What is the average '
+                'awaiting period in COA prior to registration? What '
+                'are the demographic characteristics of the population?'
             )
+        }
+        create_actions.kwh_data_create(get_context(), data_dict)
+
+        worker = PredictiveSearchWorker()
+        worker.run()
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(get_context(), data_dict)
+
+        data_dict = {
+            'type': 'theme',
+            'title': 'Refugees in Syria',
+            'description': 'Number of refugees in Syria 2020',
+            'theme': theme['id']
+        }
+        create_actions.kwh_data_create(get_context(), data_dict)
+
+        predicts = get_actions.get_predictions(
+            get_context(),
+            {'query': 'Refugees in Sy'}
+        )
+
+        assert(len(predicts) > 3)
 
 
 class TestKWHDeleteActions(ActionsBase):
@@ -1191,6 +1244,12 @@ class TestKWHDeleteActions(ActionsBase):
             'Validation report of the resource is deleted.'
             )
 
+    def test_package_delete(self):
+        dataset = create_dataset()
+        r = delete_actions.package_delete(get_context(), {'id': dataset['id']})
+
+        assert_equals(r, None)
+
 
 class TestKWHUpdateActions(ActionsBase):
 
@@ -1313,7 +1372,7 @@ class TestKWHUpdateActions(ActionsBase):
         rsc_updated = update_actions.resource_update(context, data_dict)
 
         assert_not_equals(rsc_updated, None)
-    
+
     def test_resource_validation_update(self):
         user = factories.Sysadmin()
         context = {
@@ -1357,7 +1416,7 @@ class TestKWHUpdateActions(ActionsBase):
         val_updated = update_actions.resource_validation_update(context, data_dict)
 
         assert_equals(val_updated.get('admin'), data_dict.get('admin'))
-    
+
     def test_resource_validation_status(self):
         user = factories.Sysadmin()
         context = {
@@ -1390,7 +1449,7 @@ class TestKWHUpdateActions(ActionsBase):
             context, data_dict)
 
         assert_equals(val_updated.get('status'), 'validated')
-    
+
     def test_resource_validation_revert(self):
         user = factories.Sysadmin()
         context = {
@@ -1978,7 +2037,7 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                 'value': 90.0,
                 'total': 100,
                 'complete': 90,
-            }, 
+            },
             'consistency': {
                 'value': 80.0,
                 'total': 100,
@@ -2025,7 +2084,7 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                     'total': 100,
                     'complete': 90,
                     'manual': True,
-                }, 
+                },
                 'consistency': {
                     'value': 80.0,
                     'total': 100,
@@ -2088,7 +2147,7 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                 'value': 90.0,
                 'total': 100,
                 'complete': 90,
-            }, 
+            },
             'consistency': {
                 'value': 80.0,
                 'total': 100,
@@ -2135,7 +2194,7 @@ class TestDataQualityActions(helpers.FunctionalTestBase):
                     'total': 100,
                     'complete': 90,
                     'manual': True,
-                }, 
+                },
                 'consistency': {
                     'value': 80.0,
                     'total': 100,
