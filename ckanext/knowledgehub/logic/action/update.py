@@ -26,10 +26,14 @@ from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import UserProfile
+from ckanext.knowledgehub.model.keyword import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
+
+from sqlalchemy.orm.attributes import flag_modified
 
 
 log = logging.getLogger(__name__)
@@ -171,6 +175,21 @@ def research_question_update(context, data_dict):
         raise logic.ValidationError(errors)
 
     user = context.get('user')
+
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        research_question.tags = tags
+
     data['modified_by'] = model.User.by_name(user.decode('utf8')).id
 
     filter = {'id': id}
@@ -279,6 +298,9 @@ def resource_view_update(context, data_dict):
         model.Session.rollback()
         raise ValidationError(errors)
 
+    if not data_dict.get('tags'):
+        data['tags'] = None
+
     context['resource_view'] = resource_view
     context['resource'] = model.Resource.get(resource_view.resource_id)
     # TODO need to implement custom authorization actions
@@ -318,6 +340,7 @@ def dashboard_update(context, data_dict):
         :param description
         :param title
         :param indicators
+        :param tags
     '''
     check_access('dashboard_update', context)
 
@@ -341,10 +364,25 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description', 'indicators', 'source', 'type']
+    items = ['name', 'title', 'description',
+             'indicators', 'source', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
+
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        dashboard.tags = tags
 
     dashboard_type = data.get('type')
     if dashboard_type != 'external':
@@ -365,6 +403,9 @@ def dashboard_update(context, data_dict):
 
 
 def package_update(context, data_dict):
+    u'''Wraps the CKAN's core 'package_update' function to schedule a check for
+    Data Quality metrics calculation when the package has been updated.
+    '''
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
     return result
@@ -528,7 +569,7 @@ def _patch_data_quality(context, data_dict, _type):
     # validate input
     dimensions = ['completeness', 'uniqueness', 'timeliness', 'validity',
                   'accuracy', 'consistency']
-    for dimension in  dimensions:
+    for dimension in dimensions:
         values = data_dict.get(dimension)
         if values:
             validators = _dq_validators[dimension]
@@ -542,7 +583,10 @@ def _patch_data_quality(context, data_dict, _type):
                     try:
                         _ftype(value)
                     except Exception as e:
-                        raise ValidationError({field: _('Invalid Value' + "(%s) '%s'" % (dimension, value))})
+                        raise ValidationError({
+                            field: _('Invalid Value' +
+                                     "(%s) '%s'" % (dimension, value))
+                        })
                 else:
                     try:
                         values[field] = _ftype(value)
@@ -551,13 +595,13 @@ def _patch_data_quality(context, data_dict, _type):
     db_metric = DataQualityMetrics.get(_type, data_dict['id'])
     if not db_metric:
         db_metric = DataQualityMetrics(type=_type, ref_id=data_dict['id'])
-    
+
     db_metric.metrics = db_metric.metrics or {}
-    
+
     for field, values in data_dict.items():
-        if not field in dimensions:
+        if field not in dimensions:
             continue
-        setattr(db_metric, field, values['value']) # set the main metric
+        setattr(db_metric, field, values['value'])  # set the main metric
         db_metric.metrics[field] = values
         db_metric.metrics[field]['manual'] = values.get('manual', True)
 
@@ -567,7 +611,7 @@ def _patch_data_quality(context, data_dict, _type):
     results = {}
     for dimension in dimensions:
         results[dimension] = getattr(db_metric, dimension)
-    
+
     results['calculated_on'] = db_metric.modified_at.isoformat()
     results['details'] = db_metric.metrics
 
@@ -608,7 +652,7 @@ def resource_validate_update(context, data_dict):
 
     when = datetime.datetime.utcnow().strftime(
         '%Y-%m-%dT%H:%M:%S'
-        )
+    )
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
 
@@ -620,10 +664,10 @@ def resource_validate_update(context, data_dict):
 
     filter = {'resource': id}
     rvu = {
-            'what': status,
-            'when': when,
-            'who': name
-        }
+        'what': status,
+        'when': when,
+        'who': name
+    }
     st = ResourceValidate.update(filter, rvu)
 
     return st.as_dict()
@@ -641,8 +685,9 @@ def resource_validation_update(context, data_dict):
     '''
     check_access('resource_validation_update', context, data_dict)
 
+    resource_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                resource_schema,
                                 context)
 
     if errors:
@@ -690,8 +735,9 @@ def resource_validation_status(context, data_dict):
     '''
     check_access('resource_validation_status', context, data_dict)
 
+    rc_validation_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                rc_validation_schema,
                                 context)
 
     if errors:
@@ -734,8 +780,9 @@ def resource_validation_revert(context, data_dict):
     '''
     check_access('resource_validation_revert', context, data_dict)
 
+    rc_validation_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                rc_validation_schema,
                                 context)
 
     if errors:
@@ -768,18 +815,15 @@ def resource_validation_revert(context, data_dict):
 
 def tag_update(context, data_dict):
     ''' Update the tag name or vocabulary
-
     :param id: id or name of the tag
     :type id: string
     :param name: the name of the tag
     :type name: string
     :param vocabulary_id: the id of the vocabulary (optional)
     :type vocabulary_id: string
-
     :returns: the updated tag
     :rtype: dictionary
     '''
-
     model = context['model']
 
     try:
@@ -787,13 +831,13 @@ def tag_update(context, data_dict):
     except NotAuthorized:
         raise NotAuthorized(_(u'Need to be system '
                               u'administrator to administer'))
-
+                              
     schema = knowledgehub_schema.tag_update_schema()
     data, errors = _df.validate(data_dict, schema, context)
     if errors:
         raise ValidationError(errors)
 
-    tag = model.Tag.get(data.get('id'))
+    tag = ExtendedTag.get_with_keyword(data.get('id'))
     if not tag:
         raise NotFound(_('Tag was not found'))
 
@@ -805,28 +849,32 @@ def tag_update(context, data_dict):
     session = context['session']
     tag.save()
     session.commit()
-
+    
     return _table_dictize(tag, context)
 
 
 def keyword_update(context, data_dict):
     '''Updates the tags for a keyword.
 
-    :param name: `str`, the name of the keyword to update.
+    :param id: `str`, the id or the name of the keyword to update.
     :param tags: `list` of `str`, the tags that this keyword should contain. If
         the tag does not exist, it will be created and added to this keyword.
         The tags that were removed from this keyword will be set as free tags
         and will not be removed.
-    
+
     :returns: `dict`, the updated keyword.
     '''
     check_access('keyword_update', context)
-    if 'name' not in data_dict:
-        raise ValidationError({'name': _('Missing Value')})
-    
-    existing = Keyword.by_name(data_dict['name'])
+    if 'id' not in data_dict:
+        raise ValidationError({'id': _('Missing Value')})
+    existing = Keyword.get(data_dict['id'])
+    if not existing:
+        existing = Keyword.by_name(data_dict['id'])
     if not existing:
         raise logic.NotFound(_('Not found'))
+
+    if data_dict.get('name', '').strip():
+        existing.name = data_dict['name'].strip()
 
     existing.modified_at = datetime.datetime.utcnow()
     existing.save()
@@ -846,11 +894,60 @@ def keyword_update(context, data_dict):
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
-        
-        db_tag = model.Tag.get(tag_dict['id'])
+
+        db_tag = ExtendedTag.get_with_keyword(tag_dict['id'])
         db_tag.keyword_id = existing.id
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)
         kwd_dict['tags'].append(tag_dict)
 
     return kwd_dict
+
+
+def user_profile_update(context, data_dict):
+    u'''Updates the user profile data.
+
+    For regular users, this action updates the user profile data for the
+    currently authenticated user.
+
+    For a sysadmin user, an additional parameter (user_id) can be set to update
+    the profile data for another user.
+
+    :param user_id: `str`, the id of the user to update the user profile data.
+        This parameter is available for sysadmins only, otherwise it will be
+        ignored.
+    :param user_notified: `bool`, set the flag for user flash notification.
+    :param research_questions: `list`, list of research questions IDs to set as
+        interests.
+    :param keywords: `list`, list of research questions IDs to set as
+        interests.
+    :param tags: `list`, list of research questions IDs to set as
+        interests.
+    '''
+    check_access('user_profile_update', context, data_dict)
+    user = context.get('auth_user_obj')
+    user_id = user.id
+
+    if getattr(user, 'sysadmin', False) and data_dict.get('user_id'):
+        user_id = data_dict['user_id']
+
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
+        profile = UserProfile(user_id=user_id, user_notified=True)
+        profile.interests = {}
+
+    interests = data_dict.get('interests', {})
+    for interest_type in ['research_questions', 'keywords', 'tags']:
+        if interests.get(interest_type) is not None:
+            profile.interests[interest_type] = interests[interest_type]
+
+    if profile.interests:
+        flag_modified(profile, 'interests')
+
+    if data_dict.get('user_notified'):
+        profile.user_notified = data_dict.get('user_notified')
+
+    profile.save()
+    model.Session.flush()
+
+    return _table_dictize(profile, context)

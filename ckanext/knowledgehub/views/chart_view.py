@@ -123,6 +123,11 @@ def _process_post_data(data, resource_id):
         if data.get('chart_research_questions'):
             config['research_questions'] = \
                 data['chart_research_questions']
+        if data.get('tags'):
+            config['tags'] = \
+                data['tags']
+        else:
+            config['tags'] = None
 
     config['filters'] = json.dumps(filters)
 
@@ -130,6 +135,7 @@ def _process_post_data(data, resource_id):
     view_dict['resource_id'] = resource_id
     view_dict['title'] = config['title']
     view_dict['view_type'] = 'chart'
+    view_dict['tags'] = config['tags']
     view_dict.update(config)
 
     return view_dict
@@ -225,6 +231,18 @@ class EditView(MethodView):
 
         view_dict = _process_post_data(data, resource_id)
 
+        tags = view_dict.get('tags', '')
+        if tags:
+            for tag in tags.split(','):
+                try:
+                    check_access('tag_show', context)
+                    tag_obj = get_action('tag_show')(context, {'id': tag})
+                except NotFound:
+                    check_access('tag_create', context)
+                    tag_obj = get_action('tag_create')(context, {
+                        'name': tag,
+                    })
+
         to_delete = data.pop('delete', None)
 
         try:
@@ -317,6 +335,18 @@ class CreateView(MethodView):
             base.abort(400, _(u'Integrity Error'))
 
         view_dict = _process_post_data(data, resource_id)
+
+        tags = view_dict.get('tags', '')
+        if tags:
+            for tag in tags.split(','):
+                try:
+                    check_access('tag_show', context)
+                    tag_obj = get_action('tag_show')(context, {'id': tag})
+                except NotFound:
+                    check_access('tag_create', context)
+                    tag_obj = get_action('tag_create')(context, {
+                        'name': tag,
+                    })
 
         try:
             resource_view = \

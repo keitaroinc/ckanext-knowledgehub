@@ -81,3 +81,14 @@ def get_context():
         'model': model,
         'session': model.Session
     }
+
+
+def get_regular_user_context():
+    user = factories.User()
+    return {
+        'user': user.get('name'),
+        'auth_user_obj': User(user.get('id')),
+        'model': model,
+        'session': model.Session,
+        'ignore_auth': True,
+    }

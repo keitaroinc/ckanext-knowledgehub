@@ -36,6 +36,7 @@ dashboard_table = Table(
     Column('type', types.UnicodeText, nullable=False),
     Column('source', types.UnicodeText),
     Column('indicators', types.UnicodeText),
+    Column('tags', types.UnicodeText),
     Column('created_at', types.DateTime,
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,
@@ -56,6 +57,8 @@ class Dashboard(DomainObject, Indexed):
         'indicators',
         'research_questions',
         'datasets',
+        'tags',
+        'keywords',
         mapped('groups', 'groups'),
         mapped('organizations', 'organizations')
     ]
@@ -92,6 +95,22 @@ class Dashboard(DomainObject, Indexed):
                 package_id = v.get('package_id')
                 if package_id:
                     datasets.append(package_id)
+
+        keywords = set()
+        if data.get('tags'):
+            for tag in data.get('tags', '').split(','):
+                tag_obj = get_action('tag_show')(
+                    {'ignore_auth': True},
+                    {'id': tag}
+                )
+                if tag_obj.get('keyword_id'):
+                    keyword_obj = get_action('keyword_show')(
+                        {'ignore_auth': True},
+                        {'id': tag_obj.get('keyword_id')}
+                    )
+                    keywords.add(keyword_obj.get('name'))
+                    if keywords:
+                        data['keywords'] = ','.join(keywords)
 
         data['research_questions'] = ','.join(list_rqs)
         data['organizations'] = list(set(organizations))

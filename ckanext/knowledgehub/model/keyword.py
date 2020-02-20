@@ -34,26 +34,34 @@ class Keyword(DomainObject):
     @classmethod
     def get(cls, ref):
         return Session.query(cls).get(ref)
-    
+
     @classmethod
     def by_name(cls, name):
         query = Session.query(cls)
         query = query.filter(keyword_table.c.name == name)
         return query.first()
-    
+
     @classmethod
     def get_tags(cls, keyword_id):
-        query = Session.query(Tag)
+        query = Session.query(ExtendedTag)
         query = query.filter(tag_table.c.keyword_id == keyword_id)
         return query.all()
-    
+
     @classmethod
-    def get_list(cls, page=None, limit=None, order_by='created_at desc'):
+    def get_list(cls,
+                 page=None,
+                 limit=None,
+                 search=None,
+                 order_by='created_at desc'):
         offset = None
         if page and limit:
             offset = (page - 1) * limit
 
         query = Session.query(cls).autoflush(False)
+
+        if search:
+            query = query.filter(
+                keyword_table.c.name.like('%{}%'.format(search)))
 
         if order_by:
             query = query.order_by(order_by)
@@ -66,9 +74,37 @@ class Keyword(DomainObject):
 
         return query.all()
 
+    @classmethod
+    def get_keyword_id_for_tag(cls, tag_id):
+        query = Session.query(tag_table.c.keyword_id).filter(
+            tag_table.c.id == tag_id)
+        result = query.first()
+        return result.keyword_id
+
+
+class ExtendedTag(Tag):
+    keyword_id = None
+
+    @classmethod
+    def get_all(cls, *args, **kwargs):
+        query = Session.query(ExtendedTag)
+        return query.all()
+
+    @classmethod
+    def get_with_keyword(cls, ref):
+        tag = Tag.get(ref)
+        if tag:
+            query = Session.query(ExtendedTag).filter(tag_table.c.id == tag.id)
+            return query.first()
+        return None
+
+
 mapper(Keyword, keyword_table)
 
+
 def column_exists_in_db(column_name, table_name, engine):
+    '''Checks if a column exists in the table in the database.
+    '''
     for result in engine.execute('select column_name '
                                  'from information_schema.columns '
                                  'where table_name=\'%s\'' % table_name):
@@ -78,8 +114,17 @@ def column_exists_in_db(column_name, table_name, engine):
     return False
 
 
+_tag_column_extended = False
+
 def extend_tag_table():
+    '''Extends CKAN's Tag table to add keyword_id column.
+    '''
     from ckan import model
+    global _tag_column_extended
+    if _tag_column_extended:
+        return
+    _tag_column_extended = True
+
     engine = model.meta.engine
 
     tag_table.append_column(Column(
@@ -87,23 +132,14 @@ def extend_tag_table():
         types.UnicodeText,
     ))
 
-    #Tag.keyword_id = property(column_property(tag_table.c.keyword_id))
-    from sqlalchemy.orm import configure_mappers
-
-    # Hack to update the mapper for the class Tag that already have been mapped
-    delattr(Tag,'_sa_class_manager')
-    mapper(Tag, tag_table)  # Remap the Tag class again
-
-    if column_exists_in_db('keyword_id', 'tag', engine): 
+    if column_exists_in_db('keyword_id', 'tag', engine):
+        mapper(ExtendedTag, tag_table)
         return
-    
+
     # Add the column in DB
     engine.execute('alter table tag '
                    'add column keyword_id character varying(100)')
-
-
+    mapper(ExtendedTag, tag_table)
 
 def setup():
-    extend_tag_table()
     metadata.create_all(engine)
-    

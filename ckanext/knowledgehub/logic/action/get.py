@@ -3,26 +3,31 @@ import os
 import json
 from six import string_types
 
+from paste.deploy.converters import asbool
+
 import ckan.logic as logic
 from ckan.plugins import toolkit
 from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 from ckan.model.meta import Session
-
-from ckanext.knowledgehub.model import Theme
-from ckanext.knowledgehub.model import SubThemes
-from ckanext.knowledgehub.model import ResearchQuestion
-from ckanext.knowledgehub.model import Dashboard
-from ckanext.knowledgehub.model import ResourceFeedbacks
-from ckanext.knowledgehub.model import ResourceValidate
-from ckanext.knowledgehub.model import KWHData
-from ckanext.knowledgehub.model import RNNCorpus
-from ckanext.knowledgehub.model import Visualization
-from ckanext.knowledgehub.model import UserIntents
-from ckanext.knowledgehub.model import UserQuery
-from ckanext.knowledgehub.model import UserQueryResult, DataQualityMetrics
-from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import (
+    Theme,
+    SubThemes,
+    ResearchQuestion,
+    Dashboard,
+    ResourceFeedbacks,
+    ResourceValidate,
+    KWHData,
+    RNNCorpus,
+    Visualization,
+    UserIntents,
+    UserQuery,
+    UserQueryResult, DataQualityMetrics,
+    Keyword,
+    ExtendedTag,
+    UserProfile,
+)
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
@@ -274,7 +279,6 @@ def test_import(context, data_dict):
     stream = writer.csv_writer(data.get('fields'),
                                data.get('records'),
                                ',')
-    # print stream.getvalue()
 
     return data
 
@@ -1219,6 +1223,8 @@ def tag_list(context, data_dict):
     :rtype: list of dictionaries
 
     '''
+    from ckanext.knowledgehub.model.keyword import ExtendedTag
+
     model = context['model']
 
     vocab_id_or_name = data_dict.get('vocabulary_id')
@@ -1234,11 +1240,11 @@ def tag_list(context, data_dict):
     elif vocab_id_or_name:
         tags = model.Tag.all(vocab_id_or_name)
     else:
-        tags = Session.query(model.Tag).autoflush(False).all()
+        tags = ExtendedTag.get_all()
 
     if tags:
         if all_fields:
-            tag_list = model_dictize.tag_list_dictize(tags, context)
+            tag_list = [_table_dictize(tag, context) for tag in tags]
         else:
             tag_list = [tag.name for tag in tags]
     else:
@@ -1311,6 +1317,9 @@ def tag_search(context, data_dict):
 
     '''
     tags, count = _tag_search(context, data_dict)
+    if tags:
+        for tag in tags:
+            tag.__class__ = ExtendedTag
     return {'count': count,
             'results': [_table_dictize(tag, context) for tag in tags]}
 
@@ -1330,18 +1339,19 @@ def keyword_show(context, data_dict):
     keyword = Keyword.get(data_dict['id'])
     if not keyword:
         keyword = Keyword.by_name(data_dict['id'])
-    
+
     if not keyword:
         raise logic.NotFound(_('No such keyword'))
-    
+
     keyword_dict = _table_dictize(keyword, context)
     keyword_dict['tags'] = []
     for tag in Keyword.get_tags(keyword.id):
         keyword_dict['tags'].append(_table_dictize(tag, context))
-    
+
     return keyword_dict
 
 
+@toolkit.side_effect_free
 def keyword_list(context, data_dict):
     '''Returns all keywords defined for this system.
     '''
@@ -1349,12 +1359,136 @@ def keyword_list(context, data_dict):
 
     page = data_dict.get('page')
     limit = data_dict.get('limit')
+    search = data_dict.get('q')
 
     results = []
 
-    for keyword in Keyword.get_list(page, limit):
+    for keyword in Keyword.get_list(page, limit, search=search):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
-    
+
     return results
+
+
+def _show_user_profile(context, user_id):
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
+        raise logic.NotFound(_('No such user profile'))
+
+    interests = {
+        'research_questions': [],
+        'keywords': [],
+        'tags': [],
+    }
+    for interest, show_action in {
+        'research_questions': 'research_question_show',
+        'keywords': 'keyword_show',
+        'tags': 'tag_show',
+    }.items():
+        for value in (profile.interests or {}).get(interest, []):
+            print 'VALUE ->', interest, show_action, value
+            try:
+                entity = toolkit.get_action(show_action)(context, {
+                    'id': value,
+                })
+                interests[interest].append(entity)
+            except logic.NotFound:
+                log.debug('Not found "%s" with id %s', interest, value)
+
+    profile_dict = _table_dictize(profile, context)
+    profile_dict['interests'] = interests
+    return profile_dict
+
+
+@toolkit.side_effect_free
+def user_profile_show(context, data_dict):
+    u'''Returns the data for the user profile for the currently authenticated
+    user.
+
+    If the user is a sysadmin, it can provide a specific user_id to get the
+    user profile for a particular user besides his own user account.
+
+    :param user_id: `str`, the ID of the user to display the user profile. The
+        parameter is available only if the current user is a sysadmin,
+        otherwise this parameter is ignored.
+    '''
+    check_access('user_profile_show', context)
+
+    user = context.get('auth_user_obj')
+    if getattr(user, 'sysadmin', False):
+        if data_dict.get('user_id'):
+            return _show_user_profile(context, data_dict['user_id'])
+
+    return _show_user_profile(context, user.id)
+
+
+def user_profile_list(context, data_dict):
+    u'''Returns a list of all user profiles.
+
+    Available only for sysadmin users.
+    '''
+    check_access('user_profile_list', context)
+    page = data_dict.get('page', 1)
+    limit = data_dict.get('limit', 20)
+
+    order_by = data_dict.get('order')
+
+    profiles = UserProfile.get_list(page, limit, order_by)
+
+    results = []
+
+    for profile in profiles:
+        results.append(_table_dictize(profile, context))
+
+    return results
+
+
+@toolkit.side_effect_free
+def tag_list_search(context, data_dict):
+    u'''Performs a search for tags, similar to tag_search, however it returns
+    the full data for the found tags.
+    '''
+    results = toolkit.get_action('tag_list')(context, data_dict)
+    tags = []
+    for tag_name in results:
+        tags.append(
+            toolkit.get_action('tag_show')(context, {'id': tag_name})
+        )
+
+    return tags
+@toolkit.side_effect_free
+def tag_show(context, data_dict):
+    '''Return the details of a tag and all its datasets.
+
+    :param id: the name or id of the tag
+    :type id: string
+    :param vocabulary_id: the id or name of the tag vocabulary that the tag is
+        in - if it is not specified it will assume it is a free tag.
+        (optional)
+    :type vocabulary_id: string
+    :param include_datasets: include a list of the tag's datasets. (Up to a
+        limit of 1000 - for more flexibility, use package_search - see
+        :py:func:`package_search` for an example.)
+        (optional, default: ``False``)
+    :type include_datasets: bool
+
+    :returns: the details of the tag, including a list of all of the tag's
+        datasets and their details
+    :rtype: dictionary
+    '''
+
+    model = context['model']
+    id = _get_or_bust(data_dict, 'id')
+    include_datasets = asbool(data_dict.get('include_datasets', False))
+
+    tag = ExtendedTag.get(id, vocab_id_or_name=data_dict.get('vocabulary_id'))
+    context['tag'] = tag
+
+    if tag is None:
+        raise NotFound
+    tag.__class__ = ExtendedTag
+
+    check_access('tag_show', context, data_dict)
+    return model_dictize.tag_dictize(tag, context,
+                                     include_datasets=include_datasets)

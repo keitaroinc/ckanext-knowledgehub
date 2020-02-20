@@ -139,6 +139,9 @@
                   {% if map %} {{ 'selected' if v == 'True'}} {% endif %}>{{ k }}</option>
                 {% endfor %}
               </select>
+
+              {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
+              {{ form.input('tags', id='field-tags', label=_('Tags'), placeholder=_('eg. economy, mental health, government'), value=data.tags, classes=['control-full'], attrs=tag_attrs) }}
             </div>
 
           </div>

@@ -9,7 +9,7 @@ from sqlalchemy import func
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
 from ckan import logic
-from ckan.common import _
+from ckan.common import _, g
 from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
@@ -37,6 +37,8 @@ from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import UserQuery
 from ckanext.knowledgehub.model import UserQueryResult
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import UserProfile
+from ckanext.knowledgehub.model import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -184,6 +186,20 @@ def research_question_create(context, data_dict):
         modified_at=modified_at
     )
 
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        research_question.tags = tags
+
     research_question.save()
 
     research_question_data = _table_dictize(research_question, context)
@@ -329,6 +345,7 @@ def dashboard_create(context, data_dict):
         :param type
         :param source
         :param indicators
+        :param tags
     '''
     check_access('dashboard_create', context)
     session = context['session']
@@ -342,7 +359,7 @@ def dashboard_create(context, data_dict):
 
     dashboard = Dashboard()
 
-    items = ['name', 'title', 'description', 'type']
+    items = ['name', 'title', 'description', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
@@ -358,6 +375,20 @@ def dashboard_create(context, data_dict):
 
     if indicators is not None:
         dashboard.indicators = indicators
+
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        dashboard.tags = tags
 
     user = context.get('user')
     dashboard.created_by = model.User.by_name(user.decode('utf8')).id
@@ -455,7 +486,7 @@ def resource_validation_create(context, data_dict):
         id=dataset,
         resource_id=resource,
         qualified=True
-        )
+    )
     status = 'not_validated'
 
     if data.get('admin'):
@@ -797,7 +828,7 @@ def resource_validate_create(context, data_dict):
 
     resource_validate.when = datetime.datetime.utcnow().strftime(
         '%Y-%m-%dT%H:%M:%S'
-        )
+    )
     resource_validate.who = name
     resource_validate.resource = data.get('resource')
 
@@ -918,22 +949,23 @@ def tag_create(context, data_dict):
         model.repo.commit()
 
     log.debug("Created tag '%s' " % tag)
+    tag.__class__ = ExtendedTag
     return model_dictize.tag_dictize(tag, context)
 
 
 def keyword_create(context, data_dict):
     u'''Creates new keyword with name and tags.
-    
+
     :param name: `str`, required, the name for the keyword
     :param tags: `list` of `str`, the names of the tags that this keyword
         contains. If a tag does not exist, it will be created.
-    
+
     :returns: `dict`, the new keyword.
     '''
     check_access('keyword_create', context)
     if 'name' not in data_dict:
         raise ValidationError({'name': _('Missing Value')})
-    
+
     existing = Keyword.by_name(data_dict['name'])
     if existing:
         raise ValidationError({
@@ -954,11 +986,60 @@ def keyword_create(context, data_dict):
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
-        
-        db_tag = model.Tag.get(tag_dict['id'])
+
+        db_tag = ExtendedTag.get_with_keyword(tag_dict['id'])
         db_tag.keyword_id = keyword.id
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)
         kwd_dict['tags'].append(tag_dict)
 
     return kwd_dict
+
+
+def user_profile_create(context, data_dict):
+    u'''Creates a user profile record for the currently authorized user.
+
+    :param research_questions: `list`, list of research question ID's that are
+        of interest.
+    :param tags: `list`, list of tag ID's that are
+        of interest.
+    :param keywords: `list`, list of keyword ID's that are
+        of interest.
+    '''
+    check_access('user_profile_create', context)
+
+    username = None
+    if hasattr(g, 'user'):
+        username = g.user
+
+    if not username:
+        username = context.get('user')
+
+    if not username:
+        raise logic.NotAuthorized(_('Must be authroized to use this action'))
+
+    user = toolkit.get_action('user_show')({
+        'ignore_auth': True,
+    }, {
+        'id': username,
+    })
+
+    profile = UserProfile.by_user_id(user['id'])
+    if profile:
+        raise ValidationError({
+            'user_id': _('Profile already created.')
+        })
+
+    profile = UserProfile(user_id=user['id'],
+                          user_notified=False,
+                          interests={})
+
+    for interest_type in ['research_questions', 'tags', 'keywords']:
+        if data_dict.get(interest_type):
+            profile.interests[interest_type] = data_dict[interest_type]
+
+    profile.save()
+    model.Session.flush()
+
+    profile_dict = _table_dictize(profile, context)
+    return profile_dict

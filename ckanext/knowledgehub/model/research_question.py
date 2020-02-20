@@ -1,6 +1,7 @@
 import ckan.plugins.toolkit as toolkit
 from ckan.model.meta import metadata, mapper, Session, engine
 from ckan.model.types import make_uuid
+from ckan.logic import get_action
 from ckan.model.domain_object import DomainObject
 
 from ckanext.knowledgehub.lib.solr import Indexed, mapped
@@ -38,6 +39,8 @@ research_question = Table(
            types.UnicodeText),
     Column('author',
            types.UnicodeText),
+    Column('tags',
+           types.UnicodeText),
     Column('created_at',
            types.DateTime,
            default=datetime.datetime.utcnow),
@@ -49,7 +52,7 @@ research_question = Table(
     Column('state',
            types.UnicodeText,
            default=u'active'),
-    )
+)
 
 
 class ResearchQuestion(DomainObject, Indexed):
@@ -67,6 +70,8 @@ class ResearchQuestion(DomainObject, Indexed):
         'sub_theme_name',
         'sub_theme_title',
         'image_url',
+        'tags',
+        'keywords'
     ]
 
     @classmethod
@@ -145,6 +150,23 @@ class ResearchQuestion(DomainObject, Indexed):
             data['sub_theme_id'] = sub_theme.id
             data['sub_theme_name'] = sub_theme.name
             data['sub_theme_title'] = sub_theme.title
+
+        keywords = set()
+        if data.get('tags'):
+            for tag in data.get('tags', '').split(','):
+                tag_obj = get_action('tag_show')(
+                    {'ignore_auth': True},
+                    {'id': tag}
+                )
+                if tag_obj.get('keyword_id'):
+                    keyword_obj = get_action('keyword_show')(
+                        {'ignore_auth': True},
+                        {'id': tag_obj.get('keyword_id')}
+                    )
+                    keywords.add(keyword_obj.get('name'))
+                    if keywords:
+                        data['keywords'] = ','.join(keywords)
+
         return data
 
     def __repr__(self):

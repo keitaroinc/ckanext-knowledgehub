@@ -1,6 +1,9 @@
 {% resource 'knowledgehub/table' %}
 {% resource 'knowledgehub/javascript/modules/data_transformation.js' %}
 {% resource 'knowledgehub/javascript/rqs_selection.js' %}
+
+{% import 'macros/form.html' as form %}
+
 {% if data %}
 {% set table = data.__extras or {} %}
 {% set filters = data.__extras.filters or [] %}
@@ -160,6 +163,8 @@
                 {% endfor %}
               </select>
 
+              {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
+              {{ form.input('tags', id='field-tags', label=_('Tags'), placeholder=_('eg. economy, mental health, government'), value=data.tags, classes=['control-full'], attrs=tag_attrs) }}
             </div>
           </div>
         </div>
