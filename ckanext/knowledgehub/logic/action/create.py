@@ -9,7 +9,7 @@ from sqlalchemy import func
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
 from ckan import logic
-from ckan.common import _
+from ckan.common import _, g
 from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
@@ -37,6 +37,7 @@ from ckanext.knowledgehub.model import UserIntents
 from ckanext.knowledgehub.model import UserQuery
 from ckanext.knowledgehub.model import UserQueryResult
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.model import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -1116,3 +1117,52 @@ def keyword_create(context, data_dict):
         kwd_dict['tags'].append(tag_dict)
 
     return kwd_dict
+
+
+def user_profile_create(context, data_dict):
+    u'''Creates a user profile record for the currently authorized user.
+
+    :param research_questions: `list`, list of research question ID's that are
+        of interest.
+    :param tags: `list`, list of tag ID's that are
+        of interest.
+    :param keywords: `list`, list of keyword ID's that are
+        of interest.
+    '''
+    check_access('user_profile_create', context)
+
+    username = None
+    if hasattr(g, 'user'):
+        username = g.user
+
+    if not username:
+        username = context.get('user')
+
+    if not username:
+        raise logic.NotAuthorized(_('Must be authroized to use this action'))
+
+    user = toolkit.get_action('user_show')({
+        'ignore_auth': True,
+    }, {
+        'id': username,
+    })
+
+    profile = UserProfile.by_user_id(user['id'])
+    if profile:
+        raise ValidationError({
+            'user_id': _('Profile already created.')
+        })
+
+    profile = UserProfile(user_id=user['id'],
+                          user_notified=False,
+                          interests={})
+
+    for interest_type in ['research_questions', 'tags', 'keywords']:
+        if data_dict.get(interest_type):
+            profile.interests[interest_type] = data_dict[interest_type]
+
+    profile.save()
+    model.Session.flush()
+
+    profile_dict = _table_dictize(profile, context)
+    return profile_dict

@@ -11,6 +11,7 @@ from dateutil import parser
 from flask import Blueprint
 from urllib import urlencode
 from six import string_types
+import re
 
 try:
     # CKAN 2.7 and later
@@ -21,7 +22,7 @@ except ImportError:
 
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
-from ckan.common import g, _, request
+from ckan.common import g, _, request, is_flask_request
 from ckan import logic
 from ckan.model import ResourceView, Resource
 from ckan import lib
@@ -136,7 +137,11 @@ def get_resource_validation_options(pkg_id_or_name):
                 opt = {u'text': member[u'name'], u'value': member[u'name']}
                 admins.append(opt)
     admins.insert(
-        0, {'text': 'Select the organization admin for validation request', 'value': ''})
+        0,
+        {
+            'text': 'Select the organization admin for validation request',
+            'value': ''
+        })
     return admins
 
 
@@ -846,7 +851,7 @@ def get_searched_rqs(query):
 def get_searched_dashboards(query):
     page = int(request.params.get('page', 1))
     limit = int(config.get('ckan.datasets_per_page', 20))
-    offset = (page -1) * limit
+    offset = (page - 1) * limit
     list_dash_searched = {
         'count': 0,
         'limit': limit,
@@ -997,21 +1002,23 @@ def remove_rqs_from_dataset(res_view):
                 results_search = toolkit.get_action(
                     'search_visualizations')(context, data_dict)
                 for res in results_search['results']:
-                    if res.get('research_questions') and res.get('id') != res_view.get('id') \
-                            and res.get('khe_package_id') == pkg_id:
+                    if res.get('research_questions') and \
+                       res.get('id') != res_view.get('id') and \
+                       res.get('khe_package_id') == pkg_id:
                         questions = json.loads(res.get('research_questions'))
                         for q in questions:
                             if q == rq:
                                 should_stay[rq] = True
             new_rqs_package_dict = {}
             package_sh = toolkit.get_action('package_show')(
-                dict({'ignore_auth': True}, return_type='dict'), {'id': pkg_id})
+                dict({'ignore_auth': True}, return_type='dict'),
+                {'id': pkg_id})
             if package_sh.get('research_question'):
                 questions_package = package_sh.get(
                     'research_question').split(",")
                 for q in questions_package:
                     if q in should_stay:
-                        if should_stay[q] == False:
+                        if not should_stay[q]:
                             questions_package.remove(q)
                 package_sh['research_question'] = ",".join(questions_package)
 
@@ -1040,7 +1047,8 @@ def update_rqs_in_dataset(old_data, res_view):
     if not pkg_dict.get('research_question'):  # dataset has no rqs
         pkg_dict['research_question'] = []
     else:
-        if isinstance(pkg_dict['research_question'], unicode):  # expected format
+        if isinstance(pkg_dict['research_question'], unicode):
+            # expected format
             old_rqs = pkg_dict.get('research_question')
             old_list = old_rqs.split(',')
 
@@ -1079,7 +1087,8 @@ def update_rqs_in_dataset(old_data, res_view):
                     set_old = set(li)
                 list_rqs = list(set_old-set_new)
             else:  # all were removed
-                if isinstance(old_ext.get('research_questions'), list):  # if they are more than 1
+                if isinstance(old_ext.get('research_questions'), list):
+                    # if they are more than 1
                     list_rqs = old_ext.get('research_questions')
                 else:  # if it is only 1
                     list_rqs.append(old_ext.get('research_questions'))
@@ -1106,7 +1115,7 @@ def update_rqs_in_dataset(old_data, res_view):
         questions_package = all_rqs
         for q in questions_package:
             if q in should_stay:
-                if should_stay[q] == False:
+                if not should_stay[q]:
                     questions_package.remove(q)
         pkg_dict['research_question'] = ",".join(questions_package)
 
@@ -1123,8 +1132,10 @@ def update_rqs_in_dataset(old_data, res_view):
 
 
 def get_single_dash(data_dict):
-    single_dash = toolkit.get_action('dashboard_show')(_get_context(),
-                                                       {'id': data_dict.get('id')})
+    single_dash = toolkit.get_action('dashboard_show')(
+        _get_context(),
+        {'id': data_dict.get('id')}
+    )
     return single_dash
 
 
@@ -1344,3 +1355,56 @@ def keyword_list():
     '''
 
     return toolkit.get_action('keyword_list')({'ignore_auth': True}, {})
+
+
+def check_user_profile_preferences():
+    u'''Checks if the user has been notified to set his preferences and if not,
+    it redirects the user to the User -> Profile page to set his preferences
+    and interests.
+    '''
+    path = request.path
+    ignore_patterns = [
+        r'^/api.*$',
+        r'^.*\.(js|css|png|jpg|jpeg|gif|mp4)',
+        r'^/user/profile/save_interests$',
+        r'^/user/profile/set_interests$',
+        r'^/error.*$',
+    ]
+    for pattern in ignore_patterns:
+        if re.match(pattern, path, re.IGNORECASE):
+            return
+
+    username = request.environ.get(u'REMOTE_USER', u'')
+    if not username:
+        return
+
+    already_checked = request.environ.get(u'__khb_user_pref_checked', False)
+    if already_checked:
+        return
+
+    user = model.User.by_name(username)
+    if not user:
+        return
+
+    try:
+        profile = toolkit.get_action('user_profile_show')({
+            'ignore_auth': True,
+            'auth_user_obj': user,
+        }, {
+            'id': user.id,
+        })
+    except logic.NotFound:
+        profile = toolkit.get_action('user_profile_create')({
+            'user': username,
+        }, {})
+
+    request.environ['__khb_user_pref_checked'] = True
+    if profile.get('user_notified'):
+        return
+
+    if is_flask_request():
+        from flask import redirect
+        url = h.url_for('/user/profile/set_interests')
+        response = redirect(url, 302)
+        return response
+    return toolkit.redirect_to('/user/profile/set_interests')

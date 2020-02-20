@@ -12,8 +12,6 @@ from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 from ckan.model.meta import Session
-from ckan.logic.action.get import tag_show as ckan_tag_show
-
 from ckanext.knowledgehub.model import (
     Theme,
     SubThemes,
@@ -29,6 +27,7 @@ from ckanext.knowledgehub.model import (
     UserQueryResult, DataQualityMetrics,
     Keyword,
     ExtendedTag,
+    UserProfile,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
@@ -1423,6 +1422,7 @@ def keyword_show(context, data_dict):
     return keyword_dict
 
 
+@toolkit.side_effect_free
 def keyword_list(context, data_dict):
     '''Returns all keywords defined for this system.
     '''
@@ -1430,10 +1430,11 @@ def keyword_list(context, data_dict):
 
     page = data_dict.get('page')
     limit = data_dict.get('limit')
+    search = data_dict.get('q')
 
     results = []
 
-    for keyword in Keyword.get_list(page, limit):
+    for keyword in Keyword.get_list(page, limit, search=search):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
@@ -1441,6 +1442,92 @@ def keyword_list(context, data_dict):
     return results
 
 
+def _show_user_profile(context, user_id):
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
+        raise logic.NotFound(_('No such user profile'))
+
+    interests = {
+        'research_questions': [],
+        'keywords': [],
+        'tags': [],
+    }
+    for interest, show_action in {
+        'research_questions': 'research_question_show',
+        'keywords': 'keyword_show',
+        'tags': 'tag_show',
+    }.items():
+        for value in (profile.interests or {}).get(interest, []):
+            print 'VALUE ->', interest, show_action, value
+            try:
+                entity = toolkit.get_action(show_action)(context, {
+                    'id': value,
+                })
+                interests[interest].append(entity)
+            except logic.NotFound:
+                log.debug('Not found "%s" with id %s', interest, value)
+
+    profile_dict = _table_dictize(profile, context)
+    profile_dict['interests'] = interests
+    return profile_dict
+
+
+@toolkit.side_effect_free
+def user_profile_show(context, data_dict):
+    u'''Returns the data for the user profile for the currently authenticated
+    user.
+
+    If the user is a sysadmin, it can provide a specific user_id to get the
+    user profile for a particular user besides his own user account.
+
+    :param user_id: `str`, the ID of the user to display the user profile. The
+        parameter is available only if the current user is a sysadmin,
+        otherwise this parameter is ignored.
+    '''
+    check_access('user_profile_show', context)
+
+    user = context.get('auth_user_obj')
+    if getattr(user, 'sysadmin', False):
+        if data_dict.get('user_id'):
+            return _show_user_profile(context, data_dict['user_id'])
+
+    return _show_user_profile(context, user.id)
+
+
+def user_profile_list(context, data_dict):
+    u'''Returns a list of all user profiles.
+
+    Available only for sysadmin users.
+    '''
+    check_access('user_profile_list', context)
+    page = data_dict.get('page', 1)
+    limit = data_dict.get('limit', 20)
+
+    order_by = data_dict.get('order')
+
+    profiles = UserProfile.get_list(page, limit, order_by)
+
+    results = []
+
+    for profile in profiles:
+        results.append(_table_dictize(profile, context))
+
+    return results
+
+
+@toolkit.side_effect_free
+def tag_list_search(context, data_dict):
+    u'''Performs a search for tags, similar to tag_search, however it returns
+    the full data for the found tags.
+    '''
+    results = toolkit.get_action('tag_list')(context, data_dict)
+    tags = []
+    for tag_name in results:
+        tags.append(
+            toolkit.get_action('tag_show')(context, {'id': tag_name})
+        )
+
+    return tags
 @toolkit.side_effect_free
 def tag_show(context, data_dict):
     '''Return the details of a tag and all its datasets.

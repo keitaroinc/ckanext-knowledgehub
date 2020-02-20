@@ -26,11 +26,14 @@ from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.model.keyword import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
+
+from sqlalchemy.orm.attributes import flag_modified
 
 
 log = logging.getLogger(__name__)
@@ -481,6 +484,9 @@ def dashboard_update(context, data_dict):
 
 
 def package_update(context, data_dict):
+    u'''Wraps the CKAN's core 'package_update' function to schedule a check for
+    Data Quality metrics calculation when the package has been updated.
+    '''
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
 
@@ -694,8 +700,10 @@ def _patch_data_quality(context, data_dict, _type):
                     try:
                         _ftype(value)
                     except Exception as e:
-                        raise ValidationError(
-                            {field: _('Invalid Value' + "(%s) '%s'" % (dimension, value))})
+                        raise ValidationError({
+                            field: _('Invalid Value' +
+                                     "(%s) '%s'" % (dimension, value))
+                        })
                 else:
                     try:
                         values[field] = _ftype(value)
@@ -708,7 +716,7 @@ def _patch_data_quality(context, data_dict, _type):
     db_metric.metrics = db_metric.metrics or {}
 
     for field, values in data_dict.items():
-        if not field in dimensions:
+        if field not in dimensions:
             continue
         setattr(db_metric, field, values['value'])  # set the main metric
         db_metric.metrics[field] = values
@@ -794,8 +802,9 @@ def resource_validation_update(context, data_dict):
     '''
     check_access('resource_validation_update', context, data_dict)
 
+    resource_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                resource_schema,
                                 context)
 
     if errors:
@@ -843,8 +852,9 @@ def resource_validation_status(context, data_dict):
     '''
     check_access('resource_validation_status', context, data_dict)
 
+    rc_validation_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                rc_validation_schema,
                                 context)
 
     if errors:
@@ -887,8 +897,9 @@ def resource_validation_revert(context, data_dict):
     '''
     check_access('resource_validation_revert', context, data_dict)
 
+    rc_validation_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                rc_validation_schema,
                                 context)
 
     if errors:
@@ -965,7 +976,7 @@ def tag_update(context, data_dict):
 def keyword_update(context, data_dict):
     '''Updates the tags for a keyword.
 
-    :param name: `str`, the name of the keyword to update.
+    :param id: `str`, the id or the name of the keyword to update.
     :param tags: `list` of `str`, the tags that this keyword should contain. If
         the tag does not exist, it will be created and added to this keyword.
         The tags that were removed from this keyword will be set as free tags
@@ -974,12 +985,16 @@ def keyword_update(context, data_dict):
     :returns: `dict`, the updated keyword.
     '''
     check_access('keyword_update', context)
-    if 'name' not in data_dict:
-        raise ValidationError({'name': _('Missing Value')})
-
-    existing = Keyword.by_name(data_dict['name'])
+    if 'id' not in data_dict:
+        raise ValidationError({'id': _('Missing Value')})
+    existing = Keyword.get(data_dict['id'])
+    if not existing:
+        existing = Keyword.by_name(data_dict['id'])
     if not existing:
         raise logic.NotFound(_('Not found'))
+
+    if data_dict.get('name', '').strip():
+        existing.name = data_dict['name'].strip()
 
     existing.modified_at = datetime.datetime.utcnow()
     existing.save()
@@ -1007,3 +1022,52 @@ def keyword_update(context, data_dict):
         kwd_dict['tags'].append(tag_dict)
 
     return kwd_dict
+
+
+def user_profile_update(context, data_dict):
+    u'''Updates the user profile data.
+
+    For regular users, this action updates the user profile data for the
+    currently authenticated user.
+
+    For a sysadmin user, an additional parameter (user_id) can be set to update
+    the profile data for another user.
+
+    :param user_id: `str`, the id of the user to update the user profile data.
+        This parameter is available for sysadmins only, otherwise it will be
+        ignored.
+    :param user_notified: `bool`, set the flag for user flash notification.
+    :param research_questions: `list`, list of research questions IDs to set as
+        interests.
+    :param keywords: `list`, list of research questions IDs to set as
+        interests.
+    :param tags: `list`, list of research questions IDs to set as
+        interests.
+    '''
+    check_access('user_profile_update', context, data_dict)
+    user = context.get('auth_user_obj')
+    user_id = user.id
+
+    if getattr(user, 'sysadmin', False) and data_dict.get('user_id'):
+        user_id = data_dict['user_id']
+
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
+        profile = UserProfile(user_id=user_id, user_notified=True)
+        profile.interests = {}
+
+    interests = data_dict.get('interests', {})
+    for interest_type in ['research_questions', 'keywords', 'tags']:
+        if interests.get(interest_type) is not None:
+            profile.interests[interest_type] = interests[interest_type]
+
+    if profile.interests:
+        flag_modified(profile, 'interests')
+
+    if data_dict.get('user_notified'):
+        profile.user_notified = data_dict.get('user_notified')
+
+    profile.save()
+    model.Session.flush()
+
+    return _table_dictize(profile, context)

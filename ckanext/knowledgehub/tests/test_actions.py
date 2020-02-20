@@ -34,7 +34,8 @@ from ckanext.knowledgehub import helpers as kwh_helpers
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons,
-                                                get_context)
+                                                get_context,
+                                                get_regular_user_context)
 from ckanext.knowledgehub.model import (
     Dashboard,
     ResearchQuestion,
@@ -1413,7 +1414,8 @@ class TestKWHUpdateActions(ActionsBase):
             'admin': new_user['name']
         }
 
-        val_updated = update_actions.resource_validation_update(context, data_dict)
+        val_updated = update_actions.resource_validation_update(context,
+                                                                data_dict)
 
         assert_equals(val_updated.get('admin'), data_dict.get('admin'))
 
@@ -2287,3 +2289,50 @@ class TestTagsActions(ActionsBase):
         )
 
         assert_equals(tags_dict.get('count'), 2)
+
+
+class TestUserProfileActions(ActionsBase):
+
+    def test_user_profile_create(self):
+        context = get_regular_user_context()
+        user_profile = create_actions.user_profile_create(context, {})
+        assert_true(user_profile is not None)
+        assert_equals(user_profile.get('user_id'), context['auth_user_obj'].id)
+
+    def test_user_profile_update(self):
+        context = get_regular_user_context()
+
+        user_profile = update_actions.user_profile_update(context, {})
+        assert_true(user_profile is not None)
+        assert_equals(user_profile.get('user_id'), context['auth_user_obj'].id)
+
+        interests = {
+                'research_questions': ['rq-1', 'rq-2'],
+                'keywords': ['kwd-1', 'kwd-2'],
+                'tags': ['tag-1', 'tag-2'],
+            }
+        updated = update_actions.user_profile_update(context, {
+            'user_notified': True,
+            'interests': interests,
+        })
+
+        assert_true(updated is not None)
+        assert_not_equals(updated, user_profile)
+        assert_equals(updated.get('user_notified'), True)
+        assert_equals(updated.get('interests'), interests)
+
+    def test_user_profile_show(self):
+        context = get_regular_user_context()
+        create_actions.user_profile_create(context, {})
+        user_profile = get_actions.user_profile_show(context, {})
+        assert_true(user_profile is not None)
+        assert_equals(user_profile.get('user_id'), context['auth_user_obj'].id)
+
+    def test_user_profile_list(self):
+        context = get_context()
+        create_actions.user_profile_create(context, {})
+
+        results = get_actions.user_profile_list(context, {})
+        assert_true(results is not None)
+        assert_true(isinstance(results, list))
+        assert_true(len(results) > 0)
