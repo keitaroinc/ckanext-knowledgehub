@@ -15,13 +15,7 @@
   {% if h.check_resource_status(res.id) == 'validated' %}
   <li><span class="badge badge-primary"><i class="fa fa-check-square"></i> VALIDATED</span></li>
   {% elif h.check_resource_status(res.id) == 'not_validated' and h.check_validation_admin(res.id) and h.check_access('resource_validate_create') and not validation_data%}
-  <li>
-    <button id="validation_report" class="btn btn-warning" name="resource_validate" type="submit"
-      onclick="showValidationForm()">
-      <i class="fa fa-check-square" aria-hidden="true"></i>
-      {{ _('Validate Resource') }}
-    </button>
-  </li>
+
   {% elif h.check_resource_status(res.id) == 'not_validated' %}
   <li><span class="badge badge-primary"><i class="fa fa-minus-square"></i> NOT VALIDATED</span></li>
   {% endif %}
@@ -79,11 +73,17 @@
   </li>
   {% endif %}
 
-  <!--  -->
-  <!--  -->
-
   {% if res.datastore_active %}
   <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>
+  {% endif %}
+  {% if not validation_data %}
+  <li>
+    <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit"
+      onclick="showValidationForm()">
+      <i class="fa fa-check-square" aria-hidden="true"></i>
+      {{ _('Validate Resource') }}
+    </button>
+  </li>
   {% endif %}
   {% endblock %}
 
@@ -97,7 +97,7 @@
     {% if validation_data %}
     <p></p>
     {% else %}
-    <div id='validationForm' style="display:none">
+    <div id='validationForm'>
       <div class="row">
         <div class="col-md-12">
           <div id="what" class="form-row">
@@ -116,69 +116,17 @@
   </form>
   {% endif %}
 
-  <div>
-    <section class="validation-info">
-      {% if validation_data %}
-      <!-- <h4>{{ _('Validation Report') }}</h4> -->
-      <div id="validation_comment" style="display:block">
-        <div class="comment_body">
-          <p>{{validation_data.what}}</p>
-        </div>
-        <div class="comment_details">
-          <p class="fa fa-calendar"> {{validation_data.when}} &nbsp</p>
-          <span> {{validation_data.who}}</span>
 
-          {% if h.check_validation_admin(res.id)%}
-          <button title="Edit validation" class="btn btn-edit" id="update_validation" name="update_validation_report"
-            type="button" onclick="editComment()">
-            <i class="fa fa-pencil-square-o fa-lg"></i>
-          </button>
-          <a href="{% url_for 'resource_validation_revert', id=pkg.name, resource_id=res.id %}" class="btn btn-delete"
-            id="delete_validation">
-            <i class="fa fa-remove fa-lg validation-icons"></i>
-          </a>
-          {% endif %}
-
-        </div>
-      </div>
-
-      <div id='editComment' class="editCommentVisible">
-        <div class="row">
-          <div class="col-md-12">
-            <div id="whatEdited" class="form-row">
-              <textarea cols='50' rows='3' name="commentEdit" id="commentInput"
-                placeholder="{{ validation_data.what }}"></textarea>
-            </div>
-            <button class="btn btn-primary" id="validationEdited" name="ysubmitEdit" type="submit">Edit
-              Validation</button>
-
-          </div>
-        </div>
-      </div>
-
-      <!-- <div>
-        <button id="update_validation" class="btn btn-primary" name="update_validation_report" type="button"
-          onclick="editComment()"><i class="fa fa-pencil"></i>
-          {{ _('Edit') }}
-        </button>
-        <button id="delete_validation" class="btn btn-danger pull-left" name="delete_validation_report" type="submit">
-          {{ _('Delete') }}
-        </button>
-      </div> -->
-
-      {% else %}
-      <p></p>
-      {% endif %}
-
-    </section>
-  </div>
 </div>
 
+
 {% endblock %}
+
 {% block resource_content %}
 {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>
 {% endblock %}
 {% block resource_read_url %}
+
 {% if res.url and h.is_url(res.url) %}
 <p style="margin-top:10px;"><b>{{ _('URL:') }} </b><input id="copyFrom" readonly class="inputs" id="chart_field_title"
     type="text" name="clipboard-input" value="{{ res.url }}"><button class="btn btn-sm" id="button-copy"
@@ -194,7 +142,6 @@
   {{ h.render_markdown(res.description) }}
   {% endif %}
   {% if not res.description and c.package.notes %}
-  <!-- <h3>{{ _('From the dataset abstract') }}</h3> -->
   <p>{{ h.markdown_extract(h.get_translated(c.package, 'notes')) }}</p>
   <p>
     {% trans dataset=c.package.title, url=h.url_for(controller='package', action='read', id=c.package['name']) %}Source:
@@ -416,9 +363,60 @@
   </div>
   {% endif %}
 </div>
+
 {% endblock %}
 
 {% block primary_content %}
+{%  set validation_data = h.get_resource_validation_data(res.id) %}
+
+<div>
+  <section class="validation-info pull-right">
+    {% if validation_data %}
+    <div class="shadow validation-box">
+      <div id="validation_comment">
+        <div class="comment_body">
+          <p>{{validation_data.what}}</p>
+        </div>
+        <div class="comment_details">
+          <p class="fa fa-calendar"> {{validation_data.when}} &nbsp</p>
+          <span> {{validation_data.who}}</span>
+
+          {% if h.check_validation_admin(res.id)%}
+          <button title="Edit validation" class="btn btn-edit" id="update_validation" name="update_validation_report"
+            type="button" onclick="editComment()">
+            <i class="fa fa-pencil-square-o fa-lg"></i>
+          </button>
+          <a href="{% url_for 'resource_validation_revert', id=pkg.name, resource_id=res.id %}" class="btn btn-delete"
+            id="delete_validation">
+            <i class="fa fa-remove fa-lg validation-icons"></i>
+          </a>
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+    {% else %}
+    <p></p>
+
+  </section>
+  {% endif %}
+
+</div>
+
+<div id='editComment' class="editCommentVisible">
+  <div class="row">
+    <div class="col-md-12">
+      <div id="whatEdited" class="form-row">
+        <textarea cols='50' rows='3' name="commentEdit" id="commentInput"
+          placeholder="{{ validation_data.what }}"></textarea>
+      </div>
+      <button class="btn btn-primary" id="validationEdited" name="ysubmitEdit" type="submit">Edit
+        Validation</button>
+
+    </div>
+  </div>
+</div>
 
 {%  set data_quality = h.get_resource_data_quality(res.id)  %}
 <section class="additional-info">
