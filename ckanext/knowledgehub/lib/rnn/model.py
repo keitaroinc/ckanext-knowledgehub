@@ -12,6 +12,11 @@ from ckanext.knowledgehub.lib.rnn.config import PredictiveSearchConfig
 
 
 class PredictiveSearchModel(PredictiveSearchConfig):
+    ''' Use the machine learning model trained by the worker.
+
+    Has ability to predict the next characters or word for given text.
+    '''
+
     def __init__(self):
         super(PredictiveSearchModel, self).__init__()
         self.model = None

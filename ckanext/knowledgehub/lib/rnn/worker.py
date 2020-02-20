@@ -24,6 +24,10 @@ tf.set_random_seed(42)
 
 
 class PredictiveSearchWorker(PredictiveSearchConfig):
+    ''' A worker that gets the kwh data, create corpus(training data),
+    prepare the data for training, traing the model and save it.
+    '''
+
     def __init__(self):
         super(PredictiveSearchWorker, self).__init__()
         self.model = Sequential()
