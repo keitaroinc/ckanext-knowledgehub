@@ -57,8 +57,8 @@ class Dashboard(DomainObject, Indexed):
         'indicators',
         'research_questions',
         'datasets',
-        'tags',
         'keywords',
+        mapped('tags', 'tags'),
         mapped('groups', 'groups'),
         mapped('organizations', 'organizations')
     ]
@@ -98,7 +98,8 @@ class Dashboard(DomainObject, Indexed):
 
         keywords = set()
         if data.get('tags'):
-            for tag in data.get('tags', '').split(','):
+            data['tags'] = data.get('tags').split(',')
+            for tag in data.get('tags'):
                 tag_obj = get_action('tag_show')(
                     {'ignore_auth': True},
                     {'id': tag}
