@@ -32,6 +32,8 @@ from ckanext.knowledgehub.model.kwh_data import (
 from ckanext.knowledgehub import helpers as kwh_helpers
 from ckanext.knowledgehub.logic.action import create as create_actions
 from ckanext.knowledgehub.logic.action import get as get_actions
+from ckanext.knowledgehub.logic.action import delete as delete_actions
+from ckanext.knowledgehub.logic.action import update as update_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
                                                 mock_pylons)
@@ -72,7 +74,6 @@ class ActionsBase(helpers.FunctionalTestBase):
             plugins.unload('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.unload('datapusher')
-
 
 
 class TestKWHHelpers(ActionsBase):
@@ -457,7 +458,7 @@ class TestKWHHelpers(ActionsBase):
             'sub_theme': sub_theme.get('id')
         }
         rq = create_actions.research_question_create(context, data_dict)
-        titles = kwh_helpers.get_rq_options(True)
+        titles = kwh_helpers.get_rq_options(context, True)
 
         assert_equals(len(titles), 1)
 
@@ -521,7 +522,6 @@ class TestKWHHelpers(ActionsBase):
         rq1 = create_actions.research_question_create(context, data_dict)
         dataset = create_dataset(
             research_question = rq1['id']
-
         )
         resource = factories.Resource(
             schema='',
@@ -837,59 +837,59 @@ class TestKWHHelpers(ActionsBase):
         b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
 
-    @monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
-    @monkey_patch(Visualization, 'update_index_doc', mock.Mock())
-    def test_views_dashboards_groups_update(self):
-        dataset = create_dataset()
-        resource = factories.Resource(
-            schema='',
-            validation_options='',
-            package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
-        )
+    # @monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    # @monkey_patch(Visualization, 'update_index_doc', mock.Mock())
+    # def test_views_dashboards_groups_update(self):
+    #     dataset = create_dataset()
+    #     resource = factories.Resource(
+    #         schema='',
+    #         validation_options='',
+    #         package_id=dataset['id'],
+    #         url='https://jsonplaceholder.typicode.com/posts'
+    #     )
 
-        user = factories.Sysadmin()
-        context = {
-            'user': user.get('name'),
-            'auth_user_obj': User(user.get('id')),
-            'ignore_auth': True,
-            'model': model,
-            'session': model.Session
-        }
+    #     user = factories.Sysadmin()
+    #     context = {
+    #         'user': user.get('name'),
+    #         'auth_user_obj': User(user.get('id')),
+    #         'ignore_auth': True,
+    #         'model': model,
+    #         'session': model.Session
+    #     }
 
-        data_dict = {
-            'resource_id': resource.get('id'),
-            'title': 'Visualization title',
-            'description': 'Visualization description',
-            'view_type': 'chart',
-            'config': {
-                "color": "#59a14f",
-                "y_label": "Usage",
-                "show_legend": "Yes"
-            }
-        }
-        rsc_view = create_actions.resource_view_create(context, data_dict)
+    #     data_dict = {
+    #         'resource_id': resource.get('id'),
+    #         'title': 'Visualization title',
+    #         'description': 'Visualization description',
+    #         'view_type': 'chart',
+    #         'config': {
+    #             "color": "#59a14f",
+    #             "y_label": "Usage",
+    #             "show_legend": "Yes"
+    #         }
+    #     }
+    #     rsc_view = create_actions.resource_view_create(context, data_dict)
 
-        data_dict = {
-            'name': 'internal-dashboard',
-            'title': 'Internal Dashboard',
-            'description': 'Dashboard description',
-            'type': 'internal',
-            'indicators': [
-                {"research_question": "54be129c-9e6f-4a0b-938a-bb6f2493dc91",
-                 "resource_view_id": rsc_view['id'],
-                 "order": 1,
-                 "size": "small"}
-            ]
-        }
-        dashboard = create_actions.dashboard_create(context, data_dict)
+    #     data_dict = {
+    #         'name': 'internal-dashboard',
+    #         'title': 'Internal Dashboard',
+    #         'description': 'Dashboard description',
+    #         'type': 'internal',
+    #         'indicators': [
+    #             {"research_question": "54be129c-9e6f-4a0b-938a-bb6f2493dc91",
+    #              "resource_view_id": rsc_view['id'],
+    #              "order": 1,
+    #              "size": "small"}
+    #         ]
+    #     }
+    #     dashboard = create_actions.dashboard_create(context, data_dict)
 
-        kwh_helpers.views_dashboards_groups_update(dataset['id'])
+    #     kwh_helpers.views_dashboards_groups_update(dataset['id'])
 
-        d = get_actions.dashboard_show(context, {'id': dashboard['id']})
+    #     d = get_actions.dashboard_show(context, {'id': dashboard['id']})
 
-        assert_equals(d['name'], data_dict['name'])
-        assert_equals(d['type'], data_dict['type'])
+    #     assert_equals(d['name'], data_dict['name'])
+    #     assert_equals(d['type'], data_dict['type'])
 
     @raises
     def test_get_resource_validation_options(self):
@@ -936,3 +936,327 @@ class TestKWHHelpers(ActionsBase):
         vocab_list = kwh_helpers.keyword_list()
 
         assert_equals(len(vocab_list), 1)
+
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    def test_dashboard_research_questions(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        dataset = create_dataset()
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+        data_dict = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'description': 'Visualization description',
+            'view_type': 'chart',
+            'config': {
+                "color": "#59a14f",
+                "y_label": "Usage",
+                "show_legend": "Yes"
+            }
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict)
+
+        data_dict1 = {
+          'name': 'theme-name',
+          'title': 'Test title',
+          'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict1)
+
+        data_dict2 = {
+            'name': 'sub-theme-name',
+            'title': 'Test sub-theme',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict2)
+
+        data_dict3 = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq = create_actions.research_question_create(context, data_dict3)
+
+        resource_view_id = rsc_view['id']
+        research_question_id = rq['id']
+        indicators = [{
+                        "resource_view": rsc_view,
+                        "research_question": research_question_id,
+                        "resource_view_id": resource_view_id,
+                        "order": 1,
+                        "size": "small"
+                        }]
+        json_indicators = json.dumps(indicators)
+
+        data_dict4 = {
+            'name': 'internal-dashboard',
+            'research_question_1': research_question_id,
+            'title': 'Internal Dashboard',
+            'visualization_1': resource_view_id,
+            'source': '',
+            'description': 'Dashboard description',
+            'type': 'internal',
+            'indicators': json_indicators,
+            'size_1': 'small',
+            'save': ''
+
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict4)
+        dashbourd_indicators = dashboard.get('indicators')
+        dash_indicators = json.loads(dashbourd_indicators)
+        dashboard['indicators'] = dash_indicators
+
+        drq = kwh_helpers.dashboard_research_questions(context, dashboard)
+
+        assert_equals(
+          drq[0].get('id'),
+          dashboard.get('indicators')[0].get('research_question')
+        )
+
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    def test_add_rqs_to_dataset(self):
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict1 = {
+            'name': 'sub-theme-name',
+            'title': 'Test sub-theme',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict1)
+
+        data_dict2 = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq = create_actions.research_question_create(context, data_dict2)
+
+        data_dict3 = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'chart_subtitle': 'Visualization subtitle',
+            'chart_description': 'Visualization description',
+            'view_type': 'chart',
+            'color': '#00B398',
+            'data_format': '',
+            'show_legend': 'true',
+            'y_tick_format': '',
+            'y_label': '',
+            'filters': '[]',
+            'x_text_rotate': u'0',
+            'show_labels': 'true',
+            'chart_padding_bottom': u'',
+            'dynamic_reference_factor': u'',
+            'x_axis': u'John',
+            'y_from_zero': 'true',
+            'dynamic_reference_type': u'',
+            'type': u'line',
+            'dynamic_reference_label': u'',
+            'sort': u'default',
+            'research_questions': rq.get('name')
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict3)
+
+        assert_equals(rsc_view.get('title'), data_dict3['title'])
+
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    def test_update_rqs_in_dataset(self):
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(context, data_dict)
+
+        data_dict1 = {
+            'name': 'sub-theme-name',
+            'title': 'Test sub-theme',
+            'description': 'Test description',
+            'theme': theme.get('id')
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict1)
+
+        data_dict2 = {
+            'name': 'rq1-name',
+            'title': 'Test1 title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq1 = create_actions.research_question_create(context, data_dict2)
+
+        data_dict3 = {
+            'name': 'rq2-name',
+            'title': 'Test2 title',
+            'content': 'Research question2',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id')
+        }
+        rq2 = create_actions.research_question_create(context, data_dict3)
+
+        data_dict4 = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'chart_subtitle': 'Visualization subtitle',
+            'chart_description': 'Visualization description',
+            'view_type': 'chart',
+            'color': '#00B398',
+            'data_format': '',
+            'show_legend': 'true',
+            'y_tick_format': '',
+            'y_label': '',
+            'filters': '[]',
+            'x_text_rotate': u'0',
+            'show_labels': 'true',
+            'chart_padding_bottom': u'',
+            'dynamic_reference_factor': u'',
+            'x_axis': u'John',
+            'y_from_zero': 'true',
+            'dynamic_reference_type': u'',
+            'type': u'line',
+            'dynamic_reference_label': u'',
+            'sort': u'default',
+            'research_questions': rq1.get('name')
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict4)
+
+        data_dict5 = {
+            'id': rsc_view.get('id'),
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'chart_subtitle': 'Visualization subtitle',
+            'chart_description': 'Visualization description',
+            'view_type': 'chart',
+            'color': '#00B398',
+            'data_format': '',
+            'show_legend': 'true',
+            'y_tick_format': '',
+            'y_label': '',
+            'filters': '[]',
+            'x_text_rotate': u'0',
+            'show_labels': 'true',
+            'chart_padding_bottom': u'',
+            'dynamic_reference_factor': u'',
+            'x_axis': u'John',
+            'y_from_zero': 'true',
+            'dynamic_reference_type': u'',
+            'type': u'line',
+            'dynamic_reference_label': u'',
+            'sort': u'default',
+            'research_questions': rq2.get('name')
+        }
+        rsc_view_update = update_actions.resource_view_update(
+          context,
+          data_dict5
+        )
+
+        assert_equals(
+          rsc_view_update['__extras'].get('research_questions'),
+          data_dict5['research_questions']
+        )
+
+    def test_remove_rqs_from_dataset(self):
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        rsc_view = {
+          '__extras': {
+            'color': '#00B398',
+            'y_label': '',
+            'data_format': '',
+            'show_legend': 'true',
+            'dynamic_reference_type': '',
+            'filters': '[]',
+            'x_text_rotate': '0',
+            'show_labels': 'true',
+            'chart_padding_bottom': '',
+            'dynamic_reference_factor': '',
+            'x_axis': 'John',
+            'chart_subtitle': 'subtitle1',
+            'y_tick_format': '',
+            'id': '854e6190-f2a1-4854-80a2-51d38e9c5c81',
+            'type': 'line',
+            'dynamic_reference_label': '',
+            'sort': 'default',
+            'research_questions': 'rq1',
+            'chart_description': '   not available',
+            'y_from_zero': 'true'
+          },
+          'description': None,
+          'title': 'title1',
+          'resource_id': resource.get('id'),
+          'view_type': 'chart',
+          'id': '854e6190-f2a1-4854-80a2-51d38e9c5c81',
+          'package_id': dataset['id']
+        }
+        h_rm_rqs = kwh_helpers.remove_rqs_from_dataset(rsc_view)
+
+        assert_equals(h_rm_rqs.get('message'), 'OK')
