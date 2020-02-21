@@ -170,6 +170,8 @@ def research_question_update(context, data_dict):
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.research_question_schema(),
                                 context)
+    if not data_dict.get('tags'):
+        data['tags'] = None
 
     if errors:
         raise logic.ValidationError(errors)

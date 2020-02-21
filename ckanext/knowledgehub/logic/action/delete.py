@@ -8,6 +8,7 @@ from ckan.logic.action.delete import (
 )
 from ckan.plugins import toolkit
 from ckan.common import _
+from ckan import model
 from ckan.model import Session
 from ckanext.knowledgehub import helpers as plugin_helpers
 
@@ -261,6 +262,197 @@ def tag_delete_by_name(context, data_dict):
         raise NotFound(_('Could not find tag "%s"') % tag_name)
 
     check_access('tag_delete_by_name', context, data_dict)
+
+    tag_obj.delete()
+    model.repo.commit()
+
+
+def delete_tag_in_rq(context, data_dict):
+
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+    id_or_name = data_dict.get('id') or data_dict.get('name')
+    tag_to_delete = data_dict.get('tag')
+
+    research_question = ResearchQuestion.get(id_or_name=id_or_name).first()
+    if not research_question:
+        log.debug('Could not find research question %s', id)
+
+    rq_dict = research_question.as_dict()
+
+    tag_list = rq_dict.get('tags').split(',')
+    if len(tag_list) == 1:
+        result = toolkit.get_action('research_question_update')(context, {
+                'id': rq_dict.get('id'),
+                'name': rq_dict.get('name'),
+                'title': rq_dict.get('title'),
+                'tags': None
+                })
+    else:
+        for tag in tag_list:
+            if tag == tag_to_delete:
+                tag_list.remove(tag_to_delete)
+        str1 = ","
+        tags = str1.join(tag_list)
+
+        result = toolkit.get_action('research_question_update')(context, {
+                    'id': rq_dict.get('id'),
+                    'name': rq_dict.get('name'),
+                    'title': rq_dict.get('title'),
+                    'tags': tags
+                    })
+
+    return result
+
+
+def delete_tag_in_dash(context, data_dict):
+
+    id = data_dict.get("id")
+    tag_name = data_dict.get('tag')
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+
+    dash = Dashboard.get(tag_name)
+    if not dash:
+        log.debug('Could not find dashboard %s', id)
+    dash_dict = dash.as_dict()
+    tag_list = dash_dict.get('tags').split(',')
+    if len(tag_list) == 1:
+        result = toolkit.get_action('dashboard_update')(context, {
+                'id': dash_dict.get('id'),
+                'name': dash_dict.get('name'),
+                'title': dash_dict.get('title'),
+                'description': dash_dict.get('description'),
+                'type': dash_dict.get('type'),
+                'source': dash_dict.get('source'),
+                'indicators': dash_dict.get('indicators'),
+                'created_by': dash_dict.get('created_by'),
+                'tags': None
+                })
+    else:
+        for tag in tag_list:
+            if tag == tag_name:
+                tag_list.remove(tag)
+        str1 = ","
+        tags = str1.join(tag_list)
+
+        result = toolkit.get_action('dashboard_update')(context, {
+                    'id': dash_dict.get('id'),
+                    'name': dash_dict.get('name'),
+                    'title': dash_dict.get('title'),
+                    'description': dash_dict.get('description'),
+                    'type': dash_dict.get('type'),
+                    'source': dash_dict.get('source'),
+                    'indicators': dash_dict.get('indicators'),
+                    'created_by': dash_dict.get('created_by'),
+                    'tags': tags
+                    })
+
+    return result
+
+
+def delete_tag_in_resource_view(context, data_dict):
+
+    tag_name = data_dict.get('tag')
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+
+    visual = model.Session.query(model.ResourceView).filter_by(id=id)
+    if not visual:
+        log.debug('Could not find visualization %s', id)
+    visual_element = visual.order_by(model.ResourceView.order).all()[0]
+
+    visual_dict = {
+        'id': visual_element.id,
+        'resource_id': visual_element.resource_id,
+        'title': visual_element.title,
+        'description': visual_element.description,
+        'view_type': visual_element.view_type,
+        'order': visual_element.order,
+        'config': visual_element.config,
+        'tags': visual_element.tags
+    }
+
+    if visual_dict.get('tags'):
+        tag_list = visual_dict.get('tags').split(',')
+        if len(tag_list) == 1:
+            visual_element.tags = None
+            visual_element.save()
+            visual_element.commit()
+            return visual_element
+        else:
+            for tag in tag_list:
+                if tag == tag_name:
+                    tag_list.remove(tag)
+                    str1 = ","
+                    tags = str1.join(tag_list)
+                    visual_element.tags = tags
+                    visual_element.save()
+                    visual_element.commit()
+
+                    return visual_element
+
+
+# Overwrite of the original 'tag_delete'
+def tag_delete(context, data_dict):
+    '''Delete a tag.
+
+    You must be a sysadmin to delete tags.
+
+    :param id: the id or name of the tag
+    :type id: string
+    :param vocabulary_id: the id or name of the vocabulary that the tag belongs
+        to (optional, default: None)
+    :type vocabulary_id: string
+
+    '''
+
+    model = context['model']
+
+    if not data_dict.has_key('id') or not data_dict['id']:
+        raise ValidationError({'id': _('id not in data')})
+    tag_id_or_name = _get_or_bust(data_dict, 'id')
+
+    vocab_id_or_name = data_dict.get('vocabulary_id')
+
+    tag_obj = model.tag.Tag.get(tag_id_or_name, vocab_id_or_name)
+    tag_name = tag_obj.name
+
+    if tag_obj is None:
+        raise NotFound(_('Could not find tag "%s"') % tag_id_or_name)
+
+    check_access('tag_delete', context, data_dict)
+
+    rq_list = toolkit.get_action('rqs_search_tag')(context, {
+        'tags': tag_name
+    })
+    list_dashboard = toolkit.get_action('dash_search_tag')(context, {
+        'tags': tag_name
+    })
+    list_visuals = toolkit.get_action('visual_search_tag')(context, {
+        'tags': tag_name
+    })
+
+    if len(rq_list):
+        for rq in rq_list:
+            toolkit.get_action('delete_tag_in_rq')(context, {
+                'id': rq,
+                'tag': tag_name
+            })
+    if len(list_dashboard):
+        for dash in list_dashboard:
+            toolkit.get_action('delete_tag_in_dash')(context, {
+                'id': dash,
+                'tag': tag_name
+            })
+    if len(list_visuals):
+        for visual in list_visuals:
+            toolkit.get_action('delete_tag_in_resource_view')(context, {
+                'id': visual,
+                'tag': tag_name
+            })
 
     tag_obj.delete()
     model.repo.commit()
