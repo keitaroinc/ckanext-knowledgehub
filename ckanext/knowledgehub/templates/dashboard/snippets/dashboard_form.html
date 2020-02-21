@@ -34,7 +34,7 @@
     {% set hiddenClass = 'hidden' if not data or data.type != 'external' else '' %}
     {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', hiddenClass], is_required=true) }}
 
-    {% set research_questions = [{'text': 'Choose research question', 'value': ''}] + h.get_rq_options(idValue=true) %}
+    {% set research_questions = [{'text': 'Choose research question', 'value': ''}] + h.get_rq_options(context, idValue=true) %}
     <script type="text/javascript">
         window.research_questions = {{ research_questions | tojson }}
     </script>

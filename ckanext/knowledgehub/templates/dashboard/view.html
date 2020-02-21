@@ -177,7 +177,7 @@
         </div>
         {% endfor %}
         <div class="col-md-12 col-sm-12">
-            {% set research_questions = h.dashboard_research_questions(dashboard)%}
+            {% set research_questions = h.dashboard_research_questions(context, dashboard)%}
             {% if research_questions %}
             {% snippet 'dashboard/snippets/research_questions.html', questions=research_questions %}
             {% endif%}
