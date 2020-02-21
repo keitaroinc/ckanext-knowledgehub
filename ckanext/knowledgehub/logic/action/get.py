@@ -1387,7 +1387,6 @@ def _show_user_profile(context, user_id):
         'tags': 'tag_show',
     }.items():
         for value in (profile.interests or {}).get(interest, []):
-            print 'VALUE ->', interest, show_action, value
             try:
                 entity = toolkit.get_action(show_action)(context, {
                     'id': value,
@@ -1449,14 +1448,18 @@ def tag_list_search(context, data_dict):
     u'''Performs a search for tags, similar to tag_search, however it returns
     the full data for the found tags.
     '''
+    context['ignore_auth'] = True
     results = toolkit.get_action('tag_list')(context, data_dict)
     tags = []
     for tag_name in results:
         tags.append(
             toolkit.get_action('tag_show')(context, {'id': tag_name})
         )
-
+    context.pop('ignore_auth')
     return tags
+
+
+
 @toolkit.side_effect_free
 def tag_show(context, data_dict):
     '''Return the details of a tag and all its datasets.
