@@ -37,15 +37,28 @@
                     result_id: result_id
                 })
                 .done(function (data) {
-                    console.log("User Quere Result: SAVED!");
+                    console.log("User Query Result: SAVED!");
                 })
                 .fail(function (error) {
-                    console.log("User Quere Result failed: " + error.statusText);
+                    console.log("User Query Result failed: " + error.statusText);
                 });
             }
         })
         .fail(function (error) {
             console.log("User Query Show failed: " + error.statusText);
+        });
+    }
+
+    function saveKnowledgeHubData(query_text) {
+        api.post('kwh_data_create', {
+            type: 'search_query',
+            title: query_text
+        })
+        .done(function (data) {
+            console.log("User query added to kwh data");
+        })
+        .fail(function (error) {
+            console.log("Failed to add user query to kwh data: " + error.statusText);
         });
     }
 
@@ -81,6 +94,7 @@
                 if (query_text) {
                     var user_id = $('#user-id').val();
                     saveUserQueryResult(query_text, result_type, result_id, user_id)
+                    saveKnowledgeHubData(query_text, user_id)
                 }
             }
         });

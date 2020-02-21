@@ -1,4 +1,5 @@
 import logging
+import re
 import os
 import json
 from six import string_types
@@ -11,8 +12,6 @@ from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 from ckan.model.meta import Session
-from ckan.logic.action.get import tag_show as ckan_tag_show
-
 from ckanext.knowledgehub.model import (
     Theme,
     SubThemes,
@@ -28,9 +27,10 @@ from ckanext.knowledgehub.model import (
     UserQueryResult, DataQualityMetrics,
     Keyword,
     ExtendedTag,
+    UserProfile,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
-from ckanext.knowledgehub.rnn import helpers as rnn_helpers
+from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
@@ -715,10 +715,10 @@ def kwh_data_list(context, data_dict):
     rq = data_dict.get('rq', '')
 
     q = data_dict.get('q', '')
-    page_size = int(data_dict.get('pageSize', 1000000))
+    limit = int(data_dict.get('limit', 1000000))
     page = int(data_dict.get('page', 1))
     order_by = data_dict.get('order_by', None)
-    offset = (page - 1) * page_size
+    offset = (page - 1) * limit
 
     kwargs = {}
 
@@ -736,7 +736,7 @@ def kwh_data_list(context, data_dict):
         kwargs['rq'] = rq
 
     kwargs['q'] = q
-    kwargs['limit'] = page_size
+    kwargs['limit'] = limit
     kwargs['offset'] = offset
     kwargs['order_by'] = order_by
 
@@ -744,9 +744,10 @@ def kwh_data_list(context, data_dict):
 
     try:
         db_data = KWHData.get(**kwargs).all()
-    except Exception:
+    except Exception as e:
+        log.debug('Knowledge hub data list: %s' % str(e))
         return {'total': 0, 'page': page,
-                'pageSize': page_size, 'data': []}
+                'limit': limit, 'data': []}
 
     for entry in db_data:
         kwh_data.append(_table_dictize(entry, context))
@@ -754,7 +755,7 @@ def kwh_data_list(context, data_dict):
     total = len(kwh_data)
 
     return {'total': total, 'page': page,
-            'pageSize': page_size, 'data': kwh_data}
+            'limit': limit, 'data': kwh_data}
 
 
 @toolkit.side_effect_free
@@ -771,20 +772,89 @@ def get_last_rnn_corpus(context, data_dict):
         return c.corpus
 
 
+def _get_predictions_from_db(query):
+    number_predictions = int(
+        config.get(
+            u'ckanext.knowledgehub.rnn.number_predictions',
+            3
+        )
+    )
+
+    text = ' '.join(query.split()[-3:])
+    data_dict = {
+        'q': text,
+        'limit': 10,
+        'order_by': 'created_at desc'
+    }
+    kwh_data = toolkit.get_action('kwh_data_list')({}, data_dict)
+
+    def _get_predict(text, query, index):
+        predict = ''
+        if index != -1:
+            index = index + len(query)
+            for i, ch in enumerate(text[index:]):
+                if ch.isalnum() or (i == 0 and ch == ' '):
+                    predict += ch
+                else:
+                    break
+
+        return predict
+
+    def _findall(pattern, text):
+        return [
+            match.start(0) for match in re.finditer(pattern, text)
+        ]
+
+    predictions = []
+    for data in kwh_data.get('data', []):
+        if len(predictions) >= number_predictions:
+            break
+
+        title = data.get('title').lower()
+        for index in _findall(query, title):
+            predict = _get_predict(title, query, index)
+            if predict != '' and predict not in predictions:
+                predictions.append(predict)
+
+        if data.get('description'):
+            description = data.get('description').lower()
+            for index in _findall(query, description):
+                predict = _get_predict(description, query, index)
+                if predict != '' and predict not in predictions:
+                    predictions.append(predict)
+
+    return predictions[:number_predictions]
+
+
 @toolkit.side_effect_free
 def get_predictions(context, data_dict):
-    ''' Returns a list of predictions
-    :param text: the text for which predictions have to be made
-    :type text: string
+    ''' Returns a list of predictions from RNN model and DB based
+    on data store in knowledge hub
+
+    :param query: the search query for which predictions have to be made
+    :type query: string
     :returns: predictions
     :rtype: list
     '''
+    query = data_dict.get('query')
+    if not query:
+        raise ValidationError({'query': _('Missing value')})
+    if len(query) < int(config.get(
+            u'ckanext.knowledgehub.rnn.sequence_length', 10)):
+        return []
 
-    text = data_dict.get('text')
-    if not text:
-        raise ValidationError({'text': _('Missing value')})
+    if query.isspace():
+        return []
+    query = query.lower()
 
-    return rnn_helpers.predict_completions(text)
+    predictions = _get_predictions_from_db(query)
+
+    model = PredictiveSearchModel()
+    for p in model.predict(query):
+        if p not in predictions:
+            predictions.append(p)
+
+    return predictions
 
 
 def _search_entity(index, ctx, data_dict):
@@ -1352,6 +1422,7 @@ def keyword_show(context, data_dict):
     return keyword_dict
 
 
+@toolkit.side_effect_free
 def keyword_list(context, data_dict):
     '''Returns all keywords defined for this system.
     '''
@@ -1359,10 +1430,11 @@ def keyword_list(context, data_dict):
 
     page = data_dict.get('page')
     limit = data_dict.get('limit')
+    search = data_dict.get('q')
 
     results = []
 
-    for keyword in Keyword.get_list(page, limit):
+    for keyword in Keyword.get_list(page, limit, search=search):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
@@ -1370,6 +1442,92 @@ def keyword_list(context, data_dict):
     return results
 
 
+def _show_user_profile(context, user_id):
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
+        raise logic.NotFound(_('No such user profile'))
+
+    interests = {
+        'research_questions': [],
+        'keywords': [],
+        'tags': [],
+    }
+    for interest, show_action in {
+        'research_questions': 'research_question_show',
+        'keywords': 'keyword_show',
+        'tags': 'tag_show',
+    }.items():
+        for value in (profile.interests or {}).get(interest, []):
+            print 'VALUE ->', interest, show_action, value
+            try:
+                entity = toolkit.get_action(show_action)(context, {
+                    'id': value,
+                })
+                interests[interest].append(entity)
+            except logic.NotFound:
+                log.debug('Not found "%s" with id %s', interest, value)
+
+    profile_dict = _table_dictize(profile, context)
+    profile_dict['interests'] = interests
+    return profile_dict
+
+
+@toolkit.side_effect_free
+def user_profile_show(context, data_dict):
+    u'''Returns the data for the user profile for the currently authenticated
+    user.
+
+    If the user is a sysadmin, it can provide a specific user_id to get the
+    user profile for a particular user besides his own user account.
+
+    :param user_id: `str`, the ID of the user to display the user profile. The
+        parameter is available only if the current user is a sysadmin,
+        otherwise this parameter is ignored.
+    '''
+    check_access('user_profile_show', context)
+
+    user = context.get('auth_user_obj')
+    if getattr(user, 'sysadmin', False):
+        if data_dict.get('user_id'):
+            return _show_user_profile(context, data_dict['user_id'])
+
+    return _show_user_profile(context, user.id)
+
+
+def user_profile_list(context, data_dict):
+    u'''Returns a list of all user profiles.
+
+    Available only for sysadmin users.
+    '''
+    check_access('user_profile_list', context)
+    page = data_dict.get('page', 1)
+    limit = data_dict.get('limit', 20)
+
+    order_by = data_dict.get('order')
+
+    profiles = UserProfile.get_list(page, limit, order_by)
+
+    results = []
+
+    for profile in profiles:
+        results.append(_table_dictize(profile, context))
+
+    return results
+
+
+@toolkit.side_effect_free
+def tag_list_search(context, data_dict):
+    u'''Performs a search for tags, similar to tag_search, however it returns
+    the full data for the found tags.
+    '''
+    results = toolkit.get_action('tag_list')(context, data_dict)
+    tags = []
+    for tag_name in results:
+        tags.append(
+            toolkit.get_action('tag_show')(context, {'id': tag_name})
+        )
+
+    return tags
 @toolkit.side_effect_free
 def tag_show(context, data_dict):
     '''Return the details of a tag and all its datasets.

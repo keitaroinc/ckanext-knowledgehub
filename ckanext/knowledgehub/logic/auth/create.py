@@ -69,8 +69,8 @@ def kwh_data(context, data_dict):
     '''
         Authorization check for storing KWH data
     '''
-    # sysadmins only
-    return {'success': False}
+    # all login users
+    return {'success': True}
 
 
 def corpus_create(context, data_dict):
@@ -127,3 +127,7 @@ def keyword_create(context, data_dict):
     '''
     # sysadmins only
     return {'success': False}
+
+
+def user_profile_create(context, data_dict=None):
+    return {'success': True}

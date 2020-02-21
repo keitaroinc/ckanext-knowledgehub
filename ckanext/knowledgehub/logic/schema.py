@@ -119,7 +119,7 @@ def resource_validate_schema():
         'resource': [not_empty, resource_id_exists]
     }
 
-   
+
 def resource_validation_schema():
     return {
         'dataset': [ignore_missing, unicode],
@@ -135,18 +135,23 @@ def resource_validation_schema():
 def kwh_data_schema():
     return {
         'type': [not_empty, validators.kwh_data_type_validator],
-        'content': [not_empty, unicode],
+        'title': [not_empty, unicode],
+        'description': [ignore_missing, unicode],
         'theme': [ignore_missing, unicode],
         'sub_theme': [ignore_missing, unicode],
-        'rq': [ignore_missing, unicode]
+        'research_question': [ignore_missing, unicode],
+        'dataset': [ignore_missing, unicode],
+        'visualization': [ignore_missing, unicode],
+        'dashboard': [ignore_missing, unicode]
     }
 
 
 def kwh_data_schema_update():
     return {
         'type': [not_empty, validators.kwh_data_type_validator],
-        'old_content': [not_empty, unicode],
-        'new_content': [not_empty, unicode]
+        'title': [not_empty, unicode],
+        'description': [ignore_missing, unicode],
+        'entity_id': [not_empty, unicode]
     }
 
 
