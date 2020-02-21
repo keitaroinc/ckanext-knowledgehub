@@ -313,7 +313,8 @@ def delete_tag_in_dash(context, data_dict):
     if not id:
         raise ValidationError({'id': _('Missing value')})
 
-    dash = Dashboard.get(tag_name)
+    dash = Dashboard.get(id)
+
     if not dash:
         log.debug('Could not find dashboard %s', id)
     dash_dict = dash.as_dict()
