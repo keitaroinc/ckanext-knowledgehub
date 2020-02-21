@@ -177,14 +177,22 @@ def resource_feedbacks_type_validator(key, data, errors, context):
 
 def kwh_data_type_validator(key, data, errors, context):
     clean_data = df.unflatten(data)
-    rf_type = clean_data.get('type')
+    entity_type = clean_data.get('type')
 
-    rf_types = ['theme', 'sub-theme', 'rq', 'search']
+    entity_types = [
+        'search_query',
+        'theme',
+        'sub_theme',
+        'research_question',
+        'dataset',
+        'visualization',
+        'dashboard'
+        ]
 
-    if rf_type not in rf_types:
+    if entity_type not in entity_types:
         errors[key].append(
             p.toolkit._(
-                'Allowed KWH data types are: %s' % ', '.join(rf_types)
+                'Allowed KWH data types are: %s' % ', '.join(entity_types)
             )
         )
 

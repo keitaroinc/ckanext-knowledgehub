@@ -1,3 +1,5 @@
+from ckan.logic.auth.delete import package_delete as ckan_package_delete
+
 
 def theme_delete(context, data_dict):
     '''
@@ -55,3 +57,11 @@ def keyword_delete(context, data_dict=None):
         Authorization check for deletion of a keyword. Sysadmin only.
     '''
     return {'success': False}
+
+
+def package_delete(context, data_dict):
+    '''
+    This auth function must be overriden like this,
+    otherwise a recursion error is thrown.
+    '''
+    return ckan_package_delete(context, data_dict)
