@@ -66,35 +66,39 @@ class Dashboard(DomainObject, Indexed):
 
     @staticmethod
     def before_index(data):
-        ind = []
+        indicators = []
         if data.get('indicators'):
-            ind = json.loads(data['indicators'])
+            indicators = json.loads(data['indicators'])
         list_rqs = []
         organizations = []
         groups = []
         datasets = []
         data['research_questions'] = []
-        for k in ind:
-            res_q = get_action('research_question_show')(
-                {'ignore_auth': True},
-                {'id': k['research_question']}
-            )
-            list_rqs.append(res_q['title'])
 
-            docs = get_action('search_visualizations')(
-                {'ignore_auth': True},
-                {'text': '*', 'fq': 'entity_id:' + k['resource_view_id']}
-            )
-            for v in docs.get('results', []):
-                organization = v.get('organization')
-                if organization:
-                    organizations.append(organization)
-                view_groups = v.get('groups')
-                if view_groups:
-                    groups.extend(view_groups)
-                package_id = v.get('package_id')
-                if package_id:
-                    datasets.append(package_id)
+        if data.get('type') == 'internal':
+            for k in indicators:
+                res_q = get_action('research_question_show')(
+                    {'ignore_auth': True},
+                    {'id': k['research_question']}
+                )
+                list_rqs.append(res_q['title'])
+
+                docs = get_action('search_visualizations')(
+                    {'ignore_auth': True},
+                    {'text': '*', 'fq': 'entity_id:' + k['resource_view_id']}
+                )
+                for v in docs.get('results', []):
+                    organization = v.get('organization')
+                    if organization:
+                        organizations.append(organization)
+                    view_groups = v.get('groups')
+                    if view_groups:
+                        groups.extend(view_groups)
+                    package_id = v.get('package_id')
+                    if package_id:
+                        datasets.append(package_id)
+        else:
+            data['indicators'] = ','.join(indicators)
 
         keywords = set()
         if data.get('tags'):

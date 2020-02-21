@@ -195,6 +195,10 @@ class CreateView(MethodView):
                         indicators.append(item)
 
                 data_dict['indicators'] = json.dumps(indicators)
+            else:
+                if data_dict.get('indicators'):
+                    data_dict['indicators'] = json.dumps(
+                        data_dict.get('indicators'))
 
             dashboard = get_action(u'dashboard_create')(
                 context, data_dict)
@@ -292,6 +296,9 @@ class EditView(MethodView):
                     viz_options.append({'text': viz.get('title'), 'value': viz.get('id')})
 
                 ind['viz_options'] = viz_options
+        else:
+            if data.get('indicators'):
+                data['indicators'] = json.loads(data['indicators'])
 
         return base.render(
             u'dashboard/edit_form_page.html',
@@ -327,6 +334,10 @@ class EditView(MethodView):
                         indicators.append(item)
 
                 data_dict['indicators'] = json.dumps(indicators)
+            else:
+                if data_dict.get('indicators'):
+                    data_dict['indicators'] = json.dumps(
+                        data_dict.get('indicators'))
 
             dashboard = get_action(u'dashboard_update')(
                 context, data_dict)
