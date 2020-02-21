@@ -101,7 +101,23 @@ def theme_create(context, data_dict):
     session.add(theme)
     session.commit()
 
-    return _table_dictize(theme, context)
+    theme_data = _table_dictize(theme, context)
+
+    # Add to kwh data
+    try:
+        data_dict = {
+            'type': 'theme',
+            'title': theme_data.get('title'),
+            'description': theme_data.get('description'),
+            'theme': theme_data.get('id')
+        }
+        logic.get_action('kwh_data_create')(context, data_dict)
+    except Exception as e:
+        log.debug('Unable to store theme {} to knowledgehub data: {}'.format(
+            theme_data.get('id'), str(e)
+        ))
+
+    return theme_data
 
 
 @toolkit.side_effect_free
@@ -139,7 +155,24 @@ def sub_theme_create(context, data_dict):
     st = SubThemes(**data)
     st.save()
 
-    return st.as_dict()
+    sub_theme_data = st.as_dict()
+
+    # Add to kwh data
+    try:
+        data_dict = {
+            'type': 'sub_theme',
+            'title': sub_theme_data.get('title'),
+            'description': sub_theme_data.get('description'),
+            'sub_theme': sub_theme_data.get('id')
+        }
+        logic.get_action('kwh_data_create')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to store sub-theme {} to knowledgehub data: {}'.format(
+                sub_theme_data.get('id'), str(e)
+        ))
+
+    return sub_theme_data
 
 
 def research_question_create(context, data_dict):
@@ -209,6 +242,20 @@ def research_question_create(context, data_dict):
     except Exception as e:
         ResearchQuestion.delete(research_question.id)
         raise e
+
+    # Add to kwh data
+    try:
+        data_dict = {
+            'type': 'research_question',
+            'title': research_question_data.get('title'),
+            'research_question': research_question_data.get('id')
+        }
+        logic.get_action('kwh_data_create')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to store research question %s to knowledgehub data: %s'
+                % (research_question_data.get('id'), str(e))
+        )
 
     return research_question_data
 
@@ -326,11 +373,27 @@ def resource_view_create(context, data_dict):
     # Add to index
     Visualization.add_to_index(rv_data)
 
+    # Add to kwh data
+    try:
+        data_dict = {
+            'type': 'visualization',
+            'title': rv_data.get('title'),
+            'description': rv_data.get('description'),
+            'visualization': rv_data.get('id')
+        }
+        logic.get_action('kwh_data_create')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to store visualization %s to knowledgehub data: %s'
+                % (rv_data.get('id'), str(e))
+        )
+
     # this check is because of the unit tests
     if rv_data.get('__extras'):
         ext = rv_data['__extras']
         if ext.get('research_questions'):
-            plugin_helpers.add_rqs_to_dataset(rv_data)
+            plugin_helpers.add_rqs_to_dataset(context, rv_data)
+
     return rv_data
 
 
@@ -402,11 +465,42 @@ def dashboard_create(context, data_dict):
     # Add to index
     Dashboard.add_to_index(dashboard_data)
 
+    # Add to kwh data
+    try:
+        data_dict = {
+            'type': 'dashboard',
+            'title': dashboard_data.get('title'),
+            'description': dashboard_data.get('description'),
+            'dashboard': dashboard_data.get('id')
+        }
+        logic.get_action('kwh_data_create')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to store dashboard %s to knowledgehub data: %s'
+                % (dashboard_data.get('id'), str(e))
+        )
+
     return dashboard_data
 
 
 def package_create(context, data_dict):
-    return ckan_package_create(context, data_dict)
+    dataset = ckan_package_create(context, data_dict)
+
+    try:
+        data_dict = {
+            'type': 'dataset',
+            'title': dataset.get('title'),
+            'description': dataset.get('notes'),
+            'dataset': dataset.get('id')
+        }
+        logic.get_action('kwh_data_create')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to store dataset %s to knowledgehub data: %s'
+                % (dataset.get('id'), str(e))
+        )
+
+    return dataset
 
 
 def resource_feedback(context, data_dict):
@@ -519,13 +613,43 @@ def resource_validation_create(context, data_dict):
         return _table_dictize(rv, context)
 
 
+@toolkit.side_effect_free
 def kwh_data_create(context, data_dict):
+    ''' Store Knowledge Hub data needed for predictove search.
+    It keeps the title and description of KWH entities: themes, sub-themes, research
+    questions, datasets, visualizations and dashboards.
+
+    :param type: the type of the entity, can be:
+    [
+        'search_query',
+        'theme',
+        'sub_theme',
+        'research_question',
+        'dataset',
+        'visualization',
+        'dashboard'
+    ]
+    :type type: string
+    :param title: the title of the entity
+    :type title: string
+    :param description: the description of the entity (optional)
+    :type description: string
+    :param theme: the ID of th theme (optional)
+    :type theme: string
+    :param sub_theme: the ID of the sub theme (optional)
+    :type sub_theme: string
+    :param research_question: the ID of the research question (optional)
+    :type research_question: string
+    :param dataset: the ID of the dataset (optional)
+    :type dataset: string
+    :param visualization: the ID of the visualization (optional)
+    :type visualization: string
+    :param dashboard: the ID of the dashboard (optional)
+    :type dashboard: string
+
+    returns: the newly created data
+    :rtype: dict
     '''
-    Store Knowledge Hub data
-        :param type
-        :param content
-    '''
-    check_access('kwh_data', context, data_dict)
 
     session = context['session']
 
@@ -537,20 +661,21 @@ def kwh_data_create(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    user_data = model.User.by_name(user.decode('utf8'))
-    if user_data:
-        data['user'] = user_data.id
+    if user:
+        data['user'] = model.User.by_name(user.decode('utf8')).id
 
     kwh_data = KWHData.get(
         user=data.get('user'),
-        content=data.get('content'),
-        type=data.get('type')
+        type=data.get('type'),
+        title=data.get('title'),
+        description=data.get('description'),
     ).first()
 
     if not kwh_data:
         kwh_data = KWHData(**data)
         kwh_data.save()
-        return kwh_data.as_dict()
+
+    return kwh_data.as_dict()
 
 
 def corpus_create(context, data_dict):

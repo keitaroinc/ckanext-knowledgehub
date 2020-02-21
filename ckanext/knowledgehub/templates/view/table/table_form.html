@@ -132,7 +132,7 @@
 
             {# RQs List #}
             {% set dict = {} %}
-            {% for k in h.get_rq_options() %}
+            {% for k in h.get_rq_options(context) %}
               {% if table %}
                 {% if table.research_questions is iterable and table.research_questions is not string %}
                   {% for m in table.research_questions %}

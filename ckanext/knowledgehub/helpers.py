@@ -31,7 +31,6 @@ from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceValidation
-from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 
 
 log = logging.getLogger(__name__)
@@ -96,8 +95,9 @@ def id_to_title(model, id):
     return entry.get('title') or entry.get('name')
 
 
-def get_rq_options(idValue=False):
-    context = _get_context()
+def get_rq_options(context, idValue=False):
+    if not context:
+        context = _get_context()
     rq_options = []
     rq_list = toolkit.get_action('research_question_list')(context, {})
 
@@ -929,10 +929,11 @@ def get_searched_visuals(query):
     return list_visuals_searched
 
 
-def dashboard_research_questions(dashboard):
+def dashboard_research_questions(context, dashboard):
     questions = []
     if dashboard.get('indicators'):
-        context = _get_context()
+        if not context:
+            context = _get_context()
         research_question_show = logic.get_action('research_question_show')
         for indicator in dashboard['indicators']:
             if indicator.get('research_question'):
@@ -944,15 +945,15 @@ def dashboard_research_questions(dashboard):
     return questions
 
 
-def add_rqs_to_dataset(res_view):
+def add_rqs_to_dataset(context, res_view):
 
-    context = _get_context()
+    if not context:
+        context = _get_context()
     pkg_dict = toolkit.get_action('package_show')(
         dict({'ignore_auth': True}, return_type='dict'),
         {'id': res_view['package_id']})
 
-    rq_options = get_rq_options()
-
+    rq_options = get_rq_options(context)
     all_rqs = []
     if not pkg_dict.get('research_question'):
         pkg_dict['research_question'] = []
@@ -1028,6 +1029,7 @@ def remove_rqs_from_dataset(res_view):
                 context['use_cache'] = False
                 toolkit.get_action('package_update')(context, package_sh)
                 context.pop('defer_commit')
+                return {"message": _('OK')}
             except ValidationError as e:
                 try:
                     raise ValidationError(
@@ -1039,11 +1041,12 @@ def remove_rqs_from_dataset(res_view):
 def update_rqs_in_dataset(old_data, res_view):
 
     context = _get_context()
+    context['ignore_auth'] = True
     pkg_dict = toolkit.get_action('package_show')(
         dict({'ignore_auth': True}, return_type='dict'),
         {'id': res_view['package_id']})
 
-    rq_options = get_rq_options()
+    rq_options = get_rq_options(context)
     all_rqs = []
     if not pkg_dict.get('research_question'):  # dataset has no rqs
         pkg_dict['research_question'] = []

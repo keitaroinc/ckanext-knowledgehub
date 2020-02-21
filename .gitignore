@@ -47,4 +47,4 @@ docs/_build/
 
 # Keras model files
 history.p
-keras_model.*
+keras_model*

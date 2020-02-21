@@ -10,18 +10,21 @@ from ckan.plugins import toolkit
 from ckan.common import _
 from ckan import model
 from ckan.model import Session
+from ckan.logic.action.delete import package_delete as ckan_package_delete
+
+
 from ckanext.knowledgehub import helpers as plugin_helpers
-
-
-from ckanext.knowledgehub.model import Dashboard
-from ckanext.knowledgehub.model import Theme
-from ckanext.knowledgehub.model import SubThemes
-from ckanext.knowledgehub.model import ResearchQuestion
-from ckanext.knowledgehub.model import Visualization
-from ckanext.knowledgehub.model import UserIntents
-from ckanext.knowledgehub.model import ResourceValidate
-from ckanext.knowledgehub.model import Keyword
-from ckanext.knowledgehub import helpers as kwh_helpers
+from ckanext.knowledgehub.model import (
+    Dashboard,
+    Theme,
+    SubThemes,
+    ResearchQuestion,
+    Visualization,
+    UserIntents,
+    ResourceValidate,
+    Keyword,
+    KWHData
+)
 
 
 log = logging.getLogger(__name__)
@@ -218,7 +221,7 @@ def member_delete(context, data_dict=None):
         model.repo.commit()
 
     if obj_type == 'package':
-        kwh_helpers.views_dashboards_groups_update(data_dict.get('object'))
+        plugin_helpers.views_dashboards_groups_update(data_dict.get('object'))
 
 
 def keyword_delete(context, data_dict):
@@ -457,3 +460,23 @@ def tag_delete(context, data_dict):
 
     tag_obj.delete()
     model.repo.commit()
+
+
+def package_delete(context, data_dict):
+    '''Delete a dataset (package).
+
+    This makes the dataset disappear from all web & API views, apart from the
+    trash.
+
+    You must be authorized to delete the dataset.
+
+    :param id: the id or name of the dataset to delete
+    :type id: string
+
+    '''
+
+    ckan_package_delete(context, data_dict)
+    try:
+        KWHData.delete({'dataset': data_dict['id']})
+    except Exception as e:
+        log.debug('Cannot remove dataset from kwh data %s' % str(e))
