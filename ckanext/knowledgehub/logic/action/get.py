@@ -1,4 +1,5 @@
 import logging
+import re
 import os
 import json
 from six import string_types
@@ -29,7 +30,7 @@ from ckanext.knowledgehub.model import (
     UserProfile,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
-from ckanext.knowledgehub.rnn import helpers as rnn_helpers
+from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
@@ -714,10 +715,10 @@ def kwh_data_list(context, data_dict):
     rq = data_dict.get('rq', '')
 
     q = data_dict.get('q', '')
-    page_size = int(data_dict.get('pageSize', 1000000))
+    limit = int(data_dict.get('limit', 1000000))
     page = int(data_dict.get('page', 1))
     order_by = data_dict.get('order_by', None)
-    offset = (page - 1) * page_size
+    offset = (page - 1) * limit
 
     kwargs = {}
 
@@ -735,7 +736,7 @@ def kwh_data_list(context, data_dict):
         kwargs['rq'] = rq
 
     kwargs['q'] = q
-    kwargs['limit'] = page_size
+    kwargs['limit'] = limit
     kwargs['offset'] = offset
     kwargs['order_by'] = order_by
 
@@ -743,9 +744,10 @@ def kwh_data_list(context, data_dict):
 
     try:
         db_data = KWHData.get(**kwargs).all()
-    except Exception:
+    except Exception as e:
+        log.debug('Knowledge hub data list: %s' % str(e))
         return {'total': 0, 'page': page,
-                'pageSize': page_size, 'data': []}
+                'limit': limit, 'data': []}
 
     for entry in db_data:
         kwh_data.append(_table_dictize(entry, context))
@@ -753,7 +755,7 @@ def kwh_data_list(context, data_dict):
     total = len(kwh_data)
 
     return {'total': total, 'page': page,
-            'pageSize': page_size, 'data': kwh_data}
+            'limit': limit, 'data': kwh_data}
 
 
 @toolkit.side_effect_free
@@ -770,20 +772,89 @@ def get_last_rnn_corpus(context, data_dict):
         return c.corpus
 
 
+def _get_predictions_from_db(query):
+    number_predictions = int(
+        config.get(
+            u'ckanext.knowledgehub.rnn.number_predictions',
+            3
+        )
+    )
+
+    text = ' '.join(query.split()[-3:])
+    data_dict = {
+        'q': text,
+        'limit': 10,
+        'order_by': 'created_at desc'
+    }
+    kwh_data = toolkit.get_action('kwh_data_list')({}, data_dict)
+
+    def _get_predict(text, query, index):
+        predict = ''
+        if index != -1:
+            index = index + len(query)
+            for i, ch in enumerate(text[index:]):
+                if ch.isalnum() or (i == 0 and ch == ' '):
+                    predict += ch
+                else:
+                    break
+
+        return predict
+
+    def _findall(pattern, text):
+        return [
+            match.start(0) for match in re.finditer(pattern, text)
+        ]
+
+    predictions = []
+    for data in kwh_data.get('data', []):
+        if len(predictions) >= number_predictions:
+            break
+
+        title = data.get('title').lower()
+        for index in _findall(query, title):
+            predict = _get_predict(title, query, index)
+            if predict != '' and predict not in predictions:
+                predictions.append(predict)
+
+        if data.get('description'):
+            description = data.get('description').lower()
+            for index in _findall(query, description):
+                predict = _get_predict(description, query, index)
+                if predict != '' and predict not in predictions:
+                    predictions.append(predict)
+
+    return predictions[:number_predictions]
+
+
 @toolkit.side_effect_free
 def get_predictions(context, data_dict):
-    ''' Returns a list of predictions
-    :param text: the text for which predictions have to be made
-    :type text: string
+    ''' Returns a list of predictions from RNN model and DB based
+    on data store in knowledge hub
+
+    :param query: the search query for which predictions have to be made
+    :type query: string
     :returns: predictions
     :rtype: list
     '''
+    query = data_dict.get('query')
+    if not query:
+        raise ValidationError({'query': _('Missing value')})
+    if len(query) < int(config.get(
+            u'ckanext.knowledgehub.rnn.sequence_length', 10)):
+        return []
 
-    text = data_dict.get('text')
-    if not text:
-        raise ValidationError({'text': _('Missing value')})
+    if query.isspace():
+        return []
+    query = query.lower()
 
-    return rnn_helpers.predict_completions(text)
+    predictions = _get_predictions_from_db(query)
+
+    model = PredictiveSearchModel()
+    for p in model.predict(query):
+        if p not in predictions:
+            predictions.append(p)
+
+    return predictions
 
 
 def _search_entity(index, ctx, data_dict):

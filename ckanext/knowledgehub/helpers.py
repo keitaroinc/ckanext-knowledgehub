@@ -31,7 +31,6 @@ from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceValidation
-from ckanext.knowledgehub.rnn import helpers as rnn_helpers
 
 
 log = logging.getLogger(__name__)

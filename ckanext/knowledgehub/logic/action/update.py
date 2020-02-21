@@ -71,6 +71,8 @@ def theme_update(context, data_dict):
 
     # we need the old theme name in the context for name validation
     context['theme'] = theme.name
+    context['title'] = theme.title
+    context['description'] = theme.description
     session = context['session']
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.theme_schema(),
@@ -92,7 +94,23 @@ def theme_update(context, data_dict):
     session.add(theme)
     session.commit()
 
-    return _table_dictize(theme, context)
+    theme_data = _table_dictize(theme, context)
+
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'theme',
+            'entity_id': theme_data.get('id'),
+            'title': theme_data.get('title'),
+            'description': theme_data.get('description')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug('Unable to update theme {} in knowledgehub data: {}'.format(
+            theme_data.get('id'), str(e)
+        ))
+
+    return theme_data
 
 
 @toolkit.side_effect_free
@@ -126,6 +144,8 @@ def sub_theme_update(context, data_dict):
         raise logic.NotFound(_('Sub-Theme was not found.'))
 
     context['sub_theme'] = sub_theme.name
+    context['title'] = sub_theme.title
+    context['description'] = sub_theme.description
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.sub_theme_update(),
                                 context)
@@ -139,7 +159,24 @@ def sub_theme_update(context, data_dict):
     filter = {'id': id}
     st = SubThemes.update(filter, data_dict)
 
-    return st.as_dict()
+    sub_theme_data = st.as_dict()
+
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'sub_theme',
+            'entity_id': sub_theme_data.get('id'),
+            'title': sub_theme_data.get('title'),
+            'description': sub_theme_data.get('description')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update sub-theme {} in knowledgehub data: {}'.format(
+            sub_theme_data.get('id'), str(e)
+        ))
+
+    return sub_theme_data
 
 
 def research_question_update(context, data_dict):
@@ -199,6 +236,20 @@ def research_question_update(context, data_dict):
 
     # Update index
     ResearchQuestion.update_index_doc(rq_data)
+
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'research_question',
+            'entity_id': rq_data.get('id'),
+            'title': rq_data.get('title')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update sub-theme {} in knowledgehub data: {}'.format(
+                rq_data.get('id'), str(e)
+        ))
 
     return rq_data
 
@@ -320,6 +371,21 @@ def resource_view_update(context, data_dict):
     # Update index
     Visualization.update_index_doc(resource_view_data)
 
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'visualization',
+            'entity_id': resource_view_data.get('id'),
+            'title': resource_view_data.get('title'),
+            'description': resource_view_data.get('description')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update visualization %s in knowledgehub data: %s'
+                % (resource_view_data.get('id'), str(e))
+            )
+
     # this check is done for the unit tests
     if resource_view_data.get('__extras'):
         ext = resource_view_data['__extras']
@@ -399,6 +465,21 @@ def dashboard_update(context, data_dict):
     # Update index
     Dashboard.update_index_doc(dashboard_data)
 
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'dashboard',
+            'entity_id': dashboard_data.get('id'),
+            'title': dashboard_data.get('title'),
+            'description': dashboard_data.get('description')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update dashboard %s in knowledgehub data: %s'
+            % (dashboard_data.get('id'), str(e))
+        )
+
     return dashboard_data
 
 
@@ -408,19 +489,47 @@ def package_update(context, data_dict):
     '''
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
+
+    try:
+        data_dict = {
+            'type': 'dataset',
+            'entity_id': result.get('id'),
+            'title': result.get('title'),
+            'description': result.get('notes')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update dataset {} to knowledgehub data: {}'.format(
+                result.get('id'), str(e)
+            ))
+
     return result
 
 
 def kwh_data_update(context, data_dict):
-    '''
-    Store Knowledge Hub data
-        :param type
-        :param old_content
-        :param new_content
+    ''' Update existing knowledgehub data or create new one
+
+    :param type: the type of the entity, can be:
+    [
+        'search_query',
+        'theme',
+        'sub_theme',
+        'research_question',
+        'dataset',
+        'visualization',
+        'dashboard'
+    ]
+    :param title: the title of the entity
+    :type title: string
+    :param description: the description of the entity (optional)
+    :type description: string
+    :param entity_id: the ID of the entity
+    :type entity_id: string
+    :returns: the updated data
+    :rtype: dict
     '''
     check_access('kwh_data', context, data_dict)
-
-    session = context['session']
 
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.kwh_data_schema_update(),
@@ -430,24 +539,32 @@ def kwh_data_update(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user'] = model.User.by_name(user.decode('utf8')).id
 
-    kwh_data = KWHData.get(
-        user=data['user'],
-        content=data['old_content'],
-        type=data['type']
-    ).first()
+    data_filter = {data['type']: data['entity_id']}
+    kwh_data = KWHData.get(**data_filter).first()
 
     if kwh_data:
         update_data = _table_dictize(kwh_data, context)
         update_data.pop('id')
         update_data.pop('created_at')
-        update_data['content'] = data['new_content']
+        update_data['title'] = data.get('title')
+        update_data['description'] = data.get('description')
 
-        filter = {'id': kwh_data.id}
-        data = KWHData.update(filter, update_data)
+        kwh_data = KWHData.update(data_filter, update_data)
+    else:
+        data_dict = {
+            'user': data.get('user'),
+            'type': data.get('type'),
+            'title': data.get('title'),
+            'description': data.get('description'),
+            data['type']: data['entity_id']
+        }
+        kwh_data = KWHData(**data_dict)
+        kwh_data.save()
 
-        return data.as_dict()
+    return kwh_data.as_dict()
 
 
 def user_intent_update(context, data_dict):
@@ -815,15 +932,18 @@ def resource_validation_revert(context, data_dict):
 
 def tag_update(context, data_dict):
     ''' Update the tag name or vocabulary
+
     :param id: id or name of the tag
     :type id: string
     :param name: the name of the tag
     :type name: string
     :param vocabulary_id: the id of the vocabulary (optional)
     :type vocabulary_id: string
+
     :returns: the updated tag
     :rtype: dictionary
     '''
+
     model = context['model']
 
     try:
@@ -831,7 +951,7 @@ def tag_update(context, data_dict):
     except NotAuthorized:
         raise NotAuthorized(_(u'Need to be system '
                               u'administrator to administer'))
-                              
+
     schema = knowledgehub_schema.tag_update_schema()
     data, errors = _df.validate(data_dict, schema, context)
     if errors:
@@ -849,7 +969,7 @@ def tag_update(context, data_dict):
     session = context['session']
     tag.save()
     session.commit()
-    
+
     return _table_dictize(tag, context)
 
 

@@ -69,8 +69,8 @@ def kwh_data(context, data_dict):
     '''
         Authorization check for storing KWH data
     '''
-    # sysadmins only
-    return {'success': False}
+    # all login users
+    return {'success': True}
 
 
 def corpus_create(context, data_dict):

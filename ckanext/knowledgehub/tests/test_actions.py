@@ -10,6 +10,7 @@ from ckan.tests import helpers
 from ckan.plugins import toolkit
 from ckan import model
 from datetime import datetime
+from ckan.common import config
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
@@ -43,8 +44,10 @@ from ckanext.knowledgehub.model import (
     ResourceValidate,
 )
 from ckanext.knowledgehub.model.keyword import extend_tag_table
+from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
 from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.datastore.logic.action import datastore_create
+
 from pysolr import Results
 
 assert_equals = nose.tools.assert_equals
@@ -70,14 +73,20 @@ class ActionsBase(helpers.FunctionalTestBase):
         rnn_corpus_setup()
         resource_validate_setup()
         os.environ["CKAN_INI"] = './test.ini'
+        extend_tag_table()
+        config['ckanext.knowledgehub.rnn.min_length_corpus'] = 100
+
+        if not plugins.plugin_loaded('knowledgehub'):
+            plugins.load('knowledgehub')
         if not plugins.plugin_loaded('datastore'):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.load('datapusher')
-        extend_tag_table()
 
     @classmethod
     def teardown_class(self):
+        if not plugins.plugin_loaded('knowledgehub'):
+            plugins.unload('knowledgehub')
         if not plugins.plugin_loaded('datastore'):
             plugins.unload('datastore')
         if not plugins.plugin_loaded('datapusher'):
@@ -278,11 +287,12 @@ class TestKWHCreateActions(ActionsBase):
 
         data_dict = {
             'type': 'theme',
-            'content': 'Refugees in Syria'
+            'title': 'Refugees in Syria',
+            'description': 'Number of refugees in Syria 2020'
         }
         kwh_data = create_actions.kwh_data_create(context, data_dict)
 
-        assert_equals(kwh_data.get('content'), data_dict.get('content'))
+        assert_equals(kwh_data.get('title'), data_dict.get('title'))
 
     def test_corpus_create(self):
         user = factories.Sysadmin()
@@ -769,9 +779,10 @@ class TestKWHGetActions(ActionsBase):
 
         data_dict = {
             'type': 'theme',
-            'content': 'Refugees in Syria'
+            'title': 'Refugees in Syria',
+            'description': 'Number of refugees in Syria 2020'
         }
-        kwh_data = create_actions.kwh_data_create(context, data_dict)
+        create_actions.kwh_data_create(context, data_dict)
 
         kwh_data_list = get_actions.kwh_data_list(context, {})
 
@@ -790,7 +801,7 @@ class TestKWHGetActions(ActionsBase):
         data_dict = {
             'corpus': 'KHW corpus'
         }
-        kwh_corpus = create_actions.corpus_create(context, data_dict)
+        create_actions.corpus_create(context, data_dict)
 
         last_rnn_corpus = get_actions.get_last_rnn_corpus(context, {})
 
@@ -968,11 +979,56 @@ class TestKWHGetActions(ActionsBase):
 
         resource_validate_show = get_actions.resource_validate_status(
             context, {'id': rv.get('resource')}
-            )
+        )
 
         assert_equals(
             resource_validate_show.get('what'), data_dict.get('what')
+        )
+
+    def test_get_predictions(self):
+        data_dict = {
+            'type': 'theme',
+            'title': 'Returns Resettlement Protection Social',
+            'description': (
+                'Network Displacement Trends Labor Market Social '
+                'Cohesion Civil Documentation Demographics '
+                'Reception/Asylum Conditions Conditions of Return '
+                'What is the residential distribution of refugees in '
+                'COA? What is the change in total population numbers '
+                'before and after the crisis? What is the breakdown '
+                'of refugees by place of origin at governorate level?'
+                ' What are the monthly arrival trends by place of '
+                'origin at governorate level? What is the average '
+                'awaiting period in COA prior to registration? What '
+                'are the demographic characteristics of the population?'
             )
+        }
+        create_actions.kwh_data_create(get_context(), data_dict)
+
+        worker = PredictiveSearchWorker()
+        worker.run()
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(get_context(), data_dict)
+
+        data_dict = {
+            'type': 'theme',
+            'title': 'Refugees in Syria',
+            'description': 'Number of refugees in Syria 2020',
+            'theme': theme['id']
+        }
+        create_actions.kwh_data_create(get_context(), data_dict)
+
+        predicts = get_actions.get_predictions(
+            get_context(),
+            {'query': 'Refugees in Sy'}
+        )
+
+        assert(len(predicts) > 3)
 
 
 class TestKWHDeleteActions(ActionsBase):
@@ -1188,6 +1244,12 @@ class TestKWHDeleteActions(ActionsBase):
             result.get('message'),
             'Validation report of the resource is deleted.'
             )
+
+    def test_package_delete(self):
+        dataset = create_dataset()
+        r = delete_actions.package_delete(get_context(), {'id': dataset['id']})
+
+        assert_equals(r, None)
 
 
 class TestKWHUpdateActions(ActionsBase):
@@ -1516,15 +1578,25 @@ class TestKWHUpdateActions(ActionsBase):
         }
 
         data_dict = {
-            'type': 'theme',
-            'content': 'Refugees in Syria'
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
         }
-        kwh_data = create_actions.kwh_data_create(context, data_dict)
+        theme = create_actions.theme_create(context, data_dict)
 
         data_dict = {
             'type': 'theme',
-            'old_content': 'Refugees in Syria',
-            'new_content': 'Refugees in Syria updated'
+            'title': 'Refugees in Syria',
+            'description': 'Number of refugees in Syria 2020',
+            'theme': theme['id']
+        }
+        create_actions.kwh_data_create(context, data_dict)
+
+        data_dict = {
+            'type': 'theme',
+            'entity_id': theme['id'],
+            'title': 'Refugees in Syria',
+            'description': 'Refugees in Syria updated'
         }
 
         kwh_data_updated = update_actions.kwh_data_update(
@@ -1533,8 +1605,8 @@ class TestKWHUpdateActions(ActionsBase):
         )
 
         assert_equals(
-            kwh_data_updated.get('content'),
-            data_dict.get('new_content')
+            kwh_data_updated.get('description'),
+            data_dict.get('description')
         )
 
     def test_resource_validate_update(self):
