@@ -9,9 +9,9 @@
         {{ h.build_nav_icon('kwh_user.intents', _('Intents'), id=user.name) }}
         {{ h.build_nav_icon('kwh_user.keywords', _('Keywords')) }}
         {{ h.build_nav_icon('kwh_user.tags', _('Tags'), id=user.name) }}
-        {{ h.build_nav_icon('kwh_user.profile', _('Profile')) }}
     {% endif %}
 
+    {{ h.build_nav_icon('kwh_user.profile', _('Profile')) }}
     {{ h.build_nav_icon('user.activity', _('Activity Stream'), id=user.name, offset=0) }}
     {{ h.build_nav_icon('user_datarequests', _('Data Requests'), id=user.name) }}
 {% endblock %}
