@@ -366,7 +366,6 @@ def profile():
         base.abort(403, _(u'Not authorized to see this page'))
 
     extra_vars = _extra_template_variables(context, data_dict)
-
     return base.render('user/profile/user_profile.html', extra_vars)
 
 
