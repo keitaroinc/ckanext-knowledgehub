@@ -60,7 +60,9 @@ class Dashboard(DomainObject, Indexed):
         'tags',
         'keywords',
         mapped('groups', 'groups'),
-        mapped('organizations', 'organizations')
+        mapped('organizations', 'organizations'),
+        mapped('created_at', 'khe_created'),
+        mapped('modified_at', 'khe_modified'),
     ]
     doctype = 'dashboard'
 
