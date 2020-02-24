@@ -36,6 +36,16 @@
     {% set hiddenClass = 'hidden' if not data or data.type != 'external' else '' %}
     {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', hiddenClass], is_required=true) }}
 
+    {% set datasets = h.get_datasets() %}
+    <div class="datasets {{ hiddenClass }}">
+      <label class="control-label" for="datasets">{{_('Datasets')}}</label>
+      <select name="datasets" id="datasets" multiple="multiple" type="hidden">
+        {% for datasets in datasets.results %}
+        <option value="{{ datasets['id'] }}">{{ datasets['title'] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
     {% set rq_select = {} %}
     {% for rq in h.get_rq_options() %}
 

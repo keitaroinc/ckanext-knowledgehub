@@ -37,6 +37,7 @@ dashboard_table = Table(
     Column('source', types.UnicodeText),
     Column('indicators', types.UnicodeText),
     Column('tags', types.UnicodeText),
+    Column('datasets', types.UnicodeText),
     Column('created_at', types.DateTime,
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,
@@ -97,6 +98,8 @@ class Dashboard(DomainObject, Indexed):
                     package_id = v.get('package_id')
                     if package_id:
                         datasets.append(package_id)
+
+                data['datasets'] = ', '.join(list(set(datasets)))
         else:
             if isinstance(indicators, unicode):
                 res_q = get_action('research_question_show')(
@@ -132,7 +135,6 @@ class Dashboard(DomainObject, Indexed):
         data['research_questions'] = ','.join(list_rqs)
         data['organizations'] = list(set(organizations))
         data['groups'] = list(set(groups))
-        data['datasets'] = ', '.join(list(set(datasets)))
 
         return data
 

@@ -1415,3 +1415,12 @@ def check_user_profile_preferences():
         response = redirect(url, 302)
         return response
     return toolkit.redirect_to('/user/profile/set_interests')
+
+
+def get_datasets():
+    datasets = toolkit.get_action('package_search')(
+        _get_context(),
+        {'include_private': True}
+    )
+
+    return datasets

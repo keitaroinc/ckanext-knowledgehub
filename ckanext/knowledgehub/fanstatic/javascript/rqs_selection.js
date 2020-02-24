@@ -5,4 +5,5 @@ $(document).ready(function() {
     $('#chart_research_questions').select2();
     $('#map_research_questions').select2();
     $('#indicators').select2();
+    $('#datasets').select2();
 });

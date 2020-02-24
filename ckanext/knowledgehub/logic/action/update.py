@@ -436,6 +436,13 @@ def dashboard_update(context, data_dict):
     for item in items:
         setattr(dashboard, item, data.get(item))
 
+    datasets = data_dict.get('datasets')
+    if datasets is not None:
+        if isinstance(datasets, unicode):
+            dashboard.datasets = datasets
+        elif isinstance(datasets, list):
+            dashboard.datasets = ', '.join(datasets)
+
     tags = data_dict.get('tags', '')
     if tags:
         for tag in tags.split(','):
@@ -453,6 +460,7 @@ def dashboard_update(context, data_dict):
     dashboard_type = data.get('type')
     if dashboard_type != 'external':
         dashboard.source = ''
+        dashboard.datasets = ''
 
     dashboard.modified_at = datetime.datetime.utcnow()
     dashboard.save()

@@ -113,6 +113,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'check_resource_status': h.check_resource_status,
             'check_validation_admin': h.check_validation_admin,
             'keyword_list': h.keyword_list,
+            'get_datasets': h.get_datasets
         }
 
     # IDatasetForm

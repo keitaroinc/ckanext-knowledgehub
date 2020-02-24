@@ -39,6 +39,7 @@ def dashboard_show(context, data_dict):
             for dataset in datasets:
                 try:
                     context.pop('package', None)
+                    print dataset
                     a = toolkit.check_access(
                         'package_show', context, {'id': dataset})
                 except toolkit.NotAuthorized:
