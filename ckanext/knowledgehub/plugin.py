@@ -334,18 +334,32 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         try:
             validated_data = json.loads(pkg_dict.get('validated_data_dict',
                                                      '{}'))
+            pkg_dict['idx_tags'] = []
             keywords = []
             for tag in validated_data.get('tags', []):
                 if tag.get('keyword_id'):
                     keywords.append(tag['keyword_id'])
+                pkg_dict['idx_tags'].append(tag.get('name'))
             
             pkg_dict['extras_keywords'] = ','.join(keywords)
+            pkg_dict['idx_keywords'] = keywords
+
         except Exception as e:
             log.warn("Failed to extract keyword for dataset '%s'. Error: %s",
                      pkg_dict.get('id'), str(e))
 
         pkg_dict['research_question'] = research_question
         pkg_dict['extras_research_question'] = research_question
+        if research_question:
+            if isinstance(research_question, str) or \
+               isinstance(research_question, unicode):
+                    research_question = research_question.strip()
+                    if research_question.startswith('{') and \
+                       research_question.endswith('}'):
+                        research_question = research_question[1:-1]
+                    pkg_dict['idx_research_questions'] = [research_question]
+            else:
+                pkg_dict['idx_research_questions'] = list(research_question)
         return pkg_dict
 
     # IAuthenticator
