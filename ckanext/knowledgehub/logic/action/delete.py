@@ -271,7 +271,11 @@ def tag_delete_by_name(context, data_dict):
 
 
 def delete_tag_in_rq(context, data_dict):
-
+    '''
+    Remove tag in research question
+    :param id: `str`, id of the research question.
+    :param tag: `str`, the name of the tag to be removed.
+    '''
     id = data_dict.get("id")
     if not id:
         raise ValidationError({'id': _('Missing value')})
@@ -310,7 +314,11 @@ def delete_tag_in_rq(context, data_dict):
 
 
 def delete_tag_in_dash(context, data_dict):
-
+    '''
+    Remove tag in dashboard
+    :param id: `str`, id of the dashboard.
+    :param tag: `str`, the name of the tag to be removed.
+    '''
     id = data_dict.get("id")
     tag_name = data_dict.get('tag')
     if not id:
@@ -356,8 +364,12 @@ def delete_tag_in_dash(context, data_dict):
     return result
 
 
-def delete_tag_in_resource_view(context, data_dict):
-
+def delete_tag_in_rv(context, data_dict):
+    '''
+    Remove tag in resource view
+    :param id: `str`, id of the resource view.
+    :param tag: `str`, the name of the tag to be removed.
+    '''
     tag_name = data_dict.get('tag')
     id = data_dict.get("id")
     if not id:
@@ -453,13 +465,15 @@ def tag_delete(context, data_dict):
             })
     if len(list_visuals):
         for visual in list_visuals:
-            toolkit.get_action('delete_tag_in_resource_view')(context, {
+            toolkit.get_action('delete_tag_in_rv')(context, {
                 'id': visual,
                 'tag': tag_name
             })
 
     tag_obj.delete()
     model.repo.commit()
+
+    return {"message": _('The tag is deleted.')}
 
 
 def package_delete(context, data_dict):

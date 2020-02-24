@@ -1470,6 +1470,9 @@ def keyword_list(context, data_dict):
 def rqs_search_tag(context, data_dict):
     '''
     Returns list of ids of research questions that have specific tag
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of research questions
+    that have the specific tag.
     '''
     tag = data_dict.get('tags')
     result = []
@@ -1490,7 +1493,9 @@ def rqs_search_tag(context, data_dict):
 
 def dash_search_tag(context, data_dict):
     '''
-    Returns list of ids of dashboards that have specific tag
+    Returns list of ids of dashboards that have specific tag.
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of dashboards that have the specific tag.
     '''
     tag = data_dict.get('tags')
     result = []
@@ -1509,7 +1514,9 @@ def dash_search_tag(context, data_dict):
 
 def visual_search_tag(context, data_dict):
     '''
-    Returns list of ids of visualizations that have specific tag
+    Returns list of ids of visualizations that have specific tag.
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of visualizations that have the specific tag.
     '''
     tag = data_dict.get('tags')
     result = []
@@ -1527,7 +1534,11 @@ def visual_search_tag(context, data_dict):
 
 def dataset_search_tag(context, data_dict):
     '''
-    Returns list of ids of datasets that have specific tag
+    Returns list of ids of datasets that have specific tag.
+
+    :param tags: `str`, the name of the tag.
+
+    :returns: `list`, list of ids of datasets that have the specific tag.
     '''
     tag = data_dict.get('tags')
     result = []
@@ -1555,7 +1566,7 @@ def dataset_search_tag(context, data_dict):
 
 def group_tags(context, data_dict):
     '''
-    Group wrongly written tags and replace them with the correct tag
+    Group wrongly written tags and replace them with the correct tag.
 
     :param wrong_tags: `list` of `str`, the wrong tags to be grouped.
     :param new_tag: `str`, the correct tag.
@@ -1574,9 +1585,20 @@ def group_tags(context, data_dict):
         q_list.append(item.name)
 
     # Create new tag
-    correct_tag = toolkit.get_action('tag_create')(context, {
-        'name': new_tag,
-    })
+    if new_tag not in q_list:
+        correct_tag = toolkit.get_action('tag_create')(context, {
+            'name': new_tag,
+        })
+    else:
+        tag = model.Session.query(model.Tag).filter_by(
+            name=new_tag
+            ).first()
+        extended_tag = ExtendedTag.get(
+            tag.id,
+            vocab_id_or_name=tag.vocabulary_id
+            )
+        extended_tag.__class__ = ExtendedTag
+        correct_tag = model_dictize.tag_dictize(extended_tag, context)
 
     # Update tags in research questions, dashboards and visualizations
     for tag in wrong_tags:
