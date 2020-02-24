@@ -5,6 +5,22 @@ import ckan.plugins.toolkit as toolkit
 from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm
 
+
+# imports for DatastoreBackend
+from ckanext.datastore.backend.postgres import DatastorePostgresqlBackend
+import ckanext.datastore.interfaces as interfaces
+from ckanext.datastore.backend.postgres import get_write_engine
+from ckanext.datastore.backend.postgres import _cache_types
+from ckanext.datastore.backend.postgres import _rename_json_field
+from sqlalchemy.exc import (ProgrammingError, IntegrityError,
+                            DBAPIError, DataError)
+from ckanext.datastore.backend.postgres import check_fields
+from ckanext.datastore.backend.postgres import _pluck
+ValidationError = logic.ValidationError
+
+
+
+
 import ckanext.knowledgehub.helpers as h
 
 from ckanext.knowledgehub.helpers import _register_blueprints
@@ -12,6 +28,14 @@ from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.model.visualization import extend_resource_view_table
 
+from ckanext.datastore.backend import (
+    DatastoreException,
+    _parse_sort_clause,
+    DatastoreBackend
+)
+
+
+_TIMEOUT = 60000  # milliseconds
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IConfigurer)
@@ -22,6 +46,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IDatasetForm)
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(interfaces.IDatastoreBackend, inherit=True)
+
+
 
     # IConfigurer
     def update_config(self, config_):
@@ -34,6 +61,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         extend_tag_table()
         # Extend CKAN ResourceView table
         extend_resource_view_table()
+
+        DatastoreBackend.register_backends()
+        #DatastoreBackend.set_active_backend(config)
 
     # IBlueprint
     def get_blueprint(self):
@@ -327,3 +357,197 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         pkg_dict['research_question'] = research_question
         pkg_dict['extras_research_question'] = research_question
         return pkg_dict
+
+
+    # IDatastoreBackend
+
+    def register_backends(self):
+        return {
+            'postgresql': DatastorePostgresqlBackend,
+            'postgres': DatastorePostgresqlBackend,
+        }
+
+
+
+class DatastorePostgresqlBackend(DatastorePostgresqlBackend):
+
+
+    def create(self, context, data_dict):
+        '''
+        The first row will be used to guess types not in the fields and the
+        guessed types will be added to the headers permanently.
+        Consecutive rows have to conform to the field definitions.
+        rows can be empty so that you can just set the fields.
+        fields are optional but needed if you want to do type hinting or
+        add extra information for certain columns or to explicitly
+        define ordering.
+        eg: [{"id": "dob", "type": "timestamp"},
+             {"id": "name", "type": "text"}]
+        A header items values can not be changed after it has been defined
+        nor can the ordering of them be changed. They can be extended though.
+        Any error results in total failure! For now pass back the actual error.
+        Should be transactional.
+        :raises InvalidDataError: if there is an invalid value in the given
+                                  data
+        '''
+        engine = get_write_engine()
+        context['connection'] = engine.connect()
+        timeout = context.get('query_timeout', _TIMEOUT)
+        _cache_types(context)
+
+        _rename_json_field(data_dict)
+
+        trans = context['connection'].begin()
+        try:
+            # check if table already existes
+            context['connection'].execute(
+                u'SET LOCAL statement_timeout TO {0}'.format(timeout))
+            result = context['connection'].execute(
+                u'SELECT * FROM pg_tables WHERE tablename = %s',
+                data_dict['resource_id']
+            ).fetchone()
+            if not result:
+                create_table_knowledgehub(context, data_dict)
+                _create_fulltext_trigger(
+                    context['connection'],
+                    data_dict['resource_id'])
+            else:
+                alter_table(context, data_dict)
+            if 'triggers' in data_dict:
+                _create_triggers(
+                    context['connection'],
+                    data_dict['resource_id'],
+                    data_dict['triggers'])
+            insert_data(context, data_dict)
+            create_indexes(context, data_dict)
+            create_alias(context, data_dict)
+            trans.commit()
+            return _unrename_json_field(data_dict)
+        except IntegrityError as e:
+            if e.orig.pgcode == _PG_ERR_CODE['unique_violation']:
+                raise ValidationError({
+                    'constraints': ['Cannot insert records or create index'
+                                    'because of uniqueness constraint'],
+                    'info': {
+                        'orig': str(e.orig),
+                        'pgcode': e.orig.pgcode
+                    }
+                })
+            raise
+        except DataError as e:
+            raise ValidationError({
+                'data': e.message,
+                'info': {
+                    'orig': [str(e.orig)]
+                }})
+        except DBAPIError as e:
+            if e.orig.pgcode == _PG_ERR_CODE['query_canceled']:
+                raise ValidationError({
+                    'query': ['Query took too long']
+                })
+            raise
+        except Exception as e:
+            trans.rollback()
+            raise
+        finally:
+            context['connection'].close()
+
+
+def create_table_knowledgehub(context, data_dict):
+        '''Creates table, columns and column info (stored as comments).
+
+        :param resource_id: The resource ID (i.e. postgres table name)
+        :type resource_id: string
+        :param fields: details of each field/column, each with properties:
+            id - field/column name
+            type - optional, otherwise it is guessed from the first record
+            info - some field/column properties, saved as a JSON string in postgres
+                as a column comment. e.g. "type_override", "label", "notes"
+        :type fields: list of dicts
+        :param records: records, of which the first is used when a field type needs
+            guessing.
+        :type records: list of dicts
+        '''
+
+        datastore_fields = [
+            {'id': '_id', 'type': 'serial primary key'},
+            {'id': '_full_text', 'type': 'tsvector'},
+        ]
+
+        # check first row of data for additional fields
+        extra_fields = []
+        supplied_fields = data_dict.get('fields', [])
+        check_fields(context, supplied_fields)
+        field_ids = _pluck('id', supplied_fields)
+        records = data_dict.get('records')
+
+        fields_errors = []
+
+        for field_id in field_ids:
+            # Postgres has a limit of 63 characters for a column name
+            if len(field_id) > 63:
+                raise ValidationError({
+                'field': ['Changed! Column heading exceeds limit of 63 characters. "{0}" '.format(field_id)]
+            })
+                # message = 'Column heading "{0}" exceeds limit of 63 '\
+                #     'characters.'.format(field_id)
+                # fields_errors.append(message)
+
+        if fields_errors:
+            print("Fields error")
+            print(fields_errors)
+            raise ValidationError({
+                'fields': fields_errors
+            })
+        print("posle ima li nesho ==========================")
+        # if type is field is not given try and guess or throw an error
+        for field in supplied_fields:
+            if 'type' not in field:
+                if not records or field['id'] not in records[0]:
+                    raise ValidationError({
+                        'fields': [u'"{0}" type not guessable'.format(field['id'])]
+                    })
+                field['type'] = _guess_type(records[0][field['id']])
+
+        # Check for duplicate fields
+        unique_fields = set([f['id'] for f in supplied_fields])
+        if not len(unique_fields) == len(supplied_fields):
+            raise ValidationError({
+                'field': ['Duplicate column names are not supported hahahahaha']
+            })
+
+        if records:
+            # check record for sanity
+            if not isinstance(records[0], dict):
+                raise ValidationError({
+                    'records': ['The first row is not a json object']
+                })
+            supplied_field_ids = records[0].keys()
+            for field_id in supplied_field_ids:
+                if field_id not in field_ids:
+                    extra_fields.append({
+                        'id': field_id,
+                        'type': _guess_type(records[0][field_id])
+                    })
+
+        fields = datastore_fields + supplied_fields + extra_fields
+        sql_fields = u", ".join([u'{0} {1}'.format(
+            identifier(f['id']), f['type']) for f in fields])
+
+        sql_string = u'CREATE TABLE {0} ({1});'.format(
+            identifier(data_dict['resource_id']),
+            sql_fields
+        )
+
+        info_sql = []
+        for f in supplied_fields:
+            info = f.get(u'info')
+            if isinstance(info, dict):
+                info_sql.append(u'COMMENT ON COLUMN {0}.{1} is {2}'.format(
+                    identifier(data_dict['resource_id']),
+                    identifier(f['id']),
+                    literal_string(
+                        json.dumps(info, ensure_ascii=False))))
+
+        context['connection'].execute(
+            (sql_string + u';'.join(info_sql)).replace(u'%', u'%%'))   
