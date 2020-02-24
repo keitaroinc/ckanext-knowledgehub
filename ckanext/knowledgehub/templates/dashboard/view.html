@@ -194,6 +194,12 @@
     </div>
     {% elif dashboard.type == 'external' %}
         <iframe src="{{ dashboard.source }}" frameborder="0" class="dashboard-view-iframe"></iframe>
+        <div class="col-md-12 col-sm-12">
+            {% set research_questions = h.dashboard_research_questions(context, dashboard)%}
+            {% if research_questions %}
+                {% snippet 'dashboard/snippets/research_questions.html', questions=research_questions %}
+            {% endif%}
+        </div>
     {% else %}
         {{ 'Dashboard type not supported.' }}
     {% endif %}

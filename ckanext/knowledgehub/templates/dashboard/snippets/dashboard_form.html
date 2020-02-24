@@ -29,41 +29,42 @@
 
     {{ form.input('tags', id='field-tags', label=_('Tags'), placeholder=_('eg. economy, mental health, government'), value=data.tags, error=errors.tags, classes=['control-full'], attrs=tag_attrs) }}
 
-    {% set dict = {} %}
-    {% for k in h.get_rq_options() %}
-
-      {% if data.indicators is iterable and data.indicators is not string %}
-        {% for m in data.indicators %}
-          {% if k.text == m %}
-            {% set new_item = dict.__setitem__(k.text, "True") %}
-          {% endif %}
-        {% endfor %}
-        {% else %}
-          {% if data.indicators == k.text %}
-            {% set new_item = dict.__setitem__(k.text, "True") %}
-          {% endif %}
-        {% endif %}
-
-        {% if not dict[k.text] %}
-          {% set new_item = dict.__setitem__(k.text, "False") %}
-        {% endif %}
-
-    {% endfor %}
-
-    <div class="research-questions">
-      <label class="control-label" for="chart_research_questions">{{_('Research Questions')}}</label>
-      <select name="indicators" id="chart_research_questions" multiple="multiple" type="hidden">
-          {% for k,v in dict.items() %}
-          <option value="{{ k }}" {{ 'selected' if v == 'True'}}>{{ k }}</option>
-        {% endfor %}
-      </select>
-    </div>
 
     {% set attrs = {'data-module': 'knowledgehub-dashboard-type-select', 'class': 'form-control'} %}
     {{ form.select('type', label=_('Type'), options=dashboard_options, error=errors.type, selected=data.type, is_required=true, attrs=attrs) }}
 
     {% set hiddenClass = 'hidden' if not data or data.type != 'external' else '' %}
     {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', hiddenClass], is_required=true) }}
+
+    {% set rq_select = {} %}
+    {% for rq in h.get_rq_options() %}
+
+      {% if data.indicators is iterable and data.indicators is not string %}
+        {% for m in data.indicators %}
+          {% if rq.id == m.research_question %}
+            {% set new_item = rq_select.__setitem__(rq.text, {"s": "True", "id": rq.id}) %}
+          {% endif %}
+        {% endfor %}
+        {% else %}
+          {% if data.indicators == rq.text %}
+            {% set new_item = rq_select.__setitem__(rq.text, {"s": "True", "id": rq.id}) %}
+          {% endif %}
+        {% endif %}
+
+        {% if not rq_select[rq.text] %}
+          {% set new_item = rq_select.__setitem__(rq.text, {"s": "False", "id": rq.id}) %}
+        {% endif %}
+
+    {% endfor %}
+
+    <div class="research-questions {{ hiddenClass }}">
+      <label class="control-label" for="indicators">{{_('Research Questions')}}</label>
+      <select name="indicators" id="indicators" multiple="multiple" type="hidden">
+          {% for k,v in rq_select.items() %}
+            <option value="{{ v['id'] }}" {{ 'selected' if v['s'] == 'True'}}>{{ k }}</option>
+          {% endfor %}
+      </select>
+    </div>
 
     {% set research_questions = [{'text': 'Choose research question', 'value': ''}] + h.get_rq_options(context, idValue=true) %}
     <script type="text/javascript">

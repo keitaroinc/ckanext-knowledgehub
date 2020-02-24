@@ -98,7 +98,19 @@ class Dashboard(DomainObject, Indexed):
                     if package_id:
                         datasets.append(package_id)
         else:
-            data['indicators'] = ','.join(indicators)
+            if isinstance(indicators, unicode):
+                res_q = get_action('research_question_show')(
+                    {'ignore_auth': True},
+                    {'id': indicators}
+                )
+                list_rqs.append(res_q['title'])
+            elif isinstance(indicators, list):
+                for i in indicators:
+                    res_q = get_action('research_question_show')(
+                        {'ignore_auth': True},
+                        {'id': i['research_question']}
+                    )
+                    list_rqs.append(res_q['title'])
 
         keywords = set()
         if data.get('tags'):

@@ -196,9 +196,20 @@ class CreateView(MethodView):
 
                 data_dict['indicators'] = json.dumps(indicators)
             else:
-                if data_dict.get('indicators'):
-                    data_dict['indicators'] = json.dumps(
-                        data_dict.get('indicators'))
+                indicators = data_dict.get('indicators')
+                if indicators:
+                    rq_indicators = []
+                    if isinstance(indicators, list):
+                        for ind in indicators:
+                            rq_indicators.append({
+                                'research_question': ind
+                            })
+                    elif isinstance(indicators, unicode):
+                        rq_indicators.append({
+                            'research_question': indicators
+                        })
+
+                    data_dict['indicators'] = json.dumps(rq_indicators)
 
             dashboard = get_action(u'dashboard_create')(
                 context, data_dict)
@@ -335,9 +346,20 @@ class EditView(MethodView):
 
                 data_dict['indicators'] = json.dumps(indicators)
             else:
-                if data_dict.get('indicators'):
-                    data_dict['indicators'] = json.dumps(
-                        data_dict.get('indicators'))
+                indicators = data_dict.get('indicators')
+                if indicators:
+                    rq_indicators = []
+                    if isinstance(indicators, list):
+                        for ind in indicators:
+                            rq_indicators.append({
+                                'research_question': ind
+                            })
+                    elif isinstance(indicators, unicode):
+                        rq_indicators.append({
+                            'research_question': indicators
+                        })
+
+                    data_dict['indicators'] = json.dumps(rq_indicators)
 
             dashboard = get_action(u'dashboard_update')(
                 context, data_dict)
