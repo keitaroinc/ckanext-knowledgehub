@@ -85,8 +85,8 @@ def user_query_result_search(context, data_dict):
 
 
 def resource_validate_show(context, data_dict):
-    # sysadmins only
-    return {'success': False}
+    # all users
+    return {'success': True}
 
 
 def tag_list(context, data_dict):
@@ -113,6 +113,13 @@ def tag_show(context, data_dict):
 def keyword_list(context, data_dict):
     '''
         Authorization check for getting the list of keywords. Sysadmin only.
+    '''
+    return {'success': True}
+
+
+def group_tags(context, data_dict):
+    '''
+        Authorization check for grouping sets of tags. Sysadmin only.
     '''
     return {'success': True}
 

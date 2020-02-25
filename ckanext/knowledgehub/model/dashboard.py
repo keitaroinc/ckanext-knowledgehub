@@ -61,7 +61,9 @@ class Dashboard(DomainObject, Indexed):
         'keywords',
         mapped('tags', 'tags'),
         mapped('groups', 'groups'),
-        mapped('organizations', 'organizations')
+        mapped('organizations', 'organizations'),
+        mapped('created_at', 'khe_created'),
+        mapped('modified_at', 'khe_modified'),
     ]
     doctype = 'dashboard'
 
@@ -73,6 +75,7 @@ class Dashboard(DomainObject, Indexed):
         list_rqs = []
         organizations = []
         groups = []
+	rq_ids = []
 
         if data.get('type') == 'internal':
             datasets = []
@@ -82,6 +85,7 @@ class Dashboard(DomainObject, Indexed):
                     {'id': k['research_question']}
                 )
                 list_rqs.append(res_q['title'])
+		rq_ids.append(k['research_question'])
 
                 docs = get_action('search_visualizations')(
                     {'ignore_auth': True},
@@ -106,6 +110,7 @@ class Dashboard(DomainObject, Indexed):
                     {'id': indicators}
                 )
                 list_rqs.append(res_q['title'])
+                rq_ids.append(indicators)
             elif isinstance(indicators, list):
                 for i in indicators:
                     res_q = get_action('research_question_show')(
@@ -113,6 +118,7 @@ class Dashboard(DomainObject, Indexed):
                         {'id': i['research_question']}
                     )
                     list_rqs.append(res_q['title'])
+		    rq_ids.append(i['research_question'])
 
             if data.get('datasets'):
                 datasets = data.get('datasets').split(', ')
@@ -128,10 +134,12 @@ class Dashboard(DomainObject, Indexed):
                         for g in package.get('groups', []):
                             groups.append(g.get('name'))
 
+	if rq_ids:
+            data['idx_research_questions'] = rq_ids
+
         keywords = set()
         if data.get('tags'):
-            data['tags'] = data.get('tags').split(',')
-            for tag in data.get('tags'):
+            for tag in data.get('tags', '').split(','):
                 tag_obj = get_action('tag_show')(
                     {'ignore_auth': True},
                     {'id': tag}
@@ -148,6 +156,12 @@ class Dashboard(DomainObject, Indexed):
         data['research_questions'] = ','.join(list_rqs)
         data['organizations'] = list(set(organizations))
         data['groups'] = list(set(groups))
+
+        # indexed for interests calculation
+        if keywords:
+            data['idx_keywords'] = list(keywords)
+        if data.get('tags'):
+            data['idx_tags'] = data.get('tags').split(',')
 
         return data
 

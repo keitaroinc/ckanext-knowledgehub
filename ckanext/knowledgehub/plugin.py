@@ -1,3 +1,6 @@
+import json
+from logging import getLogger
+
 from routes.mapper import SubMapper
 
 import ckan.plugins as plugins
@@ -11,6 +14,9 @@ from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.model.visualization import extend_resource_view_table
+
+
+log = getLogger(__name__)
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
@@ -122,7 +128,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         package_defaults = [toolkit.get_validator('ignore_missing'),
                             toolkit.get_converter('convert_to_extras')]
         mandatory_defaults = [toolkit.get_validator('not_empty')]
-
 
         schema.update({
             'unit_supported': package_defaults,
@@ -325,9 +330,36 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     # IPackageController
     def before_index(self, pkg_dict):
         research_question = pkg_dict.get('research_question')
+        
+        try:
+            validated_data = json.loads(pkg_dict.get('validated_data_dict',
+                                                     '{}'))
+            pkg_dict['idx_tags'] = []
+            keywords = []
+            for tag in validated_data.get('tags', []):
+                if tag.get('keyword_id'):
+                    keywords.append(tag['keyword_id'])
+                pkg_dict['idx_tags'].append(tag.get('name'))
+            
+            pkg_dict['extras_keywords'] = ','.join(keywords)
+            pkg_dict['idx_keywords'] = keywords
+
+        except Exception as e:
+            log.warn("Failed to extract keyword for dataset '%s'. Error: %s",
+                     pkg_dict.get('id'), str(e))
 
         pkg_dict['research_question'] = research_question
         pkg_dict['extras_research_question'] = research_question
+        if research_question:
+            if isinstance(research_question, str) or \
+               isinstance(research_question, unicode):
+                    research_question = research_question.strip()
+                    if research_question.startswith('{') and \
+                       research_question.endswith('}'):
+                        research_question = research_question[1:-1]
+                    pkg_dict['idx_research_questions'] = [research_question]
+            else:
+                pkg_dict['idx_research_questions'] = list(research_question)
         return pkg_dict
 
     # IAuthenticator

@@ -116,6 +116,7 @@ def column_exists_in_db(column_name, table_name, engine):
 
 _tag_column_extended = False
 
+
 def extend_tag_table():
     '''Extends CKAN's Tag table to add keyword_id column.
     '''
@@ -140,6 +141,7 @@ def extend_tag_table():
     engine.execute('alter table tag '
                    'add column keyword_id character varying(100)')
     mapper(ExtendedTag, tag_table)
+
 
 def setup():
     metadata.create_all(engine)
