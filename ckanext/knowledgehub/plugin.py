@@ -128,7 +128,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
                             toolkit.get_converter('convert_to_extras')]
         mandatory_defaults = [toolkit.get_validator('not_empty')]
 
-
         schema.update({
             'unit_supported': package_defaults,
             'im_product_name': package_defaults,
