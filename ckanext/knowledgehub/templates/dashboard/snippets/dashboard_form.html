@@ -62,8 +62,6 @@
         {% for i in data.indicators %}
           {% if rq.id == i.research_question %}
             {% set new_item = options.__setitem__(rq.text, {"s": "True", "id": rq.id}) %}
-          {% else %}
-            {% set new_item = options.__setitem__(rq.text, {"s": "False", "id": rq.id}) %}
           {% endif %}
         {% endfor %}
       {% endif %}
