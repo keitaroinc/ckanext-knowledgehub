@@ -44,6 +44,7 @@ theme_table = Table(
 
 
 class Theme(DomainObject):
+    doctype = 'theme'
 
     @classmethod
     def get(cls, reference):
@@ -105,6 +106,36 @@ class Theme(DomainObject):
             Session.commit()
         else:
             raise logic.NotFound(_(u'Theme'))
+
+    @classmethod
+    def add_to_kwh_data(cls, ctx, theme):
+        content = theme.get('title')
+        if theme.get('description'):
+            content += ' %s' % theme.get('description')
+
+        data_dict = {
+            'type': cls.doctype,
+            'content': content,
+            'theme': theme.get('id')
+        }
+        logic.get_action('kwh_data_create')(ctx, data_dict)
+
+    @classmethod
+    def update_kwh_data(cls, ctx, theme):
+        old_content = ctx.get('title')
+        if ctx.get('description'):
+            old_content += ' %s' % ctx.get('description')
+
+        new_content = theme.get('title')
+        if theme.get('description'):
+            new_content += ' %s' % theme.get('description')
+
+        data_dict = {
+            'type': cls.doctype,
+            'old_content': old_content,
+            'new_content': new_content
+        }
+        logic.get_action(u'kwh_data_update')(ctx, data_dict)
 
 
 mapper(Theme, theme_table)

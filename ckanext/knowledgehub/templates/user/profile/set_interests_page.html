@@ -1,0 +1,37 @@
+{% resource 'knowledgehub/user_profile' %}
+
+{% extends "user/read_base.html" %}
+
+{% block primary_content_inner %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <p>
+            {{ _('Looks like this is the first time you are using ths UNHCR Knowledgehub Portal. '
+                 'You can set what you are interested in on this page.') }}
+            </p>
+            <p>
+                {{ _('You can always update your preferences by going to') }}
+                <a href="{{ h.url_for('/user/profile') }}">{{ _('<i>User</i> then <i>Profile</i>') }}</a>
+                and set your interests.
+            </p>
+            <p>
+                {{ _('You can go to the portal data by clicking the button Done in the lower right '
+                     'corner, or by using the site navigation.') }}
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            {% snippet 'user/profile/snippets/interests.html' %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <a href="{{ h.url_for('/dataset') }}" class="btn btn-primary pull-right">
+                {{ _('Done') }}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

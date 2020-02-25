@@ -76,8 +76,8 @@ def resource_validate_update(context, data_dict):
         Authorization check for updating
         a validation status
     '''
-    # sysadmins only
-    return {'success': False}
+    # all users
+    return {'success': True}
 
 
 def resource_update(context, data_dict=None):
@@ -91,3 +91,7 @@ def keyword_update(context, data_dict=None):
         Authorization check for updating a keyword. Sysadmin only.
     '''
     return {'success': False}
+
+
+def user_profile_update(context, data_dict):
+    return {'success': True}

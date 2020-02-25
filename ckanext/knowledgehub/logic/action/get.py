@@ -1,4 +1,5 @@
 import logging
+import re
 import os
 import json
 from six import string_types
@@ -11,8 +12,6 @@ from ckan.common import _, config, json
 from ckan import lib
 from ckan import model
 from ckan.model.meta import Session
-from ckan.logic.action.get import tag_show as ckan_tag_show
-
 from ckanext.knowledgehub.model import (
     Theme,
     SubThemes,
@@ -28,9 +27,10 @@ from ckanext.knowledgehub.model import (
     UserQueryResult, DataQualityMetrics,
     Keyword,
     ExtendedTag,
+    UserProfile,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
-from ckanext.knowledgehub.rnn import helpers as rnn_helpers
+from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
 from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
@@ -312,6 +312,27 @@ def resource_view_list(context, data_dict):
         in q.order_by(model.ResourceView.order).all()
     ]
     return model_dictize.resource_view_list_dictize(resource_views, context)
+
+
+def resource_view_all(context, data_dict):
+
+    q = model.Session.query(model.ResourceView).all()
+
+    resource_view_list = []
+    for item in q:
+        element = {
+            "id": item.id,
+            "resource_id": item.resource_id,
+            "title": item.title,
+            "description": item.description,
+            "view_type": item.view_type,
+            "order": item.order,
+            "config": item.config,
+            "tags": item.tags
+        }
+        resource_view_list.append(element)
+
+    return resource_view_list
 
 
 @toolkit.side_effect_free
@@ -715,10 +736,10 @@ def kwh_data_list(context, data_dict):
     rq = data_dict.get('rq', '')
 
     q = data_dict.get('q', '')
-    page_size = int(data_dict.get('pageSize', 1000000))
+    limit = int(data_dict.get('limit', 1000000))
     page = int(data_dict.get('page', 1))
     order_by = data_dict.get('order_by', None)
-    offset = (page - 1) * page_size
+    offset = (page - 1) * limit
 
     kwargs = {}
 
@@ -736,7 +757,7 @@ def kwh_data_list(context, data_dict):
         kwargs['rq'] = rq
 
     kwargs['q'] = q
-    kwargs['limit'] = page_size
+    kwargs['limit'] = limit
     kwargs['offset'] = offset
     kwargs['order_by'] = order_by
 
@@ -744,9 +765,10 @@ def kwh_data_list(context, data_dict):
 
     try:
         db_data = KWHData.get(**kwargs).all()
-    except Exception:
+    except Exception as e:
+        log.debug('Knowledge hub data list: %s' % str(e))
         return {'total': 0, 'page': page,
-                'pageSize': page_size, 'data': []}
+                'limit': limit, 'data': []}
 
     for entry in db_data:
         kwh_data.append(_table_dictize(entry, context))
@@ -754,7 +776,7 @@ def kwh_data_list(context, data_dict):
     total = len(kwh_data)
 
     return {'total': total, 'page': page,
-            'pageSize': page_size, 'data': kwh_data}
+            'limit': limit, 'data': kwh_data}
 
 
 @toolkit.side_effect_free
@@ -771,20 +793,89 @@ def get_last_rnn_corpus(context, data_dict):
         return c.corpus
 
 
+def _get_predictions_from_db(query):
+    number_predictions = int(
+        config.get(
+            u'ckanext.knowledgehub.rnn.number_predictions',
+            3
+        )
+    )
+
+    text = ' '.join(query.split()[-3:])
+    data_dict = {
+        'q': text,
+        'limit': 10,
+        'order_by': 'created_at desc'
+    }
+    kwh_data = toolkit.get_action('kwh_data_list')({}, data_dict)
+
+    def _get_predict(text, query, index):
+        predict = ''
+        if index != -1:
+            index = index + len(query)
+            for i, ch in enumerate(text[index:]):
+                if ch.isalnum() or (i == 0 and ch == ' '):
+                    predict += ch
+                else:
+                    break
+
+        return predict
+
+    def _findall(pattern, text):
+        return [
+            match.start(0) for match in re.finditer(pattern, text)
+        ]
+
+    predictions = []
+    for data in kwh_data.get('data', []):
+        if len(predictions) >= number_predictions:
+            break
+
+        title = data.get('title').lower()
+        for index in _findall(query, title):
+            predict = _get_predict(title, query, index)
+            if predict != '' and predict not in predictions:
+                predictions.append(predict)
+
+        if data.get('description'):
+            description = data.get('description').lower()
+            for index in _findall(query, description):
+                predict = _get_predict(description, query, index)
+                if predict != '' and predict not in predictions:
+                    predictions.append(predict)
+
+    return predictions[:number_predictions]
+
+
 @toolkit.side_effect_free
 def get_predictions(context, data_dict):
-    ''' Returns a list of predictions
-    :param text: the text for which predictions have to be made
-    :type text: string
+    ''' Returns a list of predictions from RNN model and DB based
+    on data store in knowledge hub
+
+    :param query: the search query for which predictions have to be made
+    :type query: string
     :returns: predictions
     :rtype: list
     '''
+    query = data_dict.get('query')
+    if not query:
+        raise ValidationError({'query': _('Missing value')})
+    if len(query) < int(config.get(
+            u'ckanext.knowledgehub.rnn.sequence_length', 10)):
+        return []
 
-    text = data_dict.get('text')
-    if not text:
-        raise ValidationError({'text': _('Missing value')})
+    if query.isspace():
+        return []
+    query = query.lower()
 
-    return rnn_helpers.predict_completions(text)
+    predictions = _get_predictions_from_db(query)
+
+    model = PredictiveSearchModel()
+    for p in model.predict(query):
+        if p not in predictions:
+            predictions.append(p)
+
+    return predictions
 
 
 def _search_entity(index, ctx, data_dict):
@@ -1228,6 +1319,7 @@ def tag_list(context, data_dict):
 
     model = context['model']
 
+    id_of_tag = data_dict.get('id')
     vocab_id_or_name = data_dict.get('vocabulary_id')
     query = data_dict.get('query') or data_dict.get('q')
     if query:
@@ -1240,6 +1332,9 @@ def tag_list(context, data_dict):
         tags, count = _tag_search(context, data_dict)
     elif vocab_id_or_name:
         tags = model.Tag.all(vocab_id_or_name)
+    elif id_of_tag:
+        filter = {"id": id_of_tag}
+        tags = Session.query(model.Tag).filter(model.Tag.id == id_of_tag)
     else:
         tags = ExtendedTag.get_all()
 
@@ -1352,6 +1447,7 @@ def keyword_show(context, data_dict):
     return keyword_dict
 
 
+@toolkit.side_effect_free
 def keyword_list(context, data_dict):
     '''Returns all keywords defined for this system.
     '''
@@ -1359,15 +1455,294 @@ def keyword_list(context, data_dict):
 
     page = data_dict.get('page')
     limit = data_dict.get('limit')
+    search = data_dict.get('q')
 
     results = []
 
-    for keyword in Keyword.get_list(page, limit):
+    for keyword in Keyword.get_list(page, limit, search=search):
         results.append(toolkit.get_action('keyword_show')(context, {
             'id': keyword.id,
         }))
 
     return results
+
+
+def rqs_search_tag(context, data_dict):
+    '''
+    Returns list of ids of research questions that have specific tag
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of research questions
+    that have the specific tag.
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    x = toolkit.get_action('research_question_list')(context, {})
+    rq_list = toolkit.get_action('research_question_list')(
+        context, {}
+        ).get('data')
+
+    for rq in rq_list:
+        tags = rq.get('tags')
+        if tags:
+            for element in tags.split(','):
+                if element == tag:
+                    rq_id = rq.get('id')
+                    result.append(rq_id)
+    return result
+
+
+def dash_search_tag(context, data_dict):
+    '''
+    Returns list of ids of dashboards that have specific tag.
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of dashboards that have the specific tag.
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    x = toolkit.get_action('dashboard_list')(context, {})
+    dash_list = x.get('data')
+
+    for dash in dash_list:
+        tags = dash.get('tags')
+        if tags:
+            for element in tags.split(','):
+                if element == tag:
+                    dash_id = dash.get('id')
+                    result.append(dash_id)
+    return result
+
+
+def visual_search_tag(context, data_dict):
+    '''
+    Returns list of ids of visualizations that have specific tag.
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of visualizations that have the specific tag.
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    visual_list = toolkit.get_action('resource_view_all')(context, {})
+
+    for visual in visual_list:
+        tags = visual.get('tags')
+        if tags:
+            for element in tags.split(','):
+                if element == tag:
+                    visual_id = visual.get('id')
+                    result.append(visual_id)
+    return result
+
+
+def dataset_search_tag(context, data_dict):
+    '''
+    Returns list of ids of datasets that have specific tag.
+
+    :param tags: `str`, the name of the tag.
+
+    :returns: `list`, list of ids of datasets that have the specific tag.
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    q = model.Session.query(model.package_tag_table).all()
+    tag_id = model.Tag.by_name(name=tag).id
+    dataset_tag_list = []
+
+    for item in q:
+        element = {
+            "id": item[0],
+            "package_id": item[1],
+            "tag_id": item[2],
+            "state": item[3],
+            "revision_id": item[4]
+        }
+        dataset_tag_list.append(element)
+
+    for dataset in dataset_tag_list:
+        tags_id = dataset.get('tag_id')
+        if tags_id == tag_id:
+            result.append(dataset.get('package_id'))
+
+    return result
+
+
+def group_tags(context, data_dict):
+    '''
+    Group wrongly written tags and replace them with the correct tag.
+
+    :param wrong_tags: `list` of `str`, the wrong tags to be grouped.
+    :param new_tag: `str`, the correct tag.
+
+    :returns: `dict`, the correct tag details.
+
+    '''
+    model = context['model']
+    check_access('group_tags', context, data_dict)
+    wrong_tags = data_dict.get('wrong_tags')
+    new_tag = data_dict.get('new_tag')
+
+    q = model.Session.query(model.tag_table).all()
+    q_list = []
+    for item in q:
+        q_list.append(item.name)
+
+    # Create new tag
+    if new_tag not in q_list:
+        correct_tag = toolkit.get_action('tag_create')(context, {
+            'name': new_tag,
+        })
+    else:
+        tag = model.Session.query(model.Tag).filter_by(
+            name=new_tag
+            ).first()
+        extended_tag = ExtendedTag.get(
+            tag.id,
+            vocab_id_or_name=tag.vocabulary_id
+            )
+        extended_tag.__class__ = ExtendedTag
+        correct_tag = model_dictize.tag_dictize(extended_tag, context)
+
+    # Update tags in research questions, dashboards and visualizations
+    for tag in wrong_tags:
+
+        if tag not in q_list:
+            log.debug('No such tag: %s', str(tag))
+            raise logic.NotFound(_('Tag not found'))
+
+        rq_list = toolkit.get_action('rqs_search_tag')(context, {
+            'tags': tag
+        })
+        list_dashboard = toolkit.get_action('dash_search_tag')(context, {
+            'tags': tag
+        })
+        list_visuals = toolkit.get_action('visual_search_tag')(context, {
+            'tags': tag
+        })
+        list_datasets = toolkit.get_action('dataset_search_tag')(context, {
+            'tags': tag
+        })
+
+        if len(rq_list):
+            for rq in rq_list:
+                toolkit.get_action('update_tag_in_rq')(context, {
+                    'id': rq,
+                    'tag_new': new_tag,
+                    'tag_old': tag
+                })
+        if len(list_dashboard):
+            for dash in list_dashboard:
+                toolkit.get_action('update_tag_in_dash')(context, {
+                    'id': dash,
+                    'tag_new': new_tag,
+                    'tag_old': tag
+                })
+        if len(list_visuals):
+            for visual in list_visuals:
+                toolkit.get_action('update_tag_in_resource_view')(context, {
+                    'id': visual,
+                    'new_tag': new_tag,
+                    'old_tag': tag
+                })
+        if len(list_datasets):
+            for single_dataset in list_datasets:
+                toolkit.get_action('update_tag_in_dataset')(context, {
+                    'id': single_dataset,
+                    'new_tag': new_tag,
+                    'old_tag': tag
+                })
+
+        # Delete the wrong tag from tag table
+        toolkit.get_action('tag_delete_by_name')(context, {
+            'name': tag
+        })
+
+    return correct_tag
+
+
+def _show_user_profile(context, user_id):
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
+        raise logic.NotFound(_('No such user profile'))
+
+    interests = {
+        'research_questions': [],
+        'keywords': [],
+        'tags': [],
+    }
+    for interest, show_action in {
+        'research_questions': 'research_question_show',
+        'keywords': 'keyword_show',
+        'tags': 'tag_show',
+    }.items():
+        for value in (profile.interests or {}).get(interest, []):
+            try:
+                entity = toolkit.get_action(show_action)(context, {
+                    'id': value,
+                })
+                interests[interest].append(entity)
+            except logic.NotFound:
+                log.debug('Not found "%s" with id %s', interest, value)
+
+    profile_dict = _table_dictize(profile, context)
+    profile_dict['interests'] = interests
+    return profile_dict
+
+
+@toolkit.side_effect_free
+def user_profile_show(context, data_dict):
+    u'''Returns the data for the user profile for the currently authenticated
+    user.
+
+    If the user is a sysadmin, it can provide a specific user_id to get the
+    user profile for a particular user besides his own user account.
+
+    :param user_id: `str`, the ID of the user to display the user profile. The
+        parameter is available only if the current user is a sysadmin,
+        otherwise this parameter is ignored.
+    '''
+    check_access('user_profile_show', context)
+
+    user = context.get('auth_user_obj')
+    if getattr(user, 'sysadmin', False):
+        if data_dict.get('user_id'):
+            return _show_user_profile(context, data_dict['user_id'])
+
+    return _show_user_profile(context, user.id)
+
+
+def user_profile_list(context, data_dict):
+    u'''Returns a list of all user profiles.
+
+    Available only for sysadmin users.
+    '''
+    check_access('user_profile_list', context)
+    page = data_dict.get('page', 1)
+    limit = data_dict.get('limit', 20)
+
+    order_by = data_dict.get('order')
+
+    profiles = UserProfile.get_list(page, limit, order_by)
+
+    results = []
+
+    for profile in profiles:
+        results.append(_table_dictize(profile, context))
+
+    return results
+
+
+@toolkit.side_effect_free
+def tag_list_search(context, data_dict):
+    u'''Performs a search for tags, similar to tag_search, however it returns
+    the full data for the found tags.
+    '''
+    context['ignore_auth'] = True
+    results = toolkit.get_action('tag_list')(context, data_dict)
+    tags = []
+    for tag_name in results:
+        tags.append(
+            toolkit.get_action('tag_show')(context, {'id': tag_name})
+        )
+    context.pop('ignore_auth')
+    return tags
 
 
 @toolkit.side_effect_free

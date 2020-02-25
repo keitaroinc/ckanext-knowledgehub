@@ -85,8 +85,8 @@ def user_query_result_search(context, data_dict):
 
 
 def resource_validate_show(context, data_dict):
-    # sysadmins only
-    return {'success': False}
+    # all users
+    return {'success': True}
 
 
 def tag_list(context, data_dict):
@@ -96,10 +96,18 @@ def tag_list(context, data_dict):
 
 def keyword_show(context, data_dict):
     '''
-    Authorization check for fetching a keyword. Sysadmin only.
+    Authorization check for fetching a keyword. Authorized users.
     '''
     # sysadmins only
-    return {'success': False}
+    return {'success': True}
+
+
+def tag_show(context, data_dict):
+    '''
+    Authorization check for fetching a keyword. Authorized users.
+    '''
+    # sysadmins only
+    return {'success': True}
 
 
 def keyword_list(context, data_dict):
@@ -107,3 +115,28 @@ def keyword_list(context, data_dict):
         Authorization check for getting the list of keywords. Sysadmin only.
     '''
     return {'success': True}
+
+
+def group_tags(context, data_dict):
+    '''
+        Authorization check for grouping sets of tags. Sysadmin only.
+    '''
+    return {'success': True}
+
+
+def user_profile_show(context, data_dict):
+    user = context.get('auth_user_obj')
+    if not user:
+        return {'success': False}
+    if data_dict and data_dict.get('user_id'):
+        if getattr(user, 'sysadmin', False):
+            # Sysadmin can read all profiles
+            return {'success': True}
+        # Must be sysadmin to see all profiles
+        return {'suceess': False}
+    # User can view its own profile
+    return {'success': True}
+
+
+def user_profile_list(context, data_dict=None):
+    return {'success': False}
