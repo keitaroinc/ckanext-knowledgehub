@@ -73,10 +73,9 @@ class Dashboard(DomainObject, Indexed):
         list_rqs = []
         organizations = []
         groups = []
-        datasets = []
-        data['research_questions'] = []
 
         if data.get('type') == 'internal':
+            datasets = []
             for k in indicators:
                 res_q = get_action('research_question_show')(
                     {'ignore_auth': True},
@@ -114,6 +113,20 @@ class Dashboard(DomainObject, Indexed):
                         {'id': i['research_question']}
                     )
                     list_rqs.append(res_q['title'])
+
+            if data.get('datasets'):
+                datasets = data.get('datasets').split(', ')
+                for dataset_id in datasets:
+                    package = get_action('package_show')(
+                        {'ignore_auth': True},
+                        {'id': dataset_id, 'include_tracking': True})
+                    if package:
+                        organizations.append(
+                            package.get('organization', {}).get('name')
+                        )
+
+                        for g in package.get('groups', []):
+                            groups.append(g.get('name'))
 
         keywords = set()
         if data.get('tags'):

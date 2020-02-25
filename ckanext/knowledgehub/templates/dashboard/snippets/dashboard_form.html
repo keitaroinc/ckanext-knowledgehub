@@ -37,41 +37,47 @@
     {{ form.input('source', label=_('Source'), id='field-source', type='url', placeholder=_('Enter PowerBI Dashboard URL'), value=data.source, error=errors.source, classes=['control-full', hiddenClass], is_required=true) }}
 
     {% set datasets = h.get_datasets() %}
+    {% set selected_datasets = data.datasets.split(', ') if data.datasets else [] %}
+    {% set options = {} %}
+    {% for dataset in datasets.results %}
+      {% if dataset['id']  in selected_datasets %}
+        {% set new_item = options.__setitem__(dataset['title'], {"s": "True", "id":dataset['id']}) %}
+      {% else %}
+        {% set new_item = options.__setitem__(dataset['title'], {"s": "False", "id":dataset['id']}) %}
+      {% endif %}
+    {% endfor %}
+
     <div class="datasets {{ hiddenClass }}">
       <label class="control-label" for="datasets">{{_('Datasets')}}</label>
       <select name="datasets" id="datasets" multiple="multiple" type="hidden">
-        {% for datasets in datasets.results %}
-        <option value="{{ datasets['id'] }}">{{ datasets['title'] }}</option>
+        {% for k,v in options.items() %}
+          <option value="{{ v['id'] }}" {{'selected' if v['s'] == 'True'}}>{{ k }}</option>
         {% endfor %}
       </select>
     </div>
 
-    {% set rq_select = {} %}
+    {% set options = {} %}
     {% for rq in h.get_rq_options() %}
-
       {% if data.indicators is iterable and data.indicators is not string %}
-        {% for m in data.indicators %}
-          {% if rq.id == m.research_question %}
-            {% set new_item = rq_select.__setitem__(rq.text, {"s": "True", "id": rq.id}) %}
+        {% for i in data.indicators %}
+          {% if rq.id == i.research_question %}
+            {% set new_item = options.__setitem__(rq.text, {"s": "True", "id": rq.id}) %}
+          {% else %}
+            {% set new_item = options.__setitem__(rq.text, {"s": "False", "id": rq.id}) %}
           {% endif %}
         {% endfor %}
-        {% else %}
-          {% if data.indicators == rq.text %}
-            {% set new_item = rq_select.__setitem__(rq.text, {"s": "True", "id": rq.id}) %}
-          {% endif %}
-        {% endif %}
+      {% endif %}
 
-        {% if not rq_select[rq.text] %}
-          {% set new_item = rq_select.__setitem__(rq.text, {"s": "False", "id": rq.id}) %}
-        {% endif %}
-
+      {% if not options[rq.text] %}
+        {% set new_item = options.__setitem__(rq.text, {"s": "False", "id": rq.id}) %}
+      {% endif %}
     {% endfor %}
 
     <div class="research-questions {{ hiddenClass }}">
       <label class="control-label" for="indicators">{{_('Research Questions')}}</label>
       <select name="indicators" id="indicators" multiple="multiple" type="hidden">
-          {% for k,v in rq_select.items() %}
-            <option value="{{ v['id'] }}" {{ 'selected' if v['s'] == 'True'}}>{{ k }}</option>
+          {% for k,v in options.items() %}
+            <option value="{{ v['id'] }}" {{'selected' if v['s'] == 'True'}}>{{ k }}</option>
           {% endfor %}
       </select>
     </div>
@@ -97,6 +103,7 @@
   {% endblock %}
 
   {{ form.required_message() }}
+
   <div class="form-actions">
     {% block delete_button %}
       {% if h.check_access('dashboard_delete')  %}

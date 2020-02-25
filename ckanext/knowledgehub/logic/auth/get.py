@@ -39,7 +39,6 @@ def dashboard_show(context, data_dict):
             for dataset in datasets:
                 try:
                     context.pop('package', None)
-                    print dataset
                     a = toolkit.check_access(
                         'package_show', context, {'id': dataset})
                 except toolkit.NotAuthorized:
@@ -102,6 +101,7 @@ def keyword_show(context, data_dict):
     # sysadmins only
     return {'success': True}
 
+
 def tag_show(context, data_dict):
     '''
     Authorization check for fetching a keyword. Authorized users.
@@ -121,7 +121,7 @@ def user_profile_show(context, data_dict):
     user = context.get('auth_user_obj')
     if not user:
         return {'success': False}
-    if data_dict and  data_dict.get('user_id'):
+    if data_dict and data_dict.get('user_id'):
         if getattr(user, 'sysadmin', False):
             # Sysadmin can read all profiles
             return {'success': True}
