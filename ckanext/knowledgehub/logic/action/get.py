@@ -314,6 +314,27 @@ def resource_view_list(context, data_dict):
     return model_dictize.resource_view_list_dictize(resource_views, context)
 
 
+def resource_view_all(context, data_dict):
+
+    q = model.Session.query(model.ResourceView).all()
+
+    resource_view_list = []
+    for item in q:
+        element = {
+            "id": item.id,
+            "resource_id": item.resource_id,
+            "title": item.title,
+            "description": item.description,
+            "view_type": item.view_type,
+            "order": item.order,
+            "config": item.config,
+            "tags": item.tags
+        }
+        resource_view_list.append(element)
+
+    return resource_view_list
+
+
 @toolkit.side_effect_free
 def get_chart_data(context, data_dict):
     '''
@@ -1298,6 +1319,7 @@ def tag_list(context, data_dict):
 
     model = context['model']
 
+    id_of_tag = data_dict.get('id')
     vocab_id_or_name = data_dict.get('vocabulary_id')
     query = data_dict.get('query') or data_dict.get('q')
     if query:
@@ -1310,6 +1332,9 @@ def tag_list(context, data_dict):
         tags, count = _tag_search(context, data_dict)
     elif vocab_id_or_name:
         tags = model.Tag.all(vocab_id_or_name)
+    elif id_of_tag:
+        filter = {"id": id_of_tag}
+        tags = Session.query(model.Tag).filter(model.Tag.id == id_of_tag)
     else:
         tags = ExtendedTag.get_all()
 
@@ -1442,6 +1467,196 @@ def keyword_list(context, data_dict):
     return results
 
 
+def rqs_search_tag(context, data_dict):
+    '''
+    Returns list of ids of research questions that have specific tag
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of research questions
+    that have the specific tag.
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    x = toolkit.get_action('research_question_list')(context, {})
+    rq_list = toolkit.get_action('research_question_list')(
+        context, {}
+        ).get('data')
+
+    for rq in rq_list:
+        tags = rq.get('tags')
+        if tags:
+            for element in tags.split(','):
+                if element == tag:
+                    rq_id = rq.get('id')
+                    result.append(rq_id)
+    return result
+
+
+def dash_search_tag(context, data_dict):
+    '''
+    Returns list of ids of dashboards that have specific tag.
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of dashboards that have the specific tag.
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    x = toolkit.get_action('dashboard_list')(context, {})
+    dash_list = x.get('data')
+
+    for dash in dash_list:
+        tags = dash.get('tags')
+        if tags:
+            for element in tags.split(','):
+                if element == tag:
+                    dash_id = dash.get('id')
+                    result.append(dash_id)
+    return result
+
+
+def visual_search_tag(context, data_dict):
+    '''
+    Returns list of ids of visualizations that have specific tag.
+    :param tags: `str`, the name of the tag.
+    :returns: `list`, list of ids of visualizations that have the specific tag.
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    visual_list = toolkit.get_action('resource_view_all')(context, {})
+
+    for visual in visual_list:
+        tags = visual.get('tags')
+        if tags:
+            for element in tags.split(','):
+                if element == tag:
+                    visual_id = visual.get('id')
+                    result.append(visual_id)
+    return result
+
+
+def dataset_search_tag(context, data_dict):
+    '''
+    Returns list of ids of datasets that have specific tag.
+
+    :param tags: `str`, the name of the tag.
+
+    :returns: `list`, list of ids of datasets that have the specific tag.
+    '''
+    tag = data_dict.get('tags')
+    result = []
+    q = model.Session.query(model.package_tag_table).all()
+    tag_id = model.Tag.by_name(name=tag).id
+    dataset_tag_list = []
+
+    for item in q:
+        element = {
+            "id": item[0],
+            "package_id": item[1],
+            "tag_id": item[2],
+            "state": item[3],
+            "revision_id": item[4]
+        }
+        dataset_tag_list.append(element)
+
+    for dataset in dataset_tag_list:
+        tags_id = dataset.get('tag_id')
+        if tags_id == tag_id:
+            result.append(dataset.get('package_id'))
+
+    return result
+
+
+def group_tags(context, data_dict):
+    '''
+    Group wrongly written tags and replace them with the correct tag.
+
+    :param wrong_tags: `list` of `str`, the wrong tags to be grouped.
+    :param new_tag: `str`, the correct tag.
+
+    :returns: `dict`, the correct tag details.
+
+    '''
+    model = context['model']
+    check_access('group_tags', context, data_dict)
+    wrong_tags = data_dict.get('wrong_tags')
+    new_tag = data_dict.get('new_tag')
+
+    q = model.Session.query(model.tag_table).all()
+    q_list = []
+    for item in q:
+        q_list.append(item.name)
+
+    # Create new tag
+    if new_tag not in q_list:
+        correct_tag = toolkit.get_action('tag_create')(context, {
+            'name': new_tag,
+        })
+    else:
+        tag = model.Session.query(model.Tag).filter_by(
+            name=new_tag
+            ).first()
+        extended_tag = ExtendedTag.get(
+            tag.id,
+            vocab_id_or_name=tag.vocabulary_id
+            )
+        extended_tag.__class__ = ExtendedTag
+        correct_tag = model_dictize.tag_dictize(extended_tag, context)
+
+    # Update tags in research questions, dashboards and visualizations
+    for tag in wrong_tags:
+
+        if tag not in q_list:
+            log.debug('No such tag: %s', str(tag))
+            raise logic.NotFound(_('Tag not found'))
+
+        rq_list = toolkit.get_action('rqs_search_tag')(context, {
+            'tags': tag
+        })
+        list_dashboard = toolkit.get_action('dash_search_tag')(context, {
+            'tags': tag
+        })
+        list_visuals = toolkit.get_action('visual_search_tag')(context, {
+            'tags': tag
+        })
+        list_datasets = toolkit.get_action('dataset_search_tag')(context, {
+            'tags': tag
+        })
+
+        if len(rq_list):
+            for rq in rq_list:
+                toolkit.get_action('update_tag_in_rq')(context, {
+                    'id': rq,
+                    'tag_new': new_tag,
+                    'tag_old': tag
+                })
+        if len(list_dashboard):
+            for dash in list_dashboard:
+                toolkit.get_action('update_tag_in_dash')(context, {
+                    'id': dash,
+                    'tag_new': new_tag,
+                    'tag_old': tag
+                })
+        if len(list_visuals):
+            for visual in list_visuals:
+                toolkit.get_action('update_tag_in_resource_view')(context, {
+                    'id': visual,
+                    'new_tag': new_tag,
+                    'old_tag': tag
+                })
+        if len(list_datasets):
+            for single_dataset in list_datasets:
+                toolkit.get_action('update_tag_in_dataset')(context, {
+                    'id': single_dataset,
+                    'new_tag': new_tag,
+                    'old_tag': tag
+                })
+
+        # Delete the wrong tag from tag table
+        toolkit.get_action('tag_delete_by_name')(context, {
+            'name': tag
+        })
+
+    return correct_tag
+
+
 def _show_user_profile(context, user_id):
     profile = UserProfile.by_user_id(user_id)
     if not profile:
@@ -1528,7 +1743,6 @@ def tag_list_search(context, data_dict):
         )
     context.pop('ignore_auth')
     return tags
-
 
 
 @toolkit.side_effect_free
