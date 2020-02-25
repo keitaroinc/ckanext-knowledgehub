@@ -536,3 +536,18 @@ class Indexed:
         args = {}
         args[id_key] = doc_id
         cls.get_index().remove(doctype, **args)
+
+
+def boost_solr_params(values):
+    params = {
+        'defType': 'edismax',
+    }
+
+    bq = []
+    for prop, prop_values in values.items():
+        for value in prop_values:
+            bq.append("%s:'%s'" % (prop, value))
+
+    if bq:
+        params['bq'] = ' OR '.join(bq)
+    return params
