@@ -48,11 +48,18 @@ def resource_validate_delete(context, data_dict):
     '''
         Authorization check for deleting a validation status of resource
     '''
-    # sysadmins only
-    return {'success': False}
+    # all users
+    return {'success': True}
 
 
 def keyword_delete(context, data_dict=None):
+    '''
+        Authorization check for deletion of a keyword. Sysadmin only.
+    '''
+    return {'success': False}
+
+
+def tag_delete_by_name(context, data_dict=None):
     '''
         Authorization check for deletion of a keyword. Sysadmin only.
     '''

@@ -59,6 +59,7 @@ class UserProfile(DomainObject):
 
         return query.all()
 
+
 mapper(UserProfile, user_profile_table)
 
 

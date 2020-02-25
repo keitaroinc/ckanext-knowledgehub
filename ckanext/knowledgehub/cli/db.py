@@ -9,7 +9,9 @@ from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
 from ckanext.knowledgehub.model.sub_theme import setup as sub_theme_db_setup
 from ckanext.knowledgehub.model.dashboard import setup as dashboard_db_setup
 from ckanext.knowledgehub.model.rnn_corpus import setup as rnn_corpus_setup
-from ckanext.knowledgehub.model.resource_validation import setup as resource_validation_setup
+from ckanext.knowledgehub.model.resource_validation import (
+    setup as resource_validation_setup
+)
 from ckanext.knowledgehub.model.resource_feedback import (
     setup as resource_feedback_setup
 )
@@ -25,7 +27,9 @@ from ckanext.knowledgehub.model.resource_validate import (
 )
 from ckanext.knowledgehub.model.user_profile import setup as user_profile_setup
 from ckanext.knowledgehub.model.keyword import setup as keyword_setup
-from ckanext.knowledgehub.model.visualization import setup as extend_resource_view_setup
+from ckanext.knowledgehub.model.visualization import (
+    setup as extend_resource_view_setup
+)
 
 
 log = logging.getLogger(__name__)
