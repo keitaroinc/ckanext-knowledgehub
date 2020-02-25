@@ -643,8 +643,8 @@ class Uniqueness(DimensionMetric):
             * `unique`, `int`, number of unique values.
         '''
         result = {}
-        result['total'] = sum([r.get('total') for r in metrics])
-        result['unique'] = sum([r.get('unique') for r in metrics])
+        result['total'] = sum([r.get('total', 0) for r in metrics])
+        result['unique'] = sum([r.get('unique', 0) for r in metrics])
         if result['total'] > 0:
             result['value'] = (100.0 *
                                float(result['unique'])/float(result['total']))
