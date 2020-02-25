@@ -75,7 +75,7 @@ class Dashboard(DomainObject, Indexed):
         list_rqs = []
         organizations = []
         groups = []
-	rq_ids = []
+        rq_ids = []
 
         if data.get('type') == 'internal':
             datasets = []
@@ -85,7 +85,7 @@ class Dashboard(DomainObject, Indexed):
                     {'id': k['research_question']}
                 )
                 list_rqs.append(res_q['title'])
-		rq_ids.append(k['research_question'])
+                rq_ids.append(k['research_question'])
 
                 docs = get_action('search_visualizations')(
                     {'ignore_auth': True},
@@ -118,7 +118,7 @@ class Dashboard(DomainObject, Indexed):
                         {'id': i['research_question']}
                     )
                     list_rqs.append(res_q['title'])
-		    rq_ids.append(i['research_question'])
+                    rq_ids.append(i['research_question'])
 
             if data.get('datasets'):
                 datasets = data.get('datasets').split(', ')
@@ -134,7 +134,7 @@ class Dashboard(DomainObject, Indexed):
                         for g in package.get('groups', []):
                             groups.append(g.get('name'))
 
-	if rq_ids:
+        if rq_ids:
             data['idx_research_questions'] = rq_ids
 
         keywords = set()
