@@ -17,6 +17,16 @@ from sqlalchemy.exc import (ProgrammingError, IntegrityError,
 from ckanext.datastore.backend.postgres import check_fields
 from ckanext.datastore.backend.postgres import _pluck
 ValidationError = logic.ValidationError
+from ckanext.datastore.backend.postgres import identifier
+from ckanext.datastore.backend.postgres import _create_fulltext_trigger
+from ckanext.datastore.backend.postgres import insert_data
+from ckanext.datastore.backend.postgres import create_indexes
+from ckanext.datastore.backend.postgres import create_alias
+from ckanext.datastore.backend.postgres import _unrename_json_field
+
+
+
+
 
 import ckanext.knowledgehub.helpers as h
 
@@ -44,8 +54,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(interfaces.IDatastoreBackend, inherit=True)
-
-
+    plugins.implements(plugins.IAuthenticator, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -364,6 +373,12 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'postgres': DatastorePostgresqlBackend,
         }
 
+    # IAuthenticator
+    def identify(self):
+        from ckan.common import is_flask_request
+        if not is_flask_request():
+            h.check_user_profile_preferences()
+        return super(KnowledgehubPlugin, self).identify()
 
 
 class DatastorePostgresqlBackend(DatastorePostgresqlBackend):
@@ -551,3 +566,4 @@ def create_table_knowledgehub(context, data_dict):
 
         context['connection'].execute(
             (sql_string + u';'.join(info_sql)).replace(u'%', u'%%'))   
+    

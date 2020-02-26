@@ -95,6 +95,10 @@ def keyword_update(context, data_dict=None):
     return {'success': False}
 
 
+def user_profile_update(context, data_dict):
+    return {'success': True}
+
+
 @toolkit.chained_auth_function
 def datastore_create(action, context, data_dict=None):
     return {'success': True}

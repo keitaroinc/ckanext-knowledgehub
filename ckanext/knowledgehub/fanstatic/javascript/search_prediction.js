@@ -50,6 +50,7 @@
                 x[i].parentNode.removeChild(x[i]);
             }
         }
+        currentFocus = -1;
     }
 
     $(document).ready(function () {
@@ -58,21 +59,21 @@
         searchInput
             .bind("change keyup", function (event) {
                 clearTimeout(timer)
-                if (!(event.keyCode >= 13 && event.keyCode <= 20) && !(event.keyCode >= 37 && event.keyCode <= 40)) {
+                if (!(event.keyCode >= 13 && event.keyCode <= 20) && !(event.keyCode >= 37 && event.keyCode <= 40) && event.keyCode != 27) {
                     // detect that user has stopped typing for a while
                     timer = setTimeout(function() {
                         var text = searchInput.val();
 
                         if (text !== '') {
                             api.get('get_predictions', {
-                                text: text
+                                query: text
                             }, true)
                             .done(function (data) {
                                 if (data.success) {
                                     var a, b;
                                     var results = data.result;
 
-                                    closeAllLists()
+                                    closeAllLists();
 
                                     a = document.createElement("DIV");
                                     a.setAttribute("id", "autocomplete-list");
@@ -84,8 +85,9 @@
                                         b.innerHTML = text;
                                         b.innerHTML += "<strong>" + r + "</strong>";
                                         b.addEventListener("click", function (e) {
-                                            searchInput.val(text + r);
                                             closeAllLists();
+                                            searchInput.val(text + r);
+                                            searchInput.trigger("change");
                                         });
                                         a.append(b)
                                     });
@@ -95,25 +97,24 @@
                                 console.log("Get predictions: " + error.statusText);
                             });
                         }
-                    }, 500);
+                    }, 300);
                 }
             })
     });
 
     $('.search-input-group').on("mouseover", autocompleteItems, function(e){
-
         var activeItem = document.getElementsByClassName('autocomplete-active')[0];
         activeItem ? activeItem.classList.remove('autocomplete-active') : null;
         event.target !== input ? event.target.classList.add('autocomplete-active') : null;
         var p = e.target.parentElement;
         var index = Array.prototype.indexOf.call(p.children, e.target);
         activeItem ? currentFocus = index : currentFocus = -1
-
     });
 
     searchInput.on('keydown', function (e) {
         var x = document.getElementById("autocomplete-list");
         if (x) x = x.getElementsByTagName("div");
+
         if (e.keyCode == 40) {
             // The arrow DOWN key is pressed
             currentFocus++;
@@ -125,9 +126,12 @@
         } else if (e.keyCode == 13) {
             // ENTER key is pressed
             if (currentFocus > -1) {
+                e.preventDefault();
                 // simulate a click on the "active" item*
                 if (x) x[currentFocus].click();
             }
+        } else if (e.keyCode == 27) {
+            closeAllLists();
         }
     });
 })(ckan.i18n.ngettext, $);

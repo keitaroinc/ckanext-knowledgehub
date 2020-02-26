@@ -4,9 +4,12 @@ import datetime
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
+
 from ckan.logic import chained_action
 from ckanext.datastore.backend import DatastoreBackend
 import ckanext.datastore.logic.schema as dsschema
+from ckanext.datastore.logic.action import set_datastore_active_flag
+
 
 import ckan.lib.navl.dictization_functions
 _validate = ckan.lib.navl.dictization_functions.validate
@@ -35,10 +38,14 @@ from ckanext.knowledgehub.model import KWHData
 from ckanext.knowledgehub.model import Visualization
 from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
+from ckanext.knowledgehub.model import UserProfile
+from ckanext.knowledgehub.model.keyword import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
+
+from sqlalchemy.orm.attributes import flag_modified
 
 
 log = logging.getLogger(__name__)
@@ -76,6 +83,8 @@ def theme_update(context, data_dict):
 
     # we need the old theme name in the context for name validation
     context['theme'] = theme.name
+    context['title'] = theme.title
+    context['description'] = theme.description
     session = context['session']
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.theme_schema(),
@@ -97,7 +106,23 @@ def theme_update(context, data_dict):
     session.add(theme)
     session.commit()
 
-    return _table_dictize(theme, context)
+    theme_data = _table_dictize(theme, context)
+
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'theme',
+            'entity_id': theme_data.get('id'),
+            'title': theme_data.get('title'),
+            'description': theme_data.get('description')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug('Unable to update theme {} in knowledgehub data: {}'.format(
+            theme_data.get('id'), str(e)
+        ))
+
+    return theme_data
 
 
 @toolkit.side_effect_free
@@ -131,6 +156,8 @@ def sub_theme_update(context, data_dict):
         raise logic.NotFound(_('Sub-Theme was not found.'))
 
     context['sub_theme'] = sub_theme.name
+    context['title'] = sub_theme.title
+    context['description'] = sub_theme.description
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.sub_theme_update(),
                                 context)
@@ -144,7 +171,24 @@ def sub_theme_update(context, data_dict):
     filter = {'id': id}
     st = SubThemes.update(filter, data_dict)
 
-    return st.as_dict()
+    sub_theme_data = st.as_dict()
+
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'sub_theme',
+            'entity_id': sub_theme_data.get('id'),
+            'title': sub_theme_data.get('title'),
+            'description': sub_theme_data.get('description')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update sub-theme {} in knowledgehub data: {}'.format(
+            sub_theme_data.get('id'), str(e)
+        ))
+
+    return sub_theme_data
 
 
 def research_question_update(context, data_dict):
@@ -204,6 +248,20 @@ def research_question_update(context, data_dict):
 
     # Update index
     ResearchQuestion.update_index_doc(rq_data)
+
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'research_question',
+            'entity_id': rq_data.get('id'),
+            'title': rq_data.get('title')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update sub-theme {} in knowledgehub data: {}'.format(
+                rq_data.get('id'), str(e)
+        ))
 
     return rq_data
 
@@ -303,7 +361,7 @@ def resource_view_update(context, data_dict):
         model.Session.rollback()
         raise ValidationError(errors)
 
-    if not data_dict['tags']:
+    if not data_dict.get('tags'):
         data['tags'] = None
 
     context['resource_view'] = resource_view
@@ -324,6 +382,21 @@ def resource_view_update(context, data_dict):
 
     # Update index
     Visualization.update_index_doc(resource_view_data)
+
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'visualization',
+            'entity_id': resource_view_data.get('id'),
+            'title': resource_view_data.get('title'),
+            'description': resource_view_data.get('description')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update visualization %s in knowledgehub data: %s'
+                % (resource_view_data.get('id'), str(e))
+            )
 
     # this check is done for the unit tests
     if resource_view_data.get('__extras'):
@@ -369,11 +442,12 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description', 'indicators', 'source', 'type', 'tags']
+    items = ['name', 'title', 'description',
+             'indicators', 'source', 'type', 'tags']
 
     for item in items:
         setattr(dashboard, item, data.get(item))
-    
+
     tags = data_dict.get('tags', '')
     if tags:
         for tag in tags.split(','):
@@ -403,25 +477,71 @@ def dashboard_update(context, data_dict):
     # Update index
     Dashboard.update_index_doc(dashboard_data)
 
+    # Update kwh data
+    try:
+        data_dict = {
+            'type': 'dashboard',
+            'entity_id': dashboard_data.get('id'),
+            'title': dashboard_data.get('title'),
+            'description': dashboard_data.get('description')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update dashboard %s in knowledgehub data: %s'
+            % (dashboard_data.get('id'), str(e))
+        )
+
     return dashboard_data
 
 
 def package_update(context, data_dict):
+    u'''Wraps the CKAN's core 'package_update' function to schedule a check for
+    Data Quality metrics calculation when the package has been updated.
+    '''
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
+
+    try:
+        data_dict = {
+            'type': 'dataset',
+            'entity_id': result.get('id'),
+            'title': result.get('title'),
+            'description': result.get('notes')
+        }
+        logic.get_action(u'kwh_data_update')(context, data_dict)
+    except Exception as e:
+        log.debug(
+            'Unable to update dataset {} to knowledgehub data: {}'.format(
+                result.get('id'), str(e)
+            ))
+
     return result
 
 
 def kwh_data_update(context, data_dict):
-    '''
-    Store Knowledge Hub data
-        :param type
-        :param old_content
-        :param new_content
+    ''' Update existing knowledgehub data or create new one
+
+    :param type: the type of the entity, can be:
+    [
+        'search_query',
+        'theme',
+        'sub_theme',
+        'research_question',
+        'dataset',
+        'visualization',
+        'dashboard'
+    ]
+    :param title: the title of the entity
+    :type title: string
+    :param description: the description of the entity (optional)
+    :type description: string
+    :param entity_id: the ID of the entity
+    :type entity_id: string
+    :returns: the updated data
+    :rtype: dict
     '''
     check_access('kwh_data', context, data_dict)
-
-    session = context['session']
 
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.kwh_data_schema_update(),
@@ -431,24 +551,32 @@ def kwh_data_update(context, data_dict):
         raise ValidationError(errors)
 
     user = context.get('user')
-    data['user'] = model.User.by_name(user.decode('utf8')).id
+    if user:
+        data['user'] = model.User.by_name(user.decode('utf8')).id
 
-    kwh_data = KWHData.get(
-        user=data['user'],
-        content=data['old_content'],
-        type=data['type']
-    ).first()
+    data_filter = {data['type']: data['entity_id']}
+    kwh_data = KWHData.get(**data_filter).first()
 
     if kwh_data:
         update_data = _table_dictize(kwh_data, context)
         update_data.pop('id')
         update_data.pop('created_at')
-        update_data['content'] = data['new_content']
+        update_data['title'] = data.get('title')
+        update_data['description'] = data.get('description')
 
-        filter = {'id': kwh_data.id}
-        data = KWHData.update(filter, update_data)
+        kwh_data = KWHData.update(data_filter, update_data)
+    else:
+        data_dict = {
+            'user': data.get('user'),
+            'type': data.get('type'),
+            'title': data.get('title'),
+            'description': data.get('description'),
+            data['type']: data['entity_id']
+        }
+        kwh_data = KWHData(**data_dict)
+        kwh_data.save()
 
-        return data.as_dict()
+    return kwh_data.as_dict()
 
 
 def user_intent_update(context, data_dict):
@@ -570,7 +698,7 @@ def _patch_data_quality(context, data_dict, _type):
     # validate input
     dimensions = ['completeness', 'uniqueness', 'timeliness', 'validity',
                   'accuracy', 'consistency']
-    for dimension in  dimensions:
+    for dimension in dimensions:
         values = data_dict.get(dimension)
         if values:
             validators = _dq_validators[dimension]
@@ -584,7 +712,10 @@ def _patch_data_quality(context, data_dict, _type):
                     try:
                         _ftype(value)
                     except Exception as e:
-                        raise ValidationError({field: _('Invalid Value' + "(%s) '%s'" % (dimension, value))})
+                        raise ValidationError({
+                            field: _('Invalid Value' +
+                                     "(%s) '%s'" % (dimension, value))
+                        })
                 else:
                     try:
                         values[field] = _ftype(value)
@@ -593,13 +724,13 @@ def _patch_data_quality(context, data_dict, _type):
     db_metric = DataQualityMetrics.get(_type, data_dict['id'])
     if not db_metric:
         db_metric = DataQualityMetrics(type=_type, ref_id=data_dict['id'])
-    
+
     db_metric.metrics = db_metric.metrics or {}
-    
+
     for field, values in data_dict.items():
-        if not field in dimensions:
+        if field not in dimensions:
             continue
-        setattr(db_metric, field, values['value']) # set the main metric
+        setattr(db_metric, field, values['value'])  # set the main metric
         db_metric.metrics[field] = values
         db_metric.metrics[field]['manual'] = values.get('manual', True)
 
@@ -609,7 +740,7 @@ def _patch_data_quality(context, data_dict, _type):
     results = {}
     for dimension in dimensions:
         results[dimension] = getattr(db_metric, dimension)
-    
+
     results['calculated_on'] = db_metric.modified_at.isoformat()
     results['details'] = db_metric.metrics
 
@@ -650,7 +781,7 @@ def resource_validate_update(context, data_dict):
 
     when = datetime.datetime.utcnow().strftime(
         '%Y-%m-%dT%H:%M:%S'
-        )
+    )
     id = logic.get_or_bust(data_dict, 'id')
     data_dict.pop('id')
 
@@ -662,10 +793,10 @@ def resource_validate_update(context, data_dict):
 
     filter = {'resource': id}
     rvu = {
-            'what': status,
-            'when': when,
-            'who': name
-        }
+        'what': status,
+        'when': when,
+        'who': name
+    }
     st = ResourceValidate.update(filter, rvu)
 
     return st.as_dict()
@@ -683,8 +814,9 @@ def resource_validation_update(context, data_dict):
     '''
     check_access('resource_validation_update', context, data_dict)
 
+    resource_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                resource_schema,
                                 context)
 
     if errors:
@@ -732,8 +864,9 @@ def resource_validation_status(context, data_dict):
     '''
     check_access('resource_validation_status', context, data_dict)
 
+    rc_validation_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                rc_validation_schema,
                                 context)
 
     if errors:
@@ -776,8 +909,9 @@ def resource_validation_revert(context, data_dict):
     '''
     check_access('resource_validation_revert', context, data_dict)
 
+    rc_validation_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                rc_validation_schema,
                                 context)
 
     if errors:
@@ -835,7 +969,7 @@ def tag_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    tag = model.Tag.get(data.get('id'))
+    tag = ExtendedTag.get_with_keyword(data.get('id'))
     if not tag:
         raise NotFound(_('Tag was not found'))
 
@@ -854,21 +988,25 @@ def tag_update(context, data_dict):
 def keyword_update(context, data_dict):
     '''Updates the tags for a keyword.
 
-    :param name: `str`, the name of the keyword to update.
+    :param id: `str`, the id or the name of the keyword to update.
     :param tags: `list` of `str`, the tags that this keyword should contain. If
         the tag does not exist, it will be created and added to this keyword.
         The tags that were removed from this keyword will be set as free tags
         and will not be removed.
-    
+
     :returns: `dict`, the updated keyword.
     '''
     check_access('keyword_update', context)
-    if 'name' not in data_dict:
-        raise ValidationError({'name': _('Missing Value')})
-    
-    existing = Keyword.by_name(data_dict['name'])
+    if 'id' not in data_dict:
+        raise ValidationError({'id': _('Missing Value')})
+    existing = Keyword.get(data_dict['id'])
+    if not existing:
+        existing = Keyword.by_name(data_dict['id'])
     if not existing:
         raise logic.NotFound(_('Not found'))
+
+    if data_dict.get('name', '').strip():
+        existing.name = data_dict['name'].strip()
 
     existing.modified_at = datetime.datetime.utcnow()
     existing.save()
@@ -888,8 +1026,8 @@ def keyword_update(context, data_dict):
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
-        
-        db_tag = model.Tag.get(tag_dict['id'])
+
+        db_tag = ExtendedTag.get_with_keyword(tag_dict['id'])
         db_tag.keyword_id = existing.id
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)
@@ -1040,3 +1178,52 @@ def datastore_create(action, context, data_dict):
     result.pop('connection_url', None)
     result.pop('records', None)
     return result
+
+
+def user_profile_update(context, data_dict):
+    u'''Updates the user profile data.
+
+    For regular users, this action updates the user profile data for the
+    currently authenticated user.
+
+    For a sysadmin user, an additional parameter (user_id) can be set to update
+    the profile data for another user.
+
+    :param user_id: `str`, the id of the user to update the user profile data.
+        This parameter is available for sysadmins only, otherwise it will be
+        ignored.
+    :param user_notified: `bool`, set the flag for user flash notification.
+    :param research_questions: `list`, list of research questions IDs to set as
+        interests.
+    :param keywords: `list`, list of research questions IDs to set as
+        interests.
+    :param tags: `list`, list of research questions IDs to set as
+        interests.
+    '''
+    check_access('user_profile_update', context, data_dict)
+    user = context.get('auth_user_obj')
+    user_id = user.id
+
+    if getattr(user, 'sysadmin', False) and data_dict.get('user_id'):
+        user_id = data_dict['user_id']
+
+    profile = UserProfile.by_user_id(user_id)
+    if not profile:
+        profile = UserProfile(user_id=user_id, user_notified=True)
+        profile.interests = {}
+
+    interests = data_dict.get('interests', {})
+    for interest_type in ['research_questions', 'keywords', 'tags']:
+        if interests.get(interest_type) is not None:
+            profile.interests[interest_type] = interests[interest_type]
+
+    if profile.interests:
+        flag_modified(profile, 'interests')
+
+    if data_dict.get('user_notified'):
+        profile.user_notified = data_dict.get('user_notified')
+
+    profile.save()
+    model.Session.flush()
+
+    return _table_dictize(profile, context)

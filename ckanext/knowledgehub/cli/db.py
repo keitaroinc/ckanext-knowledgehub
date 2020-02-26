@@ -23,6 +23,7 @@ from ckanext.knowledgehub.model.data_quality import setup as data_quality_setup
 from ckanext.knowledgehub.model.resource_validate import (
     setup as resource_validate_setup
 )
+from ckanext.knowledgehub.model.user_profile import setup as user_profile_setup
 from ckanext.knowledgehub.model.keyword import setup as keyword_setup
 from ckanext.knowledgehub.model.visualization import setup as extend_resource_view_setup
 
@@ -53,6 +54,7 @@ def init():
         ml_db_setup()
         data_quality_setup()
         resource_validate_setup()
+        user_profile_setup()
         keyword_setup()
         extend_resource_view_setup()
     except Exception as e:

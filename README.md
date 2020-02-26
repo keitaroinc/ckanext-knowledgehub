@@ -61,19 +61,6 @@ knowledgehub -c /etc/ckan/default/production.ini db init
 sudo service apache2 reload
 ```
 
-6. Run the command for predictive search periodically( daily or weekly is recommended ).
-This command will start training the model:
-
-```
-knowledgehub  -c /etc/ckan/default/production.ini predictive_search train
-```
-
-There is a action that can run CLI commands for Knowledge Hub.
-This example shows how to run the above command through the API action:
-```
-curl -v 'http://hostname/api/3/action/run_command' -H'Authorization: API-KEY' -d '{"command": "predictive_search train"}'
-```
-
 ### Config Settings
 
 These are the required configuration options used by the extension:
@@ -94,24 +81,24 @@ ckanext.knowledgehub.sub_themes_per_page = 20
 ckanext.knowledgehub.dashboards_per_page = 20
 ```
 4. Predictive Search
-     - Length of the seuqunce after which the model can start predict, recommended at least 15 chars long
+     - Length of the sequence after which the model can start predict, recommended at least 10 chars long
      ```
      # (optional, default: 10)
      ckanext.knowledgehub.rnn.sequence_length = 12
      ```
      - Number of chars to be skipped in generation of next sentence
      ```
-     # (optional, default: 3)
+     # (optional, default: 1)
      ckanext.knowledgehub.rnn.sentence_step = 2
      ```
      - Number of predictions to return
      ```
      # (optional, default: 3)
-     ckanext.knowledgehub.rnn.number_prediction = 2
+     ckanext.knowledgehub.rnn.number_predictions = 2
      ```
      - Minimum length of the corpus after it should start to predict
      ```
-     # (optional, default: 3)
+     # (optional, default: 10000)
      ckanext.knowledgehub.rnn.min_length_corpus = 300
      ```
      - Maximum epochs to learn
@@ -119,10 +106,15 @@ ckanext.knowledgehub.dashboards_per_page = 20
      # (optional, default: 50)
      ckanext.knowledgehub.rnn.max_epochs = 30
      ```
-     - Full path to the RNN model
+     - Full path to the RNN weights model
      ```
-     # (optional, default: ./keras_model.h5)
-     ckanext.knowledgehub.rnn.model = /home/user/model.h5
+     # (optional, default: ./keras_model_weights.h5)
+     ckanext.knowledgehub.rnn.model_weights = /home/user/model_weights.h5
+     ```
+     - Full path to the RNN network model
+     ```
+     # (optional, default: ./keras_model_network.h5)
+     ckanext.knowledgehub.rnn.model_network = /home/user/model_network.h5
      ```
      - Full path to the model history
      ```
@@ -226,7 +218,7 @@ knowledgehub -c /etc/ckan/default/production.ini search-index rebuild --model da
 
 This would rebuild the index for dashboards.
 
-Avalilable model types are: 
+Avalilable model types are:
 * `ckan` - rebuilds the CKAN core (package) index,
 * `dashboard` - rebuilds the dasboards index,
 * `research-question` - rebuilds the research questions index and
@@ -265,3 +257,23 @@ The crontab should look something like this:
 Data Quality is measured across the six primary dimensions for data quality assessment.
 
 A lot more details are available in the dedicated [documentation section](docs/data-qualtiy-metrics.md).
+
+# Predictive search
+
+The preditive search functinality predict the next n characters in the word or the next most possible word.
+The training data is consist of title and description of all entities on Knowledge hub including themes, sub-themes,
+research questions, datasets, visualizations and dashboards. Before it starts predict the machine learning model has to be trained.
+By default user should write 10 characters in the search box on home page before it starts to predict.
+
+Run the command for predictive search periodically( daily or weekly is recommended ).
+This command will start training the model:
+
+```
+knowledgehub  -c /etc/ckan/default/production.ini predictive_search train
+```
+
+There is a action that can run CLI commands for Knowledge Hub.
+This example shows how to run the above command through the API action:
+```
+curl -v 'http://hostname/api/3/action/run_command' -H'Authorization: API-KEY' -d '{"command": "predictive_search train"}'
+```

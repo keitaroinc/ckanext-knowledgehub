@@ -21,28 +21,25 @@ class KWHData(DomainObject):
 
     @classmethod
     def get(cls, id_or_name=None, **kwargs):
-        q = kwargs.get('q')
-        limit = kwargs.get('limit')
-        offset = kwargs.get('offset')
-        order_by = kwargs.get('order_by')
-
-        kwargs.pop('q', None)
-        kwargs.pop('limit', None)
-        kwargs.pop('offset', None)
-        kwargs.pop('order_by', None)
+        q = kwargs.pop('q', None)
+        limit = kwargs.pop('limit', None)
+        offset = kwargs.pop('offset', None)
+        order_by = kwargs.pop('order_by', None)
 
         query = Session.query(cls).autoflush(False)
         query = query.filter_by(**kwargs)
 
         if id_or_name:
             query = query.filter(
-                or_(cls.id == id_or_name, cls.content == id_or_name)
+                or_(cls.id == id_or_name, cls.title == id_or_name)
             )
 
         if q:
             query = query.filter(
-                or_(cls.content.contains(q),
-                    cls.content.ilike(r"%{}%".format(q)))
+                or_(cls.title.contains(q),
+                    cls.title.ilike(r"%{}%".format(q)),
+                    cls.description.contains(q),
+                    cls.description.ilike(r"%{}%".format(q)))
             )
 
         if order_by:
@@ -71,7 +68,7 @@ class KWHData(DomainObject):
             Session.delete(obj)
             Session.commit()
         else:
-            raise logic.NotFound
+            raise logic.NotFound('data not found')
 
 
 kwh_data_table = Table(
@@ -87,9 +84,12 @@ kwh_data_table = Table(
         types.UnicodeText,
         nullable=False),
     Column(
-        'content',
+        'title',
         types.UnicodeText,
         nullable=False),
+    Column(
+        'description',
+        types.UnicodeText),
     Column(
         'user',
         types.UnicodeText,
@@ -103,9 +103,21 @@ kwh_data_table = Table(
         types.UnicodeText,
         ForeignKey('sub_themes.id', ondelete='CASCADE')),
     Column(
-        'rq',
+        'research_question',
         types.UnicodeText,
         ForeignKey('research_question.id', ondelete='CASCADE')),
+    Column(
+        'dataset',
+        types.UnicodeText,
+        ForeignKey('package.id', ondelete='CASCADE')),
+    Column(
+        'visualization',
+        types.UnicodeText,
+        ForeignKey('resource_view.id', ondelete='CASCADE')),
+    Column(
+        'dashboard',
+        types.UnicodeText,
+        ForeignKey('ckanext_knowledgehub_dashboard.id', ondelete='CASCADE')),
     Column(
         'created_at',
         types.DateTime,

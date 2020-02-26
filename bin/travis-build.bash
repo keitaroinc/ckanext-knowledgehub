@@ -50,13 +50,6 @@ echo "Moving test.ini into a subdir..."
 mkdir subdir
 mv test.ini subdir
 
-cd ..
-echo "Installing ckanext-datapusher and it's requirements... "
-git clone https://github.com/ckan/datapusher.git
-cd datapusher
-pip install -r requirements.txt
-cd -
-
 pip install SQLAlchemy==1.1.11
 pip install vdm==0.14
 

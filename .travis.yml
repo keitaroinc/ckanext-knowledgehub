@@ -8,6 +8,7 @@ services:
 install:
     - bash bin/travis-build.bash
     - pip install coveralls
+    - pip freeze
 script: sh bin/travis-run.sh
 after_success:
     - coveralls
