@@ -18,9 +18,6 @@ from ckanext.datastore.backend.postgres import check_fields
 from ckanext.datastore.backend.postgres import _pluck
 ValidationError = logic.ValidationError
 
-
-
-
 import ckanext.knowledgehub.helpers as h
 
 from ckanext.knowledgehub.helpers import _register_blueprints
@@ -487,19 +484,16 @@ def create_table_knowledgehub(context, data_dict):
             # Postgres has a limit of 63 characters for a column name
             if len(field_id) > 63:
                 raise ValidationError({
-                'field': ['Changed! Column heading exceeds limit of 63 characters. "{0}" '.format(field_id)]
+                'field': ['Column heading exceeds limit of 63 characters. "{0}" '.format(field_id)]
             })
                 # message = 'Column heading "{0}" exceeds limit of 63 '\
                 #     'characters.'.format(field_id)
                 # fields_errors.append(message)
 
         if fields_errors:
-            print("Fields error")
-            print(fields_errors)
             raise ValidationError({
                 'fields': fields_errors
             })
-        print("posle ima li nesho ==========================")
         # if type is field is not given try and guess or throw an error
         for field in supplied_fields:
             if 'type' not in field:
@@ -512,8 +506,14 @@ def create_table_knowledgehub(context, data_dict):
         # Check for duplicate fields
         unique_fields = set([f['id'] for f in supplied_fields])
         if not len(unique_fields) == len(supplied_fields):
+            all_duplicates = set()
+            field_ids = _pluck('id', supplied_fields)
+            for field_id in field_ids:
+                if field_ids.count(field_id) > 1:
+                    all_duplicates.add(field_id)
+            string_fields = ", ".join(all_duplicates)
             raise ValidationError({
-                'field': ['Duplicate column names are not supported hahahahaha']
+                'field': ['Duplicate column names are not supported! Duplicate columns are : "{0}" '.format(string_fields)]
             })
 
         if records:

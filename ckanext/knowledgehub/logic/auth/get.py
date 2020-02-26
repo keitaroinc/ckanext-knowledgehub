@@ -1,6 +1,8 @@
 import ckan.plugins.toolkit as toolkit
 import ckan.lib.helpers as h
 from ckan.logic.auth.get import tag_list as ckan_tag_list
+from ckan.logic import chained_action
+
 
 
 @toolkit.auth_allow_anonymous_access
@@ -107,3 +109,8 @@ def keyword_list(context, data_dict):
         Authorization check for getting the list of keywords. Sysadmin only.
     '''
     return {'success': True}
+
+
+# @chained_action
+# def datapusher_status(context, data_dict):
+#     return auth.datastore_auth(context, data_dict)

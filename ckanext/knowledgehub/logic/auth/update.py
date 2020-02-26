@@ -1,6 +1,8 @@
 from ckan.logic.auth.update import package_update as ckan_package_update
 from ckan.logic.auth.update import resource_update as ckan_resource_update
 
+from ckan.plugins import toolkit
+
 
 def theme_update(context, data_dict):
     '''
@@ -91,3 +93,8 @@ def keyword_update(context, data_dict=None):
         Authorization check for updating a keyword. Sysadmin only.
     '''
     return {'success': False}
+
+
+@toolkit.chained_auth_function
+def datastore_create(action, context, data_dict=None):
+    return {'success': True}
