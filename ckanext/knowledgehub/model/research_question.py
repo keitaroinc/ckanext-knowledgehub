@@ -161,7 +161,7 @@ class ResearchQuestion(DomainObject, Indexed):
                     {'ignore_auth': True},
                     {'id': tag}
                 )
-                da['idx_tags'].append(tag)
+                data['idx_tags'].append(tag)
                 if tag_obj.get('keyword_id'):
                     keyword_obj = get_action('keyword_show')(
                         {'ignore_auth': True},
