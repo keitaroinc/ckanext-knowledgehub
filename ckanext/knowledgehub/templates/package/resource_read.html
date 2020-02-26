@@ -15,9 +15,16 @@
   {% if h.check_resource_status(res.id) == 'validated' %}
   <li><span class="badge badge-primary"><i class="fa fa-check-square"></i> VALIDATED</span></li>
   {% elif h.check_resource_status(res.id) == 'not_validated' and h.check_validation_admin(res.id) and h.check_access('resource_validate_create') and not validation_data%}
-
-  {% elif h.check_resource_status(res.id) == 'not_validated' %}
   <li><span class="badge badge-primary"><i class="fa fa-minus-square"></i> NOT VALIDATED</span></li>
+  <li>
+    <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit"
+      onclick="showValidationForm()">
+      <i class="fa fa-check-square" aria-hidden="true"></i>
+      {{ _('Validate Resource') }}
+    </button>
+  </li>
+  {% elif h.check_resource_status(res.id) == 'not_validated' %}
+  <!-- <li><span class="badge badge-primary"><i class="fa fa-minus-square"></i> NOT VALIDATED</span></li> -->
   {% endif %}
 
   <li>
@@ -76,7 +83,7 @@
   {% if res.datastore_active %}
   <li>{% snippet 'package/snippets/data_api_button.html', resource=res %}</li>
   {% endif %}
-  {% if not validation_data %}
+  <!-- {% if not validation_data %}
   <li>
     <button id="validation_report" class="btn btn-primary" name="resource_validate" type="submit"
       onclick="showValidationForm()">
@@ -84,7 +91,7 @@
       {{ _('Validate Resource') }}
     </button>
   </li>
-  {% endif %}
+  {% endif %} -->
   {% endblock %}
 
 
