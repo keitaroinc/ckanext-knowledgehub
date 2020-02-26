@@ -1158,9 +1158,22 @@ def user_profile_create(context, data_dict):
                           user_notified=False,
                           interests={})
 
-    for interest_type in ['research_questions', 'tags', 'keywords']:
+    for interest_type in ['research_questions', 'keywords']:
         if data_dict.get(interest_type):
             profile.interests[interest_type] = data_dict[interest_type]
+
+    
+    profile.interests['tags'] = []
+    for tag in data_dict.get('tags', []):
+        try:
+            tag = toolkit.get_action('tag_show')({
+                'ignore_auth': True,
+            },{
+                'id': tag,
+            })
+            profile.interests['tags'].append(tag['name'])
+        except Exception as e:
+            log.warning('Failed to load tag %s. Error: %s', tag, str(e))
 
     profile.save()
     model.Session.flush()
