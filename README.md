@@ -121,6 +121,11 @@ ckanext.knowledgehub.dashboards_per_page = 20
      # (optional, default: ./history.p)
      ckanext.knowledgehub.rnn.history = /home/user/history.p
      ```
+5. Limit search facets
+```
+# mandatory
+search.facets = organization groups tags
+```
 
 # Development
 

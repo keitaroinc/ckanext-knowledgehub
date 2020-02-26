@@ -219,9 +219,7 @@ class KWHPackageController(PackageController):
             default_facet_titles = {
                 'organization': _('Functional Unit'),
                 'groups': _('Joint Analysis'),
-                'tags': _('Tags'),
-                'res_format': _('Formats'),
-                'license_id': _('Licenses'),
+                'tags': _('Tags')
             }
 
             for facet in h.facets():
