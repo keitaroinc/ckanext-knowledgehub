@@ -60,7 +60,9 @@ class Dashboard(DomainObject, Indexed):
         'tags',
         'keywords',
         mapped('groups', 'groups'),
-        mapped('organizations', 'organizations')
+        mapped('organizations', 'organizations'),
+        mapped('created_at', 'khe_created'),
+        mapped('modified_at', 'khe_modified'),
     ]
     doctype = 'dashboard'
 
@@ -74,12 +76,14 @@ class Dashboard(DomainObject, Indexed):
         groups = []
         datasets = []
         data['research_questions'] = []
+        rq_ids = []
         for k in ind:
             res_q = get_action('research_question_show')(
                 {'ignore_auth': True},
                 {'id': k['research_question']}
             )
             list_rqs.append(res_q['title'])
+            rq_ids.append(k['research_question'])
 
             docs = get_action('search_visualizations')(
                 {'ignore_auth': True},
@@ -95,6 +99,9 @@ class Dashboard(DomainObject, Indexed):
                 package_id = v.get('package_id')
                 if package_id:
                     datasets.append(package_id)
+
+        if rq_ids:
+            data['idx_research_questions'] = rq_ids
 
         keywords = set()
         if data.get('tags'):
@@ -116,6 +123,12 @@ class Dashboard(DomainObject, Indexed):
         data['organizations'] = list(set(organizations))
         data['groups'] = list(set(groups))
         data['datasets'] = ', '.join(list(set(datasets)))
+
+        # indexed for interests calculation
+        if keywords:
+            data['idx_keywords'] = list(keywords)
+        if data.get('tags'):
+            data['idx_tags'] = data.get('tags').split(',')
 
         return data
 

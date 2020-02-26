@@ -2260,7 +2260,7 @@ class TestTagsActions(ActionsBase):
 
         tags = get_actions.tag_list(self.__ctx, {})
 
-        assert_equals(len(tags), 2)
+        assert_equals(len(tags), 1)
 
         tags = get_actions.tag_list(
             self.__ctx,
@@ -2272,23 +2272,176 @@ class TestTagsActions(ActionsBase):
     def test_tag_autocomplete(self):
         vocab = self._vocabulary_create('vocabulary1')
         tag1 = self._tag_create('tag1')
-        tag2 = self._tag_create('tag2')
+        # tag2 = self._tag_create('tag2')
 
         tags = get_actions.tag_autocomplete(self.__ctx, {'query': 'tag'})
 
-        assert_equals(len(tags), 2)
+        assert_equals(len(tags), 1)
 
     def test_tag_search(self):
         vocab = self._vocabulary_create('vocabulary1')
         tag1 = self._tag_create('tag1')
-        tag2 = self._tag_create('tag2')
+        # tag2 = self._tag_create('tag2')
 
         tags_dict = get_actions.tag_search(
             self.__ctx,
             {'query': 'tag'}
         )
 
-        assert_equals(tags_dict.get('count'), 2)
+        assert_equals(tags_dict.get('count'), 1)
+
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    def test_tag_delete(self):
+        vocab = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(self.__ctx, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme['id']
+        }
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id'),
+            'tags': tag1['name']
+        }
+        rq = create_actions.research_question_create(self.__ctx, data_dict)
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+        data_dict = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'description': 'Visualization description',
+            'view_type': 'chart',
+            'config': {
+                "color": "#59a14f",
+                "y_label": "Usage",
+                "show_legend": "Yes"
+            },
+            'tags': tag1['name']
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict)
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard (1)',
+            'description': 'Dashboard description',
+            'type': 'internal',
+            'tags': tag1['name']
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+
+        tags_dict = delete_actions.tag_delete(
+            context,
+            {'id': tag1['id']}
+        )
+
+        assert_equals(tags_dict.get('message'), 'The tag is deleted.')
+
+    @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
+    @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    def test_group_tags(self):
+        vocab1 = self._vocabulary_create('vocabulary1')
+        tag1 = self._tag_create('tag1')
+
+        vocab2 = self._vocabulary_create('vocabulary2')
+        tag2 = self._tag_create('tag2')
+
+        data_dict = {
+            'name': 'theme-name',
+            'title': 'Test title',
+            'description': 'Test description'
+        }
+        theme = create_actions.theme_create(self.__ctx, data_dict)
+
+        data_dict = {
+            'name': 'sub-theme-name',
+            'title': 'Test title',
+            'description': 'Test description',
+            'theme': theme['id']
+        }
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        sub_theme = create_actions.sub_theme_create(context, data_dict)
+
+        data_dict = {
+            'name': 'rq-name',
+            'title': 'Test title',
+            'content': 'Research question?',
+            'theme': theme.get('id'),
+            'sub_theme': sub_theme.get('id'),
+            'tags': tag1['name']
+        }
+        rq = create_actions.research_question_create(self.__ctx, data_dict)
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+        data_dict = {
+            'resource_id': resource.get('id'),
+            'title': 'Visualization title',
+            'description': 'Visualization description',
+            'view_type': 'chart',
+            'config': {
+                "color": "#59a14f",
+                "y_label": "Usage",
+                "show_legend": "Yes"
+            },
+            'tags': tag1['name']
+        }
+        rsc_view = create_actions.resource_view_create(context, data_dict)
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard (1)',
+            'description': 'Dashboard description',
+            'type': 'internal',
+            'tags': tag1['name']
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+
+        tags_dict = get_actions.group_tags(
+            context,
+            {'wrong_tags': [tag1['name']], 'new_tag': tag2['name']}
+        )
+
+        assert_equals(tags_dict.get('name'), tag2.get('name'))
 
 
 class TestUserProfileActions(ActionsBase):

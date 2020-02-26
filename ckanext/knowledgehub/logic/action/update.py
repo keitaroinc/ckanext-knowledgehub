@@ -219,6 +219,8 @@ def research_question_update(context, data_dict):
     data, errors = _df.validate(data_dict,
                                 knowledgehub_schema.research_question_schema(),
                                 context)
+    if not data_dict.get('tags'):
+        data['tags'] = None
 
     if errors:
         raise logic.ValidationError(errors)
@@ -351,6 +353,7 @@ def resource_view_update(context, data_dict):
     id = _get_or_bust(data_dict, "id")
 
     resource_view = model.ResourceView.get(id)
+
     if not resource_view:
         raise NotFound
 
@@ -447,6 +450,20 @@ def dashboard_update(context, data_dict):
 
     for item in items:
         setattr(dashboard, item, data.get(item))
+
+    tags = data_dict.get('tags', '')
+    if tags:
+        for tag in tags.split(','):
+            try:
+                check_access('tag_show', context)
+                tag_obj = toolkit.get_action('tag_show')(context, {'id': tag})
+            except logic.NotFound:
+                check_access('tag_create', context)
+                tag_obj = toolkit.get_action('tag_create')(context, {
+                    'name': tag,
+                })
+
+        dashboard.tags = tags
 
     tags = data_dict.get('tags', '')
     if tags:
@@ -1178,6 +1195,195 @@ def datastore_create(action, context, data_dict):
     result.pop('connection_url', None)
     result.pop('records', None)
     return result
+
+
+def update_tag_in_rq(context, data_dict):
+    '''
+    Updates the tags for a research question.
+
+    :param id: `str`, the id of the research question to update.
+    :param name: `str`, the name of the research question to update.
+    :param tag_new: `str`, the new tag of the research question.
+    :param tag_old: `str`, the old tag of the research question.
+
+    :returns: the updated research question.
+    :rtype: dictionary
+    '''
+
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+    id_or_name = data_dict.get('id') or data_dict.get('name')
+    new_tag = data_dict.get('tag_new')
+
+    research_question = ResearchQuestion.get(id_or_name=id_or_name).first()
+    if not research_question:
+        log.debug('Could not find research question %s', id)
+
+    rq_dict = research_question.as_dict()
+
+    tag_list = rq_dict.get('tags').split(',')
+    for tag in tag_list:
+        if tag == data_dict.get('tag_old'):
+            tag_list.remove(tag)
+            tag_list.append(new_tag)
+    str1 = ","
+    tags = str1.join(tag_list)
+
+    result = toolkit.get_action('research_question_update')(context, {
+                'id': rq_dict.get('id'),
+                'name': rq_dict.get('name'),
+                'title': rq_dict.get('title'),
+                'tags': tags
+                })
+
+    return result
+
+
+def update_tag_in_dash(context, data_dict):
+    '''
+    Updates the tags for a dashboard.
+
+    :param id: `str`, the id of the dashboard to update.
+    :param name: `str`, the name of the dashboard to update.
+    :param tag_new: `str`, the new tag of the dashboard.
+    :param tag_old: `str`, the old tag of the dashboard.
+
+    :returns: the updated dashboard.
+    :rtype: dictionary
+    '''
+
+    id = data_dict.get("id")
+    new_tag = data_dict.get('tag_new')
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+    name_or_id = data_dict.get("id") or data_dict.get("name")
+
+    if name_or_id is None:
+        raise ValidationError({'id': _('Missing value')})
+
+    dash = Dashboard.get(name_or_id)
+    if not dash:
+        log.debug('Could not find dashboard %s', id)
+    dash_dict = dash.as_dict()
+
+    tag_list = dash_dict.get('tags').split(',')
+    for tag in tag_list:
+        if tag == data_dict.get('tag_old'):
+            tag_list.remove(tag)
+            tag_list.append(new_tag)
+    str1 = ","
+    tags = str1.join(tag_list)
+
+    result = toolkit.get_action('dashboard_update')(context, {
+                'id': dash_dict.get('id'),
+                'name': dash_dict.get('name'),
+                'title': dash_dict.get('title'),
+                'description': dash_dict.get('description'),
+                'type': dash_dict.get('type'),
+                'source': dash_dict.get('source'),
+                'indicators': dash_dict.get('indicators'),
+                'created_by': dash_dict.get('created_by'),
+                'tags': tags
+                })
+
+    return result
+
+
+def update_tag_in_resource_view(context, data_dict):
+    '''
+    Updates the tags for a resource view.
+
+    :param id: `str`, the id of the resource view to update.
+    :param name: `str`, the name of the resource view to update.
+    :param tag_new: `str`, the new tag of the resource view.
+    :param tag_old: `str`, the old tag of the resource view.
+
+    :returns: the updated resource view.
+    :rtype: dictionary
+    '''
+
+    new_tag = data_dict.get('new_tag')
+    old_tag = data_dict.get('old_tag')
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+
+    visual = model.Session.query(model.ResourceView).filter_by(id=id)
+    if not visual:
+        log.debug('Could not find visualization %s', id)
+    visual_element = visual.order_by(model.ResourceView.order).all()[0]
+
+    visual_dict = {
+        'id': visual_element.id,
+        'resource_id': visual_element.resource_id,
+        'title': visual_element.title,
+        'description': visual_element.description,
+        'view_type': visual_element.view_type,
+        'order': visual_element.order,
+        'config': visual_element.config,
+        'tags': visual_element.tags
+    }
+
+    if visual_dict.get('tags'):
+        tag_list = visual_dict.get('tags').split(',')
+        for tag in tag_list:
+            if tag == old_tag:
+                tag_list.remove(tag)
+                tag_list.append(new_tag)
+                str1 = ","
+                tags = str1.join(tag_list)
+                visual_element.tags = tags
+                visual_element.save()
+                visual_element.commit()
+                toolkit.get_action('tag_create')(context, {
+                    'name': new_tag,
+                })
+
+                return visual_element
+
+
+def update_tag_in_dataset(context, data_dict):
+    '''
+    Updates the tags for a dataset.
+
+    :param id: `str`, the id of the dataset to update.
+    :param tag_new: `str`, the new tag of the dataset.
+    :param tag_old: `str`, the old tag of the dataset.
+
+    :returns: the updated dataset.
+    :rtype: dictionary
+    '''
+    new_tag = data_dict.get('new_tag')
+    old_tag = data_dict.get('old_tag')
+    id = data_dict.get("id")
+    if not id:
+        raise ValidationError({'id': _('Missing value')})
+
+    toolkit.get_action('tag_create')(context, {
+                    'name': new_tag,
+                })
+
+    new_tag_info = model.Tag.by_name(name=new_tag)
+    new_tag_dict = {
+        u'vocabulary_id': new_tag_info.vocabulary_id,
+        u'display_name': new_tag_info.name,
+        u'name': new_tag_info.name,
+        u'state': u'active',
+        u'keyword_id': '',
+        u'id': new_tag_info.id
+    }
+
+    dataset_info = toolkit.get_action('package_show')(context, {
+        'id': id
+    })
+    dataset_info['tags'].append(new_tag_dict)
+    updated_dataset = toolkit.get_action('package_update')(
+        context,
+        dataset_info
+    )
+
+    return updated_dataset
 
 
 def user_profile_update(context, data_dict):

@@ -72,6 +72,7 @@ class Visualization(ResourceView, Indexed):
             data['description'] = _get_description(data)
 
         # get research questions
+        rq_ids = set()
         if data.get('config'):
             conf = data.get('config')
             if conf.get('__extras'):
@@ -79,13 +80,24 @@ class Visualization(ResourceView, Indexed):
                 if ext.get('research_questions'):
                     data_rq = json.dumps(ext.get('research_questions'))
                     data['research_questions'] = data_rq
+                    if isinstance(data_rq, dict):
+                        rq_ids.add(data_rq.get('id'))
+                    elif isinstance(data_rq, str):
+                        rq_ids.add(data_rq)
         else:
             if data.get('__extras'):
                 ext = data.get('__extras')
                 if ext.get('research_questions'):
                     data_rq = json.dumps(ext.get('research_questions'))
                     data['research_questions'] = data_rq
-        
+                    if isinstance(data_rq, dict):
+                        rq_ids.add(data_rq.get('id'))
+                    elif isinstance(data_rq, str):
+                        rq_ids.add(data_rq)
+
+        if rq_ids:
+            data['idx_research_questions'] = list(rq_ids)
+
         keywords = set()
         if data.get('tags'):
             for tag in data.get('tags', '').split(','):
@@ -101,6 +113,11 @@ class Visualization(ResourceView, Indexed):
                     keywords.add(keyword_obj.get('name'))
                     if keywords:
                         data['keywords'] = ','.join(keywords)
+            
+            data['idx_tags'] = data.get('tags').split(',')
+
+        if keywords:
+            data['idx_keywords'] = list(keywords)
 
         return data
 

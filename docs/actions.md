@@ -512,6 +512,7 @@ Return type:
 
 list
 
+
 `resource_validate_status`(_context_, _data\_dict_)
 
 Returns the validation report of a resource
@@ -525,6 +526,41 @@ Parameters:
 Returns:
 
 a validation report as dictionary
+
+Return type:
+
+dictionary
+
+
+`tag_list`(_context_, _data\_dict_)
+
+Returns a list of the site's tags
+
+Parameters:
+
+{}
+
+Returns:
+
+list of the site's tags
+
+Return type:
+
+list
+
+
+`group_tags`(_context_, _data\_dict_)
+
+Group wrongly written tags and replace them with the correct tag. Returns a dictionary with the details of the correct tag
+
+Parameters:
+
+*   **wrong\_tags** (_list_) - list of wrong tags
+*   **new_tag** (_string_) - the correct tag
+
+Returns:
+
+a dictionary including the details of the correct tag
 
 Return type:
 
@@ -686,3 +722,4 @@ the updated validation report
 Return type:
 
 dictionary
+

@@ -78,8 +78,8 @@ def resource_validate_update(context, data_dict):
         Authorization check for updating
         a validation status
     '''
-    # sysadmins only
-    return {'success': False}
+    # all users
+    return {'success': True}
 
 
 def resource_update(context, data_dict=None):
