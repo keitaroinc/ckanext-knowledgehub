@@ -5,6 +5,18 @@ from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
+from ckan.logic import chained_action
+from ckanext.datastore.backend import DatastoreBackend
+import ckanext.datastore.logic.schema as dsschema
+from ckanext.datastore.logic.action import set_datastore_active_flag
+
+
+import ckan.lib.navl.dictization_functions
+_validate = ckan.lib.navl.dictization_functions.validate
+import ckanext.datastore.helpers as datastore_helpers
+
+
+
 from ckan.common import _
 import ckan.logic as logic
 from ckan.plugins import toolkit
@@ -1039,6 +1051,150 @@ def keyword_update(context, data_dict):
         kwd_dict['tags'].append(tag_dict)
 
     return kwd_dict
+
+
+
+@chained_action
+def datastore_create(action, context, data_dict):
+    '''Adds a new table to the DataStore.
+
+    The datastore_create action allows you to post JSON data to be
+    stored against a resource. This endpoint also supports altering tables,
+    aliases and indexes and bulk insertion. This endpoint can be called
+    multiple times to initially insert more data, add fields, change the
+    aliases or indexes as well as the primary keys.
+
+    To create an empty datastore resource and a CKAN resource at the same time,
+    provide ``resource`` with a valid ``package_id`` and omit the
+    ``resource_id``.
+
+    If you want to create a datastore resource from the content of a file,
+    provide ``resource`` with a valid ``url``.
+
+    See :ref:`fields` and :ref:`records` for details on how to lay out records.
+
+    :param resource_id: resource id that the data is going to be stored
+                        against.
+    :type resource_id: string
+    :param force: set to True to edit a read-only resource
+    :type force: bool (optional, default: False)
+    :param resource: resource dictionary that is passed to
+        :meth:`~ckan.logic.action.create.resource_create`.
+        Use instead of ``resource_id`` (optional)
+    :type resource: dictionary
+    :param aliases: names for read only aliases of the resource. (optional)
+    :type aliases: list or comma separated string
+    :param fields: fields/columns and their extra metadata. (optional)
+    :type fields: list of dictionaries
+    :param records: the data, eg: [{"dob": "2005", "some_stuff": ["a", "b"]}]
+                    (optional)
+    :type records: list of dictionaries
+    :param primary_key: fields that represent a unique key (optional)
+    :type primary_key: list or comma separated string
+    :param indexes: indexes on table (optional)
+    :type indexes: list or comma separated string
+    :param triggers: trigger functions to apply to this table on update/insert.
+        functions may be created with
+        :meth:`~ckanext.datastore.logic.action.datastore_function_create`.
+        eg: [
+        {"function": "trigger_clean_reference"},
+        {"function": "trigger_check_codes"}]
+    :type triggers: list of dictionaries
+
+    Please note that setting the ``aliases``, ``indexes`` or ``primary_key``
+    replaces the exising aliases or constraints. Setting ``records`` appends
+    the provided records to the resource.
+
+    **Results:**
+
+    :returns: The newly created data object, excluding ``records`` passed.
+    :rtype: dictionary
+
+    See :ref:`fields` and :ref:`records` for details on how to lay out records.
+
+    '''
+    backend = DatastoreBackend.get_active_backend()
+    schema = context.get('schema', dsschema.datastore_create_schema())
+    records = data_dict.pop('records', None)
+    resource = data_dict.pop('resource', None)
+    data_dict, errors = _validate(data_dict, schema, context)
+    resource_dict = None
+    if records:
+        data_dict['records'] = records
+    if resource:
+        data_dict['resource'] = resource
+    if errors:
+        raise toolkit.ValidationError(errors)
+
+    toolkit.check_access('datastore_create', context, data_dict)
+
+    if 'resource' in data_dict and 'resource_id' in data_dict:
+        raise toolkit.ValidationError({
+            'resource': ['resource cannot be used with resource_id']
+        })
+
+    if 'resource' not in data_dict and 'resource_id' not in data_dict:
+        raise toolkit.ValidationError({
+            'resource_id': ['resource_id or resource required']
+        })
+
+    if 'resource' in data_dict:
+        has_url = 'url' in data_dict['resource']
+        # A datastore only resource does not have a url in the db
+        data_dict['resource'].setdefault('url', '_datastore_only_resource')
+        resource_dict = toolkit.get_action('resource_create')(
+            context, data_dict['resource'])
+        data_dict['resource_id'] = resource_dict['id']
+
+        # create resource from file
+        if has_url:
+            if not p.plugin_loaded('datapusher'):
+                raise toolkit.ValidationError({'resource': [
+                    'The datapusher has to be enabled.']})
+            toolkit.get_action('datapusher_submit')(context, {
+                'resource_id': resource_dict['id'],
+                'set_url_type': True
+            })
+            # since we'll overwrite the datastore resource anyway, we
+            # don't need to create it here
+            return
+
+        # create empty resource
+        else:
+            # no need to set the full url because it will be set in before_show
+            resource_dict['url_type'] = 'datastore'
+            p.toolkit.get_action('resource_update')(context, resource_dict)
+    else:
+        if not data_dict.pop('force', False):
+            resource_id = data_dict['resource_id']
+            _check_read_only(context, resource_id)
+
+    # validate aliases
+    aliases = datastore_helpers.get_list(data_dict.get('aliases', []))
+    for alias in aliases:
+        if not datastore_helpers.is_valid_table_name(alias):
+            raise toolkit.ValidationError({
+                'alias': [u'"{0}" is not a valid alias name'.format(alias)]
+            })
+    try:
+        result = backend.create(context, data_dict)
+    except Exception as e:
+        raise toolkit.ValidationError(str(e))
+    except InvalidDataError as err:
+        raise toolkit.ValidationError(text_type(err))
+    # Set the datastore_active flag on the resource if necessary
+    model = _get_or_bust(context, 'model')
+    resobj = model.Resource.get(data_dict['resource_id'])
+    if resobj.extras.get('datastore_active') is not True:
+        log.debug(
+            'Setting datastore_active=True on resource {0}'.format(resobj.id)
+        )
+        set_datastore_active_flag(model, data_dict, True)
+
+    result.pop('id', None)
+    result.pop('connection_url', None)
+    result.pop('records', None)
+    return result
 
 
 def update_tag_in_rq(context, data_dict):
