@@ -59,12 +59,13 @@ class ActionsBase(helpers.FunctionalTestBase):
         rnn_corpus_setup()
         os.environ["CKAN_INI"] = 'subdir/test.ini'
 
-        if not plugins.plugin_loaded('knowledgehub'):
-            plugins.load('knowledgehub')
+        
         if not plugins.plugin_loaded('datastore'):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
             plugins.load('datapusher')
+        if not plugins.plugin_loaded('knowledgehub'):
+            plugins.load('knowledgehub')
 
     @classmethod
     def teardown_class(self):

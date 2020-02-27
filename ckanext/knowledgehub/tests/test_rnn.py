@@ -41,6 +41,8 @@ class ActionsBase(helpers.FunctionalTestBase):
         os.environ["CKAN_INI"] = 'subdir/test.ini'
         config['ckanext.knowledgehub.rnn.min_length_corpus'] = 100
 
+        if not plugins.plugin_loaded('datastore'):
+            plugins.load('datastore')
         if not plugins.plugin_loaded('knowledgehub'):
             plugins.load('knowledgehub')
 
