@@ -1180,3 +1180,39 @@ def user_profile_create(context, data_dict):
 
     profile_dict = _table_dictize(profile, context)
     return profile_dict
+
+
+def user_query_result_save(context, data_dict):
+    query_text = data_dict.get('query_text')
+    query_type = data_dict.get('query_type')
+    result_id = data_dict.get('result_id')
+    user = context.get('auth_user_obj')
+    if not (query_text and query_type and result_id and user):
+        return {}  # just pass through, we don't have to generate error
+    
+    try:
+        user_query = toolkit.get_action('user_query_show')({
+            'ignore_auth': False,
+        }, {
+            'query_text': query_text,
+            'query_type': query_type,
+            'user_id': user.id,
+        })
+
+        user_query_result_create(context, {
+            'query_id': user_query['id'],
+            'result_type': query_type,
+            'result_id': result_id,
+        })
+    except Exception as e:
+        log.warning('Cannot fetch user_query. Error: %s', str(e))
+    
+    try:
+        kwh_data_create(context, {
+            'type': 'search_query',
+            'title': query_text,
+        })
+    except Exception as e:
+        log.warning('Failed to store kwh_data. Error: %s', str(e))
+    
+    return {}
