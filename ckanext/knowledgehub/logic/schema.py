@@ -101,7 +101,7 @@ def dashboard_schema():
         'source': [ignore_missing,
                    validators.dashboard_source_validator,
                    unicode],
-        'indicators': [ignore_missing, unicode],
+        'indicators': [ignore_missing, unicode]
     }
 
 
