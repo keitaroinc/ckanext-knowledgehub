@@ -1771,10 +1771,11 @@ def tag_show(context, data_dict):
     include_datasets = asbool(data_dict.get('include_datasets', False))
 
     tag = ExtendedTag.get(id, vocab_id_or_name=data_dict.get('vocabulary_id'))
-    context['tag'] = tag
-
     if tag is None:
         raise NotFound
+
+    tag = ExtendedTag.get_with_keyword(tag.id)
+    context['tag'] = tag
     tag.__class__ = ExtendedTag
 
     check_access('tag_show', context, data_dict)
