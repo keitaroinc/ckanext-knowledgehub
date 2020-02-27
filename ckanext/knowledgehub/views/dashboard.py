@@ -195,6 +195,21 @@ class CreateView(MethodView):
                         indicators.append(item)
 
                 data_dict['indicators'] = json.dumps(indicators)
+            else:
+                indicators = data_dict.get('indicators')
+                if indicators:
+                    rq_indicators = []
+                    if isinstance(indicators, list):
+                        for ind in indicators:
+                            rq_indicators.append({
+                                'research_question': ind
+                            })
+                    elif isinstance(indicators, unicode):
+                        rq_indicators.append({
+                            'research_question': indicators
+                        })
+
+                    data_dict['indicators'] = json.dumps(rq_indicators)
 
             dashboard = get_action(u'dashboard_create')(
                 context, data_dict)
@@ -292,6 +307,9 @@ class EditView(MethodView):
                     viz_options.append({'text': viz.get('title'), 'value': viz.get('id')})
 
                 ind['viz_options'] = viz_options
+        else:
+            if data.get('indicators'):
+                data['indicators'] = json.loads(data['indicators'])
 
         return base.render(
             u'dashboard/edit_form_page.html',
@@ -327,6 +345,21 @@ class EditView(MethodView):
                         indicators.append(item)
 
                 data_dict['indicators'] = json.dumps(indicators)
+            else:
+                indicators = data_dict.get('indicators')
+                if indicators:
+                    rq_indicators = []
+                    if isinstance(indicators, list):
+                        for ind in indicators:
+                            rq_indicators.append({
+                                'research_question': ind
+                            })
+                    elif isinstance(indicators, unicode):
+                        rq_indicators.append({
+                            'research_question': indicators
+                        })
+
+                    data_dict['indicators'] = json.dumps(rq_indicators)
 
             dashboard = get_action(u'dashboard_update')(
                 context, data_dict)
