@@ -325,7 +325,7 @@
                     <div class="filters col-lg-2" id="filter">
                         <div>
                             {% for facet in c.facet_titles %}
-                            {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
+                                {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
                             {% endfor %}
                         </div>
                         <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span

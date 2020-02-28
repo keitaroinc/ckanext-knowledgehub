@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from flask import Blueprint
 from urllib import urlencode
-from six import string_types
+from six import string_types, iteritems
 import re
 
 try:
@@ -22,7 +22,7 @@ except ImportError:
 
 import ckan.plugins.toolkit as toolkit
 import ckan.model as model
-from ckan.common import g, _, request, is_flask_request
+from ckan.common import g, _, request, is_flask_request, c
 from ckan import logic
 from ckan.model import ResourceView, Resource
 from ckan import lib
@@ -831,21 +831,36 @@ def _get_sort():
     return sort.replace('title_string', 'title')
 
 
+def _get_facets():
+    facets = []
+    for param, value in request.params.items():
+        if param in ['organization', 'groups', 'tags']:
+            facets.append('%s:%s' %(param, value))
+
+    return facets
+
 def get_searched_rqs(query):
     context = _get_context()
     search_query = {
         'text': query,
         'page': int(request.params.get('page', 1)),
+        'facet': True
     }
     sort = _get_sort()
+    facets = _get_facets()
     if sort:
         search_query['sort'] = sort
+    if facets:
+        search_query['fq'] = facets
     list_rqs_searched = toolkit.get_action(
         'search_research_questions')(
             context,
             search_query)
     list_rqs_searched['pager'] = _get_pager(list_rqs_searched,
                                             'research-questions')
+
+    c.search_facets = list_rqs_searched['search_facets']
+
     return list_rqs_searched
 
 
@@ -857,25 +872,37 @@ def get_searched_dashboards(query):
         'count': 0,
         'limit': limit,
         'stats': {},
-        'facets': {},
+        'search_facets': {},
         'results': []
     }
 
     def result_iter(page=1):
         search_query = {
             'text': query,
+            'facet': True
         }
         sort = _get_sort()
+        facets = _get_facets()
         if sort:
             search_query['sort'] = sort
+        if facets:
+            search_query['fq'] = facets
         while True:
             search_query['page'] = page
             dashboards = toolkit.get_action('search_dashboards')(
                 _get_context(),
                 search_query)
+
             results = dashboards.get('results', [])
             if not results:
                 break
+
+            for k, v in iteritems(dashboards.get('search_facets', {})):
+                if list_dash_searched.get('search_facets').get(k):
+                    list_dash_searched['search_facets'][k].update(v)
+                else:
+                    list_dash_searched['search_facets'][k] = v
+
             for r in results:
                 yield r
             page += 1
@@ -903,10 +930,14 @@ def get_searched_visuals(query):
     search_query = {
         'text': query,
         'page': int(request.params.get('page', 1)),
+        'facet': True
     }
     sort = _get_sort()
+    facets = _get_facets()
     if sort:
         search_query['sort'] = sort
+    if facets:
+        search_query['fq'] = facets
     list_visuals_searched = toolkit.get_action(
         'search_visualizations')(
             context,
@@ -926,6 +957,7 @@ def get_searched_visuals(query):
     list_visuals_searched['pager'] = _get_pager(list_visuals_searched,
                                                 'visualizations')
 
+    c.search_facets = list_visuals_searched['search_facets']
     return list_visuals_searched
 
 

@@ -217,7 +217,7 @@ class KWHPackageController(PackageController):
             facets = OrderedDict()
 
             default_facet_titles = {
-                'organization': _('Functional Unit'),
+                'organization': _('Functional Units'),
                 'groups': _('Joint Analysis'),
                 'tags': _('Tags')
             }
@@ -256,7 +256,10 @@ class KWHPackageController(PackageController):
                 item_count=query['count'],
                 items_per_page=limit
             )
-            c.search_facets = query['search_facets']
+            if search_for == 'datasets':
+                c.search_facets = query['search_facets']
+            else:
+                c.search_facets = {}
             c.page.items = query['results']
         except SearchQueryError as se:
             # User's search parameters are invalid, in such a way that is not

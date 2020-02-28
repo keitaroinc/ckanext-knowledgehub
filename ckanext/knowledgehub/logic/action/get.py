@@ -2,7 +2,7 @@ import logging
 import re
 import os
 import json
-from six import string_types
+from six import string_types, iteritems
 
 from paste.deploy.converters import asbool
 
@@ -879,6 +879,9 @@ def get_predictions(context, data_dict):
 
 
 def _search_entity(index, ctx, data_dict):
+    model = ctx['model']
+    session = ctx['session']
+
     page = data_dict.get('page', 1)
     page_size = int(data_dict.get('limit',
                                   config.get('ckan.datasets_per_page', 20)))
@@ -905,10 +908,51 @@ def _search_entity(index, ctx, data_dict):
     results.page = page
     results.page_size = page_size
 
+    # get facets and convert facets list to a dict
+    facets = results.facets.get('facet_fields', {})
+    for field, values in iteritems(facets):
+        facets[field] = dict(zip(values[0::2], values[1::2]))
+
+    group_names = []
+    for field_name in ('groups', 'organizations'):
+        group_names.extend(facets.get(field_name, {}).keys())
+
+    groups = (session.query(model.Group.name, model.Group.title)
+                .filter(model.Group.name.in_(group_names))
+                .all()
+                if group_names else [])
+    group_titles_by_name = dict(groups)
+
+    restructured_facets = {}
+    for key, value in facets.items():
+        restructured_facets[key] = {
+            'title': key,
+            'items': []
+        }
+        for key_, value_ in value.items():
+            if value_ == 0:
+                continue
+            new_facet_dict = {}
+            new_facet_dict['name'] = key_
+            if key in ('groups', 'organizations'):
+                display_name = group_titles_by_name.get(key_, key_)
+                display_name = display_name if display_name and display_name.strip() else key_
+                new_facet_dict['display_name'] = display_name
+            else:
+                new_facet_dict['display_name'] = key_
+            new_facet_dict['count'] = value_
+            restructured_facets[key]['items'].append(new_facet_dict)
+
+    for facet in restructured_facets:
+        restructured_facets[facet]['items'] = sorted(
+            restructured_facets[facet]['items'],
+            key=lambda facet: facet['display_name'], reverse=True)
+
     result_dict = {
         'count': results.hits,
         'results': results.docs,
-        'facets': results.facets,
+        'facets': facets,
+        'search_facets': restructured_facets,
         'stats': results.stats,
         'page': page,
         'limit': page_size,
