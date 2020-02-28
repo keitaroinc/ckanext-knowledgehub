@@ -4,6 +4,8 @@ from ckan.logic.auth.get import (
     tag_list as ckan_tag_list,
     package_search as ckan_package_search,
 )
+from ckan.logic import chained_action
+
 
 
 @toolkit.auth_allow_anonymous_access
