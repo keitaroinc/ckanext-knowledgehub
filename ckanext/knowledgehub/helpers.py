@@ -860,7 +860,6 @@ def get_searched_rqs(query):
                                             'research-questions')
 
     c.search_facets = list_rqs_searched['search_facets']
-
     return list_rqs_searched
 
 
@@ -922,6 +921,8 @@ def get_searched_dashboards(query):
     list_dash_searched['count'] = len(dashboards)
     list_dash_searched['results'] = dashboards[offset:offset+limit]
     list_dash_searched['pager'] = _get_pager(list_dash_searched, 'dashboards')
+
+    c.search_facets = list_dash_searched['search_facets']
     return list_dash_searched
 
 

@@ -923,6 +923,24 @@ def _search_entity(index, ctx, data_dict):
                 if group_names else [])
     group_titles_by_name = dict(groups)
 
+    result_dict = {
+        'count': results.hits,
+        'results': results.docs,
+        'facets': facets,
+        'search_facets': _restructured_facets(facets, group_titles_by_name),
+        'stats': results.stats,
+        'page': page,
+        'limit': page_size,
+    }
+
+    class _results_wrapper(dict):
+        def _for_json(self):
+            return json.dumps(self, cls=DateTimeEncoder)
+
+    return _results_wrapper(result_dict)
+
+
+def _restructured_facets(facets, group_titles_by_name):
     restructured_facets = {}
     for key, value in facets.items():
         restructured_facets[key] = {
@@ -936,7 +954,10 @@ def _search_entity(index, ctx, data_dict):
             new_facet_dict['name'] = key_
             if key in ('groups', 'organizations'):
                 display_name = group_titles_by_name.get(key_, key_)
-                display_name = display_name if display_name and display_name.strip() else key_
+                if display_name and display_name.strip():
+                    display_name = display_name
+                else:
+                    display_name = key_
                 new_facet_dict['display_name'] = display_name
             else:
                 new_facet_dict['display_name'] = key_
@@ -948,21 +969,7 @@ def _search_entity(index, ctx, data_dict):
             restructured_facets[facet]['items'],
             key=lambda facet: facet['display_name'], reverse=True)
 
-    result_dict = {
-        'count': results.hits,
-        'results': results.docs,
-        'facets': facets,
-        'search_facets': restructured_facets,
-        'stats': results.stats,
-        'page': page,
-        'limit': page_size,
-    }
-
-    class _results_wrapper(dict):
-        def _for_json(self):
-            return json.dumps(self, cls=DateTimeEncoder)
-
-    return _results_wrapper(result_dict)
+    return restructured_facets
 
 
 def _save_user_query(ctx, text, doc_type):

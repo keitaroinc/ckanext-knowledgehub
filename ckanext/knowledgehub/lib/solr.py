@@ -98,7 +98,8 @@ class Index:
         solr_args.update(query)
         solr_args = _prepare_search_query(solr_args)
         solr_args['fq'].append('entity_type:'+doctype)
-        if solr_args.get('facet'):
+        facet = solr_args.pop('facet', None)
+        if facet:
             solr_args['facet'] = 'true'
             solr_args['facet.field'] = config.get(
                 u'knowledgehub.search.facets', DEFAULT_FACET_NAMES).split()

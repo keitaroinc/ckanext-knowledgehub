@@ -365,7 +365,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     # IPackageController
     def before_index(self, pkg_dict):
         research_question = pkg_dict.get('research_question')
-        
+
         try:
             validated_data = json.loads(pkg_dict.get('validated_data_dict',
                                                      '{}'))
@@ -375,7 +375,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
                 if tag.get('keyword_id'):
                     keywords.append(tag['keyword_id'])
                 pkg_dict['idx_tags'].append(tag.get('name'))
-            
+
             pkg_dict['extras_keywords'] = ','.join(keywords)
             pkg_dict['idx_keywords'] = keywords
 
@@ -598,5 +598,4 @@ def create_table_knowledgehub(context, data_dict):
                         json.dumps(info, ensure_ascii=False))))
 
         context['connection'].execute(
-            (sql_string + u';'.join(info_sql)).replace(u'%', u'%%'))   
-    
+            (sql_string + u';'.join(info_sql)).replace(u'%', u'%%'))
