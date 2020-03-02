@@ -122,10 +122,19 @@ ckanext.knowledgehub.dashboards_per_page = 20
      ckanext.knowledgehub.rnn.history = /home/user/history.p
      ```
 5. Limit search facets
-```
-# mandatory
-search.facets = organization groups tags
-```
+    - Display only functional units, joint analysis and tags as facets(filters) on home page search
+    ```
+    # ( mandatory )
+    search.facets = organization groups tags
+    ```
+
+    - Which facets(filters) to show for research-questions, visualizations and dashboards
+    ```
+    # (optional, default: 'organizations groups tags)
+    knowledgehub.search.facets = organizations groups tags
+    ```
+
+
 
 # Development
 
