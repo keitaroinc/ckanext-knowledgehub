@@ -9,7 +9,7 @@ from sqlalchemy import func
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
 from ckan import logic
-from ckan.common import _, g
+from ckan.common import _, g, config
 from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
@@ -616,8 +616,8 @@ def resource_validation_create(context, data_dict):
 @toolkit.side_effect_free
 def kwh_data_create(context, data_dict):
     ''' Store Knowledge Hub data needed for predictove search.
-    It keeps the title and description of KWH entities: themes, sub-themes, research
-    questions, datasets, visualizations and dashboards.
+    It keeps the title and description of KWH entities: themes, sub-themes,
+    research questions, datasets, visualizations and dashboards.
 
     :param type: the type of the entity, can be:
     [

@@ -119,7 +119,7 @@ def keyword_list(context, data_dict):
 
 def group_tags(context, data_dict):
     '''
-        Authorization check for grouping sets of tags. Sysadmin only.
+        Authorization check for grouping sets of tags.
     '''
     return {'success': True}
 
@@ -139,4 +139,11 @@ def user_profile_show(context, data_dict):
 
 
 def user_profile_list(context, data_dict=None):
+    return {'success': False}
+
+
+def push_data_to_hdx(context, data_dict):
+    '''
+        Authorization check for pushing data to hdx. Sysadmin only.
+    '''
     return {'success': False}

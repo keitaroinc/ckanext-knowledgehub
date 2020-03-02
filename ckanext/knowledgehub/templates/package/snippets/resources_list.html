@@ -9,6 +9,9 @@ Example:
   {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources %}
 
 #}
+
+{% resource 'knowledgehub/javascript/push_data_to_hdx.js' %}
+
 <section id="dataset-resources" class="resources">
   <h3>{{ _('Data and Resources') }}</h3>
   {% block resource_list %}
@@ -26,6 +29,14 @@ Example:
     <li class="resource-item" style="text-align: end">
       <a class="btn btn-success" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}"
         {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
+    </li>
+    {% endif %}
+    <input id="package-name" value="{{ pkg.name }}" type="hidden" />
+    {% if not hide_merge_btn %}
+    <li class="resource-item" style="text-align: end">
+      <button class="btn btn-success" id="pushHDX" type="submit">
+        <i class="fa fa-upload"></i>{{ _(' Push dataset to HDX') }}
+      </button>
     </li>
     {% endif %}
     {% if system_resource %}

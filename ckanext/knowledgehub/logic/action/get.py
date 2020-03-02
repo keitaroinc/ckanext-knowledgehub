@@ -38,6 +38,12 @@ from ckan.controllers.admin import get_sysadmins
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 
+from hdx.utilities.easy_logging import setup_logging
+from hdx.hdx_configuration import Configuration
+from hdx.data.dataset import Dataset
+from hdx.data.organization import Organization
+from hdx.data.resource import Resource
+
 
 log = logging.getLogger(__name__)
 
@@ -1780,3 +1786,64 @@ def tag_show(context, data_dict):
     check_access('tag_show', context, data_dict)
     return model_dictize.tag_dictize(tag, context,
                                      include_datasets=include_datasets)
+
+
+def push_dataset_to_hdx(context, data_dict):
+    u''' Push data resources that belongs to the dataset on HDX
+
+    :param id: the dataset ID
+    :type id: string
+
+    :returns: the dataset created/pushed on HDX or error message
+    :rtype: dict
+
+    Available only for sysadmins
+    '''
+    check_access('push_data_to_hdx', context)
+    model = context['model']
+    id = _get_or_bust(data_dict, 'id')
+    print(id)
+    data = logic.get_action('package_show')(
+            {'ignore_auth': True},
+            {'id': id})
+    print(data)
+
+    # get the hdx api hey from config file
+    hdx_api_key = str(config.get(u'ckanext.knowledgehub.hdx.api_key'))
+
+    setup_logging()
+
+    conf = Configuration.create(
+        hdx_site='prod',
+        user_agent='admin',
+        hdx_key=hdx_api_key
+        )
+    dataset_class_object = Dataset(initial_data=data)
+    resource_class_object = Resource(initial_data=data['resources'])
+    resource_class_object.check_required_fields(
+        ['url', 'url_type', 'resource_type']
+        )
+    x = resource_class_object.check_url_filetoupload()
+    # hdx_class_object.add_update_resources(data['resources'])
+    # print(x)
+    print("HDX class object:")
+    print(dataset_class_object)
+    dataset.check_required_fields(
+        [
+            'dataset_source',
+            'maintainer',
+            'dataset_date',
+            'data_update_frequency',
+            'groups',
+            'methodology',
+            'notes'
+        ]
+        )
+    # resources = hdx_class_object.set_resources(data['resources'])
+    # print(resources)
+    # print(hdx_class_object)
+    # hdx_class_object['resources'] = data['resources']
+    # for resource in hdx_class_object['resources']:
+    #     print("tuka")
+    # resource.check_required_fields(['url', 'url_type', 'resource_type'])
+    dataset_class_object.create_in_hdx()
