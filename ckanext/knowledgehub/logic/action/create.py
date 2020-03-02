@@ -431,12 +431,19 @@ def dashboard_create(context, data_dict):
 
     source = data.get('source')
     indicators = data.get('indicators')
+    datasets = data_dict.get('datasets')
 
     if source is not None:
         dashboard.source = source
 
     if indicators is not None:
         dashboard.indicators = indicators
+
+    if datasets is not None:
+        if isinstance(datasets, unicode):
+            dashboard.datasets = datasets
+        elif isinstance(datasets, list):
+            dashboard.datasets = ', '.join(datasets)
 
     tags = data_dict.get('tags', '')
     if tags:

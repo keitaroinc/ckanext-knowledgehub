@@ -95,7 +95,7 @@ def id_to_title(model, id):
     return entry.get('title') or entry.get('name')
 
 
-def get_rq_options(context, idValue=False):
+def get_rq_options(context={'ignore_auth': True}, idValue=False):
     if not context:
         context = _get_context()
     rq_options = []
@@ -931,11 +931,14 @@ def get_searched_visuals(query):
 
 def dashboard_research_questions(context, dashboard):
     questions = []
-    if dashboard.get('indicators'):
+    indicators = dashboard.get('indicators')
+    if indicators:
         if not context:
             context = _get_context()
         research_question_show = logic.get_action('research_question_show')
-        for indicator in dashboard['indicators']:
+        if not isinstance(indicators, list):
+            indicators = json.loads(indicators)
+        for indicator in list(indicators):
             if indicator.get('research_question'):
                 question = research_question_show(context, {
                     'id': indicator['research_question']
@@ -1412,3 +1415,12 @@ def check_user_profile_preferences():
         response = redirect(url, 302)
         return response
     return toolkit.redirect_to('/user/profile/set_interests')
+
+
+def get_datasets():
+    datasets = toolkit.get_action('package_search')(
+        _get_context(),
+        {'include_private': True}
+    )
+
+    return datasets
