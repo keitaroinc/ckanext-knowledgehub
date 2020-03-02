@@ -70,6 +70,7 @@ class ResearchQuestion(DomainObject, Indexed):
         'sub_theme_name',
         'sub_theme_title',
         'image_url',
+        'tags',
         'keywords',
         mapped('tags', 'tags'),
         mapped('created_at', 'khe_created'),
@@ -162,12 +163,15 @@ class ResearchQuestion(DomainObject, Indexed):
                     {'ignore_auth': True},
                     {'id': tag}
                 )
+                da['idx_tags'].append(tag)
                 if tag_obj.get('keyword_id'):
                     keyword_obj = get_action('keyword_show')(
                         {'ignore_auth': True},
                         {'id': tag_obj.get('keyword_id')}
                     )
                     keywords.add(keyword_obj.get('name'))
+                    if keywords:
+                        data['keywords'] = ','.join(keywords)
 
         if keywords:
             data['keywords'] = ','.join(keywords)

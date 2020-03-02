@@ -37,6 +37,7 @@ dashboard_table = Table(
     Column('source', types.UnicodeText),
     Column('indicators', types.UnicodeText),
     Column('tags', types.UnicodeText),
+    Column('datasets', types.UnicodeText),
     Column('created_at', types.DateTime,
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,
@@ -57,8 +58,8 @@ class Dashboard(DomainObject, Indexed):
         'indicators',
         'research_questions',
         'datasets',
-        'tags',
         'keywords',
+        mapped('tags', 'tags'),
         mapped('groups', 'groups'),
         mapped('organizations', 'organizations'),
         mapped('created_at', 'khe_created'),
@@ -68,37 +69,70 @@ class Dashboard(DomainObject, Indexed):
 
     @staticmethod
     def before_index(data):
-        ind = []
+        indicators = []
         if data.get('indicators'):
-            ind = json.loads(data['indicators'])
+            indicators = json.loads(data['indicators'])
         list_rqs = []
         organizations = []
         groups = []
-        datasets = []
-        data['research_questions'] = []
         rq_ids = []
-        for k in ind:
-            res_q = get_action('research_question_show')(
-                {'ignore_auth': True},
-                {'id': k['research_question']}
-            )
-            list_rqs.append(res_q['title'])
-            rq_ids.append(k['research_question'])
 
-            docs = get_action('search_visualizations')(
-                {'ignore_auth': True},
-                {'text': '*', 'fq': 'entity_id:' + k['resource_view_id']}
-            )
-            for v in docs.get('results', []):
-                organization = v.get('organization')
-                if organization:
-                    organizations.append(organization)
-                view_groups = v.get('groups')
-                if view_groups:
-                    groups.extend(view_groups)
-                package_id = v.get('package_id')
-                if package_id:
-                    datasets.append(package_id)
+        if data.get('type') == 'internal':
+            datasets = []
+            for k in indicators:
+                res_q = get_action('research_question_show')(
+                    {'ignore_auth': True},
+                    {'id': k['research_question']}
+                )
+                list_rqs.append(res_q['title'])
+                rq_ids.append(k['research_question'])
+
+                docs = get_action('search_visualizations')(
+                    {'ignore_auth': True},
+                    {'text': '*', 'fq': 'entity_id:' + k['resource_view_id']}
+                )
+                for v in docs.get('results', []):
+                    organization = v.get('organization')
+                    if organization:
+                        organizations.append(organization)
+                    view_groups = v.get('groups')
+                    if view_groups:
+                        groups.extend(view_groups)
+                    package_id = v.get('package_id')
+                    if package_id:
+                        datasets.append(package_id)
+
+                data['datasets'] = ', '.join(list(set(datasets)))
+        else:
+            if isinstance(indicators, unicode):
+                res_q = get_action('research_question_show')(
+                    {'ignore_auth': True},
+                    {'id': indicators}
+                )
+                list_rqs.append(res_q['title'])
+                rq_ids.append(indicators)
+            elif isinstance(indicators, list):
+                for i in indicators:
+                    res_q = get_action('research_question_show')(
+                        {'ignore_auth': True},
+                        {'id': i['research_question']}
+                    )
+                    list_rqs.append(res_q['title'])
+                    rq_ids.append(i['research_question'])
+
+            if data.get('datasets'):
+                datasets = data.get('datasets').split(', ')
+                for dataset_id in datasets:
+                    package = get_action('package_show')(
+                        {'ignore_auth': True},
+                        {'id': dataset_id, 'include_tracking': True})
+                    if package:
+                        organizations.append(
+                            package.get('organization', {}).get('name')
+                        )
+
+                        for g in package.get('groups', []):
+                            groups.append(g.get('name'))
 
         if rq_ids:
             data['idx_research_questions'] = rq_ids
@@ -122,7 +156,6 @@ class Dashboard(DomainObject, Indexed):
         data['research_questions'] = ','.join(list_rqs)
         data['organizations'] = list(set(organizations))
         data['groups'] = list(set(groups))
-        data['datasets'] = ', '.join(list(set(datasets)))
 
         # indexed for interests calculation
         if keywords:
