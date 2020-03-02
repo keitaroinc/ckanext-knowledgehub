@@ -47,12 +47,13 @@ RUN python -m spacy download en_core_web_sm
 ENV CKAN__PLUGINS envvars \
                   recline_view \
                   validation \
-                  knowledgehub \
                   disqus \
                   stats \
                   datastore \
                   datapusher \
-                  datarequests
+                  datarequests \
+                  knowledgehub
+
 
 RUN mkdir -p /var/lib/ckan/default && chown -R ckan:ckan /var/lib/ckan/default
 VOLUME /var/lib/ckan/default
