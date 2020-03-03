@@ -1801,15 +1801,38 @@ def push_dataset_to_hdx(context, data_dict):
     '''
     check_access('push_data_to_hdx', context)
     model = context['model']
+
     id = _get_or_bust(data_dict, 'id')
-    print(id)
     data = logic.get_action('package_show')(
             {'ignore_auth': True},
             {'id': id})
-    print(data)
+
+    if not data['notes']:
+        data['notes'] = ''
+    dataset = {
+        'name': data['name'],
+        'organization': 'unhcr',
+        'groups': data['groups'],
+        'tags': data['tags'],
+        'notes': data['notes'],
+        'owner_org': 'abf4ca86-8e69-40b1-92f7-71509992be88',
+        'title': data['title'],
+        'private': data['private'],
+        'dataset_source': 'knowledgehub',
+        'maintainer': 'savarimu',
+        'dataset_date': data['metadata_created'],
+        'data_update_frequency': data['metadata_modified'],
+        'license_id': data['license_id'],
+        'methodology': data['license_url'],
+        'num_resources': data['num_resources'],
+        'num_tags': data['num_tags'],
+        'url': data['url'],
+        'maintainer_email': data['maintainer_email']
+
+    }
 
     # get the hdx api hey from config file
-    hdx_api_key = str(config.get(u'ckanext.knowledgehub.hdx.api_key'))
+    hdx_api_key = config.get(u'ckanext.knowledgehub.hdx.api_key')
 
     setup_logging()
 
@@ -1818,32 +1841,22 @@ def push_dataset_to_hdx(context, data_dict):
         user_agent='admin',
         hdx_key=hdx_api_key
         )
-    dataset_class_object = Dataset(initial_data=data)
-    resource_class_object = Resource(initial_data=data['resources'])
-    resource_class_object.check_required_fields(
-        ['url', 'url_type', 'resource_type']
-        )
-    x = resource_class_object.check_url_filetoupload()
-    # hdx_class_object.add_update_resources(data['resources'])
-    # print(x)
-    print("HDX class object:")
-    print(dataset_class_object)
-    dataset.check_required_fields(
-        [
-            'dataset_source',
-            'maintainer',
-            'dataset_date',
-            'data_update_frequency',
-            'groups',
-            'methodology',
-            'notes'
-        ]
-        )
-    # resources = hdx_class_object.set_resources(data['resources'])
-    # print(resources)
-    # print(hdx_class_object)
-    # hdx_class_object['resources'] = data['resources']
-    # for resource in hdx_class_object['resources']:
-    #     print("tuka")
-    # resource.check_required_fields(['url', 'url_type', 'resource_type'])
-    dataset_class_object.create_in_hdx()
+
+    dataset_class_object = Dataset(initial_data=dataset)
+    dataset_class_object.create_in_hdx(ignore_check=False)
+
+    resources = data['resources']
+    for resource in resources:
+        if not resource['resource_type']:
+            resource['resource_type'] = ''
+        resource_data = {
+            'package_id': dataset_class_object['id'],
+            'name': resource['name'],
+            'format': resource['format'],
+            'description': resource['description'],
+            'url_type': resource['url_type'],
+            'resource_type': resource['resource_type'],
+            'url': resource['url']
+        }
+        resource_class_object = Resource(initial_data=resource_data)
+        resource_class_object.create_in_hdx()
