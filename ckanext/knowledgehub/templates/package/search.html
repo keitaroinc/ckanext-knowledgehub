@@ -282,39 +282,43 @@
                                 <li class="dataset-item">
                                     <div id="tabs-dashboards" class="dataset-content">
                                         {% set additional_info_dash = h.get_single_dash(dashboard) %}
-                                            <h3 class="dataset-heading text-ellipsis">
-                                                <a href="{{ h.url_for('dashboards.view', name=dashboard.name) }}">{{ dashboard.title }}</a>
-                                            </h3>
-                                                {% set truncate = truncate or 180 %}
-                                                {% set truncate_description = truncate_description or 150 %}
-                                                {% set description = dashboard['description'] %}
-                                                <p class="text-muted">
-                                                    <small>{{ h.truncate(description, truncate_description) }}</small>
-                                                </p>
-                                                <h5 class="dataset-text-wrap text-muted">
-                                                    <span style="color: #000">Date created:</span>
-                                                    <span class="text-muted">{{ h.format_date(additional_info_dash.created_at) }}</span>
-                                                </h5>
-                                                <h5 class="dataset-text-wrap text-muted">
-                                                    <span style="color: #000">Type:</span>
-                                                    <span class="text-muted text-capitalize">{{ additional_info_dash.type }}</span>
-                                                </h5>
-                                                {% if dashboard.organizations %}
-                                                    <h5 class="dataset-text-wrap text-muted">
-                                                        <span style="color: #000">Functional Units:</span>
-                                                        {% for org in dashboard.get('organizations', []) %}
-                                                            <span class="text-muted text-capitalize">{{ org }} </span>
-                                                        {% endfor %}
-                                                    </h5>
-                                                {% endif %}
-                                                {% if additional_info_dash.tags %}
-                                                    <div class="row flex flex-wrap dataset-tag-wrapper" style="border-bottom: 0;">
-                                                        {% for tag in additional_info_dash.get('tags', '').split(',') %}
-                                                            <div class="dataset-tag mr-2">{{ tag }}</div>
-                                                        {% endfor %}
-                                                    </div>
-                                                {% endif %}
-                                        <input type="hidden" id="dashboard-id" name="dashboard-id" value="{{ dashboard.id }}">
+                                        <h3 class="dataset-heading text-ellipsis" style="padding:0">
+                                            <span
+                                                class="dataset-private label label-info text-ellipsis">{{ additional_info_dash.type }}</span>
+                                            <a
+                                                href="{{ h.url_for('dashboards.view', name=dashboard.name) }}">{{ dashboard.title }}</a>
+                                        </h3>
+                                        {% set truncate = truncate or 180 %}
+                                        {% set truncate_description = truncate_description or 150 %}
+                                        {% set description = dashboard['description'] %}
+                                        <p class="text-muted">
+                                            <small>{{ h.truncate(description, truncate_description) }}</small>
+                                        </p>
+                                        {% if additional_info_dash.tags %}
+                                        <div class="row flex flex-wrap dataset-tag-wrapper" style="border-bottom: 1;">
+                                            {% for tag in additional_info_dash.get('tags', '').split(',') %}
+                                            <div class="dataset-tag mr-2">{{ tag }}</div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <h5 class="dataset-text-wrap text-muted">
+                                            <span style="color: #000">Date created:</span>
+                                            <span
+                                                class="text-muted">{{ h.format_date(additional_info_dash.created_at) }}</span>
+                                        </h5>
+
+                                        {% if dashboard.organizations %}
+                                        <h5 class="dataset-text-wrap text-muted">
+                                            <span style="color: #000">Functional Units:</span>
+                                            {% for org in dashboard.get('organizations', []) %}
+                                            <span class="text-muted text-capitalize">{{ org }} </span>
+                                            {% endfor %}
+                                        </h5>
+                                        {% endif %}
+
+
+                                        <input type="hidden" id="dashboard-id" name="dashboard-id"
+                                            value="{{ dashboard.id }}">
                                     </div>
                                 </li>
 
@@ -333,13 +337,13 @@
                     <div class="filters col-lg-2" id="filter">
                         <div>
                             {% for facet in c.facet_titles %}
-                                {% if facet == 'organization' and active_tab != 'package' %}
-                                    {% set facet = 'organizations' %}
-                                    {% set title = 'Functional Units' %}
-                                {% else %}
-                                    {% set title = c.facet_titles[facet] %}
-                                {% endif %}
-                                {{ h.snippet('snippets/facet_list.html', title=title, name=facet) }}
+                            {% if facet == 'organization' and active_tab != 'package' %}
+                            {% set facet = 'organizations' %}
+                            {% set title = 'Functional Units' %}
+                            {% else %}
+                            {% set title = c.facet_titles[facet] %}
+                            {% endif %}
+                            {{ h.snippet('snippets/facet_list.html', title=title, name=facet) }}
                             {% endfor %}
                         </div>
                         <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
