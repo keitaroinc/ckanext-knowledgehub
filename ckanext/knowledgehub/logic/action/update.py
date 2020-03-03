@@ -445,18 +445,20 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description',
-             'indicators', 'source', 'type', 'tags']
-
-    for item in items:
-        setattr(dashboard, item, data.get(item))
-
     datasets = data_dict.get('datasets')
     if datasets is not None:
         if isinstance(datasets, unicode):
             dashboard.datasets = datasets
         elif isinstance(datasets, list):
             dashboard.datasets = ', '.join(datasets)
+    else:
+        dashboard.datasets = ''
+
+    items = ['name', 'title', 'description',
+             'indicators', 'source', 'type', 'tags']
+
+    for item in items:
+        setattr(dashboard, item, data.get(item))
 
     tags = data_dict.get('tags', '')
     if tags:
