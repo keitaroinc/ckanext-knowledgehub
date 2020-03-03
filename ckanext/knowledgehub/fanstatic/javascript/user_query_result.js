@@ -23,42 +23,10 @@
     };
 
     function saveUserQueryResult(query_text, result_type, result_id, user_id) {
-        api.get('user_query_show', {
+        api.post('user_query_result_save', {
             query_text: query_text,
             query_type: result_type,
-            user_id: user_id
-        })
-        .done(function (data) {
-            if (data.success) {
-                var query_id = data.result.id
-                api.post('user_query_result_create', {
-                    query_id: query_id,
-                    result_type: result_type,
-                    result_id: result_id
-                })
-                .done(function (data) {
-                    console.log("User Query Result: SAVED!");
-                })
-                .fail(function (error) {
-                    console.log("User Query Result failed: " + error.statusText);
-                });
-            }
-        })
-        .fail(function (error) {
-            console.log("User Query Show failed: " + error.statusText);
-        });
-    }
-
-    function saveKnowledgeHubData(query_text) {
-        api.post('kwh_data_create', {
-            type: 'search_query',
-            title: query_text
-        })
-        .done(function (data) {
-            console.log("User query added to kwh data");
-        })
-        .fail(function (error) {
-            console.log("Failed to add user query to kwh data: " + error.statusText);
+            result_id: result_id,
         });
     }
 
@@ -66,22 +34,41 @@
         var save_user_query = function(callback) {
             var tab_content = $('.tab_content');
 
-            tab_content.on('click', '.dataset-heading', function() {
+            tab_content.on('click', '.dataset-heading', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 var dataset_content = $(this).parent('.dataset-content');
                 var result_id = dataset_content.find('#dataset-id').val();
                 callback(DATASET_TYPE, result_id);
+                setTimeout(function(){
+                    window.location = $('a', this).attr('href');
+                }.bind(this), 0);
+                return false;
             });
 
-            tab_content.on('click', '.rq-heading', function () {
+            tab_content.on('click', '.rq-heading', function (e) {
+                e.preventDefault()
+                e.stopPropagation()
                 var rq_content = $(this).parent('.rq-box');
                 var result_id = rq_content.find('#rq-id').val();
                 callback(RQ_TYPE, result_id);
+                setTimeout(function(){  
+                    window.location = $('a', this).attr('href');
+                }.bind(this), 10);
+                return false;
             });
 
-            tab_content.on('click', '.dashboard-link', function () {
-                var dashboard_content = $(this).parent('#tabs-dashboards');
-                var result_id = dashboard_content.find('#dashboard-id').val();
+            tab_content.on('click', '.dashboard-link', function (e) {
+                e.preventDefault()
+                e.stopPropagation()
+                // var dashboard_content = $(this).parent('#tabs-dashboards');
+                // var result_id = dashboard_content.find('#dashboard-id').val();
+                var result_id = $(this).attr('id');
                 callback(DASHBOARD_TYPE, result_id);
+                setTimeout(function(){
+                    window.location = $(this).attr('href');
+                }.bind(this), 0);
+                return false;
             });
         }
 
@@ -94,7 +81,6 @@
                 if (query_text) {
                     var user_id = $('#user-id').val();
                     saveUserQueryResult(query_text, result_type, result_id, user_id)
-                    saveKnowledgeHubData(query_text, user_id)
                 }
             }
         });

@@ -50,15 +50,14 @@ class KnowledgeHubPackageSearchQuery(PackageSearchQuery):
             return solr_response.docs[0]
     
     def run(self, query, permission_labels=None, **kwargs):
-
-        user_id = query.get('interests_for')
+        user_id = query.get('boost_for')
         if user_id:
-            query.pop('interests_for')
+            query.pop('boost_for')
 
         boost_params = user_profile_service.get_interests_boost(user_id)
         if boost_params:
             query.update(boost_solr_params(boost_params))
-        print query
+
         return super(KnowledgeHubPackageSearchQuery, self).run(
             query,
             permission_labels,
@@ -68,7 +67,7 @@ class KnowledgeHubPackageSearchQuery(PackageSearchQuery):
 def patch_ckan_core_search():
     '''Patches CKAN's core search funtionality to add fq='entity_type:package'
     when searching for packages in Solr.
-    With KnowledgeHub extens                                                        ion, Solr is extended to support multiple types of
+    With KnowledgeHub extension, Solr is extended to support multiple types of
     entities for indexing, so we must take into account the entity_type when
     doing index searches.
     '''

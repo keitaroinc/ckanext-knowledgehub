@@ -16,6 +16,7 @@ from ckan.common import config
 import ckan.plugins as p
 import ckan.lib.base as base
 from ckan.lib.render import TemplateNotFound
+from ckan.lib.search import SearchError, SearchQueryError
 
 from ckanext.knowledgehub import helpers as kwh_h
 from ckanext.knowledgehub.lib.email import request_validation
@@ -65,8 +66,6 @@ class KWHPackageController(PackageController):
     """
 
     def search(self):
-        from ckan.lib.search import SearchError, SearchQueryError
-
         package_type = self._guess_package_type()
 
         try:
@@ -90,8 +89,8 @@ class KWHPackageController(PackageController):
                 }
 
                 kwh_data = {
-                    'type': 'search',
-                    'content': q
+                    'type': 'search_query',
+                    'title': q
                 }
                 logic.get_action(u'kwh_data_create')(
                     sysadmin_context, kwh_data

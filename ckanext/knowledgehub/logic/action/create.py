@@ -1196,10 +1196,10 @@ def user_query_result_save(context, data_dict):
     user = context.get('auth_user_obj')
     if not (query_text and query_type and result_id and user):
         return {}  # just pass through, we don't have to generate error
-    
+
     try:
         user_query = toolkit.get_action('user_query_show')({
-            'ignore_auth': False,
+            'ignore_auth': True,
         }, {
             'query_text': query_text,
             'query_type': query_type,
@@ -1213,6 +1213,7 @@ def user_query_result_save(context, data_dict):
         })
     except Exception as e:
         log.warning('Cannot fetch user_query. Error: %s', str(e))
+        log.exception(e)
     
     try:
         kwh_data_create(context, {
@@ -1221,5 +1222,6 @@ def user_query_result_save(context, data_dict):
         })
     except Exception as e:
         log.warning('Failed to store kwh_data. Error: %s', str(e))
+        log.exception(e)
     
     return {}
