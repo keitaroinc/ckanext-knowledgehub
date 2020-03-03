@@ -4,7 +4,6 @@ from ckan.logic.auth.get import tag_list as ckan_tag_list
 from ckan.logic import chained_action
 
 
-
 @toolkit.auth_allow_anonymous_access
 def research_question_show(context, data_dict):
     return {'success': True}
@@ -146,6 +145,6 @@ def user_profile_list(context, data_dict=None):
 
 def push_data_to_hdx(context, data_dict):
     '''
-        Authorization check for pushing data to hdx. Sysadmin only.
+        Authorization check for pushing data to hdx. Authorized users.
     '''
-    return {'success': False}
+    return {'success': True}
