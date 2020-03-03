@@ -1885,7 +1885,7 @@ class TestSearchIndexActions(helpers.FunctionalTestBase):
                 'numFound': 1,
             }
         })
-        results = get_actions.search_dashboards({}, {
+        results = get_actions.search_dashboards(get_context(), {
             'text': 'aaa',
         })
         assert_true(results is not None)
@@ -1904,7 +1904,7 @@ class TestSearchIndexActions(helpers.FunctionalTestBase):
                 'numFound': 1,
             }
         })
-        results = get_actions.search_research_questions({}, {
+        results = get_actions.search_research_questions(get_context(), {
             'text': 'aaa',
         })
         assert_true(results is not None)
@@ -1923,7 +1923,7 @@ class TestSearchIndexActions(helpers.FunctionalTestBase):
                 'numFound': 1,
             }
         })
-        results = get_actions.search_visualizations({}, {
+        results = get_actions.search_visualizations(get_context(), {
             'text': 'aaa',
         })
         assert_true(results is not None)

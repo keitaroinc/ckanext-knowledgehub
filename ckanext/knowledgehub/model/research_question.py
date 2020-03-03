@@ -72,6 +72,7 @@ class ResearchQuestion(DomainObject, Indexed):
         'image_url',
         'tags',
         'keywords',
+        mapped('tags', 'tags'),
         mapped('created_at', 'khe_created'),
         mapped('modified_at', 'khe_modified'),
     ]
@@ -155,13 +156,13 @@ class ResearchQuestion(DomainObject, Indexed):
 
         keywords = set()
         if data.get('tags'):
-            data['idx_tags'] = []
-            for tag in data.get('tags', '').split(','):
+            data['tags'] = data.get('tags').split(',')
+            data['idx_tags'] = data['tags']
+            for tag in data['tags']:
                 tag_obj = get_action('tag_show')(
                     {'ignore_auth': True},
                     {'id': tag}
                 )
-                data['idx_tags'].append(tag)
                 if tag_obj.get('keyword_id'):
                     keyword_obj = get_action('keyword_show')(
                         {'ignore_auth': True},
@@ -172,7 +173,9 @@ class ResearchQuestion(DomainObject, Indexed):
                         data['keywords'] = ','.join(keywords)
 
         if keywords:
+            data['keywords'] = ','.join(keywords)
             data['idx_keywords'] = list(keywords)
+
         return data
 
     def __repr__(self):

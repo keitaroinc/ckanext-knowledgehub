@@ -92,9 +92,9 @@ class Dashboard(DomainObject, Indexed):
                     {'text': '*', 'fq': 'entity_id:' + k['resource_view_id']}
                 )
                 for v in docs.get('results', []):
-                    organization = v.get('organization')
+                    organization = v.get('organizations')
                     if organization:
-                        organizations.append(organization)
+                        organizations.extend(organization)
                     view_groups = v.get('groups')
                     if view_groups:
                         groups.extend(view_groups)
@@ -139,11 +139,17 @@ class Dashboard(DomainObject, Indexed):
 
         keywords = set()
         if data.get('tags'):
-            for tag in data.get('tags', '').split(','):
-                tag_obj = get_action('tag_show')(
-                    {'ignore_auth': True},
-                    {'id': tag}
-                )
+            data['tags'] = data.get('tags').split(',')
+            data['idx_tags'] = data['tags']
+            for tag in data['tags']:
+                try:
+                    tag_obj = get_action('tag_show')(
+                        {'ignore_auth': True},
+                        {'id': tag}
+                    )
+                except logic.NotFound:
+                    continue
+
                 if tag_obj.get('keyword_id'):
                     keyword_obj = get_action('keyword_show')(
                         {'ignore_auth': True},
@@ -159,9 +165,8 @@ class Dashboard(DomainObject, Indexed):
 
         # indexed for interests calculation
         if keywords:
+            data['keywords'] = ','.join(keywords)
             data['idx_keywords'] = list(keywords)
-        if data.get('tags'):
-            data['idx_tags'] = data.get('tags').split(',')
 
         return data
 

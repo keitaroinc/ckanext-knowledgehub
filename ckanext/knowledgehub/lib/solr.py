@@ -13,7 +13,8 @@ FIELD_PREFIX = 'khe_'
 COMMON_FIELDS = {'name', 'title'}
 CHUNK_SIZE = 1000
 MAX_RESULTS = 500
-VALID_SOLR_ARGS = {'q', 'fq', 'rows', 'start', 'sort', 'fl', 'df'}
+VALID_SOLR_ARGS = {'q', 'fq', 'rows', 'start', 'sort', 'fl', 'df', 'facet'}
+DEFAULT_FACET_NAMES = u'organizations groups tags'
 
 
 def _prepare_search_query(query):
@@ -97,6 +98,12 @@ class Index:
         solr_args.update(query)
         solr_args = _prepare_search_query(solr_args)
         solr_args['fq'].append('entity_type:'+doctype)
+        facet = solr_args.pop('facet', None)
+        if facet:
+            solr_args['facet'] = 'true'
+            solr_args['facet.field'] = config.get(
+                u'knowledgehub.search.facets', DEFAULT_FACET_NAMES).split()
+
         logger.debug('Solr query args: %s', solr_args)
         return solr_args
 
