@@ -301,12 +301,20 @@
                                                     <span style="color: #000">Type:</span>
                                                     <span class="text-muted text-capitalize">{{ additional_info_dash.type }}</span>
                                                 </h5>
+                                                {% if dashboard.organizations %}
+                                                    <h5 class="dataset-text-wrap text-muted">
+                                                        <span style="color: #000">Functional Units:</span>
+                                                        {% for org in dashboard.get('organizations', []) %}
+                                                            <span class="text-muted text-capitalize">{{ org }} </span>
+                                                        {% endfor %}
+                                                    </h5>
+                                                {% endif %}
                                                 {% if additional_info_dash.tags %}
-                                                <div class="row flex flex-wrap dataset-tag-wrapper" style="border-bottom: 0;">
-                                                    {% for tag in additional_info_dash.get('tags', '').split(',') %}
-                                                    <div class="dataset-tag mr-2">{{ tag }}</div>
-                                                    {% endfor %}
-                                                </div>
+                                                    <div class="row flex flex-wrap dataset-tag-wrapper" style="border-bottom: 0;">
+                                                        {% for tag in additional_info_dash.get('tags', '').split(',') %}
+                                                            <div class="dataset-tag mr-2">{{ tag }}</div>
+                                                        {% endfor %}
+                                                    </div>
                                                 {% endif %}
                                         <input type="hidden" id="dashboard-id" name="dashboard-id" value="{{ dashboard.id }}">
                                     </div>
@@ -327,7 +335,13 @@
                     <div class="filters col-lg-2" id="filter">
                         <div>
                             {% for facet in c.facet_titles %}
-                            {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet) }}
+                                {% if facet == 'organization' and active_tab != 'package' %}
+                                    {% set facet = 'organizations' %}
+                                    {% set title = 'Functional Units' %}
+                                {% else %}
+                                    {% set title = c.facet_titles[facet] %}
+                                {% endif %}
+                                {{ h.snippet('snippets/facet_list.html', title=title, name=facet) }}
                             {% endfor %}
                         </div>
                         <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
