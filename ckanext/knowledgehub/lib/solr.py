@@ -4,6 +4,7 @@ from ckan.common import config, _ as translate
 from ckan.lib.search.common import make_connection
 from ckan.plugins.toolkit import ValidationError
 from logging import getLogger
+from ckanext.knowledgehub.lib.profile import user_profile_service
 
 
 logger = getLogger(__name__)
@@ -13,7 +14,8 @@ FIELD_PREFIX = 'khe_'
 COMMON_FIELDS = {'name', 'title'}
 CHUNK_SIZE = 1000
 MAX_RESULTS = 500
-VALID_SOLR_ARGS = {'q', 'fq', 'rows', 'start', 'sort', 'fl', 'df'}
+VALID_SOLR_ARGS = {'q', 'fq', 'rows', 'start', 'sort', 'fl', 'df',
+                   'bq', 'defType', 'boost'}
 
 
 def _prepare_search_query(query):
@@ -508,6 +510,13 @@ class Indexed:
         The query arguments are going to be translated into valid Solr query
         parameters.
         '''
+
+        if query.get('boost_for'):
+            user_id = query.pop('boost_for')
+            boost_values = user_profile_service.get_interests_boost(user_id)
+            boost_params = boost_solr_params(boost_values)
+            query.update(boost_params)
+
         Indexed.validate_solr_args(query)
         index_results = cls.get_index().search(cls._get_doctype(), **query)
         results = []
@@ -544,9 +553,16 @@ def boost_solr_params(values):
     }
 
     bq = []
-    for prop, prop_values in values.items():
+    for prop, prop_values in values.get('normal', {}).items():
         for value in prop_values:
             bq.append("%s:'%s'" % (prop, value))
+
+    for scale, boost_params in values.items():
+        if scale == 'normal':
+            continue
+        for prop, prop_values in boost_params.items():
+            for value in prop_values:
+                bq.append("%s:'%s'%s" % (prop, value, scale))
 
     if bq:
         params['bq'] = ' OR '.join(bq)

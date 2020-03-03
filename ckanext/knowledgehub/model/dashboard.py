@@ -90,7 +90,7 @@ class Dashboard(DomainObject, Indexed):
                 docs = get_action('search_visualizations')(
                     {'ignore_auth': True},
                     {'text': '*', 'fq': 'entity_id:' + k['resource_view_id']}
-                )
+                ) if k.get('resource_view_id') else {}
                 for v in docs.get('results', []):
                     organization = v.get('organization')
                     if organization:

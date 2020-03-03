@@ -240,6 +240,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'dq_timeliness_column': defaults,
             'dq_timeliness_date_format': defaults,
             'dq_accuracy_column': defaults,
+            'data_quality_completeness_column': defaults,
         })
         return schema
 

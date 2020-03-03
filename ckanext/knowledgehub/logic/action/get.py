@@ -901,6 +901,10 @@ def _search_entity(index, ctx, data_dict):
     _save_user_query(ctx, text, index.doctype)
 
     args = ckan_params_to_solr_args(data_dict)
+
+    if ctx.get('auth_user_obj'):
+        args['boost_for'] = ctx['auth_user_obj'].id
+
     results = index.search_index(**args)
 
     results.page = page
@@ -1787,5 +1791,5 @@ def package_search(context, data_dict=None):
     user = context.get('auth_user_obj')
     if user:
         data_dict = data_dict or {}
-        data_dict['interests_for'] = user.id
+        data_dict['boost_for'] = user.id
     return ckan_package_search(context, data_dict)
