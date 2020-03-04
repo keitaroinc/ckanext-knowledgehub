@@ -1840,6 +1840,9 @@ def tag_show(context, data_dict):
 
 
 def package_search(context, data_dict=None):
+    '''Overrides CKAN's package_search action to add boost parameters for the
+    user interests.
+    '''
     user = context.get('auth_user_obj')
     if user:
         data_dict = data_dict or {}

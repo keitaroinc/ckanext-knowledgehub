@@ -4,7 +4,6 @@ from ckan.common import config, _ as translate
 from ckan.lib.search.common import make_connection
 from ckan.plugins.toolkit import ValidationError
 from logging import getLogger
-from ckanext.knowledgehub.lib.profile import user_profile_service
 
 
 logger = getLogger(__name__)
@@ -519,6 +518,8 @@ class Indexed:
         '''
 
         if query.get('boost_for'):
+            # Delay the loading of the user_profile service
+            from ckanext.knowledgehub.lib.profile import user_profile_service
             user_id = query.pop('boost_for')
             boost_values = user_profile_service.get_interests_boost(user_id)
             boost_params = boost_solr_params(boost_values)
@@ -555,6 +556,8 @@ class Indexed:
 
 
 def boost_solr_params(values):
+    '''Transforms the values dict into edismax solr query arguments.
+    '''
     params = {
         'defType': 'edismax',
     }
