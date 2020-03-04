@@ -1190,6 +1190,13 @@ def user_profile_create(context, data_dict):
 
 
 def user_query_result_save(context, data_dict):
+    '''Saves the result of a query when a user clicks on a link.
+
+    :param query_text: `str` the text of the query
+    :param query_type: `str` the type of search query: dataset, dashboard etc.
+    :param result_id: `str` the id of the selected object like dataset id,
+        dashboard id etc.
+    '''
     query_text = data_dict.get('query_text')
     query_type = data_dict.get('query_type')
     result_id = data_dict.get('result_id')
