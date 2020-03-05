@@ -51,7 +51,6 @@ ckan.module('chart', function () {
 
             var chartField = $('.chart_field');
 
-
             // The Update chart button is only in the admin area. In the public
             // updating of viz items will be applied with a reload of the page.
             if (chartField.length > 0) {
@@ -863,4 +862,26 @@ ckan.module('chart', function () {
             return chart;
         },
     }
+});
+
+
+$(document).ready(function () {
+
+    // hide these at the beginning
+    document.getElementById('chart_field_additional_tornado_value').style.display = "none"
+    document.getElementById('chart_additional_tornado_label').style.display = "none"
+
+    $('#chart_field_type').change(function () {
+        var e = document.getElementById("chart_field_type");
+        var text = e.options[e.selectedIndex].text;
+        if(text == "Butterfly") {
+            document.getElementById('chart_field_additional_tornado_value').style.display = "block"
+            document.getElementById('chart_additional_tornado_label').style.display = "block"
+        }
+        else {
+            document.getElementById('chart_field_additional_tornado_value').style.display = "none"
+            document.getElementById('chart_additional_tornado_label').style.display = "none"
+            
+        }
+    })
 });
