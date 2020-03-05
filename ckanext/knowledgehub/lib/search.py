@@ -2,9 +2,13 @@
 entity types: package, dashboard, visualization etc.
 '''
 
-from ckan.lib.search.query import PackageSearchQuery
+from ckan.lib.search.query import PackageSearchQuery, VALID_SOLR_PARAMETERS
 from ckan.lib.search.common import make_connection, SearchError
 from ckan.common import config
+
+from ckanext.knowledgehub.lib.profile import user_profile_service
+from ckanext.knowledgehub.lib.solr import boost_solr_params
+
 import pysolr
 import logging
 
@@ -44,7 +48,21 @@ class KnowledgeHubPackageSearchQuery(PackageSearchQuery):
                               'the search index: %s' % reference)
         else:
             return solr_response.docs[0]
+    
+    def run(self, query, permission_labels=None, **kwargs):
+        user_id = query.get('boost_for')
+        if user_id:
+            query.pop('boost_for')
 
+        boost_params = user_profile_service.get_interests_boost(user_id)
+        if boost_params:
+            query.update(boost_solr_params(boost_params))
+
+        return super(KnowledgeHubPackageSearchQuery, self).run(
+            query,
+            permission_labels,
+            **kwargs
+        )
 
 def patch_ckan_core_search():
     '''Patches CKAN's core search funtionality to add fq='entity_type:package'
@@ -62,4 +80,8 @@ def patch_ckan_core_search():
                         'work on your curren CKAN version.')
 
     ckan_search._QUERIES['package'] = KnowledgeHubPackageSearchQuery
+
+    # Add 'bq' for edismax boost query
+    VALID_SOLR_PARAMETERS.add('bq')
+
     log.info('CKAN core queries has been patched successfully.')
