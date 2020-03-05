@@ -1,3 +1,4 @@
+from hdx.hdx_configuration import Configuration
 import json
 from logging import getLogger
 
@@ -7,6 +8,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm
+from ckan.common import config
 
 
 # imports for DatastoreBackend
@@ -27,16 +29,13 @@ from ckanext.datastore.backend.postgres import create_indexes
 from ckanext.datastore.backend.postgres import create_alias
 from ckanext.datastore.backend.postgres import _unrename_json_field
 
-
-
-
-
 import ckanext.knowledgehub.helpers as h
-
 from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.model.visualization import extend_resource_view_table
+
+from hdx.hdx_configuration import Configuration
 
 from ckanext.datastore.backend import (
     DatastoreException,
@@ -76,6 +75,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
 
         DatastoreBackend.register_backends()
         #DatastoreBackend.set_active_backend(config)
+
+        hdx_api_key = config.get(u'ckanext.knowledgehub.hdx.api_key')
+        Configuration.create(
+            hdx_site='prod', # from config, default to test
+            user_agent='admin',
+            hdx_key=hdx_api_key
+        )
 
     # IBlueprint
     def get_blueprint(self):
@@ -365,7 +371,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     # IPackageController
     def before_index(self, pkg_dict):
         research_question = pkg_dict.get('research_question')
-        
+
         try:
             validated_data = json.loads(pkg_dict.get('validated_data_dict',
                                                      '{}'))
@@ -375,7 +381,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
                 if tag.get('keyword_id'):
                     keywords.append(tag['keyword_id'])
                 pkg_dict['idx_tags'].append(tag.get('name'))
-            
+
             pkg_dict['extras_keywords'] = ','.join(keywords)
             pkg_dict['idx_keywords'] = keywords
 
@@ -598,5 +604,4 @@ def create_table_knowledgehub(context, data_dict):
                         json.dumps(info, ensure_ascii=False))))
 
         context['connection'].execute(
-            (sql_string + u';'.join(info_sql)).replace(u'%', u'%%'))   
-    
+            (sql_string + u';'.join(info_sql)).replace(u'%', u'%%'))
