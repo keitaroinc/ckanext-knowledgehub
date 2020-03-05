@@ -93,6 +93,10 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         module_root = 'ckanext.knowledgehub.logic.auth'
         auth_functions = h._get_functions(module_root)
 
+        # When setting the auth function, CKAN will try to authorize every call
+        # to the action, which is not desireable for package search.
+        auth_functions.pop('package_search')
+
         return auth_functions
 
     # ITemplateHelpers

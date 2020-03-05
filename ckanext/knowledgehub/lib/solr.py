@@ -558,6 +558,10 @@ class Indexed:
 def boost_solr_params(values):
     '''Transforms the values dict into edismax solr query arguments.
     '''
+
+    if not values:
+        return {}
+
     params = {
         'defType': 'edismax',
     }
