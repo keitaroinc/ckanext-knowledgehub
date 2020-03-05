@@ -1165,12 +1165,70 @@ def user_profile_create(context, data_dict):
                           user_notified=False,
                           interests={})
 
-    for interest_type in ['research_questions', 'tags', 'keywords']:
+    for interest_type in ['research_questions', 'keywords']:
         if data_dict.get(interest_type):
             profile.interests[interest_type] = data_dict[interest_type]
+
+    
+    profile.interests['tags'] = []
+    for tag in data_dict.get('tags', []):
+        try:
+            tag = toolkit.get_action('tag_show')({
+                'ignore_auth': True,
+            },{
+                'id': tag,
+            })
+            profile.interests['tags'].append(tag['name'])
+        except Exception as e:
+            log.warning('Failed to load tag %s. Error: %s', tag, str(e))
 
     profile.save()
     model.Session.flush()
 
     profile_dict = _table_dictize(profile, context)
     return profile_dict
+
+
+def user_query_result_save(context, data_dict):
+    '''Saves the result of a query when a user clicks on a link.
+
+    :param query_text: `str` the text of the query
+    :param query_type: `str` the type of search query: dataset, dashboard etc.
+    :param result_id: `str` the id of the selected object like dataset id,
+        dashboard id etc.
+    '''
+    query_text = data_dict.get('query_text')
+    query_type = data_dict.get('query_type')
+    result_id = data_dict.get('result_id')
+    user = context.get('auth_user_obj')
+    if not (query_text and query_type and result_id and user):
+        return {}  # just pass through, we don't have to generate error
+
+    try:
+        user_query = toolkit.get_action('user_query_show')({
+            'ignore_auth': True,
+        }, {
+            'query_text': query_text,
+            'query_type': query_type,
+            'user_id': user.id,
+        })
+
+        user_query_result_create(context, {
+            'query_id': user_query['id'],
+            'result_type': query_type,
+            'result_id': result_id,
+        })
+    except Exception as e:
+        log.warning('Cannot fetch user_query. Error: %s', str(e))
+        log.exception(e)
+    
+    try:
+        kwh_data_create(context, {
+            'type': 'search_query',
+            'title': query_text,
+        })
+    except Exception as e:
+        log.warning('Failed to store kwh_data. Error: %s', str(e))
+        log.exception(e)
+    
+    return {}
