@@ -10,7 +10,6 @@ from ckan import plugins
 from ckan.tests import helpers
 from ckan.plugins import toolkit as toolkit
 from ckan import model
-from ckan.common import g
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import (
@@ -41,7 +40,6 @@ from ckanext.knowledgehub.tests.helpers import (User,
 from ckanext.datastore.logic.action import datastore_create
 from ckanext.datastore.logic.action import datastore_search
 from ckanext.knowledgehub.lib.util import monkey_patch
-from ckanext.knowledgehub.tests.helpers import get_context
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
@@ -218,15 +216,7 @@ class TestKWHHelpers(ActionsBase):
         }
         dashboard = create_actions.dashboard_create(context, data_dict)
 
-        ctx = get_context()
-
-        g.user = ctx.get('user')
-        g.userobj = ctx.get('auth_user_obj')
-        try:
-            dashboards = kwh_helpers.get_rqs_dashboards('Test')
-        finally:
-            del g.user
-            del g.userobj
+        dashboards = kwh_helpers.get_rqs_dashboards('Test')
 
         assert_equals(len(dashboards), 0)
 

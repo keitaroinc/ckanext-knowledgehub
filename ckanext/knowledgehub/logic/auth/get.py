@@ -1,9 +1,6 @@
 import ckan.plugins.toolkit as toolkit
 import ckan.lib.helpers as h
-from ckan.logic.auth.get import (
-    tag_list as ckan_tag_list,
-    package_search as ckan_package_search,
-)
+from ckan.logic.auth.get import tag_list as ckan_tag_list
 from ckan.logic import chained_action
 
 
@@ -145,7 +142,3 @@ def user_profile_show(context, data_dict):
 
 def user_profile_list(context, data_dict=None):
     return {'success': False}
-
-
-def package_search(context, data_dict=None):
-    return ckan_package_search(context, data_dict)
