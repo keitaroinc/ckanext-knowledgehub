@@ -2452,23 +2452,7 @@ class TestUserProfileActions(ActionsBase):
         assert_true(user_profile is not None)
         assert_equals(user_profile.get('user_id'), context['auth_user_obj'].id)
 
-    @monkey_patch(toolkit, 'get_action', mock.MagicMock())
     def test_user_profile_update(self):
-
-        def _get_action(action):
-            if action != 'tag_show':
-                raise Exception('Unmocked action: ' + action)
-
-            def _tag_show(ctx, data):
-                return {
-                    'id': data['id'],
-                    'name': data['id'],
-                }
-            
-            return _tag_show
-
-        toolkit.get_action.side_effect =  _get_action   
-
         context = get_regular_user_context()
 
         user_profile = update_actions.user_profile_update(context, {})

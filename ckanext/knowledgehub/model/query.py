@@ -4,7 +4,6 @@ from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
 
 from sqlalchemy import types, ForeignKey, Column, Table, or_
-from sqlalchemy.sql.expression import func
 import datetime
 import logging
 
@@ -146,20 +145,6 @@ class UserQueryResult(DomainObject):
             query = query.offset(offset)
 
         return query.all()
-    
-    @classmethod
-    def get_last_relevant(cls, user_id, result_type, limit=5):
-        query = Session.query(
-            user_query_result.c.result_id
-        )
-        query = query.filter(
-            user_query_result.c.user_id == user_id,
-            user_query_result.c.result_type == result_type)
-        query = query.group_by(user_query_result.c.result_id)
-        query = query.order_by(user_query_result.c.result_id.desc())
-        results = query.limit(limit).all()
-
-        return [r[0] for r in results]
 
 
 mapper(UserQuery, user_query)

@@ -7,7 +7,6 @@ from six import string_types, iteritems
 from paste.deploy.converters import asbool
 
 import ckan.logic as logic
-from ckan.logic.action.get import package_search as ckan_package_search
 from ckan.plugins import toolkit
 from ckan.common import _, config, json
 from ckan import lib
@@ -904,10 +903,6 @@ def _search_entity(index, ctx, data_dict):
     _save_user_query(ctx, text, index.doctype)
 
     args = ckan_params_to_solr_args(data_dict)
-
-    if ctx.get('auth_user_obj'):
-        args['boost_for'] = ctx['auth_user_obj'].id
-
     results = index.search_index(**args)
 
     results.page = page
@@ -1837,14 +1832,3 @@ def tag_show(context, data_dict):
     check_access('tag_show', context, data_dict)
     return model_dictize.tag_dictize(tag, context,
                                      include_datasets=include_datasets)
-
-
-def package_search(context, data_dict=None):
-    '''Overrides CKAN's package_search action to add boost parameters for the
-    user interests.
-    '''
-    user = context.get('auth_user_obj')
-    if user:
-        data_dict = data_dict or {}
-        data_dict['boost_for'] = user.id
-    return ckan_package_search(context, data_dict)
