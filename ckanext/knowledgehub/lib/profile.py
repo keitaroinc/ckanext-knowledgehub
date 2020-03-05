@@ -36,7 +36,7 @@ class UserProfileService:
 
     def __init__(self, redis=None, user_profile=UserProfile,
                  user_query_result=UserQueryResult):
-        self.redis = redis or connect_to_redis()
+        self.redis = redis or connect_to_redis
         self.user_profile = user_profile
         self.user_query_result = user_query_result
 
@@ -45,6 +45,9 @@ class UserProfileService:
             return '%s.%s:%s' % (UserProfileService.PROFILE_CACHE_PREFIX,
                                  suffix, user_id)
         return '%s:%s' % (UserProfileService.PROFILE_CACHE_PREFIX, user_id)
+
+    def _connect(self):
+        return self.redis()
 
     def get_profile(self, user_id):
         '''Returns the user profile as a dict.
@@ -95,9 +98,15 @@ class UserProfileService:
                     }
                 }
         '''
-        cached = self.redis.get(self._get_key(user_id, 'boost_params'))
-        if cached:
-            return json.loads(cached)
+        try:
+            conn = self._connect()
+            cached = conn.get(self._get_key(user_id, 'boost_params'))
+            if cached:
+                return json.loads(cached)
+        except Exception as e:
+            log.warning('Failed to check cache. Error: %s', str(e))
+            lo.exception(e)
+            return {}
 
         interests = self.get_interests(user_id) or {}
 
@@ -125,9 +134,13 @@ class UserProfileService:
             }
         }
 
-        self.redis.setex(self._get_key(user_id, 'boost_params'),
-                         json.dumps(values),
-                         UserProfileService.CACHE_TIMEOUT)
+        try:
+            conn.setex(self._get_key(user_id, 'boost_params'),
+                       json.dumps(values),
+                       UserProfileService.CACHE_TIMEOUT)
+        except Exception as e:
+            log.warning('Failed to store in cache. Error: %s', str(e))
+            log.exception(e)
 
         return values
 
