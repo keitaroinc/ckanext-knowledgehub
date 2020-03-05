@@ -283,9 +283,7 @@
                                     <div id="tabs-dashboards" class="dataset-content">
                                         {% set additional_info_dash = h.get_single_dash(dashboard) %}
                                             <h3 class="dataset-heading text-ellipsis">
-                                                <a href="{{ h.url_for('dashboards.view', name=dashboard.name) }}" 
-                                                   class="dashboard-link"
-                                                   id="{{ dashboard.id }}">{{ dashboard.title }}</a>
+                                                <a href="{{ h.url_for('dashboards.view', name=dashboard.name) }}">{{ dashboard.title }}</a>
                                             </h3>
                                                 {% set truncate = truncate or 180 %}
                                                 {% set truncate_description = truncate_description or 150 %}

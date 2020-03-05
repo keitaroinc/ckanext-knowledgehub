@@ -13,8 +13,7 @@ FIELD_PREFIX = 'khe_'
 COMMON_FIELDS = {'name', 'title'}
 CHUNK_SIZE = 1000
 MAX_RESULTS = 500
-VALID_SOLR_ARGS = {'q', 'fq', 'rows', 'start', 'sort', 'fl', 'df', 'facet',
-                   'bq', 'defType', 'boost'}
+VALID_SOLR_ARGS = {'q', 'fq', 'rows', 'start', 'sort', 'fl', 'df', 'facet'}
 DEFAULT_FACET_NAMES = u'organizations groups tags'
 
 
@@ -516,15 +515,6 @@ class Indexed:
         The query arguments are going to be translated into valid Solr query
         parameters.
         '''
-
-        if query.get('boost_for'):
-            # Delay the loading of the user_profile service
-            from ckanext.knowledgehub.lib.profile import user_profile_service
-            user_id = query.pop('boost_for')
-            boost_values = user_profile_service.get_interests_boost(user_id)
-            boost_params = boost_solr_params(boost_values)
-            query.update(boost_params)
-
         Indexed.validate_solr_args(query)
         index_results = cls.get_index().search(cls._get_doctype(), **query)
         results = []
@@ -553,27 +543,3 @@ class Indexed:
         args = {}
         args[id_key] = doc_id
         cls.get_index().remove(doctype, **args)
-
-
-def boost_solr_params(values):
-    '''Transforms the values dict into edismax solr query arguments.
-    '''
-    params = {
-        'defType': 'edismax',
-    }
-
-    bq = []
-    for prop, prop_values in values.get('normal', {}).items():
-        for value in prop_values:
-            bq.append("%s:'%s'" % (prop, value))
-
-    for scale, boost_params in values.items():
-        if scale == 'normal':
-            continue
-        for prop, prop_values in boost_params.items():
-            for value in prop_values:
-                bq.append("%s:'%s'%s" % (prop, value, scale))
-
-    if bq:
-        params['bq'] = ' OR '.join(bq)
-    return params
