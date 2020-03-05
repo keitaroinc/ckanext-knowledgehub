@@ -1431,10 +1431,25 @@ def user_profile_update(context, data_dict):
         profile.interests = {}
 
     interests = data_dict.get('interests', {})
-    for interest_type in ['research_questions', 'keywords', 'tags']:
+    for interest_type in ['research_questions', 'keywords']:
         if interests.get(interest_type) is not None:
             profile.interests[interest_type] = interests[interest_type]
 
+    
+    if interests.get('tags') is not None:
+        profile.interests['tags'] = []
+        for tag in interests.get('tags', []):
+            try:
+                tag = toolkit.get_action('tag_show')({
+                    'ignore_auth': True,
+                }, {
+                    'id': tag,
+                })
+                profile.interests['tags'].append(tag['name'])
+            except Exception as e:
+                log.warning('Failed to load tag %s. Error: %s', tag, str(e))
+
+    
     if profile.interests:
         flag_modified(profile, 'interests')
 
