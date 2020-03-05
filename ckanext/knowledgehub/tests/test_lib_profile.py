@@ -134,7 +134,9 @@ class TestUserProfileService:
 
         redis_mock.get.return_value = None
 
-        service = UserProfileService(redis_mock, MagicMock(), MagicMock())
+        service = UserProfileService(MagicMock(), MagicMock(), MagicMock())
+        service._connect = Mock()
+        service._connect.return_value = redis_mock
 
         interests = {
             'keywords': ['k1', 'k2'],
