@@ -1050,6 +1050,8 @@ def keyword_update(context, data_dict):
             tag_dict = toolkit.get_action('tag_show')(context, {'id': tag})
         except logic.NotFound:
             check_access('tag_create', context)
+            if context.get('tag'):
+                context.pop('tag')
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
