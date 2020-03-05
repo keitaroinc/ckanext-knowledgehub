@@ -62,13 +62,22 @@
             </div>
 
             {# Type #}
-            {% if chart %}
-            {% set selected_chart_type = chart.type %}
-            {% else %}
-            {% set selected_chart_type = chart_types[0].value %}
-            {% endif %}
-            {{ form.select('chart_field_type', label=_('Type'), options=chart_types, selected=selected_chart_type) }}
+            <div class="control-group control-select">
+              <label class="control-label" for="chart_field_type_label">{{ _('Type') }}</label>
+              <div class="controls input-controls">
+                <select id="chart_field_type" name="chart_field_type">
+                  {% for ch_type in chart_types %}
+                  <option value="{{ch_type['value']}}" {% if chart %}{{ 'selected' if ch_type['value'] == chart.type }}
+                  {% endif %}>
+                    {{ch_type['text']}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
 
+
+
+          
             {# Measure, Y value #}
             {% set y_axis_values = h.get_resource_numeric_columns(res['id']) %}
             <div class="control-group control-select">
@@ -144,7 +153,7 @@
             {% set additional_tornado_value = h.get_resource_columns(res['id'], []) %}
             <div class="control-group control-select">
               <label class="control-label"
-                for="chart_field_additional_tornado_value">{{ _('Additional Tornado Value') }}</label>
+                for="chart_field_additional_tornado_value" id="chart_additional_tornado_label">{{ _('Additional Tornado Value') }}</label>
               <div class="controls input-controls">
                 <select id="chart_field_additional_tornado_value" name="chart_field_additional_tornado_value">
                   {% for value in additional_tornado_value %}
