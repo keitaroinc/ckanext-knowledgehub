@@ -8,6 +8,10 @@ from psycopg2 import errorcodes as pg_errorcodes
 from sqlalchemy import func
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
+from hdx.utilities.easy_logging import setup_logging
+from hdx.data.dataset import Dataset
+from hdx.data.resource import Resource
+
 from ckan import logic
 from ckan.common import _, g, config
 from ckan.plugins import toolkit
@@ -1174,3 +1178,138 @@ def user_profile_create(context, data_dict):
 
     profile_dict = _table_dictize(profile, context)
     return profile_dict
+
+
+def upsert_resource_to_hdx(context, data_dict):
+    ''' Create new if not exists or update the existing resource in HDX
+
+    :param resource_id: the ID of the resource in knowledgehub
+    :type resource_id: string
+    :param dataset_name: the name of the dataset in knowledgehub
+    :type dataset_name: string
+    :param hdx_rsc_name: the name of the resource in HDX thatwe want
+        to update. If not present it will try to create new one (optional)
+    :type hdx_rsc_name: string
+    :returns: the created/updated resource
+    :rtype: dict
+    '''
+    check_access('package_update', context)
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.hdx_resource(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    try:
+        dataset_name = data['dataset_name']
+        dataset = Dataset.read_from_hdx(dataset_name)
+        if not dataset:
+            raise NotFound('Dataset %s does not exist in HDX' % dataset_name)
+
+        rsc = get_action('resource_show')({'ignore_auth': True}, {
+            'id': data['resource_id']})
+
+        hdx_rsc_name = data.get('hdx_rsc_name')
+        if hdx_rsc_name:
+            for hdx_rsc in dataset.get_resources():
+                if hdx_rsc['name'] == hdx_rsc_name:
+                    for item in ['name', 'description', 'url', 'format']:
+                        hdx_rsc[item] = rsc[item]
+                    hdx_rsc.create_in_hdx()
+                    hdx_rsc.create_datastore()
+                    return hdx_rsc
+        else:
+            data_dict = {
+                'package_id': dataset['id'],
+                'name': rsc.get('name'),
+                'format': rsc.get('format'),
+                'description': rsc.get('description'),
+                'url': rsc.get('url'),
+            }
+
+            rsc = Resource(initial_data=data_dict)
+            rsc.check_url_filetoupload()
+            rsc.create_in_hdx()
+            rsc.create_datastore()
+            return rsc
+    except Exception as e:
+        log.debug('Unable to push resource in HDX: %s' % str(e))
+        return {}
+
+
+def upsert_dataset_to_hdx(context, data_dict):
+    u''' Push data resources that belongs to the dataset on HDX
+
+    :param id: the dataset ID
+    :type id: string
+    :param metadata_only: whether to update only metadata of dataset
+    :type metadata_only: boolean
+    :returns: the dataset created/pushed on HDX or error message
+    :rtype: dict
+    '''
+    check_access('package_create', context)
+
+    id = data_dict.get('id')
+    if not id:
+        raise ValidationError('Dataset id is missing!')
+
+    metadata_only = data_dict.get('metadata_only', False)
+
+    try:
+        setup_logging()
+        data = logic.get_action('package_show')(
+            {'ignore_auth': True},
+            {'id': id})
+
+        data_dict = {
+            'name': data.get('name'),
+            'notes': data.get('notes', ''),
+            'owner_org': 'abf4ca86-8e69-40b1-92f7-71509992be88', # from config
+            'title': data.get('title'),
+            'private': data.get('private'),
+            'dataset_source': 'knowledgehub', # from config
+            'maintainer': 'savarimu', # from config
+            'dataset_date': data.get('metadata_created'), # time now
+            'data_update_frequency': -1,
+            'license_id': data.get('license_id'),
+            'methodology': data.get('license_url'),
+            'num_resources': data.get('num_resources'),
+            'url': data.get('url')
+        }
+
+        hdx_dataset = Dataset.read_from_hdx(data['name'])
+
+        if hdx_dataset is not None:
+            data_dict['id'] = hdx_dataset['id']
+
+        dataset = Dataset(initial_data=data_dict)
+        dataset.check_required_fields(
+            ignore_fields=['groups', 'tags'], allow_no_resources=True)
+        dataset.create_in_hdx(ignore_check=False)
+
+        hdx_resources = list(map(
+            lambda r: r.get('name'), dataset.get_resources()
+        ))
+
+        resources = data['resources']
+        for resource in resources:
+            data_dict = {
+                'resource_id': resource.get('id'),
+                'dataset_name': dataset.get('name')
+            }
+            if resource['name'] in hdx_resources:
+                data_dict.update({'hdx_rsc_name': resource['name']})
+            upsert_resource_to_hdx(context, data_dict)
+
+        kwh_resources = list(map(
+            lambda r: r.get('name'), resources
+        ))
+        hdx_dataset = Dataset.read_from_hdx(data['name'])
+        for hdx_resource in hdx_dataset.get_resources():
+            if hdx_resource['name'] not in kwh_resources:
+                hdx_resource.delete_from_hdx()
+
+        return {}
+    except Exception as e:
+        log.debug('Unable to push dataset in HDX: %s' % str(e))

@@ -178,7 +178,11 @@
     <input id="resource" value="{{ res.id }}" type="hidden" />
     <input id="dataset" value="{{ res.package_id }}" type="hidden" />
   </div>
-
+</div>
+<div class="push-to-hdx pull-right">
+  <button class="btn btn-success" id="pushHDX" type="submit">
+    <i class="fa fa-upload"></i>{{ _(' Push dataset to HDX') }}
+  </button>
 </div>
 
 {% endblock %}

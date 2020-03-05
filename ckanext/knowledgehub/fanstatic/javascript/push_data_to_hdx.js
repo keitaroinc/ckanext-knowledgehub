@@ -17,17 +17,23 @@
     function pushDataHDX(tr) {
         var id = $('#package-name').val();
         var btn = $(this);
-        api.post('push_dataset_to_hdx', {
+        var flash_messages = $('.flash-messages');
+        btn.attr('disabled', true);
+        api.post('upsert_dataset_to_hdx', {
             id: id
         })
-            .done(function (data) {
-                if (data.success) {
-                    btn.attr('disabled', true);
-                }
-            })
-            .fail(function (error) {
-                console.log("Push data to HDX: " + error.statusText);
-            });
+        .done(function (data) {
+            if (data.success) {
+                btn.attr('disabled', false);
+                flash_messages.empty();
+                flash_messages.append('<div class="alert alert-warning fade in alert-info" data-ol-has-click-handler>Successfully pushed data to HDX! <a class="close" href="#">x</a></div>');
+            }
+        })
+        .fail(function (error) {
+            btn.attr('disabled', false);
+            flash_messages.empty();
+            flash_messages.append('<div class="alert alert-danger fade in alert-info" data-ol-has-click-handler>Push data to HDX: ' + error.statusText +'<a class="close" href="#">x</a></div>');
+        });
     };
 
     $(document).ready(function () {
