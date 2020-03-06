@@ -1175,7 +1175,7 @@ def user_profile_create(context, data_dict):
         if data_dict.get(interest_type):
             profile.interests[interest_type] = data_dict[interest_type]
 
-    
+
     profile.interests['tags'] = []
     for tag in data_dict.get('tags', []):
         try:
@@ -1227,7 +1227,7 @@ def user_query_result_save(context, data_dict):
     except Exception as e:
         log.warning('Cannot fetch user_query. Error: %s', str(e))
         log.exception(e)
-    
+
     try:
         kwh_data_create(context, {
             'type': 'search_query',
@@ -1236,7 +1236,7 @@ def user_query_result_save(context, data_dict):
     except Exception as e:
         log.warning('Failed to store kwh_data. Error: %s', str(e))
         log.exception(e)
-    
+
     return {}
 
 
@@ -1245,9 +1245,9 @@ def upsert_resource_to_hdx(context, data_dict):
 
     :param resource_id: the ID of the resource in knowledgehub
     :type resource_id: string
-    :param dataset_name: the name of the dataset in knowledgehub
+    :param dataset_name: the name of the dataset in knowledgehub/HDX
     :type dataset_name: string
-    :param hdx_rsc_name: the name of the resource in HDX thatwe want
+    :param hdx_rsc_name: the name of the resource in HDX that we want
         to update. If not present it will try to create new one (optional)
     :type hdx_rsc_name: string
     :returns: the created/updated resource
@@ -1301,7 +1301,7 @@ def upsert_resource_to_hdx(context, data_dict):
 def upsert_dataset_to_hdx(context, data_dict):
     u''' Push data resources that belongs to the dataset on HDX
 
-    :param id: the dataset ID
+    :param id: the dataset ID in knowledgehub
     :type id: string
     :param metadata_only: whether to update only metadata of dataset
     :type metadata_only: boolean
@@ -1348,28 +1348,29 @@ def upsert_dataset_to_hdx(context, data_dict):
             ignore_fields=['groups', 'tags'], allow_no_resources=True)
         dataset.create_in_hdx(ignore_check=False)
 
-        hdx_resources = list(map(
-            lambda r: r.get('name'), dataset.get_resources()
-        ))
+        if not metadata_only:
+            hdx_resources = list(map(
+                lambda r: r.get('name'), dataset.get_resources()
+            ))
 
-        resources = data['resources']
-        for resource in resources:
-            data_dict = {
-                'resource_id': resource.get('id'),
-                'dataset_name': dataset.get('name')
-            }
-            if resource['name'] in hdx_resources:
-                data_dict.update({'hdx_rsc_name': resource['name']})
-            upsert_resource_to_hdx(context, data_dict)
+            resources = data['resources']
+            for resource in resources:
+                data_dict = {
+                    'resource_id': resource.get('id'),
+                    'dataset_name': dataset.get('name')
+                }
+                if resource['name'] in hdx_resources:
+                    data_dict.update({'hdx_rsc_name': resource['name']})
+                upsert_resource_to_hdx(context, data_dict)
 
-        kwh_resources = list(map(
-            lambda r: r.get('name'), resources
-        ))
-        hdx_dataset = Dataset.read_from_hdx(data['name'])
-        for hdx_resource in hdx_dataset.get_resources():
-            if hdx_resource['name'] not in kwh_resources:
-                hdx_resource.delete_from_hdx()
+            kwh_resources = list(map(
+                lambda r: r.get('name'), resources
+            ))
+            hdx_dataset = Dataset.read_from_hdx(data['name'])
+            for hdx_resource in hdx_dataset.get_resources():
+                if hdx_resource['name'] not in kwh_resources:
+                    hdx_resource.delete_from_hdx()
 
-        return {}
+        return {} # cretaed/updated dataset
     except Exception as e:
         log.debug('Unable to push dataset in HDX: %s' % str(e))

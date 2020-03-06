@@ -76,6 +76,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         DatastoreBackend.register_backends()
         #DatastoreBackend.set_active_backend(config)
 
+        # Create the HDX configuration
         hdx_api_key = config.get(u'ckanext.knowledgehub.hdx.api_key')
         Configuration.create(
             hdx_site='prod', # from config, default to test
