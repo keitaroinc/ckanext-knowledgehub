@@ -2,11 +2,12 @@ import logging
 import re
 import os
 import json
-from six import string_types
+from six import string_types, iteritems
 
 from paste.deploy.converters import asbool
 
 import ckan.logic as logic
+from ckan.logic.action.get import package_search as ckan_package_search
 from ckan.plugins import toolkit
 from ckan.common import _, config, json
 from ckan import lib
@@ -885,6 +886,9 @@ def get_predictions(context, data_dict):
 
 
 def _search_entity(index, ctx, data_dict):
+    model = ctx['model']
+    session = ctx['session']
+
     page = data_dict.get('page', 1)
     page_size = int(data_dict.get('limit',
                                   config.get('ckan.datasets_per_page', 20)))
@@ -906,15 +910,35 @@ def _search_entity(index, ctx, data_dict):
     _save_user_query(ctx, text, index.doctype)
 
     args = ckan_params_to_solr_args(data_dict)
+
+    if ctx.get('auth_user_obj'):
+        args['boost_for'] = ctx['auth_user_obj'].id
+
     results = index.search_index(**args)
 
     results.page = page
     results.page_size = page_size
 
+    # get facets and convert facets list to a dict
+    facets = results.facets.get('facet_fields', {})
+    for field, values in iteritems(facets):
+        facets[field] = dict(zip(values[0::2], values[1::2]))
+
+    group_names = []
+    for field_name in ('groups', 'organizations'):
+        group_names.extend(facets.get(field_name, {}).keys())
+
+    groups = (session.query(model.Group.name, model.Group.title)
+                .filter(model.Group.name.in_(group_names))
+                .all()
+                if group_names else [])
+    group_titles_by_name = dict(groups)
+
     result_dict = {
         'count': results.hits,
         'results': results.docs,
-        'facets': results.facets,
+        'facets': facets,
+        'search_facets': _restructured_facets(facets, group_titles_by_name),
         'stats': results.stats,
         'page': page,
         'limit': page_size,
@@ -925,6 +949,38 @@ def _search_entity(index, ctx, data_dict):
             return json.dumps(self, cls=DateTimeEncoder)
 
     return _results_wrapper(result_dict)
+
+
+def _restructured_facets(facets, group_titles_by_name):
+    restructured_facets = {}
+    for key, value in facets.items():
+        restructured_facets[key] = {
+            'title': key,
+            'items': []
+        }
+        for key_, value_ in value.items():
+            if value_ == 0:
+                continue
+            new_facet_dict = {}
+            new_facet_dict['name'] = key_
+            if key in ('groups', 'organizations'):
+                display_name = group_titles_by_name.get(key_, key_)
+                if display_name and display_name.strip():
+                    display_name = display_name
+                else:
+                    display_name = key_
+                new_facet_dict['display_name'] = display_name
+            else:
+                new_facet_dict['display_name'] = key_
+            new_facet_dict['count'] = value_
+            restructured_facets[key]['items'].append(new_facet_dict)
+
+    for facet in restructured_facets:
+        restructured_facets[facet]['items'] = sorted(
+            restructured_facets[facet]['items'],
+            key=lambda facet: facet['display_name'], reverse=True)
+
+    return restructured_facets
 
 
 def _save_user_query(ctx, text, doc_type):
@@ -1781,11 +1837,25 @@ def tag_show(context, data_dict):
 
     if tag is None:
         raise NotFound
+
+    tag = ExtendedTag.get_with_keyword(tag.id)
+    context['tag'] = tag
     tag.__class__ = ExtendedTag
 
     check_access('tag_show', context, data_dict)
     return model_dictize.tag_dictize(tag, context,
                                      include_datasets=include_datasets)
+
+
+def package_search(context, data_dict=None):
+    '''Overrides CKAN's package_search action to add boost parameters for the
+    user interests.
+    '''
+    user = context.get('auth_user_obj')
+    if user:
+        data_dict = data_dict or {}
+        data_dict['boost_for'] = user.id
+    return ckan_package_search(context, data_dict)
 
 
 # def push_dataset_to_hdx(context, data_dict):
