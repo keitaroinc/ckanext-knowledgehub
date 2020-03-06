@@ -445,18 +445,20 @@ def dashboard_update(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    items = ['name', 'title', 'description',
-             'indicators', 'source', 'type', 'tags']
-
-    for item in items:
-        setattr(dashboard, item, data.get(item))
-
     datasets = data_dict.get('datasets')
     if datasets is not None:
         if isinstance(datasets, unicode):
             dashboard.datasets = datasets
         elif isinstance(datasets, list):
             dashboard.datasets = ', '.join(datasets)
+    else:
+        dashboard.datasets = ''
+
+    items = ['name', 'title', 'description',
+             'indicators', 'source', 'type', 'tags']
+
+    for item in items:
+        setattr(dashboard, item, data.get(item))
 
     tags = data_dict.get('tags', '')
     if tags:
@@ -1048,6 +1050,8 @@ def keyword_update(context, data_dict):
             tag_dict = toolkit.get_action('tag_show')(context, {'id': tag})
         except logic.NotFound:
             check_access('tag_create', context)
+            if context.get('tag'):
+                context.pop('tag')
             tag_dict = toolkit.get_action('tag_create')(context, {
                 'name': tag,
             })
@@ -1427,10 +1431,25 @@ def user_profile_update(context, data_dict):
         profile.interests = {}
 
     interests = data_dict.get('interests', {})
-    for interest_type in ['research_questions', 'keywords', 'tags']:
+    for interest_type in ['research_questions', 'keywords']:
         if interests.get(interest_type) is not None:
             profile.interests[interest_type] = interests[interest_type]
 
+    
+    if interests.get('tags') is not None:
+        profile.interests['tags'] = []
+        for tag in interests.get('tags', []):
+            try:
+                tag = toolkit.get_action('tag_show')({
+                    'ignore_auth': True,
+                }, {
+                    'id': tag,
+                })
+                profile.interests['tags'].append(tag['name'])
+            except Exception as e:
+                log.warning('Failed to load tag %s. Error: %s', tag, str(e))
+
+    
     if profile.interests:
         flag_modified(profile, 'interests')
 

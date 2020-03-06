@@ -17,9 +17,9 @@ class Visualization(ResourceView, Indexed):
         'view_type',
         'research_questions',
         'package_id',
-        'tags',
         'keywords',
-	    mapped('organization', 'organization'),
+        mapped('tags', 'tags'),
+	    mapped('organizations', 'organizations'),
         mapped('groups', 'groups')
     ]
 
@@ -36,7 +36,7 @@ class Visualization(ResourceView, Indexed):
             {'ignore_auth': True},
             {'id': data['package_id'], 'include_tracking': True})
         if package:
-            data['organization'] = package.get('organization', {}).get('name')
+            data['organizations'] = package.get('organization', {}).get('name')
 
             data['groups'] = []
             for g in package.get('groups', []):
@@ -100,7 +100,9 @@ class Visualization(ResourceView, Indexed):
 
         keywords = set()
         if data.get('tags'):
-            for tag in data.get('tags', '').split(','):
+            data['tags'] = data.get('tags').split(',')
+            data['idx_tags'] = data['tags']
+            for tag in data['tags']:
                 tag_obj = get_action('tag_show')(
                     {'ignore_auth': True},
                     {'id': tag}
@@ -111,12 +113,9 @@ class Visualization(ResourceView, Indexed):
                         {'id': tag_obj.get('keyword_id')}
                     )
                     keywords.add(keyword_obj.get('name'))
-                    if keywords:
-                        data['keywords'] = ','.join(keywords)
-            
-            data['idx_tags'] = data.get('tags').split(',')
 
         if keywords:
+            data['keywords'] = ','.join(keywords)
             data['idx_keywords'] = list(keywords)
 
         return data

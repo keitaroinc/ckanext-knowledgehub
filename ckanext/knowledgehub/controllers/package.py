@@ -16,6 +16,7 @@ from ckan.common import config
 import ckan.plugins as p
 import ckan.lib.base as base
 from ckan.lib.render import TemplateNotFound
+from ckan.lib.search import SearchError, SearchQueryError
 
 from ckanext.knowledgehub import helpers as kwh_h
 from ckanext.knowledgehub.lib.email import request_validation
@@ -65,8 +66,6 @@ class KWHPackageController(PackageController):
     """
 
     def search(self):
-        from ckan.lib.search import SearchError, SearchQueryError
-
         package_type = self._guess_package_type()
 
         try:
@@ -90,8 +89,8 @@ class KWHPackageController(PackageController):
                 }
 
                 kwh_data = {
-                    'type': 'search',
-                    'content': q
+                    'type': 'search_query',
+                    'title': q
                 }
                 logic.get_action(u'kwh_data_create')(
                     sysadmin_context, kwh_data
@@ -217,11 +216,9 @@ class KWHPackageController(PackageController):
             facets = OrderedDict()
 
             default_facet_titles = {
-                'organization': _('Functional Unit'),
+                'organization': _('Functional Units'),
                 'groups': _('Joint Analysis'),
-                'tags': _('Tags'),
-                'res_format': _('Formats'),
-                'license_id': _('Licenses'),
+                'tags': _('Tags')
             }
 
             for facet in h.facets():
@@ -258,7 +255,10 @@ class KWHPackageController(PackageController):
                 item_count=query['count'],
                 items_per_page=limit
             )
-            c.search_facets = query['search_facets']
+            if search_for == 'datasets':
+                c.search_facets = query['search_facets']
+            else:
+                c.search_facets = {}
             c.page.items = query['results']
         except SearchQueryError as se:
             # User's search parameters are invalid, in such a way that is not
