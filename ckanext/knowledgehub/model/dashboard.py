@@ -19,7 +19,7 @@ from ckan.model.domain_object import DomainObject
 from ckan.logic import get_action
 import ckan.logic as logic
 from ckan.common import _
-from ckanext.knowledgehub.lib.solr import Indexed, mapped
+from ckanext.knowledgehub.lib.solr import Indexed, mapped, unprefixed
 
 get_action = logic.get_action
 
@@ -64,6 +64,9 @@ class Dashboard(DomainObject, Indexed):
         mapped('organizations', 'organizations'),
         mapped('created_at', 'khe_created'),
         mapped('modified_at', 'khe_modified'),
+        unprefixed('idx_keywords'),
+        unprefixed('idx_tags'),
+        unprefixed('idx_research_questions'),
     ]
     doctype = 'dashboard'
 

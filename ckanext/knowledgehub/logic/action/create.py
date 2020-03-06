@@ -2,6 +2,7 @@ import logging
 import datetime
 import os
 import subprocess
+import re
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
@@ -42,6 +43,7 @@ from ckanext.knowledgehub.model import ExtendedTag
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
+from ckanext.knowledgehub.lib.profile import user_profile_service
 
 log = logging.getLogger(__name__)
 
@@ -1094,8 +1096,10 @@ def keyword_create(context, data_dict):
     :returns: `dict`, the new keyword.
     '''
     check_access('keyword_create', context)
-    if 'name' not in data_dict:
+    if 'name' not in data_dict or not data_dict['name'].strip():
         raise ValidationError({'name': _('Missing Value')})
+
+    data_dict['name'] = re.sub(r'\s+', '-', data_dict['name'].strip())
 
     existing = Keyword.by_name(data_dict['name'])
     if existing:
@@ -1186,6 +1190,12 @@ def user_profile_create(context, data_dict):
 
     profile.save()
     model.Session.flush()
+
+    try:
+        user_profile_service.clear_cached(user['id'])
+    except Exception as e:
+        log.warning('Failed to delete cached data for user %s. Error: %s',
+                    user['id'], str(e))
 
     profile_dict = _table_dictize(profile, context)
     return profile_dict
