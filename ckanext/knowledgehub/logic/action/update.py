@@ -1435,7 +1435,7 @@ def user_profile_update(context, data_dict):
         if interests.get(interest_type) is not None:
             profile.interests[interest_type] = interests[interest_type]
 
-    
+
     if interests.get('tags') is not None:
         profile.interests['tags'] = []
         for tag in interests.get('tags', []):
@@ -1449,7 +1449,7 @@ def user_profile_update(context, data_dict):
             except Exception as e:
                 log.warning('Failed to load tag %s. Error: %s', tag, str(e))
 
-    
+
     if profile.interests:
         flag_modified(profile, 'interests')
 
