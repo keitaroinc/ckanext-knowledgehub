@@ -56,10 +56,14 @@ ckan.module('visualization_info', function ($) {
       if (description != "") {
         content += '<p>' + '<b>Description: </b>' + description + '</p>';
       }
-      if (rsq != "") {
-        rsq = rsq.replace(/u'/g, "")
-        rsq = rsq.replace(/'/g, "").replace("[", "").replace("]", "");
-        content += '<p>' + '<b>Research questions: </b>' + rsq + '</p>';
+      if (typeof rsq === "string") {
+        if (rsq != "") {
+          rsq = rsq.replace(/u'/g, "")
+          rsq = rsq.replace(/'/g, "").replace("[", "").replace("]", "");
+          content += '<p>' + '<b>Research questions: </b>' + rsq + '</p>';
+        }
+      } else {
+        content += '<p>' + '<b>Research questions: </b>' + "None" + '</p>';
       }
       // if (rq_ids == 0)
       //   rqs = "This dataset contains no research <br/ > questions.";
