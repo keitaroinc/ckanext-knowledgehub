@@ -71,7 +71,7 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.name = kn
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.disqus_url = knowledgehub-staging.keitaro.app"
 # Set max resource size to 500MB
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.max_resource_size = 500"
-# Set facets for dataset
+# Set facets for datasets
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "search.facets = organization groups tags"
 # Set facets for research questions, visualizations and dashboards
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "knowledgehub.search.facets = organizations groups tags"
