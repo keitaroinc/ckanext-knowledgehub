@@ -44,6 +44,7 @@ from ckanext.knowledgehub.model import UserQueryResult
 from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.model import ExtendedTag
+from ckanext.knowledgehub.model import Notification
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -1437,3 +1438,39 @@ def upsert_dataset_to_hdx(context, data_dict):
 
     except Exception as e:
         log.debug('Unable to push dataset in HDX: %s' % str(e))
+    
+    return {}
+
+
+def notification_create(context, data_dict):
+    check_access('notification_create', context)
+
+    data, errors = _df.validate(
+        data_dict,
+        knowledgehub_schema.notification_create_schema(),
+        context
+    )
+
+    if errors:
+        raise ValidationError(errors)
+
+    recepient = data['recepient']
+
+    try:
+        user = toolkit.get_action('user_show')({
+            'ignore_auth': True,
+        }, {
+            'id': recepient,
+        })
+        recepient = user['id']
+    except logic.NotFound:
+        raise ValidationError({'recepient': _('No such user')})
+
+    notification = Notification(title=data['title'],
+                                descripton=data.get('description'),
+                                recepient=recepient,
+                                link=data.get('link'))
+    notification.save()
+    model.Session.flush()
+
+    return _table_dictize(notification, context)
