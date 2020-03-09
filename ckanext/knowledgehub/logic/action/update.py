@@ -41,6 +41,7 @@ from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.model.keyword import ExtendedTag
+from ckanext.knowledgehub.model import Notification
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -1483,3 +1484,12 @@ def user_profile_update(context, data_dict):
                     user_id, str(e))
 
     return _table_dictize(profile, context)
+
+
+def notifications_read(context, data_dict):
+    check_access('notifications_read', context)
+    user = context.get('auth_user_obj')
+
+    Notification.mark_read(user.id, data_dict.get('notifications'))
+
+    return {}

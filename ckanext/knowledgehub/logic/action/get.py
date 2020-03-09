@@ -29,6 +29,7 @@ from ckanext.knowledgehub.model import (
     Keyword,
     ExtendedTag,
     UserProfile,
+    Notification
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
@@ -1856,3 +1857,38 @@ def package_search(context, data_dict=None):
         data_dict = data_dict or {}
         data_dict['boost_for'] = user.id
     return ckan_package_search(context, data_dict)
+
+
+def notification_list(context, data_dict):
+    check_access('notification_list', context)
+
+    limit = data_dict.get('limit')
+    offset = data_dict.get('offset')
+
+    user = context['auth_user_obj']
+
+    user_id = data_dict.get('user_id')
+
+    if not (
+            (hasattr(user, 'sysadmin') and user.sysadmin) or
+            context.get('ignore_auth')):
+        user_id = user.id
+    if not user_id:
+        user_id = user.id
+    
+    print 'User id:', user_id
+    count = Notification.get_notifications_count(user_id)
+    notifications = []
+    if count:
+        notifications = Notification.get_notifications(user_id, limit, offset)
+    
+    result = {
+        'count': count,
+        'results': [],
+    }
+
+    for notification in notifications:
+        result['results'].append(_table_dictize(notification, context))
+    
+    return result
+    

@@ -30,6 +30,7 @@ from ckanext.knowledgehub.model.keyword import setup as keyword_setup
 from ckanext.knowledgehub.model.visualization import (
     setup as extend_resource_view_setup
 )
+from ckanext.knowledgehub.model.notification import setup as notification_setup
 
 
 log = logging.getLogger(__name__)
@@ -61,6 +62,7 @@ def init():
         user_profile_setup()
         keyword_setup()
         extend_resource_view_setup()
+        notification_setup()
     except Exception as e:
         error_shout(e)
     else:
