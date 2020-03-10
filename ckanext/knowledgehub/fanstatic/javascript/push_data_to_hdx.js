@@ -15,6 +15,7 @@
     };
 
     function pushDataHDX(tr) {
+        document.getElementById("hdx-loader").style.visibility = "visible";
         var id = $('#package-name').val();
         var btn = $(this);
         var flash_messages = $('.flash-messages');
@@ -22,18 +23,19 @@
         api.post('upsert_dataset_to_hdx', {
             id: id
         })
-        .done(function (data) {
-            if (data.success) {
+            .done(function (data) {
+                if (data.success) {
+                    btn.attr('disabled', false);
+                    flash_messages.empty();
+                    flash_messages.append('<div class="alert alert-warning fade in alert-info" data-ol-has-click-handler>Successfully pushed data to HDX! <a class="close" href="#">x</a></div>');
+                }
+                document.getElementById("hdx-loader").style.visibility = "hidden";
+            })
+            .fail(function (error) {
                 btn.attr('disabled', false);
                 flash_messages.empty();
-                flash_messages.append('<div class="alert alert-warning fade in alert-info" data-ol-has-click-handler>Successfully pushed data to HDX! <a class="close" href="#">x</a></div>');
-            }
-        })
-        .fail(function (error) {
-            btn.attr('disabled', false);
-            flash_messages.empty();
-            flash_messages.append('<div class="alert alert-danger fade in alert-info" data-ol-has-click-handler>Push data to HDX: ' + error.statusText +'<a class="close" href="#">x</a></div>');
-        });
+                flash_messages.append('<div class="alert alert-danger fade in alert-info" data-ol-has-click-handler>Push data to HDX: ' + error.statusText + '<a class="close" href="#">x</a></div>');
+            });
     };
 
     $(document).ready(function () {
