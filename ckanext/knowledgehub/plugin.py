@@ -35,8 +35,6 @@ from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.model.visualization import extend_resource_view_table
 
-from hdx.hdx_configuration import Configuration
-
 from ckanext.datastore.backend import (
     DatastoreException,
     _parse_sort_clause,
@@ -78,8 +76,10 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
 
         # Create the HDX configuration
         hdx_api_key = config.get(u'ckanext.knowledgehub.hdx.api_key')
+        hdx_site = config.get(u'ckanext.knowledgehub.hdx.site')
+        Configuration.delete()
         Configuration.create(
-            hdx_site='prod', # from config, default to test
+            hdx_site=hdx_site,  # from config, default to test
             user_agent='admin',
             hdx_key=hdx_api_key
         )
