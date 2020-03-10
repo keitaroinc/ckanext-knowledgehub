@@ -1,6 +1,7 @@
 import click
 
 import ckan.plugins.toolkit as toolkit
+from ckan.model import package_table, Session
 from ckanext.knowledgehub.lib.quality import (
     Accuracy,
     Uniqueness,
@@ -10,6 +11,10 @@ from ckanext.knowledgehub.lib.quality import (
     Completeness,
     DataQualityMetrics
 )
+from logging import getLogger
+
+
+log = getLogger(__name__)
 
 
 @click.group('quality')
@@ -52,10 +57,18 @@ def calculate(dataset, dimension):
     metrics = DataQualityMetrics(metrics=calculators)
 
     if dataset == 'all':
-        # FIXME: Does not return private packages, but we need all active ones.
-        for pkg in toolkit.get_action('package_list')({'ignore_auth': True},
-                                                      {}):
-            metrics.calculate_metrics_for_dataset(pkg['id'])
+
+        def _process_batch(packages):
+            for pkg in packages:
+                try:
+                    metrics.calculate_metrics_for_dataset(pkg)
+                except Exception as e:
+                    log.error('Failed to calculate metrics for %s. Error: %s',
+                              pkg, str(e))
+                    log.exception(e)
+
+        all_packages(_process_batch)
+
     else:
         metrics.calculate_metrics_for_dataset(dataset)
 
@@ -68,3 +81,31 @@ def _register_mock_translator():
     registry.prepare()
     from pylons import translator
     registry.register(translator, MockTranslator())
+
+
+def all_packages(handler):
+    offset = 0
+    limit = 64
+    while True:
+        log.debug('Fetching dataset batch %d to %d', offset, offset+limit)
+        query = Session.query(package_table.c.id)
+        query = query.offset(offset).limit(limit)
+
+        count = 0
+        packages = []
+        for result in query.all():
+            packages.append(result[0])
+            count += 1
+
+        if not count:
+            log.debug('No more packages to process.')
+            break
+
+        offset += limit
+
+        try:
+            log.debug('Processing %d packages in current batch.', count)
+            handler(packages)
+        except Exception as e:
+            log.error('Failed to process package batch. Error: %s', str(e))
+            log.exception(e)
