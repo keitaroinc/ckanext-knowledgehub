@@ -325,7 +325,9 @@ def resource_create(context, data_dict):
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
-    return ckan_rsc_create(context, data_dict)
+    create_resource_kwh = ckan_rsc_create(context, data_dict)
+
+    return create_resource_kwh
 
 
 # Overwrite of the original 'resource_view_create'
@@ -1272,6 +1274,7 @@ def upsert_resource_to_hdx(context, data_dict):
         raise ValidationError(errors)
 
     try:
+
         dataset_name = data['dataset_name']
         dataset = Dataset.read_from_hdx(dataset_name)
         if not dataset:
@@ -1282,6 +1285,7 @@ def upsert_resource_to_hdx(context, data_dict):
 
         hdx_rsc_name = data.get('hdx_rsc_name')
         if hdx_rsc_name:
+
             for hdx_rsc in dataset.get_resources():
                 if hdx_rsc['name'] == hdx_rsc_name:
                     for item in ['name', 'description', 'url', 'format']:
@@ -1327,20 +1331,26 @@ def upsert_dataset_to_hdx(context, data_dict):
     metadata_only = data_dict.get('metadata_only', False)
 
     try:
+
         setup_logging()
         data = logic.get_action('package_show')(
             {'ignore_auth': True},
             {'id': id})
 
+        owner_org = config.get(u'ckanext.knowledgehub.hdx.owner_org')
+        dataset_source = config.get(u'ckanext.knowledgehub.hdx.dataset_source')
+        maintainer = config.get(u'ckanext.knowledgehub.hdx.maintainer')
+        dataset_date = unicode(datetime.datetime.utcnow())
+
         data_dict = {
             'name': data.get('name'),
             'notes': data.get('notes', ''),
-            'owner_org': 'abf4ca86-8e69-40b1-92f7-71509992be88', # from config
+            'owner_org': owner_org,
             'title': data.get('title'),
             'private': data.get('private'),
-            'dataset_source': 'knowledgehub', # from config
-            'maintainer': 'savarimu', # from config
-            'dataset_date': data.get('metadata_created'), # time now
+            'dataset_source': dataset_source,
+            'maintainer': maintainer,
+            'dataset_date': dataset_date,
             'data_update_frequency': -1,
             'license_id': data.get('license_id'),
             'methodology': data.get('license_url'),
@@ -1381,6 +1391,45 @@ def upsert_dataset_to_hdx(context, data_dict):
                 if hdx_resource['name'] not in kwh_resources:
                     hdx_resource.delete_from_hdx()
 
-        return {} # cretaed/updated dataset
+        hdx_newest_dataset = Dataset.read_from_hdx(data['name'])
+        hdx_newest_dataset_dict = {
+            'name': hdx_newest_dataset['name'],
+            'notes': hdx_newest_dataset['notes'],
+            'owner_org': hdx_newest_dataset['owner_org'],
+            'title': hdx_newest_dataset['title'],
+            'private': hdx_newest_dataset['private'],
+            'dataset_source': hdx_newest_dataset['dataset_source'],
+            'maintainer': hdx_newest_dataset['maintainer'],
+            'dataset_date': hdx_newest_dataset['dataset_date'],
+            'data_update_frequency': hdx_newest_dataset['data_update_frequency'],
+            'license_id': hdx_newest_dataset['license_id'],
+            'methodology': hdx_newest_dataset['methodology'],
+            'num_resources': hdx_newest_dataset['num_resources'],
+            'url': hdx_newest_dataset['url'],
+            'package_creator': hdx_newest_dataset['package_creator'],
+            'relationships_as_object': hdx_newest_dataset['relationships_as_object'],
+            'id': hdx_newest_dataset['id'],
+            'metadata_created': hdx_newest_dataset['metadata_created'],
+            'archived': hdx_newest_dataset['archived'],
+            'metadata_modified': hdx_newest_dataset['metadata_modified'],
+            'state': hdx_newest_dataset['state'],
+            'version': hdx_newest_dataset['version'],
+            'creator_user_id': hdx_newest_dataset['creator_user_id'],
+            'organization': hdx_newest_dataset['organization'],
+            'pageviews_last_14_days': hdx_newest_dataset['pageviews_last_14_days'],
+            'num_tags': hdx_newest_dataset['num_tags'],
+            'solr_additions': hdx_newest_dataset['solr_additions'],
+            'tags': hdx_newest_dataset['tags'],
+            'relationships_as_subject': hdx_newest_dataset['relationships_as_subject'],
+            'is_requestdata_type': hdx_newest_dataset['is_requestdata_type'],
+            'type': hdx_newest_dataset['type'],
+            'is_fresh': hdx_newest_dataset['is_fresh'],
+            'dataset_preview': hdx_newest_dataset['dataset_preview'],
+            'total_res_downloads': hdx_newest_dataset['total_res_downloads'],
+            'updated_by_script': hdx_newest_dataset['hdx_newest_dataset']
+        }
+
+        return hdx_newest_dataset_dict
+
     except Exception as e:
         log.debug('Unable to push dataset in HDX: %s' % str(e))
