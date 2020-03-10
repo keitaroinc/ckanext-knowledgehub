@@ -406,7 +406,7 @@ def resource_view_update(context, data_dict):
     # this check is done for the unit tests
     if resource_view_data.get('__extras'):
         ext = resource_view_data['__extras']
-        ext_old = resource_view_data['__extras']
+        ext_old = old_resource_view_data['__extras']
         if ext_old.get('research_questions') or ext.get('research_questions'):
             plugin_helpers.update_rqs_in_dataset(
                 old_resource_view_data, resource_view_data)
