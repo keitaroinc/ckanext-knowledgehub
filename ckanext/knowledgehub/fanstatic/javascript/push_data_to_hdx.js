@@ -35,6 +35,7 @@
                 btn.attr('disabled', false);
                 flash_messages.empty();
                 flash_messages.append('<div class="alert alert-danger fade in alert-info" data-ol-has-click-handler>Push data to HDX: ' + error.statusText + '<a class="close" href="#">x</a></div>');
+                document.getElementById("hdx-loader").style.visibility = "hidden";
             });
     };
 
