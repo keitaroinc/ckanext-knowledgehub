@@ -4,7 +4,7 @@ from ckan.model.types import make_uuid
 from ckan.logic import get_action
 from ckan.model.domain_object import DomainObject
 
-from ckanext.knowledgehub.lib.solr import Indexed, mapped
+from ckanext.knowledgehub.lib.solr import Indexed, mapped, unprefixed
 from ckanext.knowledgehub.model import Theme, SubThemes
 
 from sqlalchemy import types, ForeignKey, Column, Table, or_
@@ -75,6 +75,10 @@ class ResearchQuestion(DomainObject, Indexed):
         mapped('tags', 'tags'),
         mapped('created_at', 'khe_created'),
         mapped('modified_at', 'khe_modified'),
+        unprefixed('idx_keywords'),
+        unprefixed('idx_tags'),
+        unprefixed('idx_research_questions'),
+
     ]
 
     @classmethod
@@ -159,22 +163,28 @@ class ResearchQuestion(DomainObject, Indexed):
             data['tags'] = data.get('tags').split(',')
             data['idx_tags'] = data['tags']
             for tag in data['tags']:
-                tag_obj = get_action('tag_show')(
-                    {'ignore_auth': True},
-                    {'id': tag}
-                )
-                if tag_obj.get('keyword_id'):
-                    keyword_obj = get_action('keyword_show')(
+                try:
+                    tag_obj = get_action('tag_show')(
                         {'ignore_auth': True},
-                        {'id': tag_obj.get('keyword_id')}
+                        {'id': tag}
                     )
-                    keywords.add(keyword_obj.get('name'))
-                    if keywords:
-                        data['keywords'] = ','.join(keywords)
+                    if tag_obj.get('keyword_id'):
+                        keyword_obj = get_action('keyword_show')(
+                            {'ignore_auth': True},
+                            {'id': tag_obj.get('keyword_id')}
+                        )
+                        keywords.add(keyword_obj.get('name'))
+                        if keywords:
+                            data['keywords'] = ','.join(keywords)
+                except Exception as e:
+                    log.warning('Failed to fetch tag/keyword data. Error: %s',
+                                str(e))
 
         if keywords:
             data['keywords'] = ','.join(keywords)
             data['idx_keywords'] = list(keywords)
+
+        data['idx_research_questions'] = [data['id']]
 
         return data
 

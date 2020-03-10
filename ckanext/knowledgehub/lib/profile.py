@@ -220,5 +220,11 @@ class UserProfileService:
 
         return relevant
 
+    def clear_cached(self, user_id):
+        '''Clears the cached parameters for this user.
+
+        :param user_id: `str`, the user id for which to clear the cache.
+        '''
+        self.redis().delete(self._get_key(user_id, 'boost_params'))
 
 user_profile_service = UserProfileService()

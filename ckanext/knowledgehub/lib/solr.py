@@ -569,15 +569,15 @@ def boost_solr_params(values):
     bq = []
     for prop, prop_values in values.get('normal', {}).items():
         for value in prop_values:
-            bq.append("%s:'%s'" % (prop, value))
+            bq.append("%s:%s" % (prop, value))
 
     for scale, boost_params in values.items():
         if scale == 'normal':
             continue
         for prop, prop_values in boost_params.items():
             for value in prop_values:
-                bq.append("%s:'%s'%s" % (prop, value, scale))
+                bq.append("%s:%s%s" % (prop, value, scale))
 
     if bq:
-        params['bq'] = ' OR '.join(bq)
+        params['bq'] = ' + '.join(bq)
     return params
