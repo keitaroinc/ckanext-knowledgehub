@@ -1457,3 +1457,15 @@ def get_datasets():
     )
 
     return datasets
+
+
+def get_all_users():
+    users = toolkit.get_action('user_list')(
+        {'ignore_auth': True},
+        {'all_fields': False}
+    )
+
+    for sysadmin in get_sysadmins():
+        users.remove(sysadmin.name)
+
+    return users
