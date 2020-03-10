@@ -4,7 +4,7 @@ from ckan.logic import get_action
 
 from sqlalchemy import Column, types
 
-from ckanext.knowledgehub.lib.solr import Indexed, mapped
+from ckanext.knowledgehub.lib.solr import Indexed, mapped, unprefixed
 import json
 
 class Visualization(ResourceView, Indexed):
@@ -20,7 +20,10 @@ class Visualization(ResourceView, Indexed):
         'keywords',
         mapped('tags', 'tags'),
 	    mapped('organizations', 'organizations'),
-        mapped('groups', 'groups')
+        mapped('groups', 'groups'),
+        unprefixed('idx_keywords'),
+        unprefixed('idx_tags'),
+        unprefixed('idx_research_questions'),
     ]
 
     doctype = 'visualization'

@@ -1,5 +1,6 @@
 import logging
 import datetime
+import re
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
@@ -44,6 +45,7 @@ from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
+from ckanext.knowledgehub.lib.profile import user_profile_service
 
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -1033,7 +1035,8 @@ def keyword_update(context, data_dict):
         raise logic.NotFound(_('Not found'))
 
     if data_dict.get('name', '').strip():
-        existing.name = data_dict['name'].strip()
+        keyword_name = re.sub(r'\s+', '-', data_dict['name'].strip())
+        existing.name = keyword_name
 
     existing.modified_at = datetime.datetime.utcnow()
     existing.save()
@@ -1458,5 +1461,11 @@ def user_profile_update(context, data_dict):
 
     profile.save()
     model.Session.flush()
+
+    try:
+        user_profile_service.clear_cached(user_id)
+    except Exception as e:
+        log.warning('Failed to clear cached data for user %s. Error: %s',
+                    user_id, str(e))
 
     return _table_dictize(profile, context)
