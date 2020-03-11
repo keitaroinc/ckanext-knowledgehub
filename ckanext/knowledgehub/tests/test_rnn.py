@@ -2,6 +2,7 @@
 
 import os
 import nose.tools
+import mock
 
 from ckan import plugins
 from ckan.tests import helpers
@@ -22,6 +23,8 @@ from ckanext.knowledgehub.logic.action import create as create_actions
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
 from ckanext.knowledgehub.tests.helpers import get_context
+from ckanext.knowledgehub.lib.util import monkey_patch
+from hdx.hdx_configuration import Configuration
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
@@ -29,6 +32,9 @@ assert_not_equals = nose.tools.assert_not_equals
 
 
 class ActionsBase(helpers.FunctionalTestBase):
+
+    @monkey_patch(Configuration, 'delete', mock.Mock())
+    @monkey_patch(Configuration, 'create', mock.Mock())
     def setup(self):
         helpers.reset_db()
         theme_db_setup()

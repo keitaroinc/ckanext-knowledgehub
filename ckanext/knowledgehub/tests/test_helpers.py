@@ -42,6 +42,8 @@ from ckanext.datastore.logic.action import datastore_create
 from ckanext.datastore.logic.action import datastore_search
 from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.knowledgehub.tests.helpers import get_context
+from hdx.data.dataset import Dataset
+from hdx.hdx_configuration import Configuration
 
 assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
@@ -50,6 +52,9 @@ raises = nose.tools.raises
 
 
 class ActionsBase(helpers.FunctionalTestBase):
+
+    @monkey_patch(Configuration, 'delete', mock.Mock())
+    @monkey_patch(Configuration, 'create', mock.Mock())
     def setup(self):
         helpers.reset_db()
         theme_db_setup()
@@ -61,7 +66,6 @@ class ActionsBase(helpers.FunctionalTestBase):
         rnn_corpus_setup()
         os.environ["CKAN_INI"] = 'subdir/test.ini'
 
-        
         if not plugins.plugin_loaded('datastore'):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
@@ -164,7 +168,9 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(isinstance(json_str, str), True)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_last_visuals(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         resource = factories.Resource(
             schema='',
@@ -374,7 +380,9 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(cut_url, '/dataset')
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_feedback_count(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -435,7 +443,6 @@ class TestKWHHelpers(ActionsBase):
         new_url = kwh_helpers.remove_space_for_url(url)
         assert_equals(new_url, 'http://host:port/lang/data-set')
 
-
     @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq_options(self):
 
@@ -473,7 +480,9 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(titles), 1)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_rq_ids(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         resource = factories.Resource(
             schema='',
@@ -484,8 +493,9 @@ class TestKWHHelpers(ActionsBase):
         rqs = kwh_helpers.get_rq_ids(resource['id'])
         assert_equals(len(rqs), 8)
 
-
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_geojson_resources(self):
+        Dataset.read_from_hdx.return_value = ""
 
         dataset = create_dataset()
         resource = factories.Resource(
@@ -497,9 +507,10 @@ class TestKWHHelpers(ActionsBase):
         resources = kwh_helpers.get_geojson_resources()
         assert_equals(len(resources), 1)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq_titles_from_res(self):
-
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -532,7 +543,7 @@ class TestKWHHelpers(ActionsBase):
 
         rq1 = create_actions.research_question_create(context, data_dict)
         dataset = create_dataset(
-            research_question = rq1['id']
+            research_question=rq1['id']
         )
         resource = factories.Resource(
             schema='',
@@ -545,20 +556,22 @@ class TestKWHHelpers(ActionsBase):
         titles = kwh_helpers.get_rq_titles_from_res(resource['id'])
         assert_equals(len(titles), 1)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_view_get_fields(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         data = {
            "fields": [{"id": "value", "type": "numeric"}],
-            "records": [
-                {"value": 0},
-                {"value": 1},
-                {"value": 2},
-                {"value": 3},
-                {"value": 5},
-                {"value": 6},
-                {"value": 7},
+           "records": [
+               {"value": 0},
+               {"value": 1},
+               {"value": 2},
+               {"value": 3},
+               {"value": 5},
+               {"value": 6},
+               {"value": 7},
             ],
-            "force": True
+           "force": True
         }
 
         resource = factories.Resource(
@@ -572,12 +585,13 @@ class TestKWHHelpers(ActionsBase):
         fields = kwh_helpers.resource_view_get_fields(resource)
         assert_equals(len(fields), 2)
 
-
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_filter_values(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         data = {
            "fields": [{"id": "value", "type": "numeric"}],
-            "records": [
+           "records": [
                 {"value": 0},
                 {"value": 1},
                 {"value": 2},
@@ -586,7 +600,7 @@ class TestKWHHelpers(ActionsBase):
                 {"value": 6},
                 {"value": 7},
             ],
-            "force": True
+           "force": True
         }
 
         resource = factories.Resource(
@@ -600,11 +614,13 @@ class TestKWHHelpers(ActionsBase):
         fil_vals = kwh_helpers.get_filter_values(resource['id'], "value", [])
         assert_equals(len(fil_vals), 7)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_resource_columns(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         data = {
            "fields": [{"id": "value", "type": "numeric"}],
-            "records": [
+           "records": [
                 {"value": 0},
                 {"value": 1},
                 {"value": 2},
@@ -613,7 +629,7 @@ class TestKWHHelpers(ActionsBase):
                 {"value": 6},
                 {"value": 7},
             ],
-            "force": True
+           "force": True
         }
 
         resource = factories.Resource(
@@ -628,11 +644,13 @@ class TestKWHHelpers(ActionsBase):
         columns = kwh_helpers.get_resource_columns(resource.get('id'))
         assert_equals(len(columns), 1)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_resource_data(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         data = {
            "fields": [{"id": "value", "type": "numeric"}],
-            "records": [
+           "records": [
                 {"value": 0},
                 {"value": 1},
                 {"value": 2},
@@ -641,7 +659,7 @@ class TestKWHHelpers(ActionsBase):
                 {"value": 6},
                 {"value": 7},
             ],
-            "force": True
+           "force": True
         }
 
         resource = factories.Resource(
@@ -660,7 +678,6 @@ class TestKWHHelpers(ActionsBase):
         res_data = kwh_helpers.get_resource_data(sql_str)
 
         assert_equals(len(res_data), 7)
-
 
     def test_get_geojson_properties(self):
 
@@ -694,13 +711,14 @@ class TestKWHHelpers(ActionsBase):
     #     res = kwh_helpers.get_map_data(url, map_key_field, data_key_field, data_value_field, from_where)
     #     assert_equals(res, "")
 
-
     def test_format_date(self):
         date = "2019-11-21T10:09:05.900808"
         date_formated = kwh_helpers.format_date(date)
         assert_equals("2019-11-21 at 10:09", date_formated)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_dataset_data(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
 
         data = {
@@ -730,7 +748,9 @@ class TestKWHHelpers(ActionsBase):
         assert_equals(d['fields'][0]['type'], 'numeric')
         assert_equals(d['fields'][0]['id'], 'value')
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_dataset_data_err_msg(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
 
         data = {
@@ -784,7 +804,9 @@ class TestKWHHelpers(ActionsBase):
                                                resource=resource.get('name')
                                             )))
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_resource_filtered_data(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
 
         data = {
@@ -816,7 +838,9 @@ class TestKWHHelpers(ActionsBase):
         d = kwh_helpers.get_resource_filtered_data('failed-id')
         assert_equals(d['records'], [])
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_is_rsc_upload_datastore(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
 
         data = {
@@ -951,7 +975,9 @@ class TestKWHHelpers(ActionsBase):
     @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_dashboard_research_questions(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -1042,7 +1068,9 @@ class TestKWHHelpers(ActionsBase):
 
     @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_add_rqs_to_dataset(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
@@ -1112,7 +1140,9 @@ class TestKWHHelpers(ActionsBase):
 
     @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_update_rqs_in_dataset(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
@@ -1222,7 +1252,9 @@ class TestKWHHelpers(ActionsBase):
           data_dict5['research_questions']
         )
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_remove_rqs_from_dataset(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
