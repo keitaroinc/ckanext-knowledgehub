@@ -240,26 +240,30 @@ ckan.module('chart', function () {
 
             // Legend/tooltip
             options.legend = { show: show_legend }
-            options.tooltip = {
-                format: {
-                    title: function (d) {
-                        if (options.data.type === 'donut' || options.data.type === 'pie') {
-                            return tooltip_name;
+            if (tooltip_name !== '') {
+                options.tooltip = {
+                    format: {
+                        title: function (d) {
+                            if (options.data.type === 'donut' || options.data.type === 'pie') {
+                                return tooltip_name;
+                            }
+                            return records[d][x_axis];
                         }
-                        return records[d][x_axis];
                     }
                 }
             }
-            if (tooltip_name !== true && tooltip_name !== '') {
-                // options.tooltip.format['title'] = function (d) {
-                //     if (options.data.type === 'donut' || options.data.type === 'pie') {
-                //         return tooltip_name;
-                //     }
-                //     return records[d][x_axis];
-                // }
 
-            }
+            //if (tooltip_name !== true && tooltip_name !== '') {
+            // options.tooltip.format['title'] = function (d) {
+            //     if (options.data.type === 'donut' || options.data.type === 'pie') {
+            //         return tooltip_name;
+            //     }
+            //     return records[d][x_axis];
+            // }
+
+            //}
             //console.log(records[0][x_axis])
+
             options.tooltip.format['value'] = function (value, ratio, id) {
                 var dataf = this.sortFormatData(data_format, value);
                 return dataf;
@@ -426,7 +430,7 @@ ckan.module('chart', function () {
                         },
                         x: {
                             type: 'category',
-                            categories: categories.map(val => val.length > 5 ? val.substring(0, 10) + "..." : val),
+                            categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
                             tick: {
                                 count: tick_count,
                                 rotate: x_text_rotate,
@@ -459,7 +463,7 @@ ckan.module('chart', function () {
                         },
                         x: {
                             type: 'category',
-                            categories: categories,
+                            categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
                             tick: {
                                 rotate: x_text_rotate,
                                 multiline: x_text_multiline,
