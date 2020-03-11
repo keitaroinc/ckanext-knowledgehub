@@ -1,0 +1,27 @@
+
+{% for notification in notifications %}
+<li>
+    <div class="notification-item container-fluid" id="{{notification.id}}">
+        <div class="row">
+            <div class="col-md-3">
+                {% if notification.image %}
+                    <img src="{{notification.image}}" class="notification-image img-responsive"></img>
+                {% endif %}
+            </div>
+            <div class="col-md-9">
+                <a href="{% if notification.link %}{{ h.url_for(notification.link) }}{% else %}javascript:void(0){% endif%}"
+                    class="notification-title">
+                    {{notification.title}}
+                </a>
+                {% if notification.description or notification.image %}
+                <div class="notification-content">
+                    {{ notification.description }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        
+    </div>
+</li>
+{% endfor %}

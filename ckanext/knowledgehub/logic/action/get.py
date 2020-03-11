@@ -1888,7 +1888,33 @@ def notification_list(context, data_dict):
     }
 
     for notification in notifications:
-        result['results'].append(_table_dictize(notification, context))
+        notification = _table_dictize(notification, context)
+        for field in ['link', 'image']:
+            if notification.get(field):
+                notification[field] = notification[field].encode('ascii')
+        result['results'].append(notification)
     
     return result
-    
+
+
+@toolkit.side_effect_free
+def notification_show(context, data_dict):
+    check_access('notification_list', context)
+
+    if 'id' not in data_dict:
+        raise ValidationError({'id': _('Missing value')})
+
+    user = context['auth_user_obj']
+
+    notification = Notification.get(data_dict['id'])
+    if not notification:
+        raise logic.NotFound(_('Not found'))
+
+    if notification.recepient != user.id:
+        raise logic.NotAuthorized(_('Not authorized to see this notifiation.'))
+
+    notification = _table_dictize(notification, context)
+    for field in ['link', 'image']:
+        if notification.get(field):
+            notification[field] = notification[field].encode('ascii')
+    return notification

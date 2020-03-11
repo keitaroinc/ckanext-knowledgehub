@@ -225,6 +225,7 @@ def notification_create_schema():
     return {
         'title': [not_empty, unicode],
         'description': [ignore_missing, unicode],
-        'link': [ignore_missing, unicode],
+        'link': [ignore_missing],
         'recepient': [not_empty, unicode],
+        'image': [ignore_missing],
     }

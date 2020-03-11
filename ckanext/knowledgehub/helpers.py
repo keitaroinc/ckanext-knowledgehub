@@ -1454,3 +1454,18 @@ def get_datasets():
     )
 
     return datasets
+
+
+def get_notifications(offset=0, limit=10):
+    context = _get_context()
+    notifications = toolkit.get_action('notification_list')(
+        context,
+        {
+            'offset': offset,
+            'limit': limit,
+        }
+    )
+    if notifications.get('count', 0) > offset + limit + 1:
+        notifications['has_more'] = True
+    
+    return notifications
