@@ -1467,9 +1467,10 @@ def notification_create(context, data_dict):
         raise ValidationError({'recepient': _('No such user')})
 
     notification = Notification(title=data['title'],
-                                descripton=data.get('description'),
+                                description=data.get('description'),
                                 recepient=recepient,
-                                link=data.get('link'))
+                                link=data.get('link'),
+                                image=data.get('image'))
     notification.save()
     model.Session.flush()
 

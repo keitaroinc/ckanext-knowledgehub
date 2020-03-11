@@ -24,12 +24,17 @@ notification_table = Table(
     Column('recepient', types.UnicodeText),
     Column('title', types.UnicodeText, nullable=False),
     Column('description', types.UnicodeText),
-    Column('link', types.UnicodeText),
+    Column('link', types.Text),
+    Column('image', types.Text),
     Column('seen', types.Boolean, default=False),
 )
 
 
 class Notification(DomainObject):
+
+    @classmethod
+    def get(cls, reference):
+        return Session.query(cls).get(reference)
 
     @classmethod
     def get_notifications(cls, user_id, limit=0, offset=10):

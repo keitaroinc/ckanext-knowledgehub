@@ -131,3 +131,7 @@ def keyword_create(context, data_dict):
 
 def user_profile_create(context, data_dict=None):
     return {'success': True}
+
+
+def notification_create(context, data_dict=None):
+    return {'success': True}
