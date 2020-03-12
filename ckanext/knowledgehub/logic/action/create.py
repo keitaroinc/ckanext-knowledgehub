@@ -1374,6 +1374,7 @@ def upsert_dataset_to_hdx(context, data_dict):
             ))
 
             resources = data['resources']
+
             for resource in resources:
                 data_dict = {
                     'resource_id': resource.get('id'),
@@ -1386,12 +1387,15 @@ def upsert_dataset_to_hdx(context, data_dict):
             kwh_resources = list(map(
                 lambda r: r.get('name'), resources
             ))
+
             hdx_dataset = Dataset.read_from_hdx(data['name'])
+
             for hdx_resource in hdx_dataset.get_resources():
                 if hdx_resource['name'] not in kwh_resources:
                     hdx_resource.delete_from_hdx()
 
         hdx_newest_dataset = Dataset.read_from_hdx(data['name'])
+
         hdx_newest_dataset_dict = {
             'name': hdx_newest_dataset['name'],
             'notes': hdx_newest_dataset['notes'],
@@ -1414,19 +1418,19 @@ def upsert_dataset_to_hdx(context, data_dict):
             'metadata_modified': hdx_newest_dataset['metadata_modified'],
             'state': hdx_newest_dataset['state'],
             'version': hdx_newest_dataset['version'],
+            'type': hdx_newest_dataset['type'],
+            'total_res_downloads': hdx_newest_dataset['total_res_downloads'],
+            'pageviews_last_14_days': hdx_newest_dataset['pageviews_last_14_days'],
             'creator_user_id': hdx_newest_dataset['creator_user_id'],
             'organization': hdx_newest_dataset['organization'],
-            'pageviews_last_14_days': hdx_newest_dataset['pageviews_last_14_days'],
             'num_tags': hdx_newest_dataset['num_tags'],
-            'solr_additions': hdx_newest_dataset['solr_additions'],
             'tags': hdx_newest_dataset['tags'],
+            'dataset_preview': hdx_newest_dataset['dataset_preview'],
+            'updated_by_script': hdx_newest_dataset['updated_by_script'],
+            'is_fresh': hdx_newest_dataset['is_fresh'],
+            'solr_additions': hdx_newest_dataset['solr_additions'],
             'relationships_as_subject': hdx_newest_dataset['relationships_as_subject'],
             'is_requestdata_type': hdx_newest_dataset['is_requestdata_type'],
-            'type': hdx_newest_dataset['type'],
-            'is_fresh': hdx_newest_dataset['is_fresh'],
-            'dataset_preview': hdx_newest_dataset['dataset_preview'],
-            'total_res_downloads': hdx_newest_dataset['total_res_downloads'],
-            'updated_by_script': hdx_newest_dataset['hdx_newest_dataset']
         }
 
         return hdx_newest_dataset_dict
