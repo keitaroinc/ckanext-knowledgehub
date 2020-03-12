@@ -930,9 +930,9 @@ def _search_entity(index, ctx, data_dict):
         group_names.extend(facets.get(field_name, {}).keys())
 
     groups = (session.query(model.Group.name, model.Group.title)
-                .filter(model.Group.name.in_(group_names))
-                .all()
-                if group_names else [])
+              .filter(model.Group.name.in_(group_names))
+              .all()
+              if group_names else [])
     group_titles_by_name = dict(groups)
 
     result_dict = {
@@ -1860,6 +1860,16 @@ def package_search(context, data_dict=None):
 
 
 def notification_list(context, data_dict):
+    '''Lists the unread notifications for the current user.
+
+    :param user_id: `str`, the id of the recepient of the notifications. Only
+        available for sysadmin users.
+    :param limit: `int`, how many notifications to show (max).
+    :param offset: `int`, how many notifications to skip (pagination).
+
+    :returns: `dict`, the notifications list and count. The count is available
+    as `count` and the list of notifications is available under `results`.
+    '''
     check_access('notification_list', context)
 
     limit = data_dict.get('limit')
@@ -1875,13 +1885,12 @@ def notification_list(context, data_dict):
         user_id = user.id
     if not user_id:
         user_id = user.id
-    
-    print 'User id:', user_id
+
     count = Notification.get_notifications_count(user_id)
     notifications = []
     if count:
         notifications = Notification.get_notifications(user_id, limit, offset)
-    
+
     result = {
         'count': count,
         'results': [],
@@ -1893,12 +1902,19 @@ def notification_list(context, data_dict):
             if notification.get(field):
                 notification[field] = notification[field].encode('ascii')
         result['results'].append(notification)
-    
+
     return result
 
 
 @toolkit.side_effect_free
 def notification_show(context, data_dict):
+    '''Display the data for a particular notification.
+    A user can only read notification to which it is set as a recepient.
+
+    :param id: `str`, the notification id.
+
+    :returns: `dict`, the data for the notification if found and available.
+    '''
     check_access('notification_list', context)
 
     if 'id' not in data_dict:
