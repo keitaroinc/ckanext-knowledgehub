@@ -48,6 +48,7 @@ from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
 from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.datastore.logic.action import datastore_create
 from hdx.data.dataset import Dataset
+from hdx.data.resource import Resource
 from hdx.hdx_configuration import Configuration
 
 from pysolr import Results
@@ -515,6 +516,64 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(rv.get('what'), 'The resource is invalid!')
         assert_equals(rv.get('resource'), resource.get('id'))
+
+
+    # @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
+    # @monkey_patch(Dataset, 'check_required_fields', mock.Mock())
+    # @monkey_patch(Dataset, 'create_in_hdx', mock.Mock())
+    # @monkey_patch(Dataset, 'get_resources', mock.Mock())
+    # @monkey_patch(Resource, 'delete_from_hdx', mock.Mock())
+    # def test_upsert_dataset_to_hdx(self):
+    #     hdx_newest_dataset = {
+    #         'notes': 'notes',
+    #     }
+    #     def _mock_read_from_hdx(param):
+    #         if first_call:
+    #             return None
+    #         else:
+    #             return hdx_newest_dataset
+    #     Dataset.read_from_hdx.side_effect = _mock_read_from_hdx
+    #     Dataset.check_required_fields.return_value = ""
+    #     Dataset.create_in_hdx.return_value = ""
+    #     Dataset.get_resources.return_value = {
+
+    #     }
+    #     Resource.delete_from_hdx = ""
+
+    #     user = factories.Sysadmin()
+    #     context = {
+    #         'user': user.get('name'),
+    #         'auth_user_obj': User(user.get('id')),
+    #         'ignore_auth': True,
+    #         'model': model,
+    #         'session': model.Session
+    #     }
+
+    #     dataset = create_dataset()
+    #     dataset['license_id'] = 'cc-by'
+    #     dataset['id'] = 'dataset name'
+    #     dataset['private'] = True
+    #     dataset['dataset_source'] = 'knowledgehub'
+    #     dataset['dataset_date'] = '2020-03-11 14:37:05.887534'
+    #     dataset['data_update_frequency'] = -1
+    #     dataset['methodology'] = 'http://www.opendefinition.org/licenses/cc-by'
+    #     dataset['num_resources'] = 1
+    #     dataset['url'] = None
+    #     resource = factories.Resource(
+    #         package_id=dataset['id'],
+    #         url='https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
+    #         description='Some description here',
+    #         created='2020-03-10 00:13:47.641641',
+    #         name='resource name',
+    #         format='CSV',
+    #         id='a7ae9f30-ff91-405c-bf7b-926017bcb9ac'
+    #     )
+    #     data_dict = {
+    #         'id': dataset.get('id'),
+    #     }
+    #     push_to_hdx = create_actions.upsert_dataset_to_hdx(context, data_dict)
+
+    #     assert_equals(push_to_hdx.get('notes'), dataset['notes'])
 
 
 class TestKWHGetActions(ActionsBase):
