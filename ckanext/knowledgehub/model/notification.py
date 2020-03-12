@@ -47,24 +47,24 @@ class Notification(DomainObject):
         query = query.offset(offset).limit(limit)
 
         return query.all()
-    
+
     @classmethod
     def get_notifications_count(cls, user_id):
         query = Session.query(cls).filter(
             notification_table.c.recepient == user_id,
             notification_table.c.seen != True
         )
-        return  query.count()
+        return query.count()
 
     @classmethod
     def mark_read(cls, user_id, notifications=None):
         statement = update(cls)
-        
+
         if notifications:
             statement = statement.where(
-                notification_table.c.recepient == user_id and \
-                notification_table.c.id.in_(notifications)
-            )
+                notification_table.c.recepient == user_id)
+            statement = statement.where(
+                notification_table.c.id.in_(notifications))
         else:
             statement = statement.where(
                 notification_table.c.recepient == user_id
