@@ -38,6 +38,11 @@ def dashboard_show(context, data_dict):
     )
     if docs.get('count', 0) == 1:
         dashboard = docs['results'][0]
+
+        user = context['auth_user_obj']
+        if user.name in dashboard.get('idx_shared_with_users', []):
+            return {'success': True}
+
         datasets_str = dashboard.get('datasets', '')
         if datasets_str:
             datasets = datasets_str.split(', ')

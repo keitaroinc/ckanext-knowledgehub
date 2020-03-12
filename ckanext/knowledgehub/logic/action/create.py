@@ -434,6 +434,7 @@ def dashboard_create(context, data_dict):
     source = data.get('source')
     indicators = data.get('indicators')
     datasets = data_dict.get('datasets')
+    shared_with_users = data_dict.get('shared_with_users')
 
     if source is not None:
         dashboard.source = source
@@ -446,6 +447,9 @@ def dashboard_create(context, data_dict):
             dashboard.datasets = datasets
         elif isinstance(datasets, list):
             dashboard.datasets = ', '.join(datasets)
+
+    if shared_with_users is not None:
+        dashboard.shared_with_users = shared_with_users
 
     tags = data_dict.get('tags', '')
     if tags:
@@ -1175,7 +1179,7 @@ def user_profile_create(context, data_dict):
         if data_dict.get(interest_type):
             profile.interests[interest_type] = data_dict[interest_type]
 
-    
+
     profile.interests['tags'] = []
     for tag in data_dict.get('tags', []):
         try:
@@ -1233,7 +1237,7 @@ def user_query_result_save(context, data_dict):
     except Exception as e:
         log.warning('Cannot fetch user_query. Error: %s', str(e))
         log.exception(e)
-    
+
     try:
         kwh_data_create(context, {
             'type': 'search_query',
@@ -1242,5 +1246,5 @@ def user_query_result_save(context, data_dict):
     except Exception as e:
         log.warning('Failed to store kwh_data. Error: %s', str(e))
         log.exception(e)
-    
+
     return {}
