@@ -139,6 +139,7 @@ ckan.module('chart', function () {
                                     var values = [];
                                     for (var row of this.fetched_data) {
                                         // Values from server are strings..
+
                                         values.push(+row[y_axis.toString().toLowerCase()]);
                                     }
                                     this.y_axis_max = Math.max.apply(null, values);
@@ -239,15 +240,30 @@ ckan.module('chart', function () {
 
             // Legend/tooltip
             options.legend = { show: show_legend }
-            options.tooltip = { format: {} }
-            if (tooltip_name !== true && tooltip_name !== '') {
-                options.tooltip.format['title'] = function (d) {
-                    if (options.data.type === 'donut' || options.data.type === 'pie') {
-                        return tooltip_name;
+            if (tooltip_name !== '') {
+                options.tooltip = {
+                    format: {
+                        title: function (d) {
+                            if (options.data.type === 'donut' || options.data.type === 'pie') {
+                                return tooltip_name;
+                            }
+                            return records[d][x_axis];
+                        }
                     }
-                    return tooltip_name + ' ' + d;
                 }
             }
+
+            //if (tooltip_name !== true && tooltip_name !== '') {
+            // options.tooltip.format['title'] = function (d) {
+            //     if (options.data.type === 'donut' || options.data.type === 'pie') {
+            //         return tooltip_name;
+            //     }
+            //     return records[d][x_axis];
+            // }
+
+            //}
+            //console.log(records[0][x_axis])
+
             options.tooltip.format['value'] = function (value, ratio, id) {
                 var dataf = this.sortFormatData(data_format, value);
                 return dataf;
@@ -302,10 +318,12 @@ ckan.module('chart', function () {
                     },
                     x: {
                         tick: {
+
                             rotate: x_text_rotate,
                             multiline: x_text_multiline,
                             multilineMax: 3,
-                        }
+
+                        },
                     }
                 }
             } else {
@@ -372,7 +390,6 @@ ckan.module('chart', function () {
                     });
 
                     columns.unshift(this.options.x_axis);
-
                     options.data = {
                         columns: [columns],
                         type: ctype,
@@ -413,7 +430,7 @@ ckan.module('chart', function () {
                         },
                         x: {
                             type: 'category',
-                            categories: categories,
+                            categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
                             tick: {
                                 count: tick_count,
                                 rotate: x_text_rotate,
@@ -446,7 +463,7 @@ ckan.module('chart', function () {
                         },
                         x: {
                             type: 'category',
-                            categories: categories,
+                            categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
                             tick: {
                                 rotate: x_text_rotate,
                                 multiline: x_text_multiline,
@@ -513,6 +530,7 @@ ckan.module('chart', function () {
                 d3.select("svg").datum(sorted_data).call(chart);
             }
             else {
+
 
                 var chart = c3.generate(options);
 
@@ -874,14 +892,14 @@ $(document).ready(function () {
     $('#chart_field_type').change(function () {
         var e = document.getElementById("chart_field_type");
         var text = e.options[e.selectedIndex].text;
-        if(text == "Butterfly") {
+        if (text == "Butterfly") {
             document.getElementById('chart_field_additional_tornado_value').style.display = "block"
             document.getElementById('chart_additional_tornado_label').style.display = "block"
         }
         else {
             document.getElementById('chart_field_additional_tornado_value').style.display = "none"
             document.getElementById('chart_additional_tornado_label').style.display = "none"
-            
+
         }
     })
 });
