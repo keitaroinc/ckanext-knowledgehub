@@ -34,17 +34,15 @@
         {% set notifications = h.get_notifications() %}
         <li class="notifications-header">
           <div class="dropdown">
-            <a class="dropdown-toggle notifications-button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+            <a class="dropdown-toggle notifications-button" id="notifications-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
               <i class="fa fa-bell"></i>
               {% if notifications.count %}
               <span class="badge">{{notifications.count}}</span>
               {% endif %}
             </a>
-            {% if notifications.count %}
-            <ul class="dropdown-menu dropdown-menu-right notifications-list" aria-labelledby="dropdownMenu1">
+            <ul class="dropdown-menu dropdown-menu-right notifications-list" aria-labelledby="notifications-dropdown">
               {% snippet 'snippets/notifications_list.html', notifications=notifications.results %}
             </ul>
-            {% endif %}
           </div>
         </li>
         {% endblock %}
