@@ -1,4 +1,5 @@
 
+{% if notifications %}
 {% for notification in notifications %}
 <li>
     <div class="notification-item container-fluid" id="{{notification.id}}">
@@ -25,3 +26,14 @@
     </div>
 </li>
 {% endfor %}
+{% else %}
+<li>
+    <div class="notification-item container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                {{ _('No new notifications!') }}
+            </div>
+        </div>
+    </div>
+</li>
+{% endif %}
