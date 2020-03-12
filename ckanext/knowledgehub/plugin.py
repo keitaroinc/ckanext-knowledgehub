@@ -430,13 +430,20 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
         if dataset_obj.owner_org:
             labels = [u'member-%s' % dataset_obj.owner_org]
             shared_with_users = dataset_obj.extras.get('shared_with_users')
-            if shared_with_users:
+            if isinstance(shared_with_users, unicode):
                 if shared_with_users.startswith('{') and \
                     shared_with_users.endswith('}'):
-                    shared_with_users = shared_with_users[1:-1]
-
+                        labels.extend(
+                            list(map(
+                                lambda user: 'user-%s' % user,
+                                shared_with_users[1:-1].split(',')))
+                        )
+                else:
+                    labels.append(u'user-%s' % shared_with_users)
+            if isinstance(shared_with_users, list):
                 labels.extend(
-                    u'user-%s' % u for u in shared_with_users.split(','))
+                    list(map(lambda user: 'user-%s' % user, shared_with_users))
+                )
 
             return labels
 
@@ -447,9 +454,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
         if not user_obj:
             return labels
 
-        labels.append(u'user-%s' % user_obj.name)
-
         labels.append(u'creator-%s' % user_obj.id)
+        labels.append(u'user-%s' % user_obj.name)
 
         orgs = logic.get_action(u'organization_list_for_user')(
             {u'user': user_obj.id}, {u'permission': u'read'})
