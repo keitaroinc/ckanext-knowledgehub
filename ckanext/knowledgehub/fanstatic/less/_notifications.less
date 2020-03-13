@@ -1,18 +1,23 @@
-.notifications-list{
+.notifications-list {
     z-index: 1001;
     width: 250px;
     margin-top: 0px;
+    padding: 0;
+
 
     .notification-item {
         color: @gray-dark;
         cursor: pointer;
-        padding: 10px;
-        margin-top: 1px;
+        padding: 15px 10px 15px 10px;
+        margin-top: 0;
         background-color: lighten(@gray-lightest, 20%);
 
-        &:hover{
+
+        &:hover {
+            transition: 0.2s;
             color: @gray-dark;
             background: lighten(@brand-primary, 40%);
+
         }
 
 
@@ -23,7 +28,7 @@
             line-height: normal;
             padding: 0px;
 
-            &:hover{
+            &:hover {
                 color: @gray-darker;
             }
         }
@@ -34,6 +39,12 @@
     }
 }
 
+.notification-border {
+    border-bottom: 0.4px @gray-lightest solid;
+
+}
+
+
 .notifications-header {
 
     .badge {
@@ -42,7 +53,7 @@
         background-color: #000;
     }
 
-    .dropdown{
+    .dropdown {
         cursor: pointer;
     }
 
