@@ -499,6 +499,20 @@ def dashboard_create(context, data_dict):
 def package_create(context, data_dict):
     dataset = ckan_package_create(context, data_dict)
 
+    shared_with_users = dataset.get('shared_with_users')
+    if shared_with_users:
+        if shared_with_users.startswith('{') and \
+            shared_with_users.endswith('}'):
+            shared_with_users = shared_with_users[1:-1]
+
+        plugin_helpers.shared_with_users_notification(
+            context['auth_user_obj'],
+            shared_with_users.split(','),
+            dataset,
+            plugin_helpers.Entity.Dataset,
+            plugin_helpers.Permission.Granted
+        )
+
     try:
         data_dict = {
             'type': 'dataset',

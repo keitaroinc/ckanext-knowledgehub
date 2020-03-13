@@ -530,8 +530,40 @@ def package_update(context, data_dict):
     u'''Wraps the CKAN's core 'package_update' function to schedule a check for
     Data Quality metrics calculation when the package has been updated.
     '''
+    package = logic.get_action('package_show')(
+        {'ignore_auth': True}, {'id': data_dict['id']}
+    )
+
+    existing_shared_users = package.get('shared_with_users', [])
+    if existing_shared_users:
+        if existing_shared_users.startswith('{') and \
+            existing_shared_users.endswith('}'):
+            existing_shared_users = existing_shared_users[1:-1]
+
+        existing_shared_users = existing_shared_users.split(',')
+
+    new_shared_users = data_dict.get('shared_with_users', [])
+    if isinstance(new_shared_users, unicode):
+        new_shared_users = new_shared_users.split()
+
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
+
+    plugin_helpers.shared_with_users_notification(
+        context['auth_user_obj'],
+        list(set(existing_shared_users) - set(new_shared_users)),
+        result,
+        plugin_helpers.Entity.Dataset,
+        plugin_helpers.Permission.Revoked
+    )
+
+    plugin_helpers.shared_with_users_notification(
+        context['auth_user_obj'],
+        list(set(new_shared_users) - set(existing_shared_users)),
+        result,
+        plugin_helpers.Entity.Dataset,
+        plugin_helpers.Permission.Granted
+    )
 
     try:
         data_dict = {
