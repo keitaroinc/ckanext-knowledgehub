@@ -52,5 +52,9 @@ mv test.ini subdir
 
 pip install SQLAlchemy==1.1.11
 pip install vdm==0.14
+# hdx 
+pip uninstall psycopg2-binary
+pip uninstall psycopg2
+pip install --no-cache-dir psycopg2==2.7.3.2
 
 echo "travis-build.bash is done."
