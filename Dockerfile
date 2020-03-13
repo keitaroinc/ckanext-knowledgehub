@@ -40,8 +40,8 @@ RUN pip install cython && \
     # disqus
     pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus" && \
     # hdx 
-    pip uninstall psycopg2-binary && \
-    pip uninstall psycopg2 && \
+    pip uninstall psycopg2-binary -y && \
+    pip uninstall psycopg2 && -y \
     pip install --no-cache-dir psycopg2==2.7.3.2
 
 # Download spaCy language model for english language
