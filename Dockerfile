@@ -38,7 +38,11 @@ RUN pip install cython && \
     # datarequests
     pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests" && \
     # disqus
-    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus"
+    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus" && \
+    # hdx 
+    pip uninstall psycopg2-binary && \
+    pip uninstall psycopg2 && \
+    pip install --no-cache-dir psycopg2==2.7.3.2
 
 # Download spaCy language model for english language
 RUN python -m spacy download en_core_web_sm
@@ -75,6 +79,13 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.max_resourc
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "search.facets = organization groups tags"
 # Set facets for research questions, visualizations and dashboards
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "knowledgehub.search.facets = organizations groups tags"
+# Set up HDX
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.api_key = ${HDX_API_KEY}"
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.site = test"
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.owner_org = ${HDX_OWNER_ORG}"
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.dataset_source = knowledgehub"
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.maintainer = ${HDX_MAINTAINER}"
+
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
