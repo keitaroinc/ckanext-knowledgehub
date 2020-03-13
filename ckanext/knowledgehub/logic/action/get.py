@@ -1874,6 +1874,7 @@ def notification_list(context, data_dict):
 
     limit = data_dict.get('limit')
     offset = data_dict.get('offset')
+    last_key = data_dict.get('last_key')
 
     user = context['auth_user_obj']
 
@@ -1886,10 +1887,20 @@ def notification_list(context, data_dict):
     if not user_id:
         user_id = user.id
 
+    before = None
+    if last_key:
+        last_notification = notification_show(context, {
+            'id': last_key,
+        })
+        before = last_notification['created_at']
+
     count = Notification.get_notifications_count(user_id)
     notifications = []
     if count:
-        notifications = Notification.get_notifications(user_id, limit, offset)
+        notifications = Notification.get_notifications(user_id,
+                                                       limit,
+                                                       offset,
+                                                       before)
 
     result = {
         'count': count,

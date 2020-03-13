@@ -1,8 +1,20 @@
+.notification-dropdown {
+    z-index: 1001;
+
+    .notifications-show-more{
+        color: @brand-primary !important;
+    }
+
+}
 .notifications-list {
     z-index: 1001;
     width: 250px;
+    height: 50vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
     margin-top: 0px;
     padding: 0;
+    
 
 
     .notification-item {
@@ -35,6 +47,17 @@
 
         .notification-content {
             margin-left: 4px;
+        }
+
+        .notification-icon{
+            padding: 5px;
+            display: block;
+            font-size: 1.4em;
+            border-radius: 32px;
+            .icon {
+                color: #fff !important;
+                
+            }
         }
     }
 }
