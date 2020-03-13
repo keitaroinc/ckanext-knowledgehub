@@ -1,6 +1,7 @@
 import logging
 import datetime
 import re
+import json
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
@@ -456,6 +457,7 @@ def dashboard_update(context, data_dict):
     else:
         dashboard.datasets = ''
 
+    existing_shared_users = dashboard.shared_with_users or []
     dashboard.shared_with_users = data_dict.get('shared_with_users')
 
     items = ['name', 'title', 'description',
@@ -507,6 +509,34 @@ def dashboard_update(context, data_dict):
 
     # Update index
     Dashboard.update_index_doc(dashboard_data)
+
+    # Send notification for sharing with users
+    if isinstance(existing_shared_users, unicode):
+        existing_shared_users = json.loads(existing_shared_users)
+        if not isinstance(existing_shared_users, list):
+            existing_shared_users = existing_shared_users.split()
+
+    new_shared_users = dashboard.shared_with_users or []
+    if isinstance(new_shared_users, str):
+        new_shared_users = json.loads(new_shared_users)
+        if isinstance(new_shared_users, unicode):
+            new_shared_users = new_shared_users.split()
+
+    plugin_helpers.shared_with_users_notification(
+        context['auth_user_obj'],
+        list(set(existing_shared_users) - set(new_shared_users)),
+        dashboard_data,
+        plugin_helpers.Entity.Dashboard,
+        plugin_helpers.Permission.Revoked
+    )
+
+    plugin_helpers.shared_with_users_notification(
+        context['auth_user_obj'],
+        list(set(new_shared_users) - set(existing_shared_users)),
+        dashboard_data,
+        plugin_helpers.Entity.Dashboard,
+        plugin_helpers.Permission.Granted
+    )
 
     # Update kwh data
     try:

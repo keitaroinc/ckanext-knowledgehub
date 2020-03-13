@@ -3,6 +3,7 @@ import datetime
 import os
 import subprocess
 import re
+import json
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
@@ -477,6 +478,20 @@ def dashboard_create(context, data_dict):
 
     # Add to index
     Dashboard.add_to_index(dashboard_data)
+
+    # Send notification for sharing with users
+    if shared_with_users is not None:
+        shared_with_users = json.loads(shared_with_users)
+        if isinstance(shared_with_users, unicode):
+            shared_with_users = shared_with_users.split()
+
+        plugin_helpers.shared_with_users_notification(
+            context['auth_user_obj'],
+            shared_with_users,
+            dashboard_data,
+            plugin_helpers.Entity.Dashboard,
+            plugin_helpers.Permission.Granted
+        )
 
     # Add to kwh data
     try:
