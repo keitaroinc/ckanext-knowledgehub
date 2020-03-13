@@ -37,11 +37,15 @@ class Notification(DomainObject):
         return Session.query(cls).get(reference)
 
     @classmethod
-    def get_notifications(cls, user_id, limit=0, offset=10):
+    def get_notifications(cls, user_id, limit=0, offset=10, before=None):
         query = Session.query(cls).filter(
             notification_table.c.recepient == user_id,
             notification_table.c.seen != True
         )
+        if before is not None:
+            query = query.filter(
+                notification_table.c.created_at < before
+            )
         query = query.order_by(notification_table.c.created_at.desc())
 
         query = query.offset(offset).limit(limit)
