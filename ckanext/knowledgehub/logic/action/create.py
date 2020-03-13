@@ -1287,6 +1287,7 @@ def upsert_resource_to_hdx(context, data_dict):
         if hdx_rsc_name:
 
             for hdx_rsc in dataset.get_resources():
+
                 if hdx_rsc['name'] == hdx_rsc_name:
                     for item in ['name', 'description', 'url', 'format']:
                         hdx_rsc[item] = rsc[item]
@@ -1332,7 +1333,7 @@ def upsert_dataset_to_hdx(context, data_dict):
 
     try:
 
-        setup_logging()
+        # setup_logging()
         data = logic.get_action('package_show')(
             {'ignore_auth': True},
             {'id': id})
@@ -1374,7 +1375,7 @@ def upsert_dataset_to_hdx(context, data_dict):
             ))
 
             resources = data['resources']
-
+            dataset = Dataset.read_from_hdx(data['name'])
             for resource in resources:
                 data_dict = {
                     'resource_id': resource.get('id'),
