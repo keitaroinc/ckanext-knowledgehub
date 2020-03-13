@@ -573,6 +573,8 @@ def package_update(context, data_dict):
         existing_shared_users = existing_shared_users.split(',')
 
     new_shared_users = data_dict.get('shared_with_users', [])
+    if not new_shared_users:
+        data_dict['shared_with_users'] = new_shared_users
     if isinstance(new_shared_users, unicode):
         new_shared_users = new_shared_users.split()
 
