@@ -6,12 +6,13 @@ import uuid
 import json
 import functools32
 import requests
+import re
 from datetime import datetime, timedelta
 from dateutil import parser
 from flask import Blueprint
 from urllib import urlencode
 from six import string_types, iteritems
-import re
+from enum import Enum
 
 try:
     # CKAN 2.7 and later
@@ -1469,3 +1470,41 @@ def get_all_users():
         users.remove(sysadmin.name)
 
     return users
+
+
+class Permission(Enum):
+    Granted = 'Permission granted'
+    Revoked = 'Permission revoked'
+
+
+class Entity(Enum):
+    Dataset = 'dataset'
+    Dashboard = 'dashboard'
+
+
+def shared_with_users_notification(editor_obj, users, data, entity, perm):
+    for u in users:
+        try:
+            user = toolkit.get_action('user_show')(
+                {'ignore_auth': True}, {'id': u})
+        except logic.NotFound:
+            continue
+
+        who = editor_obj.fullname or editor_obj.name
+        data_dict = {
+            'title': perm.value,
+            'recepient': user['id']
+        }
+        if entity == Entity.Dataset:
+            data_dict['link'] = h.url_for('dataset_read', controller='package',
+                                          action='read', id=data.get('name'))
+
+            data_dict['description'] = (
+                '%s on %s %s from user %s'
+                % (perm.value, entity.value, data.get('title'), who))
+
+        try:
+            toolkit.get_action('notification_create')(
+                {'ignore_auth': True}, data_dict)
+        except Exception as e:
+            log.debug('Unable to send notification: %s' % str(e))
