@@ -1493,15 +1493,20 @@ def shared_with_users_notification(editor_obj, users, data, entity, perm):
         who = editor_obj.fullname or editor_obj.name
         data_dict = {
             'title': perm.value,
-            'recepient': user['id']
+            'recepient': user['id'],
+            'description': (
+                '%s on %s %s from user %s'
+                % (perm.value, entity.value, data.get('title'), who))
         }
         if entity == Entity.Dataset:
             data_dict['link'] = h.url_for('dataset_read', controller='package',
                                           action='read', id=data.get('name'))
 
-            data_dict['description'] = (
-                '%s on %s %s from user %s'
-                % (perm.value, entity.value, data.get('title'), who))
+        elif entity == Entity.Dashboard:
+            data_dict['link'] = h.url_for(
+                'dashboards.view', name=data.get('name'))
+        else:
+            continue
 
         try:
             toolkit.get_action('notification_create')(
