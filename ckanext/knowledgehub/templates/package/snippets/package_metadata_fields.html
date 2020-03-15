@@ -42,7 +42,6 @@
   <h3>{{ _('Share with') }}</h3>
 
   {% set users = h.get_all_users() %}
-  {{ data.get('shared_with_users', []) }}
   <div class="control-group">
     <label class="control-label" for="field_shared_with_users">{{ _("Users") }}</label>
     <div class="controls">
