@@ -42,12 +42,13 @@
   <h3>{{ _('Share with') }}</h3>
 
   {% set users = h.get_all_users() %}
+  {{ data.get('shared_with_users', []) }}
   <div class="control-group">
     <label class="control-label" for="field_shared_with_users">{{ _("Users") }}</label>
     <div class="controls">
       <select id="field_shared_with_users" name="shared_with_users" data-module="autocomplete" multiple=False>
         {% for user in users  %}
-        <option value="{{ user }}" {% if user in data.get('shared_with_users', []) %} selected="selected" {% endif %}>{{ user }}</option>
+        <option value="{{ user.name }}" {% if user.name in data.get('shared_with_users', []) %} selected="selected" {% endif %}>{{ user.display_name }}</option>
         {% endfor %}
       </select>
     </div>

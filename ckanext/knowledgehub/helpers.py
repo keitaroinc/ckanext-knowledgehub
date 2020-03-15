@@ -1461,13 +1461,23 @@ def get_datasets():
 
 
 def get_all_users():
-    users = toolkit.get_action('user_list')(
+    users_all_fields = toolkit.get_action('user_list')(
         {'ignore_auth': True},
-        {'all_fields': False}
+        {'all_fields': True}
     )
 
-    for sysadmin in get_sysadmins():
-        users.remove(sysadmin.name)
+    sysadmins = [
+        sysadmin.name for sysadmin in get_sysadmins()]
+
+    users = []
+    for user in users_all_fields:
+        if user.get('name') not in sysadmins:
+            users.append(
+                {
+                    'name': user.get('name'),
+                    'display_name': user.get('fullname') or user.get('name')
+                }
+            )
 
     return users
 
