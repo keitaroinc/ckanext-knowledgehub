@@ -1,20 +1,35 @@
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
 .notification-dropdown {
     z-index: 1001;
+    margin-top: 0;
+    border-radius: 5px 0 0 5px;
 
-    .notifications-show-more{
-        color: @brand-primary !important;
+    .notifications-show-more {
+        color: @brand-primary  !important;
     }
 
 }
+
 .notifications-list {
     z-index: 1001;
     width: 250px;
-    height: 50vh;
+    //height: 50vh;
     overflow-y: scroll;
     overflow-x: hidden;
     margin-top: 0px;
     padding: 0;
-    
+    height: auto;
+    max-height: 300px;
+    animation: fadeIn 0.4s;
 
 
     .notification-item {
@@ -49,14 +64,15 @@
             margin-left: 4px;
         }
 
-        .notification-icon{
+        .notification-icon {
             padding: 5px;
             display: block;
             font-size: 1.4em;
             border-radius: 32px;
+
             .icon {
                 color: #fff !important;
-                
+
             }
         }
     }
