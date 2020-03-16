@@ -3,6 +3,7 @@
 import os
 import mock
 import nose.tools
+import json
 
 from ckan.tests import factories
 from ckan import plugins
@@ -232,6 +233,17 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(dashboard.get('name'), data_dict.get('name'))
         Dashboard.add_to_index.assert_called_once()
+
+        data_dict = {
+            'name': 'external-test',
+            'title': 'External test',
+            'description': 'Test',
+            'type': 'external',
+            'source': 'link',
+            'shared_with_users': json.dumps(['user1', 'user2'])
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+        assert_equals(dashboard.get('name'), data_dict.get('name'))
 
     @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_feedback(self):
