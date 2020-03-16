@@ -15,7 +15,7 @@ ckan.module('user-profile', function($){
     }
 
     $(function(){
-        var itemTemplate = $('.notification-item').first().clone();
+        var itemTemplate = $('.notification-list-item').first().clone();
         var lastId = $('.notification-item').last().attr('id')
         var showMore = function(){
             $.ajax('/api/3/action/notification_list', {
