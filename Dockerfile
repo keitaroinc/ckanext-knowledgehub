@@ -79,12 +79,6 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.max_resourc
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "search.facets = organization groups tags"
 # Set facets for research questions, visualizations and dashboards
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "knowledgehub.search.facets = organizations groups tags"
-# Set up HDX
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.api_key = ${HDX_API_KEY}"
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.site = prod"
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.owner_org = ${HDX_OWNER_ORG}"
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.dataset_source = knowledgehub"
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.maintainer = ${HDX_MAINTAINER}"
 
 
 COPY prerun.py /srv/app/prerun.py
