@@ -81,7 +81,7 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "search.facets = 
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "knowledgehub.search.facets = organizations groups tags"
 # Set up HDX
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.api_key = f6fc4e44-98a4-44a0-9c9d-53acaa86f80c"
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.site = test"
+RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.site = prod"
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.owner_org = abf4ca86-8e69-40b1-92f7-71509992be88"
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.dataset_source = knowledgehub"
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckanext.knowledgehub.hdx.maintainer = savarimu"
