@@ -76,7 +76,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
 
         # Create the HDX configuration
         hdx_api_key = config.get(u'ckanext.knowledgehub.hdx.api_key')
-        hdx_site = config.get(u'ckanext.knowledgehub.hdx.site')
+        hdx_site = config.get(u'ckanext.knowledgehub.hdx.site', 'test')
         Configuration.delete()
         Configuration.create(
             hdx_site=hdx_site,  # from config, default to test

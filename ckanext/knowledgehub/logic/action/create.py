@@ -1274,7 +1274,6 @@ def upsert_resource_to_hdx(context, data_dict):
         raise ValidationError(errors)
 
     try:
-
         dataset_name = data['dataset_name']
         dataset = Dataset.read_from_hdx(dataset_name)
         if not dataset:
