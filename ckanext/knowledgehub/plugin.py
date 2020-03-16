@@ -1,3 +1,4 @@
+from hdx.hdx_configuration import Configuration
 import json
 from logging import getLogger
 
@@ -7,6 +8,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm, DefaultPermissionLabels
+from ckan.common import config
 
 
 # imports for DatastoreBackend
@@ -26,10 +28,6 @@ from ckanext.datastore.backend.postgres import insert_data
 from ckanext.datastore.backend.postgres import create_indexes
 from ckanext.datastore.backend.postgres import create_alias
 from ckanext.datastore.backend.postgres import _unrename_json_field
-
-
-
-
 
 import ckanext.knowledgehub.helpers as h
 
@@ -77,6 +75,16 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
 
         DatastoreBackend.register_backends()
         #DatastoreBackend.set_active_backend(config)
+
+        # Create the HDX configuration
+        hdx_api_key = config.get(u'ckanext.knowledgehub.hdx.api_key')
+        hdx_site = config.get(u'ckanext.knowledgehub.hdx.site', 'test')
+        Configuration.delete()
+        Configuration.create(
+            hdx_site=hdx_site,  # from config, default to test
+            user_agent='admin',
+            hdx_key=hdx_api_key
+        )
 
     # IBlueprint
     def get_blueprint(self):

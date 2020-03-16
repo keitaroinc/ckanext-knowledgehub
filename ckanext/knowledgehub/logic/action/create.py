@@ -10,8 +10,12 @@ from psycopg2 import errorcodes as pg_errorcodes
 from sqlalchemy import func
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 
+from hdx.utilities.easy_logging import setup_logging
+from hdx.data.dataset import Dataset
+from hdx.data.resource import Resource
+
 from ckan import logic
-from ckan.common import _, g
+from ckan.common import _, g, config
 from ckan.plugins import toolkit
 from ckan import lib
 from ckan import model
@@ -322,7 +326,9 @@ def resource_create(context, data_dict):
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
-    return ckan_rsc_create(context, data_dict)
+    create_resource_kwh = ckan_rsc_create(context, data_dict)
+
+    return create_resource_kwh
 
 
 # Overwrite of the original 'resource_view_create'
@@ -1277,3 +1283,190 @@ def user_query_result_save(context, data_dict):
         log.exception(e)
 
     return {}
+
+
+def upsert_resource_to_hdx(context, data_dict):
+    ''' Create new if not exists or update the existing resource in HDX
+
+    :param resource_id: the ID of the resource in knowledgehub
+    :type resource_id: string
+    :param dataset_name: the name of the dataset in knowledgehub/HDX
+    :type dataset_name: string
+    :param hdx_rsc_name: the name of the resource in HDX that we want
+        to update. If not present it will try to create new one (optional)
+    :type hdx_rsc_name: string
+    :returns: the created/updated resource
+    :rtype: dict
+    '''
+    check_access('package_update', context)
+
+    data, errors = _df.validate(data_dict,
+                                knowledgehub_schema.hdx_resource(),
+                                context)
+    if errors:
+        raise ValidationError(errors)
+
+    try:
+        dataset_name = data['dataset_name']
+        dataset = Dataset.read_from_hdx(dataset_name)
+        if not dataset:
+            raise NotFound('Dataset %s does not exist in HDX' % dataset_name)
+
+        rsc = get_action('resource_show')({'ignore_auth': True}, {
+            'id': data['resource_id']})
+
+        hdx_rsc_name = data.get('hdx_rsc_name')
+        if hdx_rsc_name:
+
+            for hdx_rsc in dataset.get_resources():
+
+                if hdx_rsc['name'] == hdx_rsc_name:
+                    for item in ['name', 'description', 'url', 'format']:
+                        hdx_rsc[item] = rsc[item]
+                    hdx_rsc.create_in_hdx()
+                    hdx_rsc.create_datastore()
+                    return hdx_rsc
+        else:
+            data_dict = {
+                'package_id': dataset['id'],
+                'name': rsc.get('name'),
+                'format': rsc.get('format'),
+                'description': rsc.get('description'),
+                'url': rsc.get('url'),
+            }
+
+            rsc = Resource(initial_data=data_dict)
+            rsc.check_url_filetoupload()
+            rsc.create_in_hdx()
+            rsc.create_datastore()
+            return rsc
+    except Exception as e:
+        log.debug('Unable to push resource in HDX: %s' % str(e))
+        return {}
+
+
+def upsert_dataset_to_hdx(context, data_dict):
+    u''' Push data resources that belongs to the dataset on HDX
+
+    :param id: the dataset ID in knowledgehub
+    :type id: string
+    :param metadata_only: whether to update only metadata of dataset
+    :type metadata_only: boolean
+    :returns: the dataset created/pushed on HDX or error message
+    :rtype: dict
+    '''
+    check_access('package_create', context)
+
+    id = data_dict.get('id')
+    if not id:
+        raise ValidationError('Dataset id is missing!')
+
+    metadata_only = data_dict.get('metadata_only', False)
+
+    try:
+
+        # setup_logging()
+        data = logic.get_action('package_show')(
+            {'ignore_auth': True},
+            {'id': id})
+
+        owner_org = config.get(u'ckanext.knowledgehub.hdx.owner_org')
+        dataset_source = config.get(u'ckanext.knowledgehub.hdx.dataset_source')
+        maintainer = config.get(u'ckanext.knowledgehub.hdx.maintainer')
+        dataset_date = unicode(datetime.datetime.utcnow())
+
+        data_dict = {
+            'name': data.get('name'),
+            'notes': data.get('notes', ''),
+            'owner_org': owner_org,
+            'title': data.get('title'),
+            'private': data.get('private'),
+            'dataset_source': dataset_source,
+            'maintainer': maintainer,
+            'dataset_date': dataset_date,
+            'data_update_frequency': -1,
+            'license_id': data.get('license_id'),
+            'methodology': data.get('license_url'),
+            'num_resources': data.get('num_resources'),
+            'url': data.get('url')
+        }
+
+        hdx_dataset = Dataset.read_from_hdx(data['name'])
+
+        if hdx_dataset is not None:
+            data_dict['id'] = hdx_dataset['id']
+
+        dataset = Dataset(initial_data=data_dict)
+        dataset.check_required_fields(
+            ignore_fields=['groups', 'tags'], allow_no_resources=True)
+        dataset.create_in_hdx(ignore_check=False)
+
+        if not metadata_only:
+            hdx_resources = list(map(
+                lambda r: r.get('name'), dataset.get_resources()
+            ))
+
+            resources = data['resources']
+            dataset = Dataset.read_from_hdx(data['name'])
+            for resource in resources:
+                data_dict = {
+                    'resource_id': resource.get('id'),
+                    'dataset_name': dataset.get('name')
+                }
+                if resource['name'] in hdx_resources:
+                    data_dict.update({'hdx_rsc_name': resource['name']})
+                upsert_resource_to_hdx(context, data_dict)
+
+            kwh_resources = list(map(
+                lambda r: r.get('name'), resources
+            ))
+
+            hdx_dataset = Dataset.read_from_hdx(data['name'])
+
+            for hdx_resource in hdx_dataset.get_resources():
+                if hdx_resource['name'] not in kwh_resources:
+                    hdx_resource.delete_from_hdx()
+
+        hdx_newest_dataset = Dataset.read_from_hdx(data['name'])
+
+        hdx_newest_dataset_dict = {
+            'name': hdx_newest_dataset['name'],
+            'notes': hdx_newest_dataset['notes'],
+            'owner_org': hdx_newest_dataset['owner_org'],
+            'title': hdx_newest_dataset['title'],
+            'private': hdx_newest_dataset['private'],
+            'dataset_source': hdx_newest_dataset['dataset_source'],
+            'maintainer': hdx_newest_dataset['maintainer'],
+            'dataset_date': hdx_newest_dataset['dataset_date'],
+            'data_update_frequency': hdx_newest_dataset['data_update_frequency'],
+            'license_id': hdx_newest_dataset['license_id'],
+            'methodology': hdx_newest_dataset['methodology'],
+            'num_resources': hdx_newest_dataset['num_resources'],
+            'url': hdx_newest_dataset['url'],
+            'package_creator': hdx_newest_dataset['package_creator'],
+            'relationships_as_object': hdx_newest_dataset['relationships_as_object'],
+            'id': hdx_newest_dataset['id'],
+            'metadata_created': hdx_newest_dataset['metadata_created'],
+            'archived': hdx_newest_dataset['archived'],
+            'metadata_modified': hdx_newest_dataset['metadata_modified'],
+            'state': hdx_newest_dataset['state'],
+            'version': hdx_newest_dataset['version'],
+            'type': hdx_newest_dataset['type'],
+            'total_res_downloads': hdx_newest_dataset['total_res_downloads'],
+            'pageviews_last_14_days': hdx_newest_dataset['pageviews_last_14_days'],
+            'creator_user_id': hdx_newest_dataset['creator_user_id'],
+            'organization': hdx_newest_dataset['organization'],
+            'num_tags': hdx_newest_dataset['num_tags'],
+            'tags': hdx_newest_dataset['tags'],
+            'dataset_preview': hdx_newest_dataset['dataset_preview'],
+            'updated_by_script': hdx_newest_dataset['updated_by_script'],
+            'is_fresh': hdx_newest_dataset['is_fresh'],
+            'solr_additions': hdx_newest_dataset['solr_additions'],
+            'relationships_as_subject': hdx_newest_dataset['relationships_as_subject'],
+            'is_requestdata_type': hdx_newest_dataset['is_requestdata_type'],
+        }
+
+        return hdx_newest_dataset_dict
+
+    except Exception as e:
+        log.debug('Unable to push dataset in HDX: %s' % str(e))

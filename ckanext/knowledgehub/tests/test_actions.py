@@ -47,6 +47,9 @@ from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
 from ckanext.knowledgehub.lib.util import monkey_patch
 from ckanext.datastore.logic.action import datastore_create
+from hdx.data.dataset import Dataset
+from hdx.data.resource import Resource
+from hdx.hdx_configuration import Configuration
 
 from pysolr import Results
 
@@ -62,6 +65,9 @@ class _test_user:
 
 
 class ActionsBase(helpers.FunctionalTestBase):
+
+    @monkey_patch(Configuration, 'delete', mock.Mock())
+    @monkey_patch(Configuration, 'create', mock.Mock())
     def setup(self):
         helpers.reset_db()
         theme_db_setup()
@@ -171,8 +177,9 @@ class TestKWHCreateActions(ActionsBase):
         ResearchQuestion.add_to_index.assert_called_once()
 
     @monkey_patch(Visualization, 'add_to_index', mock.Mock())
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_view_create(self):
-
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
@@ -226,7 +233,9 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(dashboard.get('name'), data_dict.get('name'))
         Dashboard.add_to_index.assert_called_once()
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_feedback(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -252,7 +261,9 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(rf.get('dataset'), dataset.get('id'))
         assert_equals(rf.get('resource'), resource.get('id'))
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_validation_create(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -295,6 +306,7 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(kwh_data.get('title'), data_dict.get('title'))
 
     def test_corpus_create(self):
+
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -393,7 +405,9 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(data_dict['result_id'], result['result_id'])
         assert_equals(data_dict['query_id'], result['query_id'])
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_merge_all_data(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
 
         resource = factories.Resource(
@@ -475,7 +489,9 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(member['state'], 'active')
         assert_equals(member['capacity'], member['capacity'])
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_validate_create(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         test_auth_user = _test_user()
         context = {
@@ -500,6 +516,93 @@ class TestKWHCreateActions(ActionsBase):
 
         assert_equals(rv.get('what'), 'The resource is invalid!')
         assert_equals(rv.get('resource'), resource.get('id'))
+
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
+    @monkey_patch(Dataset, 'check_required_fields', mock.Mock())
+    @monkey_patch(Dataset, 'create_in_hdx', mock.Mock())
+    @monkey_patch(Dataset, 'get_resources', mock.Mock())
+    @monkey_patch(Resource, 'delete_from_hdx', mock.Mock())
+    @monkey_patch(Dataset, '__init__', mock.Mock())
+    def test_upsert_dataset_to_hdx(self):
+
+        Dataset.check_required_fields.return_value = ""
+        Dataset.create_in_hdx.return_value = ""
+        Resource.delete_from_hdx = ""
+
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        dataset = create_dataset()
+        dataset['license_id'] = 'cc-by'
+        dataset['private'] = True
+        dataset['dataset_source'] = 'knowledgehub'
+        dataset['dataset_date'] = '2020-03-11 14:37:05.887534'
+        dataset['data_update_frequency'] = -1
+        dataset['methodology'] = 'http://www.opendefinition.org/licenses/cc-by'
+        dataset['num_resources'] = 1
+        dataset['url'] = None
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
+            description='Some description here',
+            created='2020-03-10 00:13:47.641641',
+            name='resource name',
+            format='CSV',
+            id='a7ae9f30-ff91-405c-bf7b-926017bcb9ac'
+        )
+        Dataset.read_from_hdx.return_value = {
+            'name': dataset['name'],
+            'title': dataset['title'],
+            'notes': dataset['notes'],
+            'maintainer': dataset['maintainer'],
+            'owner_org': dataset['name'],
+            'license_id': dataset['license_id'],
+            'private': dataset['private'],
+            'dataset_date': dataset['dataset_date'],
+            'dataset_source': dataset['dataset_source'],
+            'methodology': dataset['methodology'],
+            'num_resources': dataset['num_resources'],
+            'url': dataset['url'],
+            'id': 'f32e1366-aa9e-4233-b77e-178ac0597295'
+        }
+
+        Dataset.__init__.return_value = None
+        Dataset.get_resources.return_value = [{
+            'package_id': dataset['id'],
+            'url': 'https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
+            'description':'Some description here',
+            'created':'2020-03-10 00:13:47.641641',
+            'name':'resource name',
+            'format':'CSV',
+            'id':'a7ae9f30-ff91-405c-bf7b-926017bcb9ac'
+        }]
+        hdx_newest_dataset = {
+            'name': dataset['name'],
+            'title': dataset['title'],
+            'notes': dataset['notes'],
+            'maintainer': dataset['maintainer'],
+            'owner_org': dataset['name'],
+            'license_id': dataset['license_id'],
+            'private': dataset['private'],
+            'dataset_date': dataset['dataset_date'],
+            'dataset_source': dataset['dataset_source'],
+            'methodology': dataset['methodology'],
+            'num_resources': dataset['num_resources'],
+            'url': dataset['url'],
+            'id': 'f32e1366-aa9e-4233-b77e-178ac0597295'
+        }
+        data_dict = {
+            'id': dataset.get('id'),
+        }
+        push_to_hdx = create_actions.upsert_dataset_to_hdx(context, data_dict)
+
+        assert_equals(push_to_hdx, None)
 
 
 class TestKWHGetActions(ActionsBase):
@@ -609,7 +712,9 @@ class TestKWHGetActions(ActionsBase):
 
         assert_equals(rq_list.get('total'), 1)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_view_list(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
@@ -688,7 +793,9 @@ class TestKWHGetActions(ActionsBase):
 
         assert_equals(dashboard_list.get('total'), 1)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_user_feedback_show_list(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -956,7 +1063,9 @@ class TestKWHGetActions(ActionsBase):
         assert_equals(r_search['size'], 10)
         assert_equals(len(r_search['items']), 1)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_validate_status(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         test_auth_user = _test_user()
         context = {
@@ -1215,7 +1324,9 @@ class TestKWHDeleteActions(ActionsBase):
 
         assert_equals(len(members), 0)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_validate_delete(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         test_auth_user = _test_user()
         context = {
@@ -1346,7 +1457,9 @@ class TestKWHUpdateActions(ActionsBase):
         assert_equals(rq_updated.get('title'), data_dict.get('title'))
         ResearchQuestion.update_index_doc.assert_called_once()
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_update(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -1374,7 +1487,9 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_not_equals(rsc_updated, None)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_validation_update(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -1419,7 +1534,9 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(val_updated.get('admin'), data_dict.get('admin'))
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_validation_status(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -1452,7 +1569,9 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(val_updated.get('status'), 'validated')
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_validation_revert(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         context = {
             'user': user.get('name'),
@@ -1489,7 +1608,9 @@ class TestKWHUpdateActions(ActionsBase):
         assert_equals(val_reverted.get('status'), 'not_validated')
 
     @monkey_patch(Visualization, 'update_index_doc', mock.Mock())
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_view_update(self):
+        Dataset.read_from_hdx.return_value = ""
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
@@ -1609,7 +1730,9 @@ class TestKWHUpdateActions(ActionsBase):
             data_dict.get('description')
         )
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_validate_update(self):
+        Dataset.read_from_hdx.return_value = ""
         user = factories.Sysadmin()
         test_auth_user = _test_user()
         context = {
@@ -1691,7 +1814,9 @@ class TestKWHUpdateActions(ActionsBase):
                                                               data_dict)
         assert_equals(len(res), 26)
 
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_resource_data(self):
+        Dataset.read_from_hdx.return_value = ""
 
         user = factories.Sysadmin()
         context = {
@@ -2293,7 +2418,9 @@ class TestTagsActions(ActionsBase):
     @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     @monkey_patch(Visualization, 'add_to_index', mock.Mock())
     @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_tag_delete(self):
+        Dataset.read_from_hdx.return_value = ""
         vocab = self._vocabulary_create('vocabulary1')
         tag1 = self._tag_create('tag1')
 
@@ -2368,7 +2495,9 @@ class TestTagsActions(ActionsBase):
     @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     @monkey_patch(Visualization, 'add_to_index', mock.Mock())
     @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_group_tags(self):
+        Dataset.read_from_hdx.return_value = ""
         vocab1 = self._vocabulary_create('vocabulary1')
         tag1 = self._tag_create('tag1')
 
@@ -2464,10 +2593,10 @@ class TestUserProfileActions(ActionsBase):
                     'id': data['id'],
                     'name': data['id'],
                 }
-            
+
             return _tag_show
 
-        toolkit.get_action.side_effect =  _get_action   
+        toolkit.get_action.side_effect = _get_action
 
         context = get_regular_user_context()
 

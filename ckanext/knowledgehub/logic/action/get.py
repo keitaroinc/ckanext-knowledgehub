@@ -39,6 +39,12 @@ from ckan.controllers.admin import get_sysadmins
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 
+from hdx.utilities.easy_logging import setup_logging
+from hdx.hdx_configuration import Configuration
+from hdx.data.dataset import Dataset
+from hdx.data.organization import Organization
+from hdx.data.resource import Resource
+
 
 log = logging.getLogger(__name__)
 
@@ -1827,6 +1833,8 @@ def tag_show(context, data_dict):
     include_datasets = asbool(data_dict.get('include_datasets', False))
 
     tag = ExtendedTag.get(id, vocab_id_or_name=data_dict.get('vocabulary_id'))
+    context['tag'] = tag
+
     if tag is None:
         raise NotFound
 

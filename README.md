@@ -133,6 +133,27 @@ ckanext.knowledgehub.dashboards_per_page = 20
     # (optional, default: 'organizations groups tags)
     knowledgehub.search.facets = organizations groups tags
     ```
+6. HDX Configuration
+    ```
+    # ( mandatory )
+    ckanext.knowledgehub.hdx.api_key = f6fc4e44-98a4-44a0-9c9d-53acaa86f80c
+    ```
+    ```
+    # ( mandatory )
+    ckanext.knowledgehub.hdx.site = test
+    ```
+    ```
+    # ( mandatory )
+    ckanext.knowledgehub.hdx.owner_org = abf4ca86-8e69-40b1-92f7-71509992be88
+    ```
+    ```
+    # ( mandatory )
+    ckanext.knowledgehub.hdx.dataset_source = knowledgehub
+    ```
+    ```
+    # ( mandatory )
+    ckanext.knowledgehub.hdx.maintainer = savarimu
+    ```
 
 
 

@@ -127,6 +127,43 @@ Return type:
 
 dictionary
 
+`upsert_resource_to_hdx`(_context_, _data\_dict_)
+
+Create new if not exists or update the existing resource in HDX
+
+Parameters:
+
+*   **resource_id** (_string_) – the ID of the resource in knowledgehub
+*   **dataset_name** (_string_) – the name of the dataset in knowledgehub/HDX
+*   **hdx_rsc_name** (_string_) – the name of the resource in HDX that we want
+        to update. If not present it will try to create new one (optional)
+
+Returns:
+
+the created/updated resource
+
+Return type:
+
+dictionary
+
+`upsert_dataset_to_hdx`(_context_, _data\_dict_)
+
+Push data resources that belongs to the dataset on HDX
+
+Parameters:
+
+*   **id** (_string_) – the dataset ID in knowledgehub
+*   **metadata_only** (_boolean_) – whether to update only metadata of dataset
+
+Returns:
+
+the dataset created/pushed on HDX or error message
+
+Return type:
+
+dictionary
+
+
 action.delete module
 --------------------
 
