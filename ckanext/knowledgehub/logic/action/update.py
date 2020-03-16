@@ -11,14 +11,14 @@ from ckanext.datastore.backend import DatastoreBackend
 import ckanext.datastore.logic.schema as dsschema
 from ckanext.datastore.logic.action import set_datastore_active_flag
 
+from hdx.data.dataset import Dataset
 
 import ckan.lib.navl.dictization_functions
 _validate = ckan.lib.navl.dictization_functions.validate
 import ckanext.datastore.helpers as datastore_helpers
 
 
-
-from ckan.common import _
+from ckan.common import _, config
 import ckan.logic as logic
 from ckan.plugins import toolkit
 from ckan import model
@@ -330,6 +330,7 @@ def resource_update(context, data_dict):
 
     result = ckan_rsc_update(context, data_dict)
     schedule_data_quality_check(result['package_id'])
+
     return result
 
 
@@ -528,9 +529,25 @@ def package_update(context, data_dict):
     u'''Wraps the CKAN's core 'package_update' function to schedule a check for
     Data Quality metrics calculation when the package has been updated.
     '''
+
+    package_old_info = toolkit.get_action('package_show')(context, {
+        'id': data_dict.get('id')
+    })
+
+    hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
+
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
 
+    if hdx_dataset:
+        upsert_dataset_to_hdx = {
+            'id': package_old_info.get('id'),
+            'metadata_only': False
+        }
+        logic.get_action('upsert_dataset_to_hdx')(
+            context,
+            upsert_dataset_to_hdx
+        )
     try:
         data_dict = {
             'type': 'dataset',
@@ -1068,7 +1085,6 @@ def keyword_update(context, data_dict):
     return kwd_dict
 
 
-
 @chained_action
 def datastore_create(action, context, data_dict):
     '''Adds a new table to the DataStore.
@@ -1438,7 +1454,6 @@ def user_profile_update(context, data_dict):
         if interests.get(interest_type) is not None:
             profile.interests[interest_type] = interests[interest_type]
 
-    
     if interests.get('tags') is not None:
         profile.interests['tags'] = []
         for tag in interests.get('tags', []):
@@ -1452,7 +1467,6 @@ def user_profile_update(context, data_dict):
             except Exception as e:
                 log.warning('Failed to load tag %s. Error: %s', tag, str(e))
 
-    
     if profile.interests:
         flag_modified(profile, 'interests')
 

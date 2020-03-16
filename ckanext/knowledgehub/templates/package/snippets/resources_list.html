@@ -9,18 +9,21 @@ Example:
   {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources %}
 
 #}
+
+{% resource 'knowledgehub/javascript/push_data_to_hdx.js' %}
+
 <section id="dataset-resources" class="resources">
   <h3>{{ _('Data and Resources') }}</h3>
   {% block resource_list %}
   {% if resources %}
   <ul class="{% block resource_list_class %}resource-list{% endblock %}">
     {% block resource_list_inner %}
-      {% set can_edit = h.check_access('package_update', {'id':pkg.id }) %}
-      {% for resource in resources %}
-        {% if resource.get('name') != system_resource.get('name') %}
-          {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource, can_edit=can_edit %}
-        {% endif %}
-      {% endfor %}
+    {% set can_edit = h.check_access('package_update', {'id':pkg.id }) %}
+    {% for resource in resources %}
+    {% if resource.get('name') != system_resource.get('name') %}
+    {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource, can_edit=can_edit %}
+    {% endif %}
+    {% endfor %}
     {% endblock %}
     {% if not hide_merge_btn %}
     <li class="resource-item" style="text-align: end">
@@ -28,9 +31,18 @@ Example:
         {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
     </li>
     {% endif %}
+    <input id="package-name" value="{{ pkg.name }}" type="hidden" />
+    {% if h.check_access('package_update', {'id':pkg.id }) %}
+    <li class="resource-item" style="text-align: end">
+      <div id="hdx-loader"></div>
+      <button class="btn btn-success" id="pushHDX" type="submit">
+        <i class="fa fa-upload"></i>{{ _(' Push dataset to HDX') }}
+      </button>
+    </li>
+    {% endif %}
     {% if system_resource %}
-      <h3>{{ _('System Resources') }}</h3>
-      {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=system_resource, can_edit=can_edit %}
+    <h3>{{ _('System Resources') }}</h3>
+    {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=system_resource, can_edit=can_edit %}
     {% endif %}
   </ul>
   {% else %}
