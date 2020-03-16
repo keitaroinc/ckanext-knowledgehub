@@ -1461,6 +1461,8 @@ def get_datasets():
 
 
 def get_all_users():
+    '''Return the list of user dictionaties(name, display_name)'''
+
     users_all_fields = toolkit.get_action('user_list')(
         {'ignore_auth': True},
         {'all_fields': True}
@@ -1493,6 +1495,19 @@ class Entity(Enum):
 
 
 def shared_with_users_notification(editor_obj, users, data, entity, perm):
+    ''' Send notification to the users to which permission is granted or
+    revoked on dataset/dashboard.
+    :param editor_obj: the user object of the editor
+    :type editor_obj: ckan.model.User
+    :param users: a list of user name or ID
+    :type users: list
+    :param data: a dictionary(at least title and name) of Dataset or Dashboard
+    :type data: dict
+    :param entity: enumeration, can be Entity.Dataset or Entity.Dashboard
+    :type entity: enumeration
+    :param perm: enumeration, can be Permission.Granted or Permission.Revoked
+    :type perm: enumeration
+    '''
     for u in users:
         try:
             user = toolkit.get_action('user_show')(
