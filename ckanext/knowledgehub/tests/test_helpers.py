@@ -1303,3 +1303,65 @@ class TestKWHHelpers(ActionsBase):
         h_rm_rqs = kwh_helpers.remove_rqs_from_dataset(rsc_view)
 
         assert_equals(h_rm_rqs.get('message'), 'OK')
+
+    def test_get_all_users(self):
+        user_dict = {
+            'name': 'knowledgehub-test',
+            'email': 'test@company.com',
+            'password': 'knowledgehub',
+            'fullname': 'Knowledgehub Test'
+        }
+        toolkit.get_action('user_create')(
+            get_context(),
+            user_dict
+        )
+
+        users = kwh_helpers.get_all_users()
+
+        assert_equals(len(users), 1)
+
+    def test_shared_with_users_notification(self):
+        class Editor:
+            def __init__(self, name, fullname):
+                self.name = name
+                self.fullname = fullname
+
+        user_dict = {
+            'name': 'knowledgehub-test',
+            'email': 'test@company.com',
+            'password': 'knowledgehub',
+            'fullname': 'Knowledgehub Test'
+        }
+        user = toolkit.get_action('user_create')(
+            get_context(),
+            user_dict
+        )
+        users = [user['name']]
+
+        editor = Editor('john', 'John Smith')
+
+        dataset = create_dataset()
+
+        kwh_helpers.shared_with_users_notification(
+            editor,
+            users,
+            dataset,
+            kwh_helpers.Entity.Dataset,
+            kwh_helpers.Permission.Granted
+        )
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard',
+            'description': 'Dashboard description',
+            'type': 'internal'
+        }
+        dashboard = create_actions.dashboard_create(get_context(), data_dict)
+
+        kwh_helpers.shared_with_users_notification(
+            editor,
+            users,
+            dashboard,
+            kwh_helpers.Entity.Dashboard,
+            kwh_helpers.Permission.Granted
+        )

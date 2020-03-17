@@ -162,7 +162,7 @@ class CreateView(MethodView):
                                      u' to create a dashboard'))
         return context
 
-    def get(self, data=None, errors=None, error_summary=None):
+    def get(self, data={}, errors=None, error_summary=None):
         return base.render(
             u'dashboard/base_form_page.html',
             extra_vars={'data': data,
@@ -178,6 +178,10 @@ class CreateView(MethodView):
             data_dict = clean_dict(
                 dict_fns.unflatten(tuplize_dict(
                     parse_params(request.form))))
+
+            shared_with_users = data_dict.get('shared_with_users')
+            if shared_with_users:
+                data_dict['shared_with_users'] = json.dumps(shared_with_users)
 
             if data_dict.get('type') == 'internal':
                 indicators = []
@@ -283,6 +287,11 @@ class EditView(MethodView):
         dashboard = data
         errors = errors or {}
 
+        if data.get('shared_with_users'):
+            data['shared_with_users'] = json.loads(data['shared_with_users'])
+        else:
+            data['shared_with_users'] = []
+
         if data.get('type') == 'internal':
             data['indicators'] = json.loads(data['indicators'])
 
@@ -328,6 +337,10 @@ class EditView(MethodView):
                     parse_params(request.form)
                 ))
             )
+
+            shared_with_users = data_dict.get('shared_with_users')
+            if shared_with_users:
+                data_dict['shared_with_users'] = json.dumps(shared_with_users)
 
             if data_dict.get('type') == 'internal':
                 indicators = []

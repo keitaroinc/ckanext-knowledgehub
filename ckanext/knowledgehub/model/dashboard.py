@@ -38,6 +38,7 @@ dashboard_table = Table(
     Column('indicators', types.UnicodeText),
     Column('tags', types.UnicodeText),
     Column('datasets', types.UnicodeText),
+    Column('shared_with_users', types.UnicodeText),
     Column('created_at', types.DateTime,
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,
@@ -67,6 +68,7 @@ class Dashboard(DomainObject, Indexed):
         unprefixed('idx_keywords'),
         unprefixed('idx_tags'),
         unprefixed('idx_research_questions'),
+        unprefixed('idx_shared_with_users'),
     ]
     doctype = 'dashboard'
 
@@ -161,6 +163,10 @@ class Dashboard(DomainObject, Indexed):
                     keywords.add(keyword_obj.get('name'))
                     if keywords:
                         data['keywords'] = ','.join(keywords)
+
+        shared_with_users = data.get('shared_with_users')
+        if shared_with_users:
+            data['idx_shared_with_users'] = json.loads(shared_with_users)
 
         data['research_questions'] = ','.join(list_rqs)
         data['organizations'] = list(set(organizations))

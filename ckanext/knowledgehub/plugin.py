@@ -7,7 +7,7 @@ from routes.mapper import SubMapper
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan import logic
-from ckan.lib.plugins import DefaultDatasetForm
+from ckan.lib.plugins import DefaultDatasetForm, DefaultPermissionLabels
 from ckan.common import config
 
 
@@ -47,7 +47,7 @@ _TIMEOUT = 60000  # milliseconds
 log = getLogger(__name__)
 
 
-class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
+class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPermissionLabels):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IActions)
@@ -58,6 +58,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(interfaces.IDatastoreBackend, inherit=True)
     plugins.implements(plugins.IAuthenticator, inherit=True)
+    plugins.implements(plugins.IPermissionLabels)
 
     # IConfigurer
     def update_config(self, config_):
@@ -167,6 +168,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'keyword_list': h.keyword_list,
             'get_datasets': h.get_datasets,
             'get_notifications': h.get_notifications,
+            'get_all_users': h.get_all_users,
         }
 
     # IDatasetForm
@@ -193,7 +195,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'sub_theme': package_defaults,
             'research_question': package_defaults,
             'country_code_displacement': package_defaults,
-            'country_code_origin': package_defaults
+            'country_code_origin': package_defaults,
+            'shared_with_users': package_defaults
         })
 
         schema['resources'].update({
@@ -238,7 +241,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
             'sub_theme': package_defaults,
             'research_question': package_defaults,
             'country_code_displacement': package_defaults,
-            'country_code_origin': package_defaults
+            'country_code_origin': package_defaults,
+            'shared_with_users': package_defaults
         })
 
         schema['resources'].update({
@@ -425,6 +429,46 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         if not is_flask_request():
             h.check_user_profile_preferences()
         return super(KnowledgehubPlugin, self).identify()
+
+    # IPermissionLabels
+    def get_dataset_labels(self, dataset_obj):
+        if dataset_obj.state == u'active' and not dataset_obj.private:
+            return [u'public']
+
+        if dataset_obj.owner_org:
+            labels = [u'member-%s' % dataset_obj.owner_org]
+            shared_with_users = dataset_obj.extras.get('shared_with_users')
+            if isinstance(shared_with_users, unicode):
+                if shared_with_users.startswith('{') and \
+                        shared_with_users.endswith('}'):
+                        labels.extend(
+                            list(map(
+                                lambda user: 'user-%s' % user,
+                                shared_with_users[1:-1].split(',')))
+                        )
+                else:
+                    labels.append(u'user-%s' % shared_with_users)
+            if isinstance(shared_with_users, list):
+                labels.extend(
+                    list(map(lambda user: 'user-%s' % user, shared_with_users))
+                )
+
+            return labels
+
+        return [u'creator-%s' % dataset_obj.creator_user_id]
+
+    def get_user_dataset_labels(self, user_obj):
+        labels = [u'public']
+        if not user_obj:
+            return labels
+
+        labels.append(u'creator-%s' % user_obj.id)
+        labels.append(u'user-%s' % user_obj.name)
+
+        orgs = logic.get_action(u'organization_list_for_user')(
+            {u'user': user_obj.id}, {u'permission': u'read'})
+        labels.extend(u'member-%s' % o[u'id'] for o in orgs)
+        return labels
 
 
 class DatastorePostgresqlBackend(DatastorePostgresqlBackend):
