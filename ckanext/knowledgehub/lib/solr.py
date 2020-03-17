@@ -41,6 +41,16 @@ def _prepare_search_query(query):
     return query
 
 
+def escape_str(s):
+    if not s:
+        return s
+    s = s.strip()
+    if s == '*':
+        return s
+    s = s.replace('"', '\\"')
+    return '"%s"' % s
+
+
 def ckan_params_to_solr_args(data_dict):
     u'''Transforms the parameters parsed by CKAN as data dict to the
     appropriate (py)solr query arguments.
@@ -63,28 +73,19 @@ def ckan_params_to_solr_args(data_dict):
         if provided.get(argn) is not None:
             solr_args[argn] = provided.pop(argn)
 
-    def _escape_str(s):
-        if not s:
-            return s
-        s = s.strip()
-        if s == '*':
-            return s
-        s = s.replace('"', '\\"')
-        return '"%s"' % s
-
     q = []
     if solr_args.get('q'):
         _q = solr_args.get('q')
         if isinstance(_q, str) or isinstance(_q, unicode):
-            q.append(_escape_str(_q))
+            q.append(escape_str(_q))
         elif isinstance(_q, dict):
             for prop, val in _q.items():
-                q.append('%s:%s' % (str(prop), _escape_str(str(val))))
+                q.append('%s:%s' % (str(prop), escape_str(str(val))))
         else:
             raise ValidationError({'q': _('Invalid value type')})
 
     for prop, val in provided.items():
-        q.append('%s:%s' % (str(prop), _escape_str(str(val))))
+        q.append('%s:%s' % (str(prop), escape_str(str(val))))
 
     solr_args['q'] = ' AND '.join(sorted(q))
 
