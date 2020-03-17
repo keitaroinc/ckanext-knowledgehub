@@ -32,7 +32,7 @@ class TestIndex(helpers.FunctionalTestBase):
         index.get_connection.return_value = solr_conn_mock
 
         solr_conn_mock.search.return_value = Results({
-            'response':{
+            'response': {
                 'docs': [{
                     'id': 'aaa',
                     'p1': 'v1',
@@ -163,7 +163,7 @@ class TestHelperMethods(helpers.FunctionalTestBase):
         })
 
         assert_equals({
-            'q': 'p1:v1 AND p2:v2',
+            'q': 'p1:"v1" AND p2:"v2"',
             'fq': {
                 'f1': 'v1',
                 'f2': 'v2',

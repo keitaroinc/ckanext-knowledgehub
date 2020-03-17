@@ -393,7 +393,22 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
                     keywords.append(tag['keyword_id'])
                 pkg_dict['idx_tags'].append(tag.get('name'))
 
-            pkg_dict['extras_keywords'] = ','.join(keywords)
+            extras_keywords = []
+            for keyword in keywords:
+                try:
+                    keyword = toolkit.get_action('keyword_show')({
+                        'ignore_auth': True,
+                    }, {
+                        'id': keyword,
+                    })
+                    extras_keywords.append(keyword['name'])
+                except Exception as e:
+                    log.warning('Failed to get keyword %s. Error: %s',
+                                keyword,
+                                str(e))
+                    log.exception(e)
+
+            pkg_dict['extras_keywords'] = ','.join(extras_keywords)
             pkg_dict['idx_keywords'] = keywords
 
         except Exception as e:
