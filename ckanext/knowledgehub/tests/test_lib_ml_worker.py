@@ -20,10 +20,13 @@ class TestWorker(helpers.FunctionalTestBase):
 
         redis_mock.get.return_value = None
 
-        worker = Worker('test_worker', 1000, redis=redis_mock)
+        worker = Worker('test_worker', 100000, redis=redis_mock)
         worker.run()
 
-        redis_mock.setex.assert_called_once_with('ckan:worker:test_worker:heartbeat', 'RUNNING', 2)
+        from time import sleep
+        sleep(2)
+
+        redis_mock.setex.assert_called_once_with('ckan:worker:test_worker:heartbeat', 'RUNNING', 101)
         redis_mock.delete.assert_called_once()
 
     def test_run_worker_heartbeat(self):
