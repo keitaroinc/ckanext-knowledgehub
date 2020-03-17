@@ -42,8 +42,8 @@ def _prepare_search_query(query):
 
 
 def ckan_params_to_solr_args(data_dict):
-    u'''Transforms the parameters parsed by CKAN as data dict to the appropriate
-    (py)solr query arguments.
+    u'''Transforms the parameters parsed by CKAN as data dict to the
+    appropriate (py)solr query arguments.
 
     Every entry in the dictionary will be validated and transformed to a solr
     arguments. Valid argument names are 'q', 'fq', 'rows', 'start', 'sort',
@@ -62,19 +62,29 @@ def ckan_params_to_solr_args(data_dict):
     for argn in VALID_SOLR_ARGS:
         if provided.get(argn) is not None:
             solr_args[argn] = provided.pop(argn)
+
+    def _escape_str(s):
+        if not s:
+            return s
+        s = s.strip()
+        if s == '*':
+            return s
+        s = s.replace('"', '\\"')
+        return '"%s"' % s
+
     q = []
     if solr_args.get('q'):
         _q = solr_args.get('q')
         if isinstance(_q, str) or isinstance(_q, unicode):
-            q.append(_q)
+            q.append(_escape_str(_q))
         elif isinstance(_q, dict):
             for prop, val in _q.items():
-                q.append('%s:%s' % (str(prop), str(val)))
+                q.append('%s:%s' % (str(prop), _escape_str(str(val))))
         else:
             raise ValidationError({'q': _('Invalid value type')})
 
     for prop, val in provided.items():
-        q.append('%s:%s' % (str(prop), str(val)))
+        q.append('%s:%s' % (str(prop), _escape_str(str(val))))
 
     solr_args['q'] = ' AND '.join(sorted(q))
 
@@ -293,8 +303,8 @@ def to_indexed_doc(data, doctype, fields):
 
 
 def indexed_doc_to_data_dict(doc, fields):
-    u'''Mapps a document fetched from the index, to a document with the original
-    structure based on the fields mappings.
+    u'''Mapps a document fetched from the index, to a document with the
+    original structure based on the fields mappings.
 
     This function basically does the reverse process of `to_indexed_doc`.
 
@@ -410,7 +420,8 @@ class Indexed:
 
     @classmethod
     def rebuild_index(cls):
-        u'''Performs a full rebuild of the index for the documents of this type.
+        u'''Performs a full rebuild of the index for the documents of this
+        type.
 
         It collects the data from the database for this model, transforms and
         inserts the documents into the index. First all documents of this type
