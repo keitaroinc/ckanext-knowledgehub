@@ -118,6 +118,10 @@ class ResearchQuestion(DomainObject, Indexed):
         return query
 
     @classmethod
+    def get_by_id(cls, ref_id):
+        return Session.query(cls).get(ref_id)
+
+    @classmethod
     def update(cls, filter, data):
         obj = Session.query(cls).filter_by(**filter)
         obj.update(data)

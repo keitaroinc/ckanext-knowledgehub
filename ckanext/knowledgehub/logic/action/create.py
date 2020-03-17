@@ -48,6 +48,7 @@ from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.lib.profile import user_profile_service
+from ckanext.knowledgehub.logic.jobs import schedule_update_index
 
 log = logging.getLogger(__name__)
 
@@ -1135,6 +1136,8 @@ def keyword_create(context, data_dict):
         db_tag.save()
         tag_dict = _table_dictize(db_tag, context)
         kwd_dict['tags'].append(tag_dict)
+
+        schedule_update_index(tag_dict['name'])
 
     return kwd_dict
 

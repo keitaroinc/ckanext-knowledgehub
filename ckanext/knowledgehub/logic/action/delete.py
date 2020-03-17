@@ -25,6 +25,7 @@ from ckanext.knowledgehub.model import (
     Keyword,
     KWHData
 )
+from ckanext.knowledgehub.logic.jobs import schedule_update_index
 
 
 log = logging.getLogger(__name__)
@@ -244,6 +245,8 @@ def keyword_delete(context, data_dict):
 
     Session.delete(Keyword.get(keyword['id']))
     Session.commit()
+
+    schedule_update_index(keyword['name'])
 
 
 def tag_delete_by_name(context, data_dict):
