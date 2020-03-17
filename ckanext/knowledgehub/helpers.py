@@ -946,14 +946,11 @@ def get_searched_visuals(query):
     visuals = []
     for vis in list_visuals_searched['results']:
         visual = model.Session.query(ResourceView)\
-            .filter(ResourceView.resource_id == vis['resource_id'])
+            .filter(ResourceView.id == vis['id'])
         data_dict_format = model_dictize\
             .resource_view_list_dictize(visual, _get_context())
-        # get the second part of the list,
-        # since the first one is the recline view!
-        if len(data_dict_format) > 1:
-            data_dict_format = data_dict_format[1]
-            visuals.append(data_dict_format)
+        visuals.append(data_dict_format)
+
     list_visuals_searched['results'] = visuals
     list_visuals_searched['pager'] = _get_pager(list_visuals_searched,
                                                 'visualizations')
