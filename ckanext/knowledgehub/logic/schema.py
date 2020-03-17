@@ -212,9 +212,20 @@ def tag_update_schema():
         'keyword_id': [ignore_missing, unicode]
     }
 
+
 def hdx_resource():
     return {
         'resource_id': [not_empty, unicode],
         'dataset_name': [not_empty, unicode],
         'hdx_rsc_name': [ignore_missing, unicode]
+    }
+
+
+def notification_create_schema():
+    return {
+        'title': [not_empty, unicode],
+        'description': [ignore_missing, unicode],
+        'link': [ignore_missing],
+        'recepient': [not_empty, unicode],
+        'image': [ignore_missing],
     }

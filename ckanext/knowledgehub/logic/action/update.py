@@ -14,11 +14,9 @@ from ckanext.datastore.logic.action import set_datastore_active_flag
 from hdx.data.dataset import Dataset
 
 import ckan.lib.navl.dictization_functions
-_validate = ckan.lib.navl.dictization_functions.validate
+from ckan.common import _, config
 import ckanext.datastore.helpers as datastore_helpers
 
-
-from ckan.common import _, config
 import ckan.logic as logic
 from ckan.plugins import toolkit
 from ckan import model
@@ -41,6 +39,7 @@ from ckanext.knowledgehub.model import UserIntents, DataQualityMetrics
 from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.model.keyword import ExtendedTag
+from ckanext.knowledgehub.model import Notification
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -56,6 +55,8 @@ log = logging.getLogger(__name__)
 _df = lib.navl.dictization_functions
 _table_dictize = lib.dictization.table_dictize
 _get_or_bust = logic.get_or_bust
+_validate = ckan.lib.navl.dictization_functions.validate
+
 
 check_access = toolkit.check_access
 NotFound = logic.NotFound
@@ -188,8 +189,9 @@ def sub_theme_update(context, data_dict):
     except Exception as e:
         log.debug(
             'Unable to update sub-theme {} in knowledgehub data: {}'.format(
-            sub_theme_data.get('id'), str(e)
-        ))
+                sub_theme_data.get('id'),
+                str(e))
+        )
 
     return sub_theme_data
 
@@ -265,8 +267,9 @@ def research_question_update(context, data_dict):
     except Exception as e:
         log.debug(
             'Unable to update sub-theme {} in knowledgehub data: {}'.format(
-                rq_data.get('id'), str(e)
-        ))
+                    rq_data.get('id'),
+                    str(e))
+        )
 
     return rq_data
 
@@ -401,9 +404,9 @@ def resource_view_update(context, data_dict):
         logic.get_action(u'kwh_data_update')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to update visualization %s in knowledgehub data: %s'
-                % (resource_view_data.get('id'), str(e))
-            )
+            'Unable to update visualization %s in knowledgehub data: %s' %
+            (resource_view_data.get('id'), str(e))
+        )
 
     # this check is done for the unit tests
     if resource_view_data.get('__extras'):
@@ -766,7 +769,7 @@ def _patch_data_quality(context, data_dict, _type):
                 else:
                     try:
                         values[field] = _ftype(value)
-                    except:
+                    except Exception:
                         raise ValidationError({field: _('Invalid Value Type')})
     db_metric = DataQualityMetrics.get(_type, data_dict['id'])
     if not db_metric:
@@ -1486,3 +1489,21 @@ def user_profile_update(context, data_dict):
                     user_id, str(e))
 
     return _table_dictize(profile, context)
+
+
+def notifications_read(context, data_dict):
+    '''Marks a list of notifications as read.
+
+    The notifications must belong to this user (from context). Those that don't
+    and belong to a different user will not be marked as read.
+
+    :param notifications: `list` of notification IDs to mark as read. If not
+        specified, ALL notifications for the current user will be marked as
+        read.
+    '''
+    check_access('notifications_read', context)
+    user = context.get('auth_user_obj')
+
+    Notification.mark_read(user.id, data_dict.get('notifications'))
+
+    return {}

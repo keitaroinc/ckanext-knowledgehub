@@ -156,3 +156,11 @@ def push_data_to_hdx(context, data_dict):
         Authorization check for pushing data to hdx. Authorized users.
     '''
     return {'success': True}
+
+
+def notification_list(context, data_dict=None):
+    return {'success': True}
+
+
+def notification_show(context, data_dict):
+    return {'success': True}
