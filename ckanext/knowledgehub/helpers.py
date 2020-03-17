@@ -947,14 +947,11 @@ def get_searched_visuals(query):
     visuals = []
     for vis in list_visuals_searched['results']:
         visual = model.Session.query(ResourceView)\
-            .filter(ResourceView.resource_id == vis['resource_id'])
+            .filter(ResourceView.id == vis['id'])
         data_dict_format = model_dictize\
             .resource_view_list_dictize(visual, _get_context())
-        # get the second part of the list,
-        # since the first one is the recline view!
-        if len(data_dict_format) > 1:
-            data_dict_format = data_dict_format[1]
-            visuals.append(data_dict_format)
+        visuals.append(data_dict_format)
+
     list_visuals_searched['results'] = visuals
     list_visuals_searched['pager'] = _get_pager(list_visuals_searched,
                                                 'visualizations')
@@ -1460,6 +1457,21 @@ def get_datasets():
     return datasets
 
 
+def get_notifications(offset=0, limit=10):
+    context = _get_context()
+    notifications = toolkit.get_action('notification_list')(
+        context,
+        {
+            'offset': offset,
+            'limit': limit,
+        }
+    )
+    if notifications.get('count', 0) > offset + limit + 1:
+        notifications['has_more'] = True
+    
+    return notifications
+
+
 def get_all_users():
     '''Return the list of user dictionaties(name, display_name)'''
 
@@ -1538,3 +1550,4 @@ def shared_with_users_notification(editor_obj, users, data, entity, perm):
                 {'ignore_auth': True}, data_dict)
         except Exception as e:
             log.debug('Unable to send notification: %s' % str(e))
+

@@ -1,0 +1,107 @@
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.notification-dropdown {
+    z-index: 1001;
+    margin-top: 0;
+    border-radius: 5px 0 0 5px;
+
+    .notifications-show-more {
+        color: @brand-primary  !important;
+    }
+
+}
+
+.notifications-list {
+    z-index: 1001;
+    width: 250px;
+    //height: 50vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    margin-top: 0px;
+    padding: 0;
+    height: auto;
+    max-height: 300px;
+    animation: fadeIn 0.4s;
+
+
+    .notification-item {
+        color: @gray-dark;
+        cursor: pointer;
+        padding: 15px 10px 15px 10px;
+        margin-top: 0;
+        background-color: lighten(@gray-lightest, 20%);
+
+
+        &:hover {
+            transition: 0.2s;
+            color: @gray-dark;
+            background: lighten(@brand-primary, 40%);
+
+        }
+
+
+        .notification-title {
+            color: @gray-darker;
+            display: block;
+            size: 1.3em;
+            line-height: normal;
+            padding: 0px;
+
+            &:hover {
+                color: @gray-darker;
+            }
+        }
+
+        .notification-content {
+            margin-left: 4px;
+        }
+
+        .notification-icon {
+            padding: 5px;
+            display: block;
+            font-size: 1.4em;
+            border-radius: 32px;
+
+            .icon {
+                color: #fff !important;
+
+            }
+        }
+    }
+}
+
+.notification-border {
+    border-bottom: 0.4px @gray-lightest solid;
+
+}
+
+
+.notifications-header {
+
+    .badge {
+        border-radius: 4px;
+        padding: 1px 6px;
+        background-color: #000;
+    }
+
+    .dropdown {
+        cursor: pointer;
+    }
+
+    .dropdown.open {
+        background-color: @gray-lightest;
+
+        .fa {
+            color: @gray-dark;
+        }
+
+    }
+}

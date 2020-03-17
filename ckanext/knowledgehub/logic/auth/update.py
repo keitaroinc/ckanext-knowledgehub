@@ -102,3 +102,7 @@ def user_profile_update(context, data_dict):
 @toolkit.chained_auth_function
 def datastore_create(action, context, data_dict=None):
     return {'success': True}
+
+
+def notifications_read(context, data_dict):
+    return {'success': True}

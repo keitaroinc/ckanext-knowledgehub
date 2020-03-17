@@ -2646,3 +2646,86 @@ class TestUserProfileActions(ActionsBase):
         assert_true(results is not None)
         assert_true(isinstance(results, list))
         assert_true(len(results) > 0)
+
+
+class TestNotificationsActions(ActionsBase):
+
+    def test_notification_create(self):
+        context = get_regular_user_context()
+        notification = create_actions.notification_create(context, {
+            'title': 'title',
+            'description': 'test desc',
+            'link': '/link',
+            'image': '/image.url.png',
+            'recepient': context['user'],
+        })
+
+        assert_true(notification is not None)
+        assert_equals(notification.get('title'), 'title')
+        assert_equals(notification.get('description'), 'test desc')
+        assert_equals(notification.get('link'), '/link')
+        assert_equals(notification.get('image'), '/image.url.png')
+        assert_true(notification.get('id') is not None)
+        assert_true(notification.get('created_at') is not None)
+        assert_equals(notification.get('seen'), False)
+
+    def test_notification_list(self):
+        context = get_regular_user_context()
+        for i in range(0, 3):
+            create_actions.notification_create(context, {
+                'title': 'title-%d' % i,
+                'description': 'test desc %d' % i,
+                'link': '/link',
+                'image': '/image.url.png',
+                'recepient': context['user'],
+            })
+
+        notifications = get_actions.notification_list(context, {})
+        assert_true(notifications is not None)
+        assert_equals(notifications.get('count'), 3)
+        assert_equals(len(notifications.get('results', [])), 3)
+
+    def test_notification_show(self):
+        context = get_regular_user_context()
+
+        notification = create_actions.notification_create(context, {
+            'title': 'title',
+            'description': 'test desc',
+            'link': '/link',
+            'image': '/image.url.png',
+            'recepient': context['user'],
+        })
+
+        result = get_actions.notification_show(context, {
+            'id': notification['id']
+        })
+
+        assert_equals(notification, result)
+
+    def test_notifications_read(self):
+        context = get_regular_user_context()
+
+        notifications = []
+        for i in range(0, 10):
+            notification = create_actions.notification_create(context, {
+                'title': 'title-%d' % i,
+                'description': 'test desc %d' % i,
+                'link': '/link',
+                'image': '/image.url.png',
+                'recepient': context['user'],
+            })
+            notifications.append(notification)
+
+        update_actions.notifications_read(context, {
+            'notifications': [n['id'] for n in notifications[0:3]],
+        })
+
+        unread = get_actions.notification_list(context, {})
+        assert_true(unread is not None)
+        assert_equals(unread.get('count'), 7)
+
+        # now mark all as read
+        update_actions.notifications_read(context, {})
+        unread = get_actions.notification_list(context, {})
+        assert_true(unread is not None)
+        assert_equals(unread.get('count'), 0)

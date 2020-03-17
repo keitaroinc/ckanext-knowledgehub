@@ -45,6 +45,7 @@ from ckanext.knowledgehub.model import UserQueryResult
 from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.model import ExtendedTag
+from ckanext.knowledgehub.model import Notification
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -176,8 +177,8 @@ def sub_theme_create(context, data_dict):
     except Exception as e:
         log.debug(
             'Unable to store sub-theme {} to knowledgehub data: {}'.format(
-                sub_theme_data.get('id'), str(e)
-        ))
+                sub_theme_data.get('id'),
+                str(e)))
 
     return sub_theme_data
 
@@ -260,8 +261,8 @@ def research_question_create(context, data_dict):
         logic.get_action('kwh_data_create')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to store research question %s to knowledgehub data: %s'
-                % (research_question_data.get('id'), str(e))
+            'Unable to store research question %s to knowledgehub data: %s' %
+            (research_question_data.get('id'), str(e))
         )
 
     return research_question_data
@@ -393,8 +394,8 @@ def resource_view_create(context, data_dict):
         logic.get_action('kwh_data_create')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to store visualization %s to knowledgehub data: %s'
-                % (rv_data.get('id'), str(e))
+            'Unable to store visualization %s to knowledgehub data: %s' %
+            (rv_data.get('id'), str(e))
         )
 
     # this check is because of the unit tests
@@ -510,8 +511,8 @@ def dashboard_create(context, data_dict):
         logic.get_action('kwh_data_create')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to store dashboard %s to knowledgehub data: %s'
-                % (dashboard_data.get('id'), str(e))
+            'Unable to store dashboard %s to knowledgehub data: %s' %
+            (dashboard_data.get('id'), str(e))
         )
 
     return dashboard_data
@@ -544,8 +545,8 @@ def package_create(context, data_dict):
         logic.get_action('kwh_data_create')(context, data_dict)
     except Exception as e:
         log.debug(
-            'Unable to store dataset %s to knowledgehub data: %s'
-                % (dataset.get('id'), str(e))
+            'Unable to store dataset %s to knowledgehub data: %s' %
+            (dataset.get('id'), str(e))
         )
 
     return dataset
@@ -610,8 +611,9 @@ def resource_validation_create(context, data_dict):
     '''
     check_access('resource_validation_create', context, data_dict)
 
+    resource_schema = knowledgehub_schema.resource_validation_schema()
     data, errors = _df.validate(data_dict,
-                                knowledgehub_schema.resource_validation_schema(),
+                                resource_schema,
                                 context)
 
     if errors:
@@ -664,8 +666,8 @@ def resource_validation_create(context, data_dict):
 @toolkit.side_effect_free
 def kwh_data_create(context, data_dict):
     ''' Store Knowledge Hub data needed for predictove search.
-    It keeps the title and description of KWH entities: themes, sub-themes, research
-    questions, datasets, visualizations and dashboards.
+    It keeps the title and description of KWH entities: themes, sub-themes,
+    research questions, datasets, visualizations and dashboards.
 
     :param type: the type of the entity, can be:
     [
@@ -1214,13 +1216,12 @@ def user_profile_create(context, data_dict):
         if data_dict.get(interest_type):
             profile.interests[interest_type] = data_dict[interest_type]
 
-
     profile.interests['tags'] = []
     for tag in data_dict.get('tags', []):
         try:
             tag = toolkit.get_action('tag_show')({
                 'ignore_auth': True,
-            },{
+            }, {
                 'id': tag,
             })
             profile.interests['tags'].append(tag['name'])
@@ -1470,3 +1471,50 @@ def upsert_dataset_to_hdx(context, data_dict):
 
     except Exception as e:
         log.debug('Unable to push dataset in HDX: %s' % str(e))
+
+
+def notification_create(context, data_dict):
+    '''Creates new notification intended for a particular user (recepient).
+
+    :param title: `str`, the notification title.
+    :param description: `str`, _optional_, the notification description.
+    :param link: `str`, URL,  optional link for this notification. When
+        displayed, the user can click on this notification and will be
+        redirected to this url.
+    :param image: `str`, optional url of an image to show along with the
+        notification.
+
+    :returns: `dict`, the newely created notification object.
+    '''
+    check_access('notification_create', context)
+
+    data, errors = _df.validate(
+        data_dict,
+        knowledgehub_schema.notification_create_schema(),
+        context
+    )
+
+    if errors:
+        raise ValidationError(errors)
+
+    recepient = data['recepient']
+
+    try:
+        user = toolkit.get_action('user_show')({
+            'ignore_auth': True,
+        }, {
+            'id': recepient,
+        })
+        recepient = user['id']
+    except logic.NotFound:
+        raise ValidationError({'recepient': _('No such user')})
+
+    notification = Notification(title=data['title'],
+                                description=data.get('description'),
+                                recepient=recepient,
+                                link=data.get('link'),
+                                image=data.get('image'))
+    notification.save()
+    model.Session.flush()
+
+    return _table_dictize(notification, context)
