@@ -1438,8 +1438,6 @@ def upsert_dataset_to_hdx(context, data_dict):
 
     except Exception as e:
         log.debug('Unable to push dataset in HDX: %s' % str(e))
-    
-    return {}
 
 
 def notification_create(context, data_dict):
