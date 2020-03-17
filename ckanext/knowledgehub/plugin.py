@@ -30,7 +30,6 @@ from ckanext.datastore.backend.postgres import create_alias
 from ckanext.datastore.backend.postgres import _unrename_json_field
 
 import ckanext.knowledgehub.helpers as h
-
 from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 from ckanext.knowledgehub.model.keyword import extend_tag_table

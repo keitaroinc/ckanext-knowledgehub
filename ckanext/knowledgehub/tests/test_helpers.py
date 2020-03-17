@@ -66,7 +66,6 @@ class ActionsBase(helpers.FunctionalTestBase):
         rnn_corpus_setup()
         os.environ["CKAN_INI"] = 'subdir/test.ini'
 
-        
         if not plugins.plugin_loaded('datastore'):
             plugins.load('datastore')
         if not plugins.plugin_loaded('datapusher'):
@@ -444,7 +443,6 @@ class TestKWHHelpers(ActionsBase):
         new_url = kwh_helpers.remove_space_for_url(url)
         assert_equals(new_url, 'http://host:port/lang/data-set')
 
-
     @monkey_patch(ResearchQuestion, 'add_to_index', mock.Mock())
     def test_get_rq_options(self):
 
@@ -681,7 +679,6 @@ class TestKWHHelpers(ActionsBase):
 
         assert_equals(len(res_data), 7)
 
-
     def test_get_geojson_properties(self):
 
         url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
@@ -713,7 +710,6 @@ class TestKWHHelpers(ActionsBase):
     #     helpers.call_action('datastore_create', **data)
     #     res = kwh_helpers.get_map_data(url, map_key_field, data_key_field, data_value_field, from_where)
     #     assert_equals(res, "")
-
 
     def test_format_date(self):
         date = "2019-11-21T10:09:05.900808"
