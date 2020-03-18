@@ -430,7 +430,13 @@ ckan.module('chart', function () {
                         },
                         x: {
                             type: 'category',
-                            categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
+                            //categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
+                            categories: categories.map(function(val){
+                                if (val && val.length > 13){
+                                    return val.substring(0, 11) + "...";
+                                }
+                                return val;
+                            }),
                             tick: {
                                 count: tick_count,
                                 rotate: x_text_rotate,
@@ -463,7 +469,13 @@ ckan.module('chart', function () {
                         },
                         x: {
                             type: 'category',
-                            categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
+                            // categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
+                            categories: categories.map(function(val){
+                                if (val && val.length > 13){
+                                    return val.substring(0, 11) + "...";
+                                }
+                                return val;
+                            }),
                             tick: {
                                 rotate: x_text_rotate,
                                 multiline: x_text_multiline,
@@ -536,7 +548,7 @@ ckan.module('chart', function () {
 
                 info.map(val => {
                     var x = $(".c3-title", chart.element).attr('x');
-                    //var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    var element = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
                     val.length > 30 ? val = val.substring(0, 30) + "..." : null;
                     element.textContent = val;
                     element.setAttributeNS(null, 'dy', '1.2em');
@@ -886,8 +898,8 @@ ckan.module('chart', function () {
 $(document).ready(function () {
 
     // hide these at the beginning
-    document.getElementById('chart_field_additional_tornado_value').style.display = "none"
-    document.getElementById('chart_additional_tornado_label').style.display = "none"
+    $('#chart_field_additional_tornado_value').css('display', 'none'); 
+    $('#chart_additional_tornado_label').css('display', 'none'); 
 
     $('#chart_field_type').change(function () {
         var e = document.getElementById("chart_field_type");

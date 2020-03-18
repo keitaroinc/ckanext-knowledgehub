@@ -4,7 +4,12 @@ from ckan.logic import get_action
 
 from sqlalchemy import Column, types
 
-from ckanext.knowledgehub.lib.solr import Indexed, mapped, unprefixed
+from ckanext.knowledgehub.lib.solr import (
+    Indexed,
+    mapped,
+    unprefixed,
+    DontIndexException
+)
 import json
 
 class Visualization(ResourceView, Indexed):
@@ -30,6 +35,10 @@ class Visualization(ResourceView, Indexed):
 
     @staticmethod
     def before_index(data):
+        # Index only charts
+        if data.get('view_type') not in  ['chart', 'map']:
+            raise DontIndexException(data.get('id'))
+
         resource_view = get_action('resource_view_show')(
             {'ignore_auth': True},
             {'id': data['id']})

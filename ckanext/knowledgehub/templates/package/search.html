@@ -193,7 +193,6 @@
                             <div class="flex flex-wrap" id="tabs-visualizations">
                                 {% set vis = search_results.results %}
                                 {% for resource_view in vis %}
-                                {% set resource_view = resource_view[0] %}
                                 <div class="col-xs-12 visualizations">
                                     {% if resource_view.view_type == 'chart' %}
                                     {% set chart_id = resource_view.id %}
