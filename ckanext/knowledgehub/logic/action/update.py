@@ -536,7 +536,7 @@ def package_update(context, data_dict):
     package_old_info = toolkit.get_action('package_show')(context, {
         'id': data_dict.get('id')
     })
-
+    print("<In package update>")
     try:
         hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
     except Exception as e:

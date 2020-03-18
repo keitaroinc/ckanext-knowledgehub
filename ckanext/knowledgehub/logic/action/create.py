@@ -325,9 +325,9 @@ def resource_create(context, data_dict):
                 data_dict['name'] = filename
 
             data_dict['upload'] = FlaskFileStorage(stream, filename)
-
+    print("<In resource create>")
     create_resource_kwh = ckan_rsc_create(context, data_dict)
-
+    print("<In resource create 2>")
     return create_resource_kwh
 
 
@@ -501,7 +501,7 @@ def dashboard_create(context, data_dict):
 
 def package_create(context, data_dict):
     dataset = ckan_package_create(context, data_dict)
-
+    print("<In package create>")
     try:
         data_dict = {
             'type': 'dataset',
