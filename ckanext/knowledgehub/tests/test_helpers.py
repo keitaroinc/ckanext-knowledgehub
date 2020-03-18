@@ -1365,3 +1365,9 @@ class TestKWHHelpers(ActionsBase):
             kwh_helpers.Entity.Dashboard,
             kwh_helpers.Permission.Granted
         )
+
+        notifications = toolkit.get_action('notification_list')(
+            get_context(), {}
+        )
+
+        assert_equals(len(notifications), 2)
