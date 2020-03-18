@@ -6,12 +6,14 @@ import uuid
 import json
 import functools32
 import requests
+import re
+
 from datetime import datetime, timedelta
 from dateutil import parser
 from flask import Blueprint
 from urllib import urlencode
 from six import string_types, iteritems
-import re
+from enum import Enum
 
 try:
     # CKAN 2.7 and later
@@ -1471,5 +1473,85 @@ def get_notifications(offset=0, limit=10):
     )
     if notifications.get('count', 0) > offset + limit + 1:
         notifications['has_more'] = True
-    
+
     return notifications
+
+
+def get_all_users():
+    '''Return the list of user dictionaties(name, display_name)'''
+
+    users_all_fields = toolkit.get_action('user_list')(
+        {'ignore_auth': True},
+        {'all_fields': True}
+    )
+
+    sysadmins = [
+        sysadmin.name for sysadmin in get_sysadmins()]
+
+    users = []
+    for user in users_all_fields:
+        if user.get('name') not in sysadmins:
+            users.append(
+                {
+                    'name': user.get('name'),
+                    'display_name': user.get('fullname') or user.get('name')
+                }
+            )
+
+    return users
+
+
+class Permission(Enum):
+    Granted = 'Permission granted'
+    Revoked = 'Permission revoked'
+
+
+class Entity(Enum):
+    Dataset = 'dataset'
+    Dashboard = 'dashboard'
+
+
+def shared_with_users_notification(editor_obj, users, data, entity, perm):
+    ''' Send notification to the users to which permission is granted or
+    revoked on dataset/dashboard.
+    :param editor_obj: the user object of the editor
+    :type editor_obj: ckan.model.User
+    :param users: a list of user name or ID
+    :type users: list
+    :param data: a dictionary(at least title and name) of Dataset or Dashboard
+    :type data: dict
+    :param entity: enumeration, can be Entity.Dataset or Entity.Dashboard
+    :type entity: enumeration
+    :param perm: enumeration, can be Permission.Granted or Permission.Revoked
+    :type perm: enumeration
+    '''
+    for u in users:
+        try:
+            user = toolkit.get_action('user_show')(
+                {'ignore_auth': True}, {'id': u})
+        except logic.NotFound:
+            continue
+
+        who = editor_obj.fullname or editor_obj.name
+        data_dict = {
+            'title': perm.value,
+            'recepient': user['id'],
+            'description': (
+                '%s on %s %s from user %s'
+                % (perm.value, entity.value, data.get('title'), who))
+        }
+        if entity == Entity.Dataset:
+            data_dict['link'] = h.url_for('dataset_read', controller='package',
+                                          action='read', id=data.get('name'))
+
+        elif entity == Entity.Dashboard:
+            data_dict['link'] = h.url_for(
+                'dashboards.view', name=data.get('name'))
+        else:
+            continue
+
+        try:
+            toolkit.get_action('notification_create')(
+                {'ignore_auth': True}, data_dict)
+        except Exception as e:
+            log.debug('Unable to send notification: %s' % str(e))

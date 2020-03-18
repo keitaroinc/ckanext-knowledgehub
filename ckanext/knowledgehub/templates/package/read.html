@@ -37,9 +37,11 @@
 {% endblock %}
 
 {% block package_resources %}
-<div class="pull-right">
-  {% link_for _('Add new resource'), controller='package', action='new_resource', id=pkg.name, class_='btn btn-primary', icon='plus' %}
-</div>
+{% if h.check_access('resource_create', {'package_id': pkg.id}) %}
+  <div class="pull-right">
+    {% link_for _('Add new resource'), controller='package', action='new_resource', id=pkg.name, class_='btn btn-primary', icon='plus' %}
+  </div>
+{% endif %}
 
 {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, system_resource=system_resource, active_upload=active_upload, hide_merge_btn=hide_merge_btn %}
 
