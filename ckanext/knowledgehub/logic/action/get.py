@@ -1028,6 +1028,12 @@ def search_visualizations(context, data_dict):
 
     :returns: ``list``, the documents matching the search query from the index.
     '''
+    fq = data_dict.get('fq', [])
+    if isinstance(fq, str) or isinstance(fq, unicode):
+        fq = [fq]
+    fq.append('khe_view_type:chart')
+    data_dict['fq'] = fq
+
     return _search_entity(Visualization, context, data_dict)
 
 

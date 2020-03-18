@@ -36,6 +36,7 @@ from ckanext.knowledgehub.model import ResourceValidation
 log = logging.getLogger(__name__)
 model_dictize = lib.dictization.model_dictize
 
+
 SYSTEM_RESOURCE_TYPE = 'system_merge'
 INVALID_COLUMN_NAMES = ['_id', '_full_text']
 
@@ -946,10 +947,13 @@ def get_searched_visuals(query):
     visuals = []
     for vis in list_visuals_searched['results']:
         visual = model.Session.query(ResourceView)\
-            .filter(ResourceView.id == vis['id'])
-        data_dict_format = model_dictize\
-            .resource_view_list_dictize(visual, _get_context())
-        visuals.append(data_dict_format)
+            .get(vis['id'])
+        try:
+            data_dict_format = model_dictize\
+                .resource_view_list_dictize([visual], _get_context())
+            visuals.append(data_dict_format[0])
+        except  Exception as e:
+            log.exception(e)
 
     list_visuals_searched['results'] = visuals
     list_visuals_searched['pager'] = _get_pager(list_visuals_searched,

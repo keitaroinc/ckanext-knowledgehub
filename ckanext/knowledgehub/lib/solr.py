@@ -18,6 +18,12 @@ VALID_SOLR_ARGS = {'q', 'fq', 'rows', 'start', 'sort', 'fl', 'df', 'facet',
 DEFAULT_FACET_NAMES = u'organizations groups tags'
 
 
+class DontIndexException(Exception):
+    u'''Flag exception to signal the indexer that it should not index this
+    entity.
+    '''
+    pass
+
 def _prepare_search_query(query):
     u'''Prepares the query parameters to be send to pysolr as function
     arguments.
@@ -436,6 +442,9 @@ class Indexed:
                         data = cls._get_before_index()(result.__dict__)
                         index.add(doctype,
                                   to_indexed_doc(data, doctype, fields))
+                    except DontIndexException as e:
+                        logger.debug('Should not index this resource %s.',
+                                     str(e))
                     except Exception as e:
                         logger.exception(e)
                         logger.error('Failed to build index for %s. Error: %s',
@@ -468,8 +477,11 @@ class Indexed:
         '''
         doctype = cls._get_doctype()
         fields = cls._get_indexed_fields()
-        doc = to_indexed_doc(cls._get_before_index()(data), doctype, fields)
-        cls.get_index().add(cls._get_doctype(), doc)
+        try:
+            doc = to_indexed_doc(cls._get_before_index()(data), doctype, fields)
+            cls.get_index().add(cls._get_doctype(), doc)
+        except DontIndexException as e:
+            logger.debug('Signaled to not index this resource %s.', str(e))
 
     @classmethod
     def update_index_doc(cls, data):
@@ -492,11 +504,14 @@ class Indexed:
         if doc:
             idarg = {id_key: doc[id_key]}
             index.remove(cls._get_doctype(), **idarg)
-        index.add(cls._get_doctype(),
-                  to_indexed_doc(
-                      cls._get_before_index()(data),
-                      cls._get_doctype(),
-                      fields))
+        try:
+            index.add(cls._get_doctype(),
+                    to_indexed_doc(
+                        cls._get_before_index()(data),
+                        cls._get_doctype(),
+                        fields))
+        except DontIndexException as e:
+            logger.debug('Signaled to not index this resource %s.', str(e))
 
     @staticmethod
     def validate_solr_args(args):
