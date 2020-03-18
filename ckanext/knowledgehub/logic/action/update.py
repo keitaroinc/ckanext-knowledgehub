@@ -537,7 +537,10 @@ def package_update(context, data_dict):
         'id': data_dict.get('id')
     })
 
-    hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
+    try:
+        hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
+    except Exception as e:
+        print("HDX error: {}".format(str(e)))
 
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
