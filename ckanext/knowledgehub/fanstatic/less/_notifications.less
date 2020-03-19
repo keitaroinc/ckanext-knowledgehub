@@ -11,17 +11,29 @@
 .notification-dropdown {
     z-index: 1001;
     margin-top: 0;
-    border-radius: 5px 0 0 5px;
+    border-radius: 8px 0 0 8px;
+    min-width: 300px;
+    ;
 
     .notifications-show-more {
         color: @brand-primary  !important;
     }
 
+    padding: 0;
+}
+
+.notifications-show-more {
+    background-color: #e5e5e5 !important;
+    border-bottom-left-radius: 8px;
+}
+
+.notification-mark-read {
+    padding: 5px 0 0 0 !important;
 }
 
 .notifications-list {
     z-index: 1001;
-    width: 250px;
+    min-width: 300px;
     //height: 50vh;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -30,12 +42,13 @@
     height: auto;
     max-height: 300px;
     animation: fadeIn 0.4s;
-
+    border-top-left-radius: 8px;
 
     .notification-item {
         color: @gray-dark;
         cursor: pointer;
-        padding: 15px 10px 15px 10px;
+        padding-top: 15px;
+        padding-bottom: 15px;
         margin-top: 0;
         background-color: lighten(@gray-lightest, 20%);
 
@@ -60,8 +73,8 @@
             }
         }
 
-        .notification-content {
-            margin-left: 4px;
+        .notification-info {
+            padding-top: 5px;
         }
 
         .notification-icon {
