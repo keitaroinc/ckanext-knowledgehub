@@ -213,7 +213,6 @@ ckan.module('chart', function () {
 
             options.title = {
                 text: titleVal,
-                //position: "upper-right",
                 padding: {
                     left: 0,
                     right: 150,
@@ -253,17 +252,6 @@ ckan.module('chart', function () {
                 }
             }
 
-            //if (tooltip_name !== true && tooltip_name !== '') {
-            // options.tooltip.format['title'] = function (d) {
-            //     if (options.data.type === 'donut' || options.data.type === 'pie') {
-            //         return tooltip_name;
-            //     }
-            //     return records[d][x_axis];
-            // }
-
-            //}
-            //console.log(records[0][x_axis])
-
             options.tooltip.format['value'] = function (value, ratio, id) {
                 var dataf = this.sortFormatData(data_format, value);
                 return dataf;
@@ -272,9 +260,21 @@ ckan.module('chart', function () {
             // Chart types
             if (this.options.chart_type === 'donut' ||
                 this.options.chart_type === 'pie') {
-                values = records.map(function (item) {
-                    return [item[x_axis], item[y_axis]]
-                });
+                if (additionalCategory){
+                    var orderedRecords = {};
+                    values = []
+                    Object.keys(records).sort().forEach(function (key) {
+                        orderedRecords[key] = records[key];
+                    });
+
+                    for (var key in orderedRecords) {
+                        values.push(orderedRecords[key]);;
+                    }
+                }else{
+                    values = records.map(function (item) {
+                        return [item[x_axis], item[y_axis]]
+                    });
+                }
                 options.data = {
                     columns: values,
                     type: this.options.chart_type
@@ -287,9 +287,23 @@ ckan.module('chart', function () {
                     // On horizontal bar the x axis is now actually the y axis
                     yrotate = x_text_rotate;
                 }
-                values = records.map(function (item) {
-                    return [item[x_axis], item[y_axis]]
-                });
+
+                if (additionalCategory){
+                    var orderedRecords = {};
+                    values = []
+                    Object.keys(records).sort().forEach(function (key) {
+                        orderedRecords[key] = records[key];
+                    });
+
+                    for (var key in orderedRecords) {
+                        values.push(orderedRecords[key]);;
+                    }
+                }else{
+                    values = records.map(function (item) {
+                        return [item[x_axis], item[y_axis]]
+                    });
+                }
+
                 options.data = {
                     columns: values,
                     type: 'bar',
@@ -362,7 +376,7 @@ ckan.module('chart', function () {
                 }
 
                 var columns = [];
-
+                var categories = [];
                 if (additionalCategory) {
 
                     var orderedRecords = {};
@@ -385,7 +399,7 @@ ckan.module('chart', function () {
                         return Number(item[y_axis]);
                     });
 
-                    var categories = records.map(function (item) {
+                    categories = records.map(function (item) {
                         return item[x_axis];
                     });
 
@@ -430,7 +444,6 @@ ckan.module('chart', function () {
                         },
                         x: {
                             type: 'category',
-                            //categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
                             categories: categories.map(function(val){
                                 if (val && val.length > 13){
                                     return val.substring(0, 11) + "...";
@@ -469,7 +482,6 @@ ckan.module('chart', function () {
                         },
                         x: {
                             type: 'category',
-                            // categories: categories.map(val => val.length > 13 ? val.substring(0, 11) + "..." : val),
                             categories: categories.map(function(val){
                                 if (val && val.length > 13){
                                     return val.substring(0, 11) + "...";
@@ -911,7 +923,6 @@ $(document).ready(function () {
         else {
             document.getElementById('chart_field_additional_tornado_value').style.display = "none"
             document.getElementById('chart_additional_tornado_label').style.display = "none"
-
         }
     })
 });
