@@ -529,92 +529,93 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(rv.get('what'), 'The resource is invalid!')
         assert_equals(rv.get('resource'), resource.get('id'))
 
-    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
-    @monkey_patch(Dataset, 'check_required_fields', mock.Mock())
-    @monkey_patch(Dataset, 'create_in_hdx', mock.Mock())
-    @monkey_patch(Dataset, 'get_resources', mock.Mock())
-    @monkey_patch(Resource, 'delete_from_hdx', mock.Mock())
-    @monkey_patch(Dataset, '__init__', mock.Mock())
-    def test_upsert_dataset_to_hdx(self):
+    # Commented HDX
+    # @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
+    # @monkey_patch(Dataset, 'check_required_fields', mock.Mock())
+    # @monkey_patch(Dataset, 'create_in_hdx', mock.Mock())
+    # @monkey_patch(Dataset, 'get_resources', mock.Mock())
+    # @monkey_patch(Resource, 'delete_from_hdx', mock.Mock())
+    # @monkey_patch(Dataset, '__init__', mock.Mock())
+    # def test_upsert_dataset_to_hdx(self):
 
-        Dataset.check_required_fields.return_value = ""
-        Dataset.create_in_hdx.return_value = ""
-        Resource.delete_from_hdx = ""
+    #     Dataset.check_required_fields.return_value = ""
+    #     Dataset.create_in_hdx.return_value = ""
+    #     Resource.delete_from_hdx = ""
 
-        user = factories.Sysadmin()
-        context = {
-            'user': user.get('name'),
-            'auth_user_obj': User(user.get('id')),
-            'ignore_auth': True,
-            'model': model,
-            'session': model.Session
-        }
+    #     user = factories.Sysadmin()
+    #     context = {
+    #         'user': user.get('name'),
+    #         'auth_user_obj': User(user.get('id')),
+    #         'ignore_auth': True,
+    #         'model': model,
+    #         'session': model.Session
+    #     }
 
-        dataset = create_dataset()
-        dataset['license_id'] = 'cc-by'
-        dataset['private'] = True
-        dataset['dataset_source'] = 'knowledgehub'
-        dataset['dataset_date'] = '2020-03-11 14:37:05.887534'
-        dataset['data_update_frequency'] = -1
-        dataset['methodology'] = 'http://www.opendefinition.org/licenses/cc-by'
-        dataset['num_resources'] = 1
-        dataset['url'] = None
-        resource = factories.Resource(
-            package_id=dataset['id'],
-            url='https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
-            description='Some description here',
-            created='2020-03-10 00:13:47.641641',
-            name='resource name',
-            format='CSV',
-            id='a7ae9f30-ff91-405c-bf7b-926017bcb9ac'
-        )
-        Dataset.read_from_hdx.return_value = {
-            'name': dataset['name'],
-            'title': dataset['title'],
-            'notes': dataset['notes'],
-            'maintainer': dataset['maintainer'],
-            'owner_org': dataset['name'],
-            'license_id': dataset['license_id'],
-            'private': dataset['private'],
-            'dataset_date': dataset['dataset_date'],
-            'dataset_source': dataset['dataset_source'],
-            'methodology': dataset['methodology'],
-            'num_resources': dataset['num_resources'],
-            'url': dataset['url'],
-            'id': 'f32e1366-aa9e-4233-b77e-178ac0597295'
-        }
+    #     dataset = create_dataset()
+    #     dataset['license_id'] = 'cc-by'
+    #     dataset['private'] = True
+    #     dataset['dataset_source'] = 'knowledgehub'
+    #     dataset['dataset_date'] = '2020-03-11 14:37:05.887534'
+    #     dataset['data_update_frequency'] = -1
+    #     dataset['methodology'] = 'http://www.opendefinition.org/licenses/cc-by'
+    #     dataset['num_resources'] = 1
+    #     dataset['url'] = None
+    #     resource = factories.Resource(
+    #         package_id=dataset['id'],
+    #         url='https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
+    #         description='Some description here',
+    #         created='2020-03-10 00:13:47.641641',
+    #         name='resource name',
+    #         format='CSV',
+    #         id='a7ae9f30-ff91-405c-bf7b-926017bcb9ac'
+    #     )
+    #     Dataset.read_from_hdx.return_value = {
+    #         'name': dataset['name'],
+    #         'title': dataset['title'],
+    #         'notes': dataset['notes'],
+    #         'maintainer': dataset['maintainer'],
+    #         'owner_org': dataset['name'],
+    #         'license_id': dataset['license_id'],
+    #         'private': dataset['private'],
+    #         'dataset_date': dataset['dataset_date'],
+    #         'dataset_source': dataset['dataset_source'],
+    #         'methodology': dataset['methodology'],
+    #         'num_resources': dataset['num_resources'],
+    #         'url': dataset['url'],
+    #         'id': 'f32e1366-aa9e-4233-b77e-178ac0597295'
+    #     }
 
-        Dataset.__init__.return_value = None
-        Dataset.get_resources.return_value = [{
-            'package_id': dataset['id'],
-            'url': 'https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
-            'description':'Some description here',
-            'created':'2020-03-10 00:13:47.641641',
-            'name':'resource name',
-            'format':'CSV',
-            'id':'a7ae9f30-ff91-405c-bf7b-926017bcb9ac'
-        }]
-        hdx_newest_dataset = {
-            'name': dataset['name'],
-            'title': dataset['title'],
-            'notes': dataset['notes'],
-            'maintainer': dataset['maintainer'],
-            'owner_org': dataset['name'],
-            'license_id': dataset['license_id'],
-            'private': dataset['private'],
-            'dataset_date': dataset['dataset_date'],
-            'dataset_source': dataset['dataset_source'],
-            'methodology': dataset['methodology'],
-            'num_resources': dataset['num_resources'],
-            'url': dataset['url'],
-            'id': 'f32e1366-aa9e-4233-b77e-178ac0597295'
-        }
-        data_dict = {
-            'id': dataset.get('id'),
-        }
-        push_to_hdx = create_actions.upsert_dataset_to_hdx(context, data_dict)
+    #     Dataset.__init__.return_value = None
+    #     Dataset.get_resources.return_value = [{
+    #         'package_id': dataset['id'],
+    #         'url': 'https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
+    #         'description':'Some description here',
+    #         'created':'2020-03-10 00:13:47.641641',
+    #         'name':'resource name',
+    #         'format':'CSV',
+    #         'id':'a7ae9f30-ff91-405c-bf7b-926017bcb9ac'
+    #     }]
+    #     hdx_newest_dataset = {
+    #         'name': dataset['name'],
+    #         'title': dataset['title'],
+    #         'notes': dataset['notes'],
+    #         'maintainer': dataset['maintainer'],
+    #         'owner_org': dataset['name'],
+    #         'license_id': dataset['license_id'],
+    #         'private': dataset['private'],
+    #         'dataset_date': dataset['dataset_date'],
+    #         'dataset_source': dataset['dataset_source'],
+    #         'methodology': dataset['methodology'],
+    #         'num_resources': dataset['num_resources'],
+    #         'url': dataset['url'],
+    #         'id': 'f32e1366-aa9e-4233-b77e-178ac0597295'
+    #     }
+    #     data_dict = {
+    #         'id': dataset.get('id'),
+    #     }
+    #     push_to_hdx = create_actions.upsert_dataset_to_hdx(context, data_dict)
 
-        assert_equals(push_to_hdx, None)
+    #     assert_equals(push_to_hdx, None)
 
 
 class TestKWHGetActions(ActionsBase):
