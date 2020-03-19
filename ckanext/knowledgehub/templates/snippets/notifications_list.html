@@ -18,12 +18,6 @@
                         class="notification-title">
                         {{notification.title}}
                     </a>
-                    <!-- <div class="col-md-2">
-                    <a href="#" class="notification-mark-read pull-right" notification="{{notification.id}}"
-                        title="{{ _('Mark as read.') }}">
-                        <i class="fa fa-close"></i>
-                    </a>
-                </div> -->
                     {% if notification.description or notification.image %}
                     <div class="notification-content">
                         {{ notification.description }}
@@ -34,7 +28,7 @@
                 <div class="col-md-1 col-sm-1 col-1">
                     <a href="#" class="notification-mark-read" notification="{{notification.id}}"
                         title="{{ _('Mark as read.') }}">
-                        <i class="fa fa-close"></i>
+                        <i class="fa fa-close large-fa"></i>
                     </a>
                 </div>
             </div>
