@@ -31,14 +31,15 @@ Example:
         {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
     </li>
     {% endif %}
-    <input id="package-name" value="{{ pkg.name }}" type="hidden" />
+    <!-- Commented HDX-->
+    <!-- <input id="package-name" value="{{ pkg.name }}" type="hidden" />
     {% if h.check_access('package_update', {'id':pkg.id }) %}
     <li class="resource-item" style="text-align: end">
       <div id="hdx-loader"></div>
       <button class="btn btn-success" id="pushHDX" type="submit">
         <i class="fa fa-upload"></i>{{ _(' Push dataset to HDX') }}
       </button>
-    </li>
+    </li> -->
     {% endif %}
     {% if system_resource %}
     <h3>{{ _('System Resources') }}</h3>
