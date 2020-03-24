@@ -41,7 +41,9 @@ def merge_all_data(id):
             {'id': id}
         )
     except Exception as e:
-        data_dict['err_msg'] = 'Unable to merge data'
+        note = 'Unable to merge data: '
+        error_msg = str(e)
+        data_dict['err_msg'] = note + error_msg
 
     return h.redirect_to(controller='package',
                          action='read',

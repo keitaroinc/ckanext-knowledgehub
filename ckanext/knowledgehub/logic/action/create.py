@@ -294,7 +294,6 @@ def resource_create(context, data_dict):
     :param validation_options: options to be used for validation
     :type validation_options: string
     '''
-
     if (data_dict.get('schema') == ''):
         del data_dict['schema']
 
@@ -329,6 +328,13 @@ def resource_create(context, data_dict):
             data_dict['upload'] = FlaskFileStorage(stream, filename)
 
     create_resource_kwh = ckan_rsc_create(context, data_dict)
+
+    if (data_dict.get('admin')):
+        plugin_helpers.resource_validation_notification(
+            context['auth_user_obj'],
+            data_dict,
+            plugin_helpers.Entity.Resource
+        )
 
     return create_resource_kwh
 
@@ -647,7 +653,8 @@ def resource_validation_create(context, data_dict):
             admin=admin,
             admin_email=admin_email,
             status=status,
-            requested_at=requested_at
+            requested_at=requested_at,
+            notification_sent=True
         )
 
         rv.save()
