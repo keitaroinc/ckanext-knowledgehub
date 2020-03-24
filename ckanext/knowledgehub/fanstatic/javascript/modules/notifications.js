@@ -1,7 +1,7 @@
 /**
  * JavaScript module for managing the user notifications.
  */
-ckan.module('user-profile', function($){
+ckan.module('notifications', function($){
     'use strict';
 
     var markAsRead = function(notificationId){
