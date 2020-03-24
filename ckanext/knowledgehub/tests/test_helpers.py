@@ -1371,3 +1371,42 @@ class TestKWHHelpers(ActionsBase):
         )
 
         assert_equals(len(notifications), 2)
+
+    def test_resource_validation_notification(self):
+        class Editor:
+            def __init__(self, name, fullname):
+                self.name = name
+                self.fullname = fullname
+
+        user_dict = {
+            'name': 'knowledgehub-test',
+            'email': 'test@company.com',
+            'password': 'knowledgehub',
+            'fullname': 'Knowledgehub Test'
+        }
+        user = toolkit.get_action('user_create')(
+            get_context(),
+            user_dict
+        )
+
+        editor = Editor('john', 'John Smith')
+
+        dataset = create_dataset()
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts'
+        )
+        resource['admin'] = user['name']
+        kwh_helpers.resource_validation_notification(
+            editor,
+            resource,
+            kwh_helpers.Entity.Resource
+        )
+
+        notifications = toolkit.get_action('notification_list')(
+            get_context(), {}
+        )
+
+        assert_equals(len(notifications), 2)
