@@ -335,6 +335,7 @@ ckan.module('user-profile', function($){
                 profile.interests[interest].push(entry.id);
             })
             this.updateInterests(profile).done(function(){
+
                 var interest_entries = this.profile.interests[interest];
                 var updated_entries = []
                 $.each(interest_entries, function(_, entry){
@@ -366,6 +367,7 @@ ckan.module('user-profile', function($){
             // update the profile with API
             var profile = this.getProfile();
             profile.interests[interest].push(data.id)
+            
             api.post('user_profile_update', undefined, profile)
                 .done(function(){
                     // add component
@@ -381,6 +383,7 @@ ckan.module('user-profile', function($){
                     this.flashError('Failed to update interests.')
                 }.bind(this));
 
+            this.profile.interests[interest].push(data)
         },
         /**
          * Flashes a message in the user profile page.
