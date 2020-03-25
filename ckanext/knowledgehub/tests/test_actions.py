@@ -529,7 +529,6 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(rv.get('what'), 'The resource is invalid!')
         assert_equals(rv.get('resource'), resource.get('id'))
 
-    # Commented HDX
     @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     @monkey_patch(Dataset, 'check_required_fields', mock.Mock())
     @monkey_patch(Dataset, 'create_in_hdx', mock.Mock())

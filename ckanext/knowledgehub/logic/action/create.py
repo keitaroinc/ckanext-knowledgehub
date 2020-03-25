@@ -1289,7 +1289,6 @@ def user_query_result_save(context, data_dict):
     return {}
 
 
-# Commented HDX
 def upsert_resource_to_hdx(context, data_dict):
     ''' Create new if not exists or update the existing resource in HDX
 
