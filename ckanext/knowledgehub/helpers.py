@@ -842,6 +842,7 @@ def _get_facets():
 
     return facets
 
+
 def get_searched_rqs(query):
     context = _get_context()
     search_query = {
@@ -1509,6 +1510,7 @@ class Permission(Enum):
 class Entity(Enum):
     Dataset = 'dataset'
     Dashboard = 'dashboard'
+    Resource = 'resource'
 
 
 def shared_with_users_notification(editor_obj, users, data, entity, perm):
@@ -1563,3 +1565,50 @@ def get_all_organizations():
 
 def get_all_groups():
     return toolkit.get_action('get_all_groups')({'ignore_auth': True}, {})
+
+
+def resource_validation_notification(editor_obj, data, entity):
+    validation_user = None
+    try:
+        validation_user = toolkit.get_action('user_show')(
+            {'ignore_auth': True}, {'id': data.get('admin')})
+    except Exception as e:
+        log.debug('Unable to find the user: %s' % str(e))
+
+    who = editor_obj.fullname or editor_obj.name
+    if validation_user:
+        data_dict = {
+            'title': 'Resource Validation',
+            'recepient': validation_user['id'],
+            'description': (
+                'You have been asked to validate a data resource from %s'
+                % (who))
+        }
+
+    if entity == Entity.Resource:
+        context = _get_context()
+        resource_name = data['name']
+        dataset = toolkit.get_action('package_show')(
+            context,
+            {u'id': data.get('package_id')}
+        )
+        resources = dataset.get('resources')
+        resource_id = None
+        for resource in resources:
+            rsc_name = resource.get('name')
+            if rsc_name == resource_name:
+                resource_id = resource['id']
+
+        data_dict['link'] = h.url_for(
+            controller='package',
+            action='resource_read',
+            id=dataset.get('id'),
+            resource_id=resource_id,
+            qualified=True
+        )
+
+    try:
+        toolkit.get_action('notification_create')(
+            {'ignore_auth': True}, data_dict)
+    except Exception as e:
+        log.debug('Unable to send notification: %s' % str(e))

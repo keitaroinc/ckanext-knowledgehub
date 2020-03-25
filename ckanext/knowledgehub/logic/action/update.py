@@ -587,23 +587,22 @@ def package_update(context, data_dict):
         'id': data_dict.get('id')
     })
 
-    # Commented HDX
-    # try:
-    #     hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
-    #     if hdx_dataset:
-    #         upsert_dataset_to_hdx = {
-    #             'id': package_old_info.get('id'),
-    #             'metadata_only': False
-    #         }
-    #         logic.get_action('upsert_dataset_to_hdx')(
-    #             context,
-    #             upsert_dataset_to_hdx
-    #         )
-    # except Exception as e:
-    #     log.debug(
-    #         'Connection to HDX: <error> {}'.format(
-    #             str(e)
-    #         ))
+    try:
+        hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
+        if hdx_dataset:
+            upsert_dataset_to_hdx = {
+                'id': package_old_info.get('id'),
+                'metadata_only': False
+            }
+            logic.get_action('upsert_dataset_to_hdx')(
+                context,
+                upsert_dataset_to_hdx
+            )
+    except Exception as e:
+        log.debug(
+            'Connection to HDX: <error> {}'.format(
+                str(e)
+            ))
 
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])

@@ -119,6 +119,11 @@ resource_validation_table = Table(
     Column(
         'validated_at',
         types.DateTime,
+    ),
+    Column(
+        'notification_sent',
+        types.Boolean,
+        default=False
     )
 )
 
