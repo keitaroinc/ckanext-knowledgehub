@@ -19,7 +19,12 @@ from ckan.model.domain_object import DomainObject
 from ckan.logic import get_action
 import ckan.logic as logic
 from ckan.common import _
-from ckanext.knowledgehub.lib.solr import Indexed, mapped, unprefixed
+from ckanext.knowledgehub.lib.solr import (
+    Indexed,
+    mapped,
+    unprefixed,
+    get_permission_labels,
+)
 
 get_action = logic.get_action
 
@@ -39,6 +44,8 @@ dashboard_table = Table(
     Column('tags', types.UnicodeText),
     Column('datasets', types.UnicodeText),
     Column('shared_with_users', types.UnicodeText),
+    Column('shared_with_groups', types.UnicodeText),
+    Column('shared_with_organizations', types.UnicodeText),
     Column('created_at', types.DateTime,
            default=datetime.datetime.utcnow),
     Column('modified_at', types.DateTime,
@@ -176,6 +183,20 @@ class Dashboard(DomainObject, Indexed):
         if keywords:
             data['keywords'] = ','.join(keywords)
             data['idx_keywords'] = list(keywords)
+
+        permission_labels = []
+        for org_id in list(set(organizations)):
+            permission_labels.append('member-%s' % org_id)
+
+        for group_id in list(set(groups)):
+            permission_labels.append('member-group-%s' % group_id)
+        
+        if data.get('created_by'):
+            permission_labels.append('creator-%s' % data['created_by'])
+
+        data['permission_labels'] = permission_labels
+
+        data['permission_labels'] = get_permission_labels(data)
 
         return data
 

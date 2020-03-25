@@ -1951,3 +1951,40 @@ def notification_show(context, data_dict):
         if notification.get(field):
             notification[field] = notification[field].encode('ascii')
     return notification
+
+
+@toolkit.side_effect_free
+def get_all_organizations(context, data_dict):
+    return _get_all_organizations_or_groups(context, data_dict, True)
+
+
+@toolkit.side_effect_free
+def get_all_groups(context, data_dict):
+    return _get_all_organizations_or_groups(context, data_dict, False)
+
+
+def _get_all_organizations_or_groups(context, data_dict, is_organization=True):
+    user = context.get('auth_user_obj')
+    is_sysadmin = user is not None and hasattr(user, 'sysadmin') and \
+        user.sysadmin
+    
+    if not context.get('ignore_auth') and not is_sysadmin:
+        raise logic.NotAuthorized()
+    
+    group_table = model.group_table
+
+    query = Session.query(model.Group)
+    query = query.filter(group_table.c.state == 'active')
+    query = query.filter(group_table.c.is_organization == is_organization)
+
+    organizations = []
+
+    for org in query.all():
+        organizations.append({
+            'id': org.id,
+            'title': org.title,
+            'name': org.name,
+        })
+
+    return organizations
+        

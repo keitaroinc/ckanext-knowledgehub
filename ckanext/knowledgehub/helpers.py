@@ -1555,3 +1555,11 @@ def shared_with_users_notification(editor_obj, users, data, entity, perm):
                 {'ignore_auth': True}, data_dict)
         except Exception as e:
             log.debug('Unable to send notification: %s' % str(e))
+
+
+def get_all_organizations():
+    return toolkit.get_action('get_all_organizations')({'ignore_auth': True}, {})
+
+
+def get_all_groups():
+    return toolkit.get_action('get_all_groups')({'ignore_auth': True}, {})

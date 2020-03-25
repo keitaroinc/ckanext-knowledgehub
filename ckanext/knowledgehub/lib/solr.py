@@ -608,3 +608,24 @@ def boost_solr_params(values):
     if bq:
         params['bq'] = ' + '.join(bq)
     return params
+
+
+_PERMISSION_LABEL_PREFIX = {
+    'shared_with_users': 'user-%s',
+    'shared_with_organizations': 'member-%s',
+    'shared_with_groups': 'member-group-%s',
+}
+
+def get_permission_labels(data_dict):
+    permission_labels = data_dict.get('permission_labels', [])
+
+    for field, prefix_template in _PERMISSION_LABEL_PREFIX.items():
+        if data_dict.get(field):
+            ids = [s.strip() for s in data_dict[field].strip().split(',')]
+            for id in ids:
+                if id:
+                    label = prefix_template % id
+                    if label not in permission_labels:
+                        permission_labels.append(label)
+    
+    return permission_labels

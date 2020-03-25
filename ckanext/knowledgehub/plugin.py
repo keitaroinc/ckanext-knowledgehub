@@ -169,6 +169,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
             'get_datasets': h.get_datasets,
             'get_notifications': h.get_notifications,
             'get_all_users': h.get_all_users,
+            'get_all_organizations': h.get_all_organizations,
+            'get_all_groups': h.get_all_groups,
         }
 
     # IDatasetForm
