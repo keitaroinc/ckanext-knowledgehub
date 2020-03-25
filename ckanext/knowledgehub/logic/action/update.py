@@ -587,7 +587,6 @@ def package_update(context, data_dict):
         'id': data_dict.get('id')
     })
 
-    # Commented HDX
     try:
         hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
         if hdx_dataset:

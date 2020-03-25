@@ -31,7 +31,6 @@ Example:
         {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
     </li>
     {% endif %}
-    <!-- Commented HDX-->
     <input id="package-name" value="{{ pkg.name }}" type="hidden" />
     {% if h.check_access('package_update', {'id':pkg.id }) %}
     <li class="resource-item" style="text-align: end">
