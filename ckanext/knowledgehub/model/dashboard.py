@@ -25,6 +25,10 @@ from ckanext.knowledgehub.lib.solr import (
     unprefixed,
     get_permission_labels,
 )
+from logging import getLogger
+
+
+log = getLogger(__name__)
 
 get_action = logic.get_action
 
@@ -76,6 +80,9 @@ class Dashboard(DomainObject, Indexed):
         unprefixed('idx_tags'),
         unprefixed('idx_research_questions'),
         unprefixed('idx_shared_with_users'),
+        unprefixed('idx_shared_with_organiztions'),
+        unprefixed('idx_shared_with_groups'),
+        unprefixed('permission_labels'),
     ]
     doctype = 'dashboard'
 
@@ -185,11 +192,44 @@ class Dashboard(DomainObject, Indexed):
             data['idx_keywords'] = list(keywords)
 
         permission_labels = []
+        organization_ids = []
         for org_id in list(set(organizations)):
-            permission_labels.append('member-%s' % org_id)
+            try:
+                org = get_action('organization_show')({
+                    'ignore_auth': True,
+                }, {
+                    'id': org_id,
+                })
+                organization_ids.append(org['id'])
+            except Exception as e:
+                log.warning('Failed to get ID for organization %s. '
+                            'Error: %s', org_id, str(e))
+                log.exception(e)
+            
 
+        if organization_ids:
+            # Must be member of ALL organizations to see this dashboard
+            permission_labels.append('member-%s' % '-'.join(organization_ids))
+
+
+
+        group_ids = []
         for group_id in list(set(groups)):
-            permission_labels.append('member-group-%s' % group_id)
+            try:
+                group = get_action('group_show')({
+                    'ignore_auth': True,
+                }, {
+                    'id': group_id,
+                })
+                group_ids.append(group['id'])
+            except Exception as e:
+                log.warning('Failed to get ID for group %s. '
+                            'Error: %s', org_id, str(e))
+                log.exception(e)
+            
+        if group_ids:
+            # Must be member of ALL groups to see this dashboard.
+            permission_labels.append('member-%s' % '-'.join(group_ids))
         
         if data.get('created_by'):
             permission_labels.append('creator-%s' % data['created_by'])

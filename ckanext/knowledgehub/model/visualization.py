@@ -29,6 +29,7 @@ class Visualization(ResourceView, Indexed):
         unprefixed('idx_keywords'),
         unprefixed('idx_tags'),
         unprefixed('idx_research_questions'),
+        unprefixed('permission_labels'),
     ]
 
     doctype = 'visualization'
@@ -38,6 +39,8 @@ class Visualization(ResourceView, Indexed):
         # Index only charts
         if data.get('view_type') not in  ['chart', 'map']:
             raise DontIndexException(data.get('id'))
+
+        permission_labels = []
 
         resource_view = get_action('resource_view_show')(
             {'ignore_auth': True},
@@ -49,10 +52,14 @@ class Visualization(ResourceView, Indexed):
             {'id': data['package_id'], 'include_tracking': True})
         if package:
             data['organizations'] = package.get('organization', {}).get('name')
+            organization_id = package.get('organization', {}).get('id')
+            if organization_id:
+                permission_labels.append('member-%s' % organization_id)
 
             data['groups'] = []
             for g in package.get('groups', []):
                 data['groups'].append(g['name'])
+                permission_labels.append('member-%s' % g['id'])
 
         if data.get('_sa_instance_state'):
             del data['_sa_instance_state']
@@ -129,6 +136,9 @@ class Visualization(ResourceView, Indexed):
         if keywords:
             data['keywords'] = ','.join(keywords)
             data['idx_keywords'] = list(keywords)
+
+        if permission_labels:
+            data['permission_labels'] = permission_labels
 
         return data
 

@@ -33,7 +33,11 @@ from ckanext.knowledgehub.model import (
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
-from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
+from ckanext.knowledgehub.lib.solr import (
+    ckan_params_to_solr_args,
+    get_user_permission_labels,
+    get_fq_permission_labels,
+)
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 
@@ -889,6 +893,12 @@ def get_predictions(context, data_dict):
 def _search_entity(index, ctx, data_dict):
     model = ctx['model']
     session = ctx['session']
+    ignore_permissions = data_dict.pop('ignore_permissions', False)
+    ignore_auth = ctx.get('ignore_auth')
+    user = ctx.get('auth_user_obj')
+    is_sysadmin = False
+    if user and hasattr(user, 'sysadmin'):
+        is_sysadmin = user.sysadmin
 
     page = data_dict.get('page', 1)
     page_size = int(data_dict.get('limit',
@@ -914,6 +924,21 @@ def _search_entity(index, ctx, data_dict):
 
     if ctx.get('auth_user_obj'):
         args['boost_for'] = ctx['auth_user_obj'].id
+        # Regular access is when the user is not sysadmin and 'ignore_auth'
+        # flag has not been set. In this case we may want to use permissions.
+        regular_access = not (ignore_auth or is_sysadmin)
+        # This flag tells us if we want to use permissions. By default, we do
+        # and then it depends on the type of access (regular or sysadmin).
+        # It is the reverse of the 'ignore_permissions' flag (if set).
+        use_permissions = not ignore_permissions
+        if use_permissions and regular_access:
+            permission_labels = get_user_permission_labels(ctx)
+            if permission_labels:
+                fq = args.get('fq', [])
+                if isinstance(fq, str) or isinstance(fq, unicode):
+                    fq = [fq]
+                fq.append(get_fq_permission_labels(permission_labels))
+                args['fq'] = fq
 
     results = index.search_index(**args)
 
@@ -1017,6 +1042,12 @@ def search_research_questions(context, data_dict):
 
     :returns: ``list``, the documents matching the search query from the index.
     '''
+    # We're ignoring permissions based access to the reserch questions
+    # because every user with an accout to the portal should be able to see
+    # the research questions. However, the access to the data may be restricted
+    # based on the user, organization/group and if the data has been shared.
+    data_dict['ignore_permissions'] = True
+
     return _search_entity(ResearchQuestion, context, data_dict)
 
 

@@ -613,7 +613,7 @@ def boost_solr_params(values):
 _PERMISSION_LABEL_PREFIX = {
     'shared_with_users': 'user-%s',
     'shared_with_organizations': 'member-%s',
-    'shared_with_groups': 'member-group-%s',
+    'shared_with_groups': 'member-%s',
 }
 
 def get_permission_labels(data_dict):
@@ -629,3 +629,51 @@ def get_permission_labels(data_dict):
                         permission_labels.append(label)
     
     return permission_labels
+
+
+from ckan import model
+from ckan.model.meta import Session
+
+def get_user_permission_labels(context):
+    labels = ['public']
+
+    if context.get('auth_user_obj') is not None:
+        user = context['auth_user_obj']
+        labels.append('user-%s' % user.id)
+        labels.append('creator-%s' % user.id)
+
+        organizations, groups = _get_all_orgs_or_groups_for_user(user.id)
+
+        for ids in [organizations, groups]:
+            if ids:
+                if len(ids) > 1:
+                    labels.append('member-%s' % '-'.join(ids))
+                for _id in ids:
+                    labels.append('member-%s' % _id)
+
+    return labels
+
+
+def _get_all_orgs_or_groups_for_user(user_id):
+    q = Session.query(model.Member, model.Group)
+    q = q.join(model.Group,
+               model.member_table.c.group_id == model.group_table.c.id)
+    q = q.filter(model.member_table.c.table_id == user_id)
+    q = q.filter(model.member_table.c.table_name == 'user')
+
+    organizations, groups = [], []
+
+    for _,group in q.all():
+        if group.is_organization:
+            organizations.append(group.id)
+        else:
+            groups.append(group.id)
+    
+    return (organizations, groups)
+
+def get_fq_permission_labels(permission_labels):
+    fq = '+permission_labels:'
+    fq += '(' + ' OR '.join([escape_str(label) for label in \
+        permission_labels]) +')'
+    return fq
+    
