@@ -35,9 +35,9 @@ from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
 from ckanext.knowledgehub.lib.solr import (
     ckan_params_to_solr_args,
-    get_user_permission_labels,
     get_fq_permission_labels,
 )
+from ckanext.knowledgehub.logic.auth import get_user_permission_labels
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 

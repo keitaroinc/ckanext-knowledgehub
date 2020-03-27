@@ -23,8 +23,8 @@ from ckanext.knowledgehub.lib.solr import (
     Indexed,
     mapped,
     unprefixed,
-    get_permission_labels,
 )
+from ckanext.knowledgehub.logic.auth import get_permission_labels
 from logging import getLogger
 
 
