@@ -781,9 +781,12 @@ def remove_space_for_url(str):
     return str.replace(" ", "-")
 
 
-def format_date(str):
+def format_date(date_str):
     # split date & time
-    date = str.split('T')  # date[0] is the date, date[1] is the time
+    if isinstance(date_str, datetime):
+        date_str = date_str.isoformat()
+
+    date = date_str.split('T')  # date[0] is the date, date[1] is the time
     time_basic = date[1].split('.')  # time_basic[0] = hh/mm/ss
     # remove seconds
     time_basic[0] = time_basic[0][:-3]
@@ -838,7 +841,7 @@ def _get_facets():
     facets = []
     for param, value in request.params.items():
         if param in ['organization', 'groups', 'tags']:
-            facets.append('%s:%s' %(param, value))
+            facets.append('%s:%s' % (param, value))
 
     return facets
 
@@ -955,7 +958,7 @@ def get_searched_visuals(query):
             data_dict_format = model_dictize\
                 .resource_view_list_dictize([visual], _get_context())
             visuals.append(data_dict_format[0])
-        except  Exception as e:
+        except Exception as e:
             log.exception(e)
 
     list_visuals_searched['results'] = visuals
@@ -1560,7 +1563,8 @@ def shared_with_users_notification(editor_obj, users, data, entity, perm):
 
 
 def get_all_organizations():
-    return toolkit.get_action('get_all_organizations')({'ignore_auth': True}, {})
+    return toolkit.get_action('get_all_organizations')(
+        {'ignore_auth': True}, {})
 
 
 def get_all_groups():

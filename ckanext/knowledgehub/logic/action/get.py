@@ -36,6 +36,8 @@ from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
 from ckanext.knowledgehub.lib.solr import (
     ckan_params_to_solr_args,
     get_fq_permission_labels,
+    get_sort_string,
+    escape_str as solr_escape_str,
 )
 from ckanext.knowledgehub.logic.auth import get_user_permission_labels
 from ckan.lib import helpers as h
@@ -504,38 +506,36 @@ def dashboard_list(context, data_dict):
     page = int(data_dict.get(u'page', 1))
     limit = int(data_dict.get(u'limit', 10000))
     offset = int(data_dict.get(u'offset', 0))
-    sort = data_dict.get(u'sort', u'name asc')
-    q = data_dict.get(u'q', u'')
+    sort = get_sort_string(Dashboard, data_dict.get(u'sort', u'name asc'))
+    q = data_dict.get(u'q', u'*').strip()
+    if not q:
+        q = '*'
 
-    def result_iter(limit=100):
-        offset = 0
-        while True:
-            dashboards = Dashboard.search(q=q,
-                                          limit=limit,
-                                          offset=offset,
-                                          order_by=sort).all()
-            if not dashboards:
-                break
-            for dashboard in dashboards:
-                yield dashboard
-            offset += limit
+    user = context.get('auth_user_obj')
+    ignore_permissions = data_dict.pop('ignore_permissions', False)
+    ignore_auth = context.get('ignore_auth')
+    sysadmin_user = user and hasattr(user, 'sysadmin') and user.sysadmin
 
-    dashboards = []
-    for dashboard in result_iter():
-        try:
-            check_access('dashboard_show', context, {'name': dashboard.name})
-        except NotAuthorized:
-            continue
+    query = {
+        'q': 'text:%s' % solr_escape_str(q),
+        'start': offset,
+        'rows': limit,
+        'sort': sort,
+    }
 
-        if len(dashboards) == limit + offset:
-            break
+    if not (sysadmin_user or ignore_auth):
+        if not ignore_permissions:
+            permission_labels = get_user_permission_labels(context)
+            query['fq'] = [
+                get_fq_permission_labels(permission_labels)
+            ]
 
-        dashboards.append(_table_dictize(dashboard, context))
+    docs = Dashboard.search_index(**query)
 
-    return {u'total': len(Dashboard.search().all()),
+    return {u'total': docs.hits,
             u'page': page,
             u'items_per_page': limit,
-            u'data': dashboards[offset:offset+limit]}
+            u'data': docs.docs}
 
 
 @toolkit.side_effect_free
@@ -575,22 +575,34 @@ def visualizations_for_rq(context, data_dict):
         raise toolkit.ValidationError(
             'Query parameter `research_question` is required')
 
+    research_question = toolkit.get_action('research_question_show')(
+        context,
+        {'id': research_question}
+    )
+
     resource_views = []
 
-    datasets = toolkit.get_action('package_search')(context, {
-        'fq': '+extras_research_question:{0}'.format(research_question),
-        'include_private': True
+    result = search_visualizations(context, {
+        'text': '*',
+        'fq': [
+            '+idx_research_questions:{0}'.format(research_question['id']),
+        ]
     })
 
-    for dataset in datasets.get('results'):
-        for resource in dataset.get('resources'):
-            resource_view_list = toolkit.get_action('resource_view_list')(
-                context, {'id': resource.get('id')})
-            for resource_view in resource_view_list:
-                if resource_view.get('view_type') == 'chart' or \
-                   resource_view.get('view_type') == 'map' or \
-                   resource_view.get('view_type') == 'table':
-                    resource_views.append(resource_view)
+    resource_views = []
+    for rv in result.get('results', []):
+        try:
+            resource_views.append(
+                toolkit.get_action('resource_view_show')(
+                    context,
+                    {'id': rv['id']}
+                )
+            )
+        except Exception as e:
+            log.warning('Failed to fetch resource view: %s. Error: %s',
+                        rv['id'],
+                        str(e))
+            log.exception(e)
 
     return resource_views
 
@@ -1998,10 +2010,10 @@ def _get_all_organizations_or_groups(context, data_dict, is_organization=True):
     user = context.get('auth_user_obj')
     is_sysadmin = user is not None and hasattr(user, 'sysadmin') and \
         user.sysadmin
-    
+
     if not context.get('ignore_auth') and not is_sysadmin:
         raise logic.NotAuthorized()
-    
+
     group_table = model.group_table
 
     query = Session.query(model.Group)
@@ -2018,4 +2030,3 @@ def _get_all_organizations_or_groups(context, data_dict, is_organization=True):
         })
 
     return organizations
-        

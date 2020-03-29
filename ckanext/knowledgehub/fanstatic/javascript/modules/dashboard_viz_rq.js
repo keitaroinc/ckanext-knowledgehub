@@ -43,7 +43,7 @@ ckan.module('knowledgehub-dashboard-viz-rq', function ($) {
                 return;
             }
 
-            var RQValue = this.el.find('option[value=' + this.el.val() + ']').text()
+            var RQValue = $('option[value=' + this.el.val() + ']').val()
 
             if (RQValue) {
                 api.get('visualizations_for_rq', { research_question: RQValue})

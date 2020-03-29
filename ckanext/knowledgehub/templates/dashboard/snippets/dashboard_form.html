@@ -109,7 +109,7 @@
           <div class="controls">
             <select id="field_shared_with_users" name="shared_with_users" data-module="autocomplete" multiple=False>
               {% for user in users  %}
-              <option value="{{ user.name }}" {% if user.name in data.get('shared_with_users', []) %} selected="selected"
+              <option value="{{ user.name }}" {% if user.name in (data.get('shared_with_users') or []) %} selected="selected"
                 {% endif %}>{{ user.display_name }}</option>
               {% endfor %}
             </select>
@@ -122,7 +122,7 @@
             <select id="field_shared_with_organizations" name="shared_with_organizations" data-module="autocomplete" multiple=False>
               {% for organization in organizations  %}
               <option value="{{ organization.id }}"
-                {% if data.shared_with_organizations and organization.id in data.get('shared_with_organizations', []) %} selected="selected" {% endif %} >
+                {% if data.shared_with_organizations and organization.id in (data.get('shared_with_organizations') or []) %} selected="selected" {% endif %} >
                 {{ organization.title }}</option>
               {% endfor %}
             </select>
@@ -135,7 +135,7 @@
             <select id="field_shared_with_groups" name="shared_with_groups" data-module="autocomplete" multiple=False>
               {% for group in groups  %}
               <option value="{{ group.id }}"
-                {% if data.shared_with_groups and group.id in data.get('shared_with_groups', []) %} selected="selected" {% endif %} >
+                {% if data.shared_with_groups and group.id in (data.get('shared_with_groups') or []) %} selected="selected" {% endif %} >
                 {{ group.title }}</option>
               {% endfor %}
             </select>

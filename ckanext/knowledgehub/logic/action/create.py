@@ -3,7 +3,6 @@ import datetime
 import os
 import subprocess
 import re
-import json
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
@@ -495,7 +494,6 @@ def dashboard_create(context, data_dict):
 
     # Send notification for sharing with users
     if shared_with_users is not None:
-        shared_with_users = json.loads(shared_with_users)
         if isinstance(shared_with_users, unicode):
             shared_with_users = shared_with_users.split()
 

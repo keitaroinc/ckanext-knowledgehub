@@ -12,17 +12,19 @@ from ckanext.knowledgehub.model import (
 logger = getLogger(__name__)
 
 
+def _mock_translator():
+    # Workaround until the core translation function defaults to the Flask one
+    from paste.registry import Registry
+    from ckan.lib.cli import MockTranslator
+    registry = Registry()
+    registry.prepare()
+    from pylons import translator
+    registry.register(translator, MockTranslator())
+
+
 class CkanCoreIndex:
 
     def rebuild_index(self):
-        # Workaround until the core translation function defaults to the Flask one
-        from paste.registry import Registry
-        from ckan.lib.cli import MockTranslator
-        registry = Registry()
-        registry.prepare()
-        from pylons import translator
-        registry.register(translator, MockTranslator())
-        
         rebuild()
 
 
@@ -57,6 +59,7 @@ def rebuild_index_for(doctype):
               help='Rebuild index for specified model type. Available are: ' +
                    ','.join(sorted([k for k, _ in INDEX_EXECUTORS.items()])))
 def rebuild_index(model):
+    _mock_translator()
     types = [model]
     if model == 'all':
         # TODO: Add CKAN search index rebuild here.

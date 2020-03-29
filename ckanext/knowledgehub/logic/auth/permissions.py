@@ -23,10 +23,8 @@ def get_permission_labels(data_dict):
                     label = prefix_template % id
                     if label not in permission_labels:
                         permission_labels.append(label)
-    
+
     return permission_labels
-
-
 
 
 def get_user_permission_labels(context):
@@ -42,7 +40,7 @@ def get_user_permission_labels(context):
         for ids in [organizations, groups]:
             if ids:
                 if len(ids) > 1:
-                    labels.append('member-%s' % '-'.join(ids))
+                    labels.append('member-%s' % '-'.join(sorted(ids)))
                 for _id in ids:
                     labels.append('member-%s' % _id)
 
@@ -58,10 +56,10 @@ def _get_all_orgs_or_groups_for_user(user_id):
 
     organizations, groups = [], []
 
-    for _,group in q.all():
+    for _, group in q.all():
         if group.is_organization:
             organizations.append(group.id)
         else:
             groups.append(group.id)
-    
-    return (organizations, groups)
+
+    return (sorted(organizations), sorted(groups))

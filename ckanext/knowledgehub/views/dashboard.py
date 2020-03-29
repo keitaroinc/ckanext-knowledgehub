@@ -31,6 +31,7 @@ dashboard = Blueprint(
     url_prefix=u'/dashboards'
 )
 
+
 def _get_context():
     return dict(model=model, user=g.user,
                 auth_user_obj=g.userobj,
@@ -74,6 +75,9 @@ def index():
     global_results = get_action(u'dashboard_list')(context,
                                                    data_dict_global_results)
 
+    context.pop('ignore_auth', None)
+    context.pop('__auth_user_obj_checked', None)
+
     page_results = get_action(u'dashboard_list')(context,
                                                  data_dict_page_results)
 
@@ -111,7 +115,9 @@ def view(name):
         for ind in dashboard_dict['indicators']:
             res_view_id = ind.get('resource_view_id')
             if res_view_id:
-                res_view = get_action('resource_view_show')({'ignore_auth': True}, {
+                res_view = get_action('resource_view_show')({
+                    'ignore_auth': True
+                }, {
                     'id': res_view_id
                 })
                 ind['resource_view'] = res_view
@@ -181,7 +187,7 @@ class CreateView(MethodView):
 
             shared_with_users = data_dict.get('shared_with_users')
             if shared_with_users:
-                data_dict['shared_with_users'] = json.dumps(shared_with_users)
+                data_dict['shared_with_users'] = shared_with_users
 
             if data_dict.get('type') == 'internal':
                 indicators = []
@@ -192,8 +198,10 @@ class CreateView(MethodView):
                         id = k.split('_')[-1]
 
                         item['order'] = int(id)
-                        item['research_question'] = data_dict['research_question_{}'.format(id)]
-                        item['resource_view_id'] = data_dict['visualization_{}'.format(id)]
+                        item['research_question'] = \
+                            data_dict['research_question_{}'.format(id)]
+                        item['resource_view_id'] = \
+                            data_dict['visualization_{}'.format(id)]
                         item['size'] = data_dict['size_{}'.format(id)]
 
                         indicators.append(item)
@@ -228,22 +236,32 @@ class CreateView(MethodView):
 
                 for ind in data_dict['indicators']:
                     res_view_id = ind.get('resource_view_id')
-                    res_view = get_action('resource_view_show')(_get_context(), {
-                        'id': res_view_id
-                    })
+                    res_view = get_action('resource_view_show')(
+                        _get_context(),
+                        {
+                            'id': res_view_id
+                        })
                     ind['resource_view'] = res_view
 
                     rq = get_action('research_question_show')(_get_context(), {
                         'id': ind['research_question']
                     })
 
-                    viz_options = [{'text': 'Choose visualization', 'value': ''}]
-                    visualizations = get_action('visualizations_for_rq')(_get_context(), {
-                        'research_question': rq['title']
-                    })
+                    viz_options = [{
+                        'text': 'Choose visualization',
+                        'value': '',
+                    }]
+                    visualizations = get_action('visualizations_for_rq')(
+                        _get_context(),
+                        {
+                            'research_question': rq['title']
+                        })
 
                     for viz in visualizations:
-                        viz_options.append({'text': viz.get('title'), 'value': viz.get('id')})
+                        viz_options.append({
+                            'text': viz.get('title'),
+                            'value': viz.get('id'),
+                        })
 
                     ind['viz_options'] = viz_options
 
@@ -287,20 +305,17 @@ class EditView(MethodView):
         dashboard = data
         errors = errors or {}
 
-        if data.get('shared_with_users'):
-            data['shared_with_users'] = json.loads(data['shared_with_users'])
-        else:
-            data['shared_with_users'] = []
-
         if data.get('type') == 'internal':
             data['indicators'] = json.loads(data['indicators'])
 
             for ind in data['indicators']:
                 res_view_id = ind.get('resource_view_id')
                 if res_view_id:
-                    res_view = get_action('resource_view_show')(_get_context(), {
-                        'id': res_view_id
-                    })
+                    res_view = get_action('resource_view_show')(
+                        _get_context(),
+                        {
+                            'id': res_view_id
+                        })
                     ind['resource_view'] = res_view
 
                 rq = get_action('research_question_show')(_get_context(), {
@@ -308,12 +323,17 @@ class EditView(MethodView):
                 })
 
                 viz_options = [{'text': 'Choose visualization', 'value': ''}]
-                visualizations = get_action('visualizations_for_rq')(_get_context(), {
-                    'research_question': rq['title']
-                })
+                visualizations = get_action('visualizations_for_rq')(
+                    _get_context(),
+                    {
+                        'research_question': rq['title']
+                    })
 
                 for viz in visualizations:
-                    viz_options.append({'text': viz.get('title'), 'value': viz.get('id')})
+                    viz_options.append({
+                        'text': viz.get('title'),
+                        'value': viz.get('id'),
+                    })
 
                 ind['viz_options'] = viz_options
         else:
@@ -340,7 +360,7 @@ class EditView(MethodView):
 
             shared_with_users = data_dict.get('shared_with_users')
             if shared_with_users:
-                data_dict['shared_with_users'] = json.dumps(shared_with_users)
+                data_dict['shared_with_users'] = shared_with_users
 
             if data_dict.get('type') == 'internal':
                 indicators = []
@@ -351,8 +371,10 @@ class EditView(MethodView):
                         id = k.split('_')[-1]
 
                         item['order'] = int(id)
-                        item['research_question'] = data_dict['research_question_{}'.format(id)]
-                        item['resource_view_id'] = data_dict['visualization_{}'.format(id)]
+                        item['research_question'] = \
+                            data_dict['research_question_{}'.format(id)]
+                        item['resource_view_id'] = \
+                            data_dict['visualization_{}'.format(id)]
                         item['size'] = data_dict['size_{}'.format(id)]
 
                         indicators.append(item)
@@ -388,22 +410,34 @@ class EditView(MethodView):
 
                 for ind in data_dict['indicators']:
                     res_view_id = ind.get('resource_view_id')
-                    res_view = get_action('resource_view_show')(_get_context(), {
-                        'id': res_view_id
-                    })
+                    res_view = get_action('resource_view_show')(
+                        _get_context(),
+                        {
+                            'id': res_view_id
+                        })
                     ind['resource_view'] = res_view
 
-                    rq = get_action('research_question_show')(_get_context(), {
-                        'id': ind['research_question']
-                    })
+                    rq = get_action('research_question_show')(
+                        _get_context(),
+                        {
+                            'id': ind['research_question']
+                        })
 
-                    viz_options = [{'text': 'Choose visualization', 'value': ''}]
-                    visualizations = get_action('visualizations_for_rq')(_get_context(), {
-                        'research_question': rq['title']
-                    })
+                    viz_options = [{
+                        'text': 'Choose visualization',
+                        'value': ''
+                    }]
+                    visualizations = get_action('visualizations_for_rq')(
+                        _get_context(),
+                        {
+                            'research_question': rq['title']
+                        })
 
                     for viz in visualizations:
-                        viz_options.append({'text': viz.get('title'), 'value': viz.get('id')})
+                        viz_options.append({
+                            'text': viz.get('title'),
+                            'value': viz.get('id'),
+                        })
 
                     ind['viz_options'] = viz_options
 

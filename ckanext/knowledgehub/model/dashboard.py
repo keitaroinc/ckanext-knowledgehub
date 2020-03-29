@@ -180,7 +180,24 @@ class Dashboard(DomainObject, Indexed):
 
         shared_with_users = data.get('shared_with_users')
         if shared_with_users:
-            data['idx_shared_with_users'] = json.loads(shared_with_users)
+            user_ids = []
+            if not isinstance(shared_with_users, list):
+                shared_with_users = map(lambda _id: _id.strip(),
+                                        filter(lambda _id: _id and _id.strip(),
+                                               shared_with_users.split(',')))
+            for user_id in shared_with_users:
+                try:
+                    user = get_action('user_show')({
+                        'ignore_auth': True,
+                    }, {
+                        'id': user_id,
+                    })
+                    user_ids.append(user['id'])
+                except Exception as e:
+                    log.debug('Failed to fetch user %s. Error %s',
+                              user_id, str(e))
+            data['idx_shared_with_users'] = user_ids
+            data['shared_with_users'] = ','.join(user_ids)
 
         data['research_questions'] = ','.join(list_rqs)
         data['organizations'] = list(set(organizations))
@@ -205,13 +222,10 @@ class Dashboard(DomainObject, Indexed):
                 log.warning('Failed to get ID for organization %s. '
                             'Error: %s', org_id, str(e))
                 log.exception(e)
-            
 
         if organization_ids:
             # Must be member of ALL organizations to see this dashboard
             permission_labels.append('member-%s' % '-'.join(organization_ids))
-
-
 
         group_ids = []
         for group_id in list(set(groups)):
@@ -226,17 +240,57 @@ class Dashboard(DomainObject, Indexed):
                 log.warning('Failed to get ID for group %s. '
                             'Error: %s', org_id, str(e))
                 log.exception(e)
-            
+
         if group_ids:
             # Must be member of ALL groups to see this dashboard.
             permission_labels.append('member-%s' % '-'.join(group_ids))
-        
+
         if data.get('created_by'):
             permission_labels.append('creator-%s' % data['created_by'])
 
         data['permission_labels'] = permission_labels
-
         data['permission_labels'] = get_permission_labels(data)
+
+        # Check each dataset, if explicitly shared with users.
+        # If there are users that have access to all datasets, then we must
+        # add the same permission label for those users (user-<id>) the
+        # dashboard as well to add access to those users to this dataset.
+        if data.get('datasets'):
+            datasets = map(lambda _id: _id.strip(),
+                           filter(lambda _id: _id and _id.strip(),
+                                  data['datasets'].split(',')))
+            shared_users = {}
+            for dataset in datasets:
+                try:
+                    dataset = get_action('package_show')({
+                        'ignore_auth': True,
+                    }, {
+                        'id': dataset,
+                    })
+
+                    shared_users[dataset['id']] = set()
+                    for user_id in map(lambda _id: _id.strip(),
+                                       filter(lambda _id: _id and _id.strip(),
+                                              dataset.get('shared_with_users',
+                                                          '').split(','))):
+                        shared_users[dataset['id']].add(user_id)
+
+                    users_with_access = None
+                    for _, user_ids in shared_users.items():
+                        if users_with_access is None:
+                            users_with_access = user_ids
+                        else:
+                            users_with_access = \
+                                users_with_access.intersection(user_ids)
+                    if users_with_access:
+                        for user_id in users_with_access:
+                            label = 'user-%s' % user_id
+                            if label not in data['permission_labels']:
+                                data['permission_labels'].append(label)
+
+                except Exception as e:
+                    log.debug('Cannot fetch dataset %s. Error: %s',
+                              dataset, str(e))
 
         return data
 

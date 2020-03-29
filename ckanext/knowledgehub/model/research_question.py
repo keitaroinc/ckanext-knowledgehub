@@ -82,6 +82,17 @@ class ResearchQuestion(DomainObject, Indexed):
     ]
 
     @classmethod
+    def get_by_id_name_or_title(cls, id_name_title):
+        query = Session.query(cls).filter(
+            or_(
+                research_question.c.id == id_name_title,
+                research_question.c.name == id_name_title,
+                research_question.c.title == id_name_title,
+            )
+        )
+        return query.first()
+
+    @classmethod
     def get(cls, id_or_name=None, **kwargs):
         q = kwargs.get('q')
         limit = kwargs.get('limit')
@@ -114,7 +125,6 @@ class ResearchQuestion(DomainObject, Indexed):
 
         if offset:
             query = query.offset(offset)
-
         return query
 
     @classmethod
