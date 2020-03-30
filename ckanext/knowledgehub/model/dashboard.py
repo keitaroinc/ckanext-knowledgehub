@@ -82,217 +82,290 @@ class Dashboard(DomainObject, Indexed):
         unprefixed('idx_shared_with_users'),
         unprefixed('idx_shared_with_organiztions'),
         unprefixed('idx_shared_with_groups'),
+        unprefixed('idx_datasets'),
         unprefixed('permission_labels'),
     ]
     doctype = 'dashboard'
 
-    @staticmethod
-    def before_index(data):
+    @classmethod
+    def before_index(cls, data):
         indicators = []
         if data.get('indicators'):
             indicators = json.loads(data['indicators'])
-        list_rqs = []
-        organizations = []
-        groups = []
-        rq_ids = []
 
+        datasets = {}
+        organizations = {}
+        groups = {}
+        research_questions = {}
+        visualizations = {}
+        tags = {}
+        keywords = {}
+
+        research_question_ids = set()
+        resource_view_ids = set()
         if data.get('type') == 'internal':
-            datasets = []
             for k in indicators:
-                res_q = get_action('research_question_show')(
-                    {'ignore_auth': True},
-                    {'id': k['research_question']}
-                )
-                list_rqs.append(res_q['title'])
-                rq_ids.append(k['research_question'])
-
-                docs = get_action('search_visualizations')(
-                    {'ignore_auth': True},
-                    {'text': '*', 'fq': 'entity_id:' + k['resource_view_id']}
-                ) if k.get('resource_view_id') else {}
-                for v in docs.get('results', []):
-                    organization = v.get('organizations')
-                    if organization:
-                        organizations.extend(organization)
-                    view_groups = v.get('groups')
-                    if view_groups:
-                        groups.extend(view_groups)
-                    package_id = v.get('package_id')
-                    if package_id:
-                        datasets.append(package_id)
-
-                data['datasets'] = ', '.join(list(set(datasets)))
+                if k.get('research_question'):
+                    research_question_ids.add(k['research_question'])
+                if k.get('resource_view_id'):
+                    resource_view_ids.add(k['resource_view_id'])
         else:
-            if isinstance(indicators, unicode):
-                res_q = get_action('research_question_show')(
-                    {'ignore_auth': True},
-                    {'id': indicators}
-                )
-                list_rqs.append(res_q['title'])
-                rq_ids.append(indicators)
+            if isinstance(indicators, unicode) or isinstance(indicators, str):
+                # The indicator seems to be the research question ID
+                research_question_ids.add(indicators)
             elif isinstance(indicators, list):
                 for i in indicators:
-                    res_q = get_action('research_question_show')(
-                        {'ignore_auth': True},
-                        {'id': i['research_question']}
-                    )
-                    list_rqs.append(res_q['title'])
-                    rq_ids.append(i['research_question'])
+                    research_question_ids.add(i['research_question'])
+            else:
+                log.warning('The indicators was expected to be string/unicode '
+                            'or list, however %s was received. Indicators: %s',
+                            str(type(indicators)),
+                            str(indicators))
 
-            if data.get('datasets'):
-                datasets = data.get('datasets').split(', ')
-                for dataset_id in datasets:
-                    package = get_action('package_show')(
-                        {'ignore_auth': True},
-                        {'id': dataset_id, 'include_tracking': True})
-                    if package:
-                        organizations.append(
-                            package.get('organization', {}).get('name')
-                        )
+        # Load packages (when external dashboard)
+        if data.get('datasets'):
+            for dataset_id in map(lambda _id: _id.strip(),
+                                  filter(lambda _id: _id and _id.strip(),
+                                         data.get('datasets', '').split(','))):
+                pkg = cls._get_package(dataset_id)
+                if pkg:
+                    datasets[pkg['id']] = pkg
 
-                        for g in package.get('groups', []):
-                            groups.append(g.get('name'))
+        # Load the research questions related to this dashboard.
+        for research_question_id in research_question_ids:
+            try:
+                rq = get_action('research_question_show')({
+                    'ignore_auth': True,
+                }, {
+                    'id': research_question_id,
+                })
+                research_questions[rq['id']] = rq
+            except Exception as e:
+                log.warning('Failed to research question %s. Error: %s',
+                            research_question_id,
+                            str(e))
+                log.exception(e)
 
-        if rq_ids:
-            data['idx_research_questions'] = rq_ids
+        # Load resource views (visualizations). Also loads the packages.
+        for resource_view_id in resource_view_ids:
+            try:
+                rv = get_action('resource_view_show')({
+                    'ignore_auth': True,
+                }, {
+                    'id': resource_view_id,
+                })
+                visualizations[rv['id']] = rv
+                if rv['package_id'] not in datasets:
+                    pkg = cls._get_package(rv['package_id'])
+                    if pkg:
+                        datasets[pkg['id']] = pkg
+            except Exception as e:
+                log.warning('Failed to fetch resource view %s. Error: %s',
+                            resource_view_id,
+                            str(e))
+                log.exception(e)
 
-        keywords = set()
+        # Load tags and keywords
         if data.get('tags'):
-            data['tags'] = data.get('tags').split(',')
-            data['idx_tags'] = data['tags']
-            for tag in data['tags']:
+            for tag_id in map(lambda t: t.strip(),
+                              filter(lambda t: t and t.strip(),
+                                     data.get('tags', '').split(','))):
                 try:
-                    tag_obj = get_action('tag_show')(
-                        {'ignore_auth': True},
-                        {'id': tag}
-                    )
-                except logic.NotFound:
-                    continue
-
-                if tag_obj.get('keyword_id'):
-                    keyword_obj = get_action('keyword_show')(
-                        {'ignore_auth': True},
-                        {'id': tag_obj.get('keyword_id')}
-                    )
-                    keywords.add(keyword_obj.get('name'))
-                    if keywords:
-                        data['keywords'] = ','.join(keywords)
-
-        shared_with_users = data.get('shared_with_users')
-        if shared_with_users:
-            user_ids = []
-            if not isinstance(shared_with_users, list):
-                shared_with_users = map(lambda _id: _id.strip(),
-                                        filter(lambda _id: _id and _id.strip(),
-                                               shared_with_users.split(',')))
-            for user_id in shared_with_users:
-                try:
-                    user = get_action('user_show')({
+                    tag = get_action('tag_show')({
                         'ignore_auth': True,
                     }, {
-                        'id': user_id,
+                        'id': tag_id,
                     })
-                    user_ids.append(user['id'])
+                    tags[tag['id']] = tag
+
+                    keyword_id = tag.get('keyword_id')
+                    if keyword_id and keyword_id not in keywords:
+                        try:
+                            keyword = get_action('keyword_show')({
+                                'ignore_auth': True,
+                            }, {
+                                'id': keyword_id,
+                            })
+                            keywords[keyword['id']] = keyword
+                        except Exception as e:
+                            log.warning('Failed to fetch keyword %s. '
+                                        'Error: %s',
+                                        keyword_id,
+                                        str(e))
+                            log.exception(e)
                 except Exception as e:
-                    log.debug('Failed to fetch user %s. Error %s',
-                              user_id, str(e))
-            data['idx_shared_with_users'] = user_ids
-            data['shared_with_users'] = ','.join(user_ids)
+                    log.warning('Failed to fetch tag %s. Error: %s',
+                                tag_id,
+                                str(e))
+                    log.exception(e)
 
-        data['research_questions'] = ','.join(list_rqs)
-        data['organizations'] = list(set(organizations))
-        data['groups'] = list(set(groups))
+        # set groups and organizations
+        for _, pkg in datasets.items():
+            if pkg.get('organization'):
+                org = pkg['organization']
+                organizations[org['id']] = org
+            if pkg.get('group'):
+                group = pkg['group']
+                groups[group['id']] = group
 
-        # indexed for interests calculation
-        if keywords:
-            data['keywords'] = ','.join(keywords)
-            data['idx_keywords'] = list(keywords)
+        # Set data
+        data['datasets'] = ','.join(datasets.keys())
+        data['idx_datasets'] = list(datasets.keys())
+        data['research_questions'] = ','.join(map(lambda (_, rq): rq['title'],
+                                                  research_questions.items()))
+        data['organizations'] = ','.join(map(lambda (_, o): o['name'],
+                                             organizations.items()))
+        data['groups'] = ','.join(map(lambda (_, g): g['name'],
+                                      groups.items()))
+        data['tags'] = ','.join(map(lambda (_, t): t['name'], tags.items()))
+        data['keywords'] = ','.join(map(lambda (_, k): k['name'],
+                                        keywords.items()))
 
+        # Set idx_ (id index) for usage in user interests
+        data['idx_research_questions'] = list(research_questions.keys())
+        data['idx_tags'] = list(map(lambda (_, t): t['name'], tags.items()))
+        data['idx_keywords'] = list(map(lambda (_, k): k['name'],
+                                        keywords.items()))
+
+        permission_labels = cls._generate_dashboard_permission_labels(
+            data,
+            datasets,
+            organizations,
+            groups,
+        )
+        if permission_labels:
+            data['permission_labels'] = permission_labels
+
+        # Remap 'shared_with_' properties
+        for field in ['shared_with_organizations',
+                      'shared_with_groups']:
+            if data.get(field):
+                data['idx_%s' % field] = data[field].split(',')
+
+        return data
+
+    @classmethod
+    def _generate_dashboard_permission_labels(cls,
+                                              data,
+                                              datasets,
+                                              organizations,
+                                              groups):
         permission_labels = []
-        organization_ids = []
-        for org_id in list(set(organizations)):
-            try:
-                org = get_action('organization_show')({
-                    'ignore_auth': True,
-                }, {
-                    'id': org_id,
-                })
-                organization_ids.append(org['id'])
-            except Exception as e:
-                log.warning('Failed to get ID for organization %s. '
-                            'Error: %s', org_id, str(e))
-                log.exception(e)
-
-        if organization_ids:
-            # Must be member of ALL organizations to see this dashboard
-            permission_labels.append('member-%s' % '-'.join(organization_ids))
-
-        group_ids = []
-        for group_id in list(set(groups)):
-            try:
-                group = get_action('group_show')({
-                    'ignore_auth': True,
-                }, {
-                    'id': group_id,
-                })
-                group_ids.append(group['id'])
-            except Exception as e:
-                log.warning('Failed to get ID for group %s. '
-                            'Error: %s', org_id, str(e))
-                log.exception(e)
-
-        if group_ids:
-            # Must be member of ALL groups to see this dashboard.
-            permission_labels.append('member-%s' % '-'.join(group_ids))
+        users = {}
+        user_ids = set()
 
         if data.get('created_by'):
             permission_labels.append('creator-%s' % data['created_by'])
 
-        data['permission_labels'] = permission_labels
-        data['permission_labels'] = get_permission_labels(data)
+        if data.get('shared_with_users'):
+            shared_with = cls._get_safe_shared_with(data['shared_with_users'])
+            for user_id in map(lambda _id: _id.strip(),
+                               filter(lambda _id: _id and _id.strip(),
+                                      shared_with.split(','))):
+                user = cls._get_user(user_id)
+                if user:
+                    users[user['id']] = user
+        data['shared_with_users'] = ','.join(users.keys())
+        data['idx_shared_with_users'] = list(users.keys())
+
+        # Attach permission labels for explicit sharing (with user,
+        # organization or group)
+        permission_labels += get_permission_labels(data)
+
+        # Add aggregated permission labels.
+        if organizations:
+            # The user must be member of ALL organizations related to the
+            #  datasets in this dashboard
+            permission_labels.append('member-%s' %
+                                     '-'.join(sorted(
+                                                list(organizations.keys()))))
+
+        if groups:
+            # The user must be member of ALL organizations related to the
+            #  datasets in this dashboard
+            permission_labels.append('member-%s' %
+                                     '-'.join(sorted(list(groups.keys()))))
 
         # Check each dataset, if explicitly shared with users.
         # If there are users that have access to all datasets, then we must
         # add the same permission label for those users (user-<id>) the
         # dashboard as well to add access to those users to this dataset.
-        if data.get('datasets'):
-            datasets = map(lambda _id: _id.strip(),
-                           filter(lambda _id: _id and _id.strip(),
-                                  data['datasets'].split(',')))
-            shared_users = {}
-            for dataset in datasets:
-                try:
-                    dataset = get_action('package_show')({
-                        'ignore_auth': True,
-                    }, {
-                        'id': dataset,
-                    })
+        shared_users = []
+        for _, dataset in datasets.items():
+            if dataset.get('shared_with_users'):
+                shared_with = cls._get_safe_shared_with(
+                    dataset['shared_with_users'])
+                user_with_access = set()
+                for user_id in map(lambda u: u.strip(),
+                                   filter(lambda u: u and u.strip(),
+                                          shared_with.split(','))):
+                    # We might get the ID or the name of the user
+                    user = cls._get_user(user_id)
+                    if user:
+                        user_with_access.add(user['id'])
 
-                    shared_users[dataset['id']] = set()
-                    for user_id in map(lambda _id: _id.strip(),
-                                       filter(lambda _id: _id and _id.strip(),
-                                              dataset.get('shared_with_users',
-                                                          '').split(','))):
-                        shared_users[dataset['id']].add(user_id)
+                shared_users.append(user_with_access)
 
-                    users_with_access = None
-                    for _, user_ids in shared_users.items():
-                        if users_with_access is None:
-                            users_with_access = user_ids
-                        else:
-                            users_with_access = \
-                                users_with_access.intersection(user_ids)
-                    if users_with_access:
-                        for user_id in users_with_access:
-                            label = 'user-%s' % user_id
-                            if label not in data['permission_labels']:
-                                data['permission_labels'].append(label)
+        if shared_users:
+            if len(shared_users) == 1:
+                for user_id in shared_users[0]:
+                    permission_labels.append('user-%s' % user_id)
+            else:
+                user_with_access = shared_users[0]
+                for i in range(1, len(shared_users)):
+                    user_with_access = \
+                        user_with_access.intersection(shared_users[i])
 
-                except Exception as e:
-                    log.debug('Cannot fetch dataset %s. Error: %s',
-                              dataset, str(e))
+                for user_id in user_with_access:
+                    permission_labels.append('user-%s' % user_id)
 
-        return data
+        return permission_labels
+
+    @classmethod
+    def _get_safe_shared_with(cls, value):
+        '''This function returns a comma separated string of the values in
+        properties like shared_with_users.
+        Because earlier version kept these properties differently - some were
+        serializing a set (string value {"a","b","c"}), and some are keeping
+        json versions of the values, this function will check for those cases
+        and will return a comma separated string of the values always.
+        '''
+        if isinstance(value, list):
+            return ','.join(value)
+        if value.startswith('{') and value.endswith('}'):
+            return value[1:-1]
+        if value.startswith('"') and value.endswith('"'):
+            return ','.join(json.loads('[%s]' % value))
+        return value
+
+    @classmethod
+    def _get_user(cls, user_id):
+        try:
+            return get_action('user_show')({
+                'ignore_auth': True,
+            }, {
+                'id': user_id,
+            })
+        except Exception as e:
+            log.warning('Failed to fetch user %s. Error: %s', user_id, str(e))
+            log.exception(e)
+        return None
+
+    @classmethod
+    def _get_package(cls, pkg_id):
+        try:
+            pkg = get_action('package_show')({
+                'ignore_auth': True,
+            }, {
+                'id': pkg_id,
+            })
+            return pkg
+        except Exception as e:
+            log.warning('Failed to get package %s. Error: %s',
+                        dataset_id,
+                        str(e))
+            log.exception(e)
+        return None
 
     @classmethod
     def get(cls, reference):

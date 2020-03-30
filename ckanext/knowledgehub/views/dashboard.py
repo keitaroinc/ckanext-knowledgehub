@@ -254,7 +254,7 @@ class CreateView(MethodView):
                     visualizations = get_action('visualizations_for_rq')(
                         _get_context(),
                         {
-                            'research_question': rq['title']
+                            'research_question': rq['id']
                         })
 
                     for viz in visualizations:
@@ -326,7 +326,7 @@ class EditView(MethodView):
                 visualizations = get_action('visualizations_for_rq')(
                     _get_context(),
                     {
-                        'research_question': rq['title']
+                        'research_question': rq['id']
                     })
 
                 for viz in visualizations:
@@ -430,7 +430,7 @@ class EditView(MethodView):
                     visualizations = get_action('visualizations_for_rq')(
                         _get_context(),
                         {
-                            'research_question': rq['title']
+                            'research_question': rq['id']
                         })
 
                     for viz in visualizations:

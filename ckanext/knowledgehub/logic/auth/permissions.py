@@ -53,6 +53,7 @@ def _get_all_orgs_or_groups_for_user(user_id):
                model.member_table.c.group_id == model.group_table.c.id)
     q = q.filter(model.member_table.c.table_id == user_id)
     q = q.filter(model.member_table.c.table_name == 'user')
+    q = q.filter(model.member_table.c.state == 'active')
 
     organizations, groups = [], []
 

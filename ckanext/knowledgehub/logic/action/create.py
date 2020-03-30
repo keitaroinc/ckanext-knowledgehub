@@ -463,7 +463,10 @@ def dashboard_create(context, data_dict):
             dashboard.datasets = ', '.join(datasets)
 
     if shared_with_users is not None:
-        dashboard.shared_with_users = shared_with_users
+        if isinstance(shared_with_users, list):
+            dashboard.shared_with_users = ','.join(shared_with_users)
+        else:
+            dashboard.shared_with_users = shared_with_users
 
     tags = data_dict.get('tags', '')
     if tags:
@@ -1447,13 +1450,15 @@ def upsert_dataset_to_hdx(context, data_dict):
             'dataset_source': hdx_newest_dataset['dataset_source'],
             'maintainer': hdx_newest_dataset['maintainer'],
             'dataset_date': hdx_newest_dataset['dataset_date'],
-            'data_update_frequency': hdx_newest_dataset['data_update_frequency'],
+            'data_update_frequency':
+                hdx_newest_dataset['data_update_frequency'],
             'license_id': hdx_newest_dataset['license_id'],
             'methodology': hdx_newest_dataset['methodology'],
             'num_resources': hdx_newest_dataset['num_resources'],
             'url': hdx_newest_dataset['url'],
             'package_creator': hdx_newest_dataset['package_creator'],
-            'relationships_as_object': hdx_newest_dataset['relationships_as_object'],
+            'relationships_as_object':
+                hdx_newest_dataset['relationships_as_object'],
             'id': hdx_newest_dataset['id'],
             'metadata_created': hdx_newest_dataset['metadata_created'],
             'archived': hdx_newest_dataset['archived'],
@@ -1462,7 +1467,8 @@ def upsert_dataset_to_hdx(context, data_dict):
             'version': hdx_newest_dataset['version'],
             'type': hdx_newest_dataset['type'],
             'total_res_downloads': hdx_newest_dataset['total_res_downloads'],
-            'pageviews_last_14_days': hdx_newest_dataset['pageviews_last_14_days'],
+            'pageviews_last_14_days':
+                hdx_newest_dataset['pageviews_last_14_days'],
             'creator_user_id': hdx_newest_dataset['creator_user_id'],
             'organization': hdx_newest_dataset['organization'],
             'num_tags': hdx_newest_dataset['num_tags'],
@@ -1471,7 +1477,8 @@ def upsert_dataset_to_hdx(context, data_dict):
             'updated_by_script': hdx_newest_dataset['updated_by_script'],
             'is_fresh': hdx_newest_dataset['is_fresh'],
             'solr_additions': hdx_newest_dataset['solr_additions'],
-            'relationships_as_subject': hdx_newest_dataset['relationships_as_subject'],
+            'relationships_as_subject':
+                hdx_newest_dataset['relationships_as_subject'],
             'is_requestdata_type': hdx_newest_dataset['is_requestdata_type'],
         }
 

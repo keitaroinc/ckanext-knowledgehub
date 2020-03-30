@@ -46,7 +46,10 @@ from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
 from ckanext.knowledgehub.lib.profile import user_profile_service
-from ckanext.knowledgehub.logic.jobs import schedule_update_index
+from ckanext.knowledgehub.logic.jobs import (
+    schedule_update_index,
+    update_dashboard_index
+)
 
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -431,8 +434,6 @@ def dashboard_update(context, data_dict):
         :param indicators
         :param tags
     '''
-    check_access('dashboard_update', context)
-
     name_or_id = data_dict.get("id") or data_dict.get("name")
 
     if name_or_id is None:
@@ -463,7 +464,24 @@ def dashboard_update(context, data_dict):
         dashboard.datasets = ''
 
     existing_shared_users = dashboard.shared_with_users or []
-    dashboard.shared_with_users = data_dict.get('shared_with_users')
+    if existing_shared_users and not isinstance(existing_shared_users, list):
+        if existing_shared_users.startswith('{') and \
+                existing_shared_users.endswith('}'):
+            existing_shared_users = existing_shared_users[1:-1]
+
+        existing_shared_users = map(lambda s: s.strip('"'),
+                                    existing_shared_users.split(','))
+    shared_with_users = data_dict.get('shared_with_users', '')
+    if isinstance(shared_with_users, list):
+        dashboard.shared_with_users = ','.join(shared_with_users)
+    else:
+        dashboard.shared_with_users = shared_with_users
+
+    for field in ['shared_with_organizations', 'shared_with_groups']:
+        value = data_dict.get(field, '')
+        if isinstance(value, list):
+            value = ','.join(value)
+        setattr(dashboard, field, value or '')
 
     items = ['name', 'title', 'description',
              'indicators', 'source', 'type', 'tags']
@@ -570,7 +588,7 @@ def package_update(context, data_dict):
     existing_shared_users = package.get('shared_with_users', [])
     if existing_shared_users:
         if existing_shared_users.startswith('{') and \
-            existing_shared_users.endswith('}'):
+                existing_shared_users.endswith('}'):
             existing_shared_users = existing_shared_users[1:-1]
 
         existing_shared_users = existing_shared_users.split(',')
@@ -634,6 +652,17 @@ def package_update(context, data_dict):
             'Unable to update dataset {} to knowledgehub data: {}'.format(
                 result.get('id'), str(e)
             ))
+
+    try:
+        log.debug('Refreshing index for related dashboards...')
+        update_dashboard_index([result['id']])
+        log.debug('Dashboard index refreshed successfully.')
+    except Exception as e:
+        log.warning('Failed to refresh dashboard index for package %s. '
+                    'Error: %s',
+                    result.get('id'),
+                    str(e))
+        log.exception(e)
 
     return result
 
