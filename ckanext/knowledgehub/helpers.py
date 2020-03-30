@@ -680,7 +680,10 @@ def get_map_data(geojson_url, map_key_field, data_key_field,
                  data_value_field, from_where_clause):
 
     geojson_keys = []
-    username = request.environ.get(u'REMOTE_USER', u'')
+
+    username = None
+    if hasattr(g, 'user'):
+        username = g.user
 
     user = model.User.by_name(username)
     context = {
@@ -741,20 +744,12 @@ def get_map_data(geojson_url, map_key_field, data_key_field,
 
 
 # Gets the properties from the geojson file, to populate the dropdowns
-def get_geojson_properties(url):
+def get_geojson_properties(url, username):
     # TODO handle if no url
     # TODO handle topojson format
 
-    username = request.environ.get(u'REMOTE_USER', u'')
-
-    user = model.User.by_name(username)
-    context = {
-            'user': user.get('name'),
-            'auth_user_obj': user,
-            'model': model,
-            'user': username
-        }
-    user_dict = model_dictize.user_dictize(user, context)
+    user_dict = toolkit.get_action('user_show')(
+                {'ignore_auth': True}, {'id': username})
 
     # give the apikey to requests, so the geojson file is accessible
     resp = requests.get(url, headers={'Authorization': user_dict.get('apikey') })
