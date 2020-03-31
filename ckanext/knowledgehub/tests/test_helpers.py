@@ -695,7 +695,6 @@ class TestKWHHelpers(ActionsBase):
                 "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
 
         }
-        print(user)
         url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
         res = kwh_helpers.get_geojson_properties(url, context.get('user'))
         assert_equals(len(res), 26)
