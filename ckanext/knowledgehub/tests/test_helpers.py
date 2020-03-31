@@ -11,6 +11,7 @@ from ckan.tests import helpers
 from ckan.plugins import toolkit as toolkit
 from ckan import model
 from ckan.common import g
+from collections import namedtuple
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import (
@@ -415,6 +416,7 @@ class TestKWHHelpers(ActionsBase):
         assert_equals(total, 1)
 
     @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'search_index', mock.Mock())
     def test_get_dashboards(self):
         user = factories.Sysadmin()
         context = {
@@ -433,9 +435,13 @@ class TestKWHHelpers(ActionsBase):
         }
         dashboard = create_actions.dashboard_create(context, data_dict)
 
+        _Docs = namedtuple('_Docs', ['docs', 'hits'])
+        Dashboard.search_index.return_value = _Docs([data_dict], 1)
+
         dashboards = kwh_helpers.get_dashboards(ctx=context)
 
         assert_equals(len(dashboards), 1)
+        assert_equals(Dashboard.search_index.call_count, 1)
 
     def test_remove_space_for_url(self):
         url = 'http://host:port/lang/data set'

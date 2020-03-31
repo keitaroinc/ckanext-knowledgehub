@@ -204,9 +204,9 @@ class Dashboard(DomainObject, Indexed):
             if pkg.get('organization'):
                 org = pkg['organization']
                 organizations[org['id']] = org
-            if pkg.get('group'):
-                group = pkg['group']
-                groups[group['id']] = group
+            if pkg.get('groups'):
+                for group in pkg['groups']:
+                    groups[group['id']] = group
 
         # Set data
         data['datasets'] = ','.join(datasets.keys())

@@ -1617,7 +1617,9 @@ def dash_search_tag(context, data_dict):
     for dash in dash_list:
         tags = dash.get('tags')
         if tags:
-            for element in tags.split(','):
+            if isinstance(tags, str) or isinstance(tags, unicode):
+                tags = tags.split(',')
+            for element in tags:
                 if element == tag:
                     dash_id = dash.get('id')
                     result.append(dash_id)

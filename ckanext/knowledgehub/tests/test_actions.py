@@ -12,6 +12,7 @@ from ckan.plugins import toolkit
 from ckan import model
 from datetime import datetime
 from ckan.common import config
+from collections import namedtuple
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import setup as rq_db_setup
@@ -770,6 +771,7 @@ class TestKWHGetActions(ActionsBase):
         )
 
     @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
+    @monkey_patch(Dashboard, 'search_index', mock.Mock())
     def test_dashboard_show_list(self):
         user = factories.Sysadmin()
         context = {
@@ -791,6 +793,8 @@ class TestKWHGetActions(ActionsBase):
             return data_dict
 
         Dashboard.add_to_index.side_effect = _mock_create_dashboard
+        _Docs = namedtuple('_Docs', ['docs', 'hits'])
+        Dashboard.search_index.return_value = _Docs([data_dict], 1)
 
         dashboard = create_actions.dashboard_create(context, data_dict)
 
@@ -804,6 +808,7 @@ class TestKWHGetActions(ActionsBase):
         dashboard_list = get_actions.dashboard_list(context, {})
 
         assert_equals(dashboard_list.get('total'), 1)
+        assert_equals(Dashboard.search_index.call_count, 1)
 
     @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_resource_user_feedback_show_list(self):
