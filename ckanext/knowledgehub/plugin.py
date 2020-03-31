@@ -27,6 +27,7 @@ from ckanext.datastore.backend.postgres import insert_data
 from ckanext.datastore.backend.postgres import create_indexes
 from ckanext.datastore.backend.postgres import create_alias
 from ckanext.datastore.backend.postgres import _unrename_json_field
+from ckanext.datastore.backend.postgres import _guess_type
 
 import ckanext.knowledgehub.helpers as h
 from ckanext.knowledgehub.helpers import _register_blueprints
