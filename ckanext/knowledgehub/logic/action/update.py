@@ -26,6 +26,7 @@ from ckan.logic.action.update import resource_update as ckan_rsc_update
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.update import package_update as ckan_package_update
+from ckan.lib.helpers import url_for
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
@@ -46,6 +47,7 @@ from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
 from ckanext.knowledgehub.lib.profile import user_profile_service
+from ckanext.knowledgehub.lib.util import get_as_list
 from ckanext.knowledgehub.logic.jobs import (
     schedule_update_index,
     update_dashboard_index
@@ -472,6 +474,19 @@ def dashboard_update(context, data_dict):
         existing_shared_users = map(lambda s: s.strip('"'),
                                     existing_shared_users.split(','))
     shared_with_users = data_dict.get('shared_with_users', '')
+
+    shared_with_organizations = get_as_list('shared_with_organizations',
+                                            data_dict)
+    shared_with_groups = get_as_list('shared_with_groups', data_dict)
+
+    already_shared_groups = []
+    already_shared_organizations = []
+    if dashboard.shared_with_groups:
+        already_shared_groups = dashboard.shared_with_groups.split(',')
+    if dashboard.shared_with_organizations:
+        already_shared_organizations = \
+            dashboard.shared_with_organizations.split(',')
+
     if isinstance(shared_with_users, list):
         dashboard.shared_with_users = ','.join(shared_with_users)
     else:
@@ -558,6 +573,36 @@ def dashboard_update(context, data_dict):
         plugin_helpers.Entity.Dashboard,
         plugin_helpers.Permission.Granted
     )
+
+    sharing = [
+        ['organization', shared_with_organizations,
+         already_shared_organizations],
+        ['group', shared_with_groups, already_shared_groups],
+    ]
+
+    for _type, new_list, old_list in sharing:
+        notify_revoked = set(old_list).difference(set(new_list))
+        notify_granted = set(new_list).difference(set(old_list))
+
+        plugin_helpers.notification_broadcast({
+            'ignore_auth': True,
+            'auth_user_obj': context.get('auth_user_obj'),
+        }, {
+            'title': _('Access granted'),
+            'description': _('Dashboard {} have been shared '
+                             'with your {}.').format(dashboard.title, _type),
+            'link': url_for('dashboards_view', name=dashboard.name),
+        }, notify_granted)
+
+        plugin_helpers.notification_broadcast({
+            'ignore_auth': True,
+            'auth_user_obj': context.get('auth_user_obj'),
+        }, {
+            'title': _('Access revoked'),
+            'description': _('Dashboard {} have been removed '
+                             'from your {}.').format(dashboard.title, _type),
+            'link': url_for('dashboards_view', name=dashboard.name),
+        }, notify_granted)
 
     # Update kwh data
     try:

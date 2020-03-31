@@ -49,6 +49,7 @@ from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.lib.profile import user_profile_service
+from ckanext.knowledgehub.lib.util import get_as_list
 from ckanext.knowledgehub.logic.jobs import schedule_update_index
 
 log = logging.getLogger(__name__)
@@ -449,6 +450,12 @@ def dashboard_create(context, data_dict):
     indicators = data.get('indicators')
     datasets = data_dict.get('datasets')
     shared_with_users = data_dict.get('shared_with_users')
+    shared_with_organizations = get_as_list('shared_with_organizations',
+                                            data_dict)
+    shared_with_groups = get_as_list('shared_with_groups', data_dict)
+
+    dashboard.shared_with_organizations = ','.join(shared_with_organizations)
+    dashboard.shared_with_groups = ','.join(shared_with_groups)
 
     if source is not None:
         dashboard.source = source
@@ -510,18 +517,34 @@ def dashboard_create(context, data_dict):
 
     # Add to kwh data
     try:
-        data_dict = {
+        kwh_data = {
             'type': 'dashboard',
             'title': dashboard_data.get('title'),
             'description': dashboard_data.get('description'),
             'dashboard': dashboard_data.get('id')
         }
-        logic.get_action('kwh_data_create')(context, data_dict)
+        logic.get_action('kwh_data_create')(context, kwh_data)
     except Exception as e:
         log.debug(
             'Unable to store dashboard %s to knowledgehub data: %s' %
             (dashboard_data.get('id'), str(e))
         )
+
+    def _notification(_type):
+        return {
+            'title': _('Permission granted'),
+            'description': _('The dashboard {} have been '
+                             'shared with your {}.').format(dashboard.title,
+                                                            _type),
+            'link': url_for('dashboards_view', name=dashboard.name),
+        }
+
+    for _type, groups in [('organization', shared_with_organizations),
+                          ('group', shared_with_groups)]:
+        plugin_helpers.notification_broadcast({
+            'ignore_auth': True,
+            'auth_user_obj': context.get('auth_user_obj'),
+        }, _notification(_type), groups)
 
     return dashboard_data
 

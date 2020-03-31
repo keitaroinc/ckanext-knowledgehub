@@ -101,3 +101,17 @@ class monkey_patch:
         _with_patched.__module__ = method.__module__
         _with_patched.__doc__ = method.__doc__
         return _with_patched
+
+
+def get_as_list(prop, data):
+    if prop not in data:
+        return []
+    value = data[prop]
+    if not value:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, unicode) or isinstance(value, str):
+        return map(lambda v: v.strip(),
+                   filter(lambda v: v and v.strip(), value.split(',')))
+    return []

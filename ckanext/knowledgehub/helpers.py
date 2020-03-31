@@ -1616,3 +1616,46 @@ def resource_validation_notification(editor_obj, data, entity):
             {'ignore_auth': True}, data_dict)
     except Exception as e:
         log.debug('Unable to send notification: %s' % str(e))
+
+
+def notification_broadcast(context, notification, orgs_or_groups):
+
+    sender = context.get('auth_user_obj')
+
+    def _get_members(group_id):
+        try:
+            return toolkit.get_action('member_list')(context, {
+                'id': group_id,
+                'object_type': 'user',
+            })
+        except Exception as e:
+            log.warning('Failed to get members list for group %s. Error: %s',
+                        group_id, str(e))
+            log.exception(e)
+        return []
+
+    def _send_notification(notification, user_id):
+        send_notif = {}
+        send_notif.update(notification)
+        send_notif['recepient'] = user_id
+
+        try:
+            toolkit.get_action('notification_create')(context, send_notif)
+        except Exception as e:
+            log.warning('Failed to send notification to user: %s. Error: %s',
+                        user_id, str(e))
+            log.exception(e)
+
+    users = set()
+    for group_id in orgs_or_groups:
+        members = _get_members(group_id)
+        if members:
+            for user_id, _, _ in members:
+                if sender and sender.id == user_id:
+                    continue
+                users.add(user_id)
+
+    log.debug('Broadcasting message to %d users.', len(users))
+    for user_id in users:
+        _send_notification(notification, user_id)
+    log.debug('Notifications sent.')
