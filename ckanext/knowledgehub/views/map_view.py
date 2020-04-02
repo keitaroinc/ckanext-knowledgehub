@@ -69,7 +69,7 @@ def _process_post_data(data, resource_id):
             data['map_field_description']
         if data.get('map_research_questions'):
             config['research_questions'] = \
-                data['research_questions']
+                data['map_research_questions']
         if data.get('tags'):
             config['tags'] = \
                 data['tags']

@@ -117,7 +117,7 @@
                     {% endif %}
                   {% endfor %}
                 {% else %}
-                  {% if chart.research_questions == k.text %}
+                  {% if map.research_questions == k.text %}
                     {% set new_item = dict.__setitem__(k.text, "True") %}
                   {% endif %}
                 {% endif %}
