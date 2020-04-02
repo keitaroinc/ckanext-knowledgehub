@@ -156,3 +156,7 @@ def notification_list(context, data_dict=None):
 
 def notification_show(context, data_dict):
     return {'success': True}
+
+
+def get_groups_for_user(context, data_dict=None):
+    return {'success': False}

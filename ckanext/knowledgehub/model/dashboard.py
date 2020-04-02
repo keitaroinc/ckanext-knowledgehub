@@ -25,6 +25,7 @@ from ckanext.knowledgehub.lib.solr import (
     unprefixed,
 )
 from ckanext.knowledgehub.logic.auth import get_permission_labels
+from ckanext.knowledgehub.lib.util import get_as_list
 from logging import getLogger
 
 
@@ -208,6 +209,22 @@ class Dashboard(DomainObject, Indexed):
                 for group in pkg['groups']:
                     groups[group['id']] = group
 
+            # Handle if dataset is explicitly shared with an organization or
+            # group: the dataset may be treated as it belongs to that group.
+            exp_shared_orgs = get_as_list('shared_with_organizations', pkg)
+            exp_shared_groups = get_as_list('shared_with_groups', pkg)
+            all_groups = set(organizations.keys()).union(set(groups.keys()))
+            for exp_groups, is_org in [(exp_shared_orgs, True),
+                                       (exp_shared_groups, False)]:
+                for group_id in exp_groups:
+                    if group_id not in all_groups:
+                        group = cls._get_group(group_id, is_org)
+                        if group:
+                            if is_org:
+                                organizations[group['id']] = group
+                            else:
+                                groups[group['id']] = group
+
         # Set data
         data['datasets'] = ','.join(datasets.keys())
         data['idx_datasets'] = list(datasets.keys())
@@ -364,6 +381,21 @@ class Dashboard(DomainObject, Indexed):
             log.warning('Failed to get package %s. Error: %s',
                         dataset_id,
                         str(e))
+            log.exception(e)
+        return None
+
+    @classmethod
+    def _get_group(cls, group_id, is_org):
+        action = 'organization_show' if is_org else 'group_show'
+        try:
+            return get_action(action)({
+                'ignore_auth': True,
+            }, {
+                'id': group_id
+            })
+        except Exception as e:
+            log.warning('Failed to execute %s for id %s. Error: %s',
+                        action, group_id, str(e))
             log.exception(e)
         return None
 

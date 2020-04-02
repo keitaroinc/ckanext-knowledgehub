@@ -112,6 +112,10 @@ def get_as_list(prop, data):
     if isinstance(value, list):
         return value
     if isinstance(value, unicode) or isinstance(value, str):
+        if value.startswith('{') and value.endswith('}'):
+            value = value[1:-1]
+        if value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
         return map(lambda v: v.strip(),
                    filter(lambda v: v and v.strip(), value.split(',')))
     return []

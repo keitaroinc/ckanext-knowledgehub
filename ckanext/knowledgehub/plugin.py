@@ -34,6 +34,7 @@ from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.model.visualization import extend_resource_view_table
+from ckanext.knowledgehub.lib.util import get_as_list
 
 from ckanext.datastore.backend import (
     DatastoreException,
@@ -202,7 +203,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'research_question': package_defaults,
             'country_code_displacement': package_defaults,
             'country_code_origin': package_defaults,
-            'shared_with_users': package_defaults
+            'shared_with_users': package_defaults,
+            'shared_with_organizations': package_defaults,
+            'shared_with_groups': package_defaults,
         })
 
         schema['resources'].update({
@@ -248,7 +251,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'research_question': package_defaults,
             'country_code_displacement': package_defaults,
             'country_code_origin': package_defaults,
-            'shared_with_users': package_defaults
+            'shared_with_users': package_defaults,
+            'shared_with_organizations': package_defaults,
+            'shared_with_groups': package_defaults,
         })
 
         schema['resources'].update({
@@ -503,6 +508,14 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
                                     shared_with_users)))
                 )
 
+            shared_with_organizations = get_as_list(
+                'shared_with_organizations', dataset_obj.extras)
+            shared_with_groups = get_as_list('shared_with_groups',
+                                             dataset_obj.extras)
+
+            for group_id in shared_with_groups + shared_with_organizations:
+                labels.append('member-%s' % group_id)
+
             return labels
 
         return [u'creator-%s' % dataset_obj.creator_user_id]
@@ -518,6 +531,14 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
         orgs = logic.get_action(u'organization_list_for_user')(
             {u'user': user_obj.id}, {u'permission': u'read'})
         labels.extend(u'member-%s' % o[u'id'] for o in orgs)
+
+        groups = logic.get_action('group_list_for_user')({
+            'ignore_auth': True,
+        }, {
+            'user': user_obj.id,
+        })
+        labels.extend(u'member-%s' % g[u'id'] for g in groups)
+
         return labels
 
 

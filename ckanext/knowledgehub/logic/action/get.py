@@ -2032,3 +2032,30 @@ def _get_all_organizations_or_groups(context, data_dict, is_organization=True):
         })
 
     return organizations
+
+
+def group_list_for_user(context, data_dict):
+    check_access('get_groups_for_user', context, data_dict)
+
+    if 'user' not in data_dict or not data_dict.get('user'):
+        raise logic.ValidationError({'user', _('Missing value')})
+
+    user_id = data_dict.get('user')
+
+    Member = model.Member
+    Group = model.Group
+    MemberTable = model.member_table
+    GroupTable = model.group_table
+
+    q = Session.query(Group).join(Member,
+                                  MemberTable.c.group_id == GroupTable.c.id)
+    q = q.filter(GroupTable.c.is_organization == False)
+    q = q.filter(MemberTable.c.table_id == user_id)
+    q = q.filter(MemberTable.c.table_name == 'user')
+    q = q.filter(MemberTable.c.state == 'active')
+
+    groups = []
+    for group in q.all():
+        groups.append(_table_dictize(group, context))
+
+    return groups
