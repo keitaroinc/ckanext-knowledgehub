@@ -687,8 +687,22 @@ class TestKWHHelpers(ActionsBase):
 
     def test_get_geojson_properties(self):
 
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'map_resource':
+                "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
+
+        }
         url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
-        res = kwh_helpers.get_geojson_properties(url)
+        res = kwh_helpers.get_geojson_properties(url, context.get('user'))
         assert_equals(len(res), 26)
 
     # def test_get_map_data(self):

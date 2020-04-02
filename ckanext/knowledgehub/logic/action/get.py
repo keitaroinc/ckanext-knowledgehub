@@ -555,7 +555,7 @@ def knowledgehub_get_map_data(context, data_dict):
 def knowledgehub_get_geojson_properties(context, data_dict):
     map_resource_url = data_dict.get('map_resource')
 
-    return kh_helpers.get_geojson_properties(map_resource_url)
+    return kh_helpers.get_geojson_properties(map_resource_url, context.get('user'))
 
 
 @toolkit.side_effect_free

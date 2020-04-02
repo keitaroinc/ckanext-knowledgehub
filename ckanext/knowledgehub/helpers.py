@@ -656,14 +656,16 @@ def rq_ids_to_titles(rq_ids):
 
 
 def get_geojson_resources():
+
     context = _get_context()
-    data = {
-        'query': 'format:geojson',
-        'order_by': 'name',
-    }
-    result = toolkit.get_action('resource_search')(context, data)
+
+    q = model.Session.query(model.Resource) \
+         .filter(model.Resource.format == 'GeoJSON').all()
+    list_resources = model_dictize.resource_list_dictize(q, context)
+
     return [{'text': r['name'], 'value': r['url']}
-            for r in result.get('results', [])]
+            for r in list_resources]
+    return []
 
 
 def get_dataset_url_path(url):
@@ -678,7 +680,23 @@ def get_map_data(geojson_url, map_key_field, data_key_field,
                  data_value_field, from_where_clause):
 
     geojson_keys = []
-    resp = requests.get(geojson_url)
+
+    username = None
+    if hasattr(g, 'user'):
+        username = g.user
+
+    user = model.User.by_name(username)
+    context = {
+            'user': user.get('name'),
+            'auth_user_obj': user,
+            'model': model,
+            'user': username
+        }
+    user_dict = model_dictize.user_dictize(user, context)
+    
+    # give the apikey to requests, so the geojson file is accessible
+    resp = requests.get(geojson_url, headers={'Authorization': user_dict.get('apikey') })
+
     try:
         geojson_data = resp.json()
     except ValueError as e:
@@ -725,12 +743,18 @@ def get_map_data(geojson_url, map_key_field, data_key_field,
     return map_data
 
 
-def get_geojson_properties(url):
+# Gets the properties from the geojson file, to populate the dropdowns
+def get_geojson_properties(url, username):
     # TODO handle if no url
     # TODO handle topojson format
-    resp = requests.get(url)
-    geojson = resp.json()
 
+    user_dict = toolkit.get_action('user_show')(
+                {'ignore_auth': True}, {'id': username})
+
+    # give the apikey to requests, so the geojson file is accessible
+    resp = requests.get(url, headers={'Authorization': user_dict.get('apikey') })
+
+    geojson = resp.json()
     result = []
     exclude_keys = [
         'marker-symbol',

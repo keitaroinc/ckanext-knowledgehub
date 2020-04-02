@@ -48,7 +48,6 @@
                   <input id="map_field_description" type="text" name="map_field_description" value="{{ map.map_description }}" placeholder="{{ _('Map description') }}" maxlength="100" required="required">
               </div>
             </div>
-
             {% set resources = h.knowledgehub_get_geojson_resources() %}
             <div class="control-group control-select">
               <label class="control-label" for="map_resource">{{ _('Map resource') }}</label>
@@ -62,9 +61,8 @@
                 </select>
               </div>
             </div>
-
             {% if map %}
-              {% set map_properties = h.knowledgehub_get_geojson_properties(map.map_resource) %}
+              {% set map_properties = h.knowledgehub_get_geojson_properties(map.map_resource, c.user) %}
             {% else %}
               {% set map_properties = [] %}
             {% endif %}
