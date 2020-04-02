@@ -34,6 +34,7 @@ from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.model.visualization import extend_resource_view_table
+from ckanext.knowledgehub.model.dashboard import dashboard_table_upgrade
 from ckanext.knowledgehub.lib.util import get_as_list
 
 from ckanext.datastore.backend import (
@@ -75,6 +76,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
         extend_tag_table()
         # Extend CKAN ResourceView table
         extend_resource_view_table()
+        # Upgrade the dashboard table.
+        dashboard_table_upgrade()
 
         DatastoreBackend.register_backends()
         # DatastoreBackend.set_active_backend(config)

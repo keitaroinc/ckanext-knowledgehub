@@ -7,6 +7,7 @@ from sqlalchemy import (
     Table,
     or_,
 )
+from sqlalchemy.engine import reflection
 
 from ckan.model.meta import (
     metadata,
@@ -34,6 +35,40 @@ log = getLogger(__name__)
 get_action = logic.get_action
 
 __all__ = ['Dashboard', 'dashboard_table']
+
+
+def ensure_column(table_name, column_name, column_type, engine):
+    """Ensure that the column exists in the table. If not, add it.
+    :param table_name: the table to check.
+    :type table_name: string
+    :param column_name: the name of the column to check for.
+    :type column_name: string
+    :param column_type: column type definition.
+    :type column_type: string
+    :param engine: configured SQLAlchemy engine.
+    :type engine: sqlachemy.engine.Engine
+    """
+
+    insp = reflection.Inspector.from_engine(engine)
+    has_column = False
+    for col in insp.get_columns(table_name):
+        if column_name.lower() == col['name'].lower():
+            has_column = True
+            break
+
+    log.debug('Check if column %s is present in table %s: %s',
+              column_name, table_name, 'Yes' if has_column else 'No')
+
+    if not has_column:
+        engine.execute('ALTER TABLE %(table_name)s ADD '
+                       'COLUMN %(column_name)s %(column_type)s' % {
+                            "table_name": table_name,
+                            "column_name": column_name,
+                            "column_type": column_type
+                        })
+        log.debug('Added column %s (type %s) to %s', column_name, column_type,
+                  table_name)
+
 
 dashboard_table = Table(
     'ckanext_knowledgehub_dashboard', metadata,
@@ -455,8 +490,23 @@ class Dashboard(DomainObject, Indexed):
         return query
 
 
+def dashboard_table_upgrade(_engine=None):
+    if _engine is None:
+        from ckan.model.meta import engine as ckan_model_engine
+        _engine = ckan_model_engine
+    log.debug('Upgrading table ckanext_knowledgehub_dashboard...')
+    for column_name in ['shared_with_organizations', 'shared_with_groups']:
+        ensure_column('ckanext_knowledgehub_dashboard',
+                      column_name,
+                      'text',
+                      _engine)
+        log.debug('Ensured column %s is present.', column_name)
+    log.info('Table ckanext_knowledgehub_dashboard upgraded successfully.')
+
+
 mapper(Dashboard, dashboard_table)
 
 
 def setup():
     metadata.create_all(engine)
+    dashboard_table_upgrade(engine)
