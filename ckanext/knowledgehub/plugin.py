@@ -21,19 +21,21 @@ from sqlalchemy.exc import (ProgrammingError, IntegrityError,
                             DBAPIError, DataError)
 from ckanext.datastore.backend.postgres import check_fields
 from ckanext.datastore.backend.postgres import _pluck
-ValidationError = logic.ValidationError
 from ckanext.datastore.backend.postgres import identifier
 from ckanext.datastore.backend.postgres import _create_fulltext_trigger
 from ckanext.datastore.backend.postgres import insert_data
 from ckanext.datastore.backend.postgres import create_indexes
 from ckanext.datastore.backend.postgres import create_alias
 from ckanext.datastore.backend.postgres import _unrename_json_field
+from ckanext.datastore.backend.postgres import _guess_type
 
 import ckanext.knowledgehub.helpers as h
 from ckanext.knowledgehub.helpers import _register_blueprints
 from ckanext.knowledgehub.lib.search import patch_ckan_core_search
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.model.visualization import extend_resource_view_table
+from ckanext.knowledgehub.model.dashboard import dashboard_table_upgrade
+from ckanext.knowledgehub.lib.util import get_as_list
 
 from ckanext.datastore.backend import (
     DatastoreException,
@@ -42,12 +44,15 @@ from ckanext.datastore.backend import (
 )
 
 
+ValidationError = logic.ValidationError
+
 _TIMEOUT = 60000  # milliseconds
 
 log = getLogger(__name__)
 
 
-class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPermissionLabels):
+class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
+                         DefaultPermissionLabels):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IActions)
@@ -71,9 +76,11 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
         extend_tag_table()
         # Extend CKAN ResourceView table
         extend_resource_view_table()
+        # Upgrade the dashboard table.
+        dashboard_table_upgrade()
 
         DatastoreBackend.register_backends()
-        #DatastoreBackend.set_active_backend(config)
+        # DatastoreBackend.set_active_backend(config)
 
         # Create the HDX configuration
         hdx_api_key = config.get(u'ckanext.knowledgehub.hdx.api_key')
@@ -162,13 +169,16 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
             'get_package_data_quality': h.get_package_data_quality,
             'get_resource_data_quality': h.get_resource_data_quality,
             'get_resource_validation_data': h.get_resource_validation_data,
-            'get_resource_validation_options': h.get_resource_validation_options,
+            'get_resource_validation_options':
+                h.get_resource_validation_options,
             'check_resource_status': h.check_resource_status,
             'check_validation_admin': h.check_validation_admin,
             'keyword_list': h.keyword_list,
             'get_datasets': h.get_datasets,
             'get_notifications': h.get_notifications,
             'get_all_users': h.get_all_users,
+            'get_all_organizations': h.get_all_organizations,
+            'get_all_groups': h.get_all_groups,
         }
 
     # IDatasetForm
@@ -196,7 +206,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
             'research_question': package_defaults,
             'country_code_displacement': package_defaults,
             'country_code_origin': package_defaults,
-            'shared_with_users': package_defaults
+            'shared_with_users': package_defaults,
+            'shared_with_organizations': package_defaults,
+            'shared_with_groups': package_defaults,
         })
 
         schema['resources'].update({
@@ -242,7 +254,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
             'research_question': package_defaults,
             'country_code_displacement': package_defaults,
             'country_code_origin': package_defaults,
-            'shared_with_users': package_defaults
+            'shared_with_users': package_defaults,
+            'shared_with_organizations': package_defaults,
+            'shared_with_groups': package_defaults,
         })
 
         schema['resources'].update({
@@ -353,8 +367,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
             m.connect('/dataset/{id}/resource/{resource_id}/view/',
                       action='resource_view')
 
-        # Override read action, for changing the titles in facets and tell CKAN where to look for
-        # new and list actions.
+        # Override read action, for changing the titles in facets and tell CKAN
+        #  where to look for new and list actions.
         # NOTE: List and New actions should be specified before Read action!!
         with SubMapper(
             map,
@@ -381,8 +395,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
 
     # IPackageController
     def before_index(self, pkg_dict):
-        research_question = pkg_dict.get('research_question')
-
+        validated_data = None
         try:
             validated_data = json.loads(pkg_dict.get('validated_data_dict',
                                                      '{}'))
@@ -415,23 +428,49 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
             log.warn("Failed to extract keyword for dataset '%s'. Error: %s",
                      pkg_dict.get('id'), str(e))
 
-        pkg_dict['research_question'] = research_question
-        pkg_dict['extras_research_question'] = research_question
-        if research_question:
-            if isinstance(research_question, str) or \
-               isinstance(research_question, unicode):
-                    research_question = research_question.strip()
-                    if research_question.startswith('{') and \
-                       research_question.endswith('}'):
-                        research_question = research_question[1:-1]
-                    pkg_dict['idx_research_questions'] = [research_question]
-            else:
-                pkg_dict['idx_research_questions'] = list(research_question)
+        research_questions = set()
+        if validated_data:
+            for resource in validated_data.get('resources', []):
+                try:
+                    resource_views = toolkit.get_action('resource_view_list')({
+                        'ignore_auth': True,
+                    }, {
+                        'id': resource['id']
+                    })
+                    for resource_view in resource_views:
+                        if resource_view.get('view_type') != 'recline_view':
+                            rqs = resource_view.get('__extras', {}).\
+                                get('research_questions', '')
+                            if rqs:
+                                for rq in map(lambda r: r.strip(),
+                                              filter(lambda r: r and r.strip(),
+                                                     rqs.split(','))):
+                                    try:
+                                        rq = toolkit.get_action(
+                                            'research_question_show')({
+                                                'ignore_auth': True,
+                                            }, {
+                                                'id': rq
+                                            })
+                                        research_questions.add(rq['id'])
+                                    except Exception as e:
+                                        log.debug('Failed to get research '
+                                                  'question %s. Error: %s',
+                                                  rq,
+                                                  str(e))
+                except Exception as e:
+                    log.debug('Failed to load research question. Error: %s',
+                              str(e))
+                    log.exception(e)
+
+        research_questions = ','.join(research_questions)
+        pkg_dict['research_question'] = research_questions
+        pkg_dict['extras_research_question'] = research_questions
+        pkg_dict['idx_research_questions'] = research_questions
+
         return pkg_dict
 
-
     # IDatastoreBackend
-
     def register_backends(self):
         return {
             'postgresql': DatastorePostgresqlBackend,
@@ -456,17 +495,29 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
             if isinstance(shared_with_users, unicode):
                 if shared_with_users.startswith('{') and \
                         shared_with_users.endswith('}'):
-                        labels.extend(
-                            list(map(
-                                lambda user: 'user-%s' % user,
-                                shared_with_users[1:-1].split(',')))
-                        )
+                    labels.extend(
+                        list(map(
+                            lambda user: 'user-%s' % user,
+                            filter(lambda user: user and user.strip(),
+                                   shared_with_users[1:-1].split(','))))
+                    )
                 else:
-                    labels.append(u'user-%s' % shared_with_users)
+                    if shared_with_users.strip():
+                        labels.append(u'user-%s' % shared_with_users.strip())
             if isinstance(shared_with_users, list):
                 labels.extend(
-                    list(map(lambda user: 'user-%s' % user, shared_with_users))
+                    list(map(lambda user: 'user-%s' % user,
+                             filter(lambda user: user and user.strip(),
+                                    shared_with_users)))
                 )
+
+            shared_with_organizations = get_as_list(
+                'shared_with_organizations', dataset_obj.extras)
+            shared_with_groups = get_as_list('shared_with_groups',
+                                             dataset_obj.extras)
+
+            for group_id in shared_with_groups + shared_with_organizations:
+                labels.append('member-%s' % group_id)
 
             return labels
 
@@ -483,11 +534,18 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm, DefaultPer
         orgs = logic.get_action(u'organization_list_for_user')(
             {u'user': user_obj.id}, {u'permission': u'read'})
         labels.extend(u'member-%s' % o[u'id'] for o in orgs)
+
+        groups = logic.get_action('group_list_for_user')({
+            'ignore_auth': True,
+        }, {
+            'user': user_obj.id,
+        })
+        labels.extend(u'member-%s' % g[u'id'] for g in groups)
+
         return labels
 
 
 class DatastorePostgresqlBackend(DatastorePostgresqlBackend):
-
 
     def create(self, context, data_dict):
         '''
@@ -571,103 +629,102 @@ class DatastorePostgresqlBackend(DatastorePostgresqlBackend):
 
 
 def create_table_knowledgehub(context, data_dict):
-        '''Creates table, columns and column info (stored as comments).
+    '''Creates table, columns and column info (stored as comments).
 
-        :param resource_id: The resource ID (i.e. postgres table name)
-        :type resource_id: string
-        :param fields: details of each field/column, each with properties:
-            id - field/column name
-            type - optional, otherwise it is guessed from the first record
-            info - some field/column properties, saved as a JSON string in postgres
-                as a column comment. e.g. "type_override", "label", "notes"
-        :type fields: list of dicts
-        :param records: records, of which the first is used when a field type needs
-            guessing.
-        :type records: list of dicts
-        '''
+    :param resource_id: The resource ID (i.e. postgres table name)
+    :type resource_id: string
+    :param fields: details of each field/column, each with properties:
+        id - field/column name
+        type - optional, otherwise it is guessed from the first record
+        info - some field/column properties, saved as a JSON string in postgres
+            as a column comment. e.g. "type_override", "label", "notes"
+    :type fields: list of dicts
+    :param records: records, of which the first is used when a field type needs
+        guessing.
+    :type records: list of dicts
+    '''
 
-        datastore_fields = [
-            {'id': '_id', 'type': 'serial primary key'},
-            {'id': '_full_text', 'type': 'tsvector'},
-        ]
+    datastore_fields = [
+        {'id': '_id', 'type': 'serial primary key'},
+        {'id': '_full_text', 'type': 'tsvector'},
+    ]
 
-        # check first row of data for additional fields
-        extra_fields = []
-        supplied_fields = data_dict.get('fields', [])
-        check_fields(context, supplied_fields)
-        field_ids = _pluck('id', supplied_fields)
-        records = data_dict.get('records')
+    # check first row of data for additional fields
+    extra_fields = []
+    supplied_fields = data_dict.get('fields', [])
+    check_fields(context, supplied_fields)
+    field_ids = _pluck('id', supplied_fields)
+    records = data_dict.get('records')
 
-        fields_errors = []
+    fields_errors = []
 
-        for field_id in field_ids:
-            # Postgres has a limit of 63 characters for a column name
-            if len(field_id) > 63:
-                raise ValidationError({
-                'field': ['Column heading exceeds limit of 63 characters. "{0}" '.format(field_id)]
-            })
-                # message = 'Column heading "{0}" exceeds limit of 63 '\
-                #     'characters.'.format(field_id)
-                # fields_errors.append(message)
-
-        if fields_errors:
+    for field_id in field_ids:
+        # Postgres has a limit of 63 characters for a column name
+        if len(field_id) > 63:
             raise ValidationError({
-                'fields': fields_errors
-            })
-        # if type is field is not given try and guess or throw an error
-        for field in supplied_fields:
-            if 'type' not in field:
-                if not records or field['id'] not in records[0]:
-                    raise ValidationError({
-                        'fields': [u'"{0}" type not guessable'.format(field['id'])]
-                    })
-                field['type'] = _guess_type(records[0][field['id']])
-
-        # Check for duplicate fields
-        unique_fields = set([f['id'] for f in supplied_fields])
-        if not len(unique_fields) == len(supplied_fields):
-            all_duplicates = set()
-            field_ids = _pluck('id', supplied_fields)
-            for field_id in field_ids:
-                if field_ids.count(field_id) > 1:
-                    all_duplicates.add(field_id)
-            string_fields = ", ".join(all_duplicates)
-            raise ValidationError({
-                'field': ['Duplicate column names are not supported! Duplicate columns are : "{0}" '.format(string_fields)]
+                'field': ['Column heading exceeds limit of '
+                          '63 characters. "{0}" '.format(field_id)]
             })
 
-        if records:
-            # check record for sanity
-            if not isinstance(records[0], dict):
+    if fields_errors:
+        raise ValidationError({
+            'fields': fields_errors
+        })
+    # if type is field is not given try and guess or throw an error
+    for field in supplied_fields:
+        if 'type' not in field:
+            if not records or field['id'] not in records[0]:
                 raise ValidationError({
-                    'records': ['The first row is not a json object']
+                    'fields': [u'"{0}" type not guessable'.format(field['id'])]
                 })
-            supplied_field_ids = records[0].keys()
-            for field_id in supplied_field_ids:
-                if field_id not in field_ids:
-                    extra_fields.append({
-                        'id': field_id,
-                        'type': _guess_type(records[0][field_id])
-                    })
+            field['type'] = _guess_type(records[0][field['id']])
 
-        fields = datastore_fields + supplied_fields + extra_fields
-        sql_fields = u", ".join([u'{0} {1}'.format(
-            identifier(f['id']), f['type']) for f in fields])
+    # Check for duplicate fields
+    unique_fields = set([f['id'] for f in supplied_fields])
+    if not len(unique_fields) == len(supplied_fields):
+        all_duplicates = set()
+        field_ids = _pluck('id', supplied_fields)
+        for field_id in field_ids:
+            if field_ids.count(field_id) > 1:
+                all_duplicates.add(field_id)
+        string_fields = ", ".join(all_duplicates)
+        raise ValidationError({
+            'field': ['Duplicate column names are not supported! '
+                      'Duplicate columns are : "{0}" '.format(string_fields)]
+        })
 
-        sql_string = u'CREATE TABLE {0} ({1});'.format(
-            identifier(data_dict['resource_id']),
-            sql_fields
-        )
+    if records:
+        # check record for sanity
+        if not isinstance(records[0], dict):
+            raise ValidationError({
+                'records': ['The first row is not a json object']
+            })
+        supplied_field_ids = records[0].keys()
+        for field_id in supplied_field_ids:
+            if field_id not in field_ids:
+                extra_fields.append({
+                    'id': field_id,
+                    'type': _guess_type(records[0][field_id])
+                })
 
-        info_sql = []
-        for f in supplied_fields:
-            info = f.get(u'info')
-            if isinstance(info, dict):
-                info_sql.append(u'COMMENT ON COLUMN {0}.{1} is {2}'.format(
-                    identifier(data_dict['resource_id']),
-                    identifier(f['id']),
-                    literal_string(
-                        json.dumps(info, ensure_ascii=False))))
+    fields = datastore_fields + supplied_fields + extra_fields
+    sql_fields = u", ".join([u'{0} {1}'.format(
+        identifier(f['id']), f['type']) for f in fields])
 
-        context['connection'].execute(
-            (sql_string + u';'.join(info_sql)).replace(u'%', u'%%'))
+    sql_string = u'CREATE TABLE {0} ({1});'.format(
+        identifier(data_dict['resource_id']),
+        sql_fields
+    )
+
+    info_sql = []
+    for f in supplied_fields:
+        info = f.get(u'info')
+        if isinstance(info, dict):
+            info_sql.append(u'COMMENT ON COLUMN {0}.{1} is {2}'.format(
+                identifier(data_dict['resource_id']),
+                identifier(f['id']),
+                literal_string(
+                    json.dumps(info, ensure_ascii=False))))
+
+    context['connection'].execute(
+        (sql_string + u';'.join(info_sql)).replace(u'%', u'%%'))

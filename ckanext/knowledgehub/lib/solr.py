@@ -24,6 +24,7 @@ class DontIndexException(Exception):
     '''
     pass
 
+
 def _prepare_search_query(query):
     u'''Prepares the query parameters to be send to pysolr as function
     arguments.
@@ -490,7 +491,8 @@ class Indexed:
         doctype = cls._get_doctype()
         fields = cls._get_indexed_fields()
         try:
-            doc = to_indexed_doc(cls._get_before_index()(data), doctype, fields)
+            doc = to_indexed_doc(cls._get_before_index()(data),
+                                 doctype, fields)
             cls.get_index().add(cls._get_doctype(), doc)
         except DontIndexException as e:
             logger.debug('Signaled to not index this resource %s.', str(e))
@@ -518,10 +520,11 @@ class Indexed:
             index.remove(cls._get_doctype(), **idarg)
         try:
             index.add(cls._get_doctype(),
-                    to_indexed_doc(
+                      to_indexed_doc(
                         cls._get_before_index()(data),
                         cls._get_doctype(),
-                        fields))
+                        fields
+                      ))
         except DontIndexException as e:
             logger.debug('Signaled to not index this resource %s.', str(e))
 
@@ -608,3 +611,37 @@ def boost_solr_params(values):
     if bq:
         params['bq'] = ' + '.join(bq)
     return params
+
+
+def get_fq_permission_labels(permission_labels):
+    fq = '+permission_labels:'
+    fq += '(' + ' OR '.join([escape_str(label) for label in
+                            permission_labels]) + ')'
+    return fq
+
+
+def get_sort_string(model_cls, sort_str):
+    sort_by = _parse_sort_str(sort_str)
+    if not sort_by:
+        return None
+    mapping = _get_fields_mapping(model_cls.indexed)
+    sort_expr = []
+    for column, order in sort_by:
+        column = mapping.get(column, column)
+        sort_expr.append('%s %s' % (column, order))
+
+    return ','.join(sort_expr)
+
+
+def _parse_sort_str(sort_str):
+    sort_by = []
+    for sort_field in sort_str.strip().split(','):
+        sort_field = sort_field.strip()
+        if not sort_field:
+            continue
+        expr = list(filter(lambda exp: exp and exp.strip(),
+                           sort_field.split()))
+        column = expr[0]
+        order = expr[1] if len(expr) > 1 else 'asc'
+        sort_by.append((column, order))
+    return sort_by

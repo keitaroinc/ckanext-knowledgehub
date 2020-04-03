@@ -129,5 +129,35 @@ def update_index(query):
             logger.exception(e)
 
 
+class _DatasetRelatedDashboardsRefresh(IndexedModelsRefreshIndex):
+
+    def __init__(self):
+        super(_DatasetRelatedDashboardsRefresh, self).__init__(Dashboard)
+
+    def find_documents(self, query):
+        doc_ids = []
+        for doc in self.model.search_index(**query):
+            if doc.get('id'):
+                doc_ids.append(doc['id'])
+        self.logger.debug('Lookup for query "%s" found %d documents',
+                          query,
+                          len(doc_ids))
+        return doc_ids
+
+
+def update_dashboard_index(datasets):
+    if not datasets:
+        logger.debug('No datasets ids to refresh dashboards for.')
+        return
+    index_refresh = _DatasetRelatedDashboardsRefresh()
+    query = {
+        'q': 'text:*',
+        'fq': [
+            ' OR '.join(['idx_datasets:"%s"' % _id for _id in datasets])
+        ]
+    }
+    index_refresh.refresh_index(query)
+
+
 def schedule_update_index(query):
     jobs.enqueue(update_index, [query])

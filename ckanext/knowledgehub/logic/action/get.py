@@ -33,7 +33,13 @@ from ckanext.knowledgehub.model import (
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
-from ckanext.knowledgehub.lib.solr import ckan_params_to_solr_args
+from ckanext.knowledgehub.lib.solr import (
+    ckan_params_to_solr_args,
+    get_fq_permission_labels,
+    get_sort_string,
+    escape_str as solr_escape_str,
+)
+from ckanext.knowledgehub.logic.auth import get_user_permission_labels
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
 
@@ -500,38 +506,36 @@ def dashboard_list(context, data_dict):
     page = int(data_dict.get(u'page', 1))
     limit = int(data_dict.get(u'limit', 10000))
     offset = int(data_dict.get(u'offset', 0))
-    sort = data_dict.get(u'sort', u'name asc')
-    q = data_dict.get(u'q', u'')
+    sort = get_sort_string(Dashboard, data_dict.get(u'sort', u'name asc'))
+    q = data_dict.get(u'q', u'*').strip()
+    if not q:
+        q = '*'
 
-    def result_iter(limit=100):
-        offset = 0
-        while True:
-            dashboards = Dashboard.search(q=q,
-                                          limit=limit,
-                                          offset=offset,
-                                          order_by=sort).all()
-            if not dashboards:
-                break
-            for dashboard in dashboards:
-                yield dashboard
-            offset += limit
+    user = context.get('auth_user_obj')
+    ignore_permissions = data_dict.pop('ignore_permissions', False)
+    ignore_auth = context.get('ignore_auth')
+    sysadmin_user = user and hasattr(user, 'sysadmin') and user.sysadmin
 
-    dashboards = []
-    for dashboard in result_iter():
-        try:
-            check_access('dashboard_show', context, {'name': dashboard.name})
-        except NotAuthorized:
-            continue
+    query = {
+        'q': 'text:%s' % solr_escape_str(q),
+        'start': offset,
+        'rows': limit,
+        'sort': sort,
+    }
 
-        if len(dashboards) == limit + offset:
-            break
+    if not (sysadmin_user or ignore_auth):
+        if not ignore_permissions:
+            permission_labels = get_user_permission_labels(context)
+            query['fq'] = [
+                get_fq_permission_labels(permission_labels)
+            ]
 
-        dashboards.append(_table_dictize(dashboard, context))
+    docs = Dashboard.search_index(**query)
 
-    return {u'total': len(Dashboard.search().all()),
+    return {u'total': docs.hits,
             u'page': page,
             u'items_per_page': limit,
-            u'data': dashboards[offset:offset+limit]}
+            u'data': docs.docs}
 
 
 @toolkit.side_effect_free
@@ -571,22 +575,34 @@ def visualizations_for_rq(context, data_dict):
         raise toolkit.ValidationError(
             'Query parameter `research_question` is required')
 
+    research_question = toolkit.get_action('research_question_show')(
+        context,
+        {'id': research_question}
+    )
+
     resource_views = []
 
-    datasets = toolkit.get_action('package_search')(context, {
-        'fq': '+extras_research_question:{0}'.format(research_question),
-        'include_private': True
+    result = search_visualizations(context, {
+        'text': '*',
+        'fq': [
+            '+idx_research_questions:{0}'.format(research_question['id']),
+        ]
     })
 
-    for dataset in datasets.get('results'):
-        for resource in dataset.get('resources'):
-            resource_view_list = toolkit.get_action('resource_view_list')(
-                context, {'id': resource.get('id')})
-            for resource_view in resource_view_list:
-                if resource_view.get('view_type') == 'chart' or \
-                   resource_view.get('view_type') == 'map' or \
-                   resource_view.get('view_type') == 'table':
-                    resource_views.append(resource_view)
+    resource_views = []
+    for rv in result.get('results', []):
+        try:
+            resource_views.append(
+                toolkit.get_action('resource_view_show')(
+                    context,
+                    {'id': rv['id']}
+                )
+            )
+        except Exception as e:
+            log.warning('Failed to fetch resource view: %s. Error: %s',
+                        rv['id'],
+                        str(e))
+            log.exception(e)
 
     return resource_views
 
@@ -889,6 +905,12 @@ def get_predictions(context, data_dict):
 def _search_entity(index, ctx, data_dict):
     model = ctx['model']
     session = ctx['session']
+    ignore_permissions = data_dict.pop('ignore_permissions', False)
+    ignore_auth = ctx.get('ignore_auth')
+    user = ctx.get('auth_user_obj')
+    is_sysadmin = False
+    if user and hasattr(user, 'sysadmin'):
+        is_sysadmin = user.sysadmin
 
     page = data_dict.get('page', 1)
     page_size = int(data_dict.get('limit',
@@ -914,6 +936,21 @@ def _search_entity(index, ctx, data_dict):
 
     if ctx.get('auth_user_obj'):
         args['boost_for'] = ctx['auth_user_obj'].id
+        # Regular access is when the user is not sysadmin and 'ignore_auth'
+        # flag has not been set. In this case we may want to use permissions.
+        regular_access = not (ignore_auth or is_sysadmin)
+        # This flag tells us if we want to use permissions. By default, we do
+        # and then it depends on the type of access (regular or sysadmin).
+        # It is the reverse of the 'ignore_permissions' flag (if set).
+        use_permissions = not ignore_permissions
+        if use_permissions and regular_access:
+            permission_labels = get_user_permission_labels(ctx)
+            if permission_labels:
+                fq = args.get('fq', [])
+                if isinstance(fq, str) or isinstance(fq, unicode):
+                    fq = [fq]
+                fq.append(get_fq_permission_labels(permission_labels))
+                args['fq'] = fq
 
     results = index.search_index(**args)
 
@@ -1017,6 +1054,12 @@ def search_research_questions(context, data_dict):
 
     :returns: ``list``, the documents matching the search query from the index.
     '''
+    # We're ignoring permissions based access to the reserch questions
+    # because every user with an accout to the portal should be able to see
+    # the research questions. However, the access to the data may be restricted
+    # based on the user, organization/group and if the data has been shared.
+    data_dict['ignore_permissions'] = True
+
     return _search_entity(ResearchQuestion, context, data_dict)
 
 
@@ -1574,7 +1617,9 @@ def dash_search_tag(context, data_dict):
     for dash in dash_list:
         tags = dash.get('tags')
         if tags:
-            for element in tags.split(','):
+            if isinstance(tags, str) or isinstance(tags, unicode):
+                tags = tags.split(',')
+            for element in tags:
                 if element == tag:
                     dash_id = dash.get('id')
                     result.append(dash_id)
@@ -1951,3 +1996,66 @@ def notification_show(context, data_dict):
         if notification.get(field):
             notification[field] = notification[field].encode('ascii')
     return notification
+
+
+@toolkit.side_effect_free
+def get_all_organizations(context, data_dict):
+    return _get_all_organizations_or_groups(context, data_dict, True)
+
+
+@toolkit.side_effect_free
+def get_all_groups(context, data_dict):
+    return _get_all_organizations_or_groups(context, data_dict, False)
+
+
+def _get_all_organizations_or_groups(context, data_dict, is_organization=True):
+    user = context.get('auth_user_obj')
+    is_sysadmin = user is not None and hasattr(user, 'sysadmin') and \
+        user.sysadmin
+
+    if not context.get('ignore_auth') and not is_sysadmin:
+        raise logic.NotAuthorized()
+
+    group_table = model.group_table
+
+    query = Session.query(model.Group)
+    query = query.filter(group_table.c.state == 'active')
+    query = query.filter(group_table.c.is_organization == is_organization)
+
+    organizations = []
+
+    for org in query.all():
+        organizations.append({
+            'id': org.id,
+            'title': org.title,
+            'name': org.name,
+        })
+
+    return organizations
+
+
+def group_list_for_user(context, data_dict):
+    check_access('get_groups_for_user', context, data_dict)
+
+    if 'user' not in data_dict or not data_dict.get('user'):
+        raise logic.ValidationError({'user', _('Missing value')})
+
+    user_id = data_dict.get('user')
+
+    Member = model.Member
+    Group = model.Group
+    MemberTable = model.member_table
+    GroupTable = model.group_table
+
+    q = Session.query(Group).join(Member,
+                                  MemberTable.c.group_id == GroupTable.c.id)
+    q = q.filter(GroupTable.c.is_organization == False)
+    q = q.filter(MemberTable.c.table_id == user_id)
+    q = q.filter(MemberTable.c.table_name == 'user')
+    q = q.filter(MemberTable.c.state == 'active')
+
+    groups = []
+    for group in q.all():
+        groups.append(_table_dictize(group, context))
+
+    return groups

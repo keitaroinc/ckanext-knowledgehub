@@ -3,7 +3,6 @@ import datetime
 import os
 import subprocess
 import re
-import json
 
 from sqlalchemy import exc
 from psycopg2 import errorcodes as pg_errorcodes
@@ -50,6 +49,7 @@ from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.lib.profile import user_profile_service
+from ckanext.knowledgehub.lib.util import get_as_list
 from ckanext.knowledgehub.logic.jobs import schedule_update_index
 
 log = logging.getLogger(__name__)
@@ -450,6 +450,12 @@ def dashboard_create(context, data_dict):
     indicators = data.get('indicators')
     datasets = data_dict.get('datasets')
     shared_with_users = data_dict.get('shared_with_users')
+    shared_with_organizations = get_as_list('shared_with_organizations',
+                                            data_dict)
+    shared_with_groups = get_as_list('shared_with_groups', data_dict)
+
+    dashboard.shared_with_organizations = ','.join(shared_with_organizations)
+    dashboard.shared_with_groups = ','.join(shared_with_groups)
 
     if source is not None:
         dashboard.source = source
@@ -464,7 +470,10 @@ def dashboard_create(context, data_dict):
             dashboard.datasets = ', '.join(datasets)
 
     if shared_with_users is not None:
-        dashboard.shared_with_users = shared_with_users
+        if isinstance(shared_with_users, list):
+            dashboard.shared_with_users = ','.join(shared_with_users)
+        else:
+            dashboard.shared_with_users = shared_with_users
 
     tags = data_dict.get('tags', '')
     if tags:
@@ -495,7 +504,6 @@ def dashboard_create(context, data_dict):
 
     # Send notification for sharing with users
     if shared_with_users is not None:
-        shared_with_users = json.loads(shared_with_users)
         if isinstance(shared_with_users, unicode):
             shared_with_users = shared_with_users.split()
 
@@ -509,18 +517,34 @@ def dashboard_create(context, data_dict):
 
     # Add to kwh data
     try:
-        data_dict = {
+        kwh_data = {
             'type': 'dashboard',
             'title': dashboard_data.get('title'),
             'description': dashboard_data.get('description'),
             'dashboard': dashboard_data.get('id')
         }
-        logic.get_action('kwh_data_create')(context, data_dict)
+        logic.get_action('kwh_data_create')(context, kwh_data)
     except Exception as e:
         log.debug(
             'Unable to store dashboard %s to knowledgehub data: %s' %
             (dashboard_data.get('id'), str(e))
         )
+
+    def _notification(_type):
+        return {
+            'title': _('Permission granted'),
+            'description': _('The dashboard {} have been '
+                             'shared with your {}.').format(dashboard.title,
+                                                            _type),
+            'link': url_for('dashboards_view', name=dashboard.name),
+        }
+
+    for _type, groups in [('organization', shared_with_organizations),
+                          ('group', shared_with_groups)]:
+        plugin_helpers.notification_broadcast({
+            'ignore_auth': True,
+            'auth_user_obj': context.get('auth_user_obj'),
+        }, _notification(_type), groups)
 
     return dashboard_data
 
@@ -1449,13 +1473,15 @@ def upsert_dataset_to_hdx(context, data_dict):
             'dataset_source': hdx_newest_dataset['dataset_source'],
             'maintainer': hdx_newest_dataset['maintainer'],
             'dataset_date': hdx_newest_dataset['dataset_date'],
-            'data_update_frequency': hdx_newest_dataset['data_update_frequency'],
+            'data_update_frequency':
+                hdx_newest_dataset['data_update_frequency'],
             'license_id': hdx_newest_dataset['license_id'],
             'methodology': hdx_newest_dataset['methodology'],
             'num_resources': hdx_newest_dataset['num_resources'],
             'url': hdx_newest_dataset['url'],
             'package_creator': hdx_newest_dataset['package_creator'],
-            'relationships_as_object': hdx_newest_dataset['relationships_as_object'],
+            'relationships_as_object':
+                hdx_newest_dataset['relationships_as_object'],
             'id': hdx_newest_dataset['id'],
             'metadata_created': hdx_newest_dataset['metadata_created'],
             'archived': hdx_newest_dataset['archived'],
@@ -1464,7 +1490,8 @@ def upsert_dataset_to_hdx(context, data_dict):
             'version': hdx_newest_dataset['version'],
             'type': hdx_newest_dataset['type'],
             'total_res_downloads': hdx_newest_dataset['total_res_downloads'],
-            'pageviews_last_14_days': hdx_newest_dataset['pageviews_last_14_days'],
+            'pageviews_last_14_days':
+                hdx_newest_dataset['pageviews_last_14_days'],
             'creator_user_id': hdx_newest_dataset['creator_user_id'],
             'organization': hdx_newest_dataset['organization'],
             'num_tags': hdx_newest_dataset['num_tags'],
@@ -1473,7 +1500,8 @@ def upsert_dataset_to_hdx(context, data_dict):
             'updated_by_script': hdx_newest_dataset['updated_by_script'],
             'is_fresh': hdx_newest_dataset['is_fresh'],
             'solr_additions': hdx_newest_dataset['solr_additions'],
-            'relationships_as_subject': hdx_newest_dataset['relationships_as_subject'],
+            'relationships_as_subject':
+                hdx_newest_dataset['relationships_as_subject'],
             'is_requestdata_type': hdx_newest_dataset['is_requestdata_type'],
         }
 

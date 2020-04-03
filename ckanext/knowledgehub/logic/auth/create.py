@@ -1,5 +1,8 @@
-from ckan.logic.auth.create import package_create as ckan_package_create
-from ckan.logic.auth.create import resource_create as ckan_resource_create
+from ckan.logic.auth.create import (
+    package_create as ckan_package_create,
+    resource_create as ckan_resource_create,
+    member_create as ckan_member_create,
+)
 
 
 def theme_create(context, data_dict):
@@ -135,3 +138,8 @@ def user_profile_create(context, data_dict=None):
 
 def notification_create(context, data_dict=None):
     return {'success': True}
+
+
+def member_create(context, data_dict=None):
+    return ckan_member_create(context, data_dict)
+

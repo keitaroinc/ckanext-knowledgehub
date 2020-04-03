@@ -805,9 +805,12 @@ def remove_space_for_url(str):
     return str.replace(" ", "-")
 
 
-def format_date(str):
+def format_date(date_str):
     # split date & time
-    date = str.split('T')  # date[0] is the date, date[1] is the time
+    if isinstance(date_str, datetime):
+        date_str = date_str.isoformat()
+
+    date = date_str.split('T')  # date[0] is the date, date[1] is the time
     time_basic = date[1].split('.')  # time_basic[0] = hh/mm/ss
     # remove seconds
     time_basic[0] = time_basic[0][:-3]
@@ -862,7 +865,7 @@ def _get_facets():
     facets = []
     for param, value in request.params.items():
         if param in ['organization', 'groups', 'tags']:
-            facets.append('%s:%s' %(param, value))
+            facets.append('%s:%s' % (param, value))
 
     return facets
 
@@ -979,7 +982,7 @@ def get_searched_visuals(query):
             data_dict_format = model_dictize\
                 .resource_view_list_dictize([visual], _get_context())
             visuals.append(data_dict_format[0])
-        except  Exception as e:
+        except Exception as e:
             log.exception(e)
 
     list_visuals_searched['results'] = visuals
@@ -1583,6 +1586,15 @@ def shared_with_users_notification(editor_obj, users, data, entity, perm):
             log.debug('Unable to send notification: %s' % str(e))
 
 
+def get_all_organizations():
+    return toolkit.get_action('get_all_organizations')(
+        {'ignore_auth': True}, {})
+
+
+def get_all_groups():
+    return toolkit.get_action('get_all_groups')({'ignore_auth': True}, {})
+
+
 def resource_validation_notification(editor_obj, data, entity):
     validation_user = None
     try:
@@ -1628,3 +1640,46 @@ def resource_validation_notification(editor_obj, data, entity):
             {'ignore_auth': True}, data_dict)
     except Exception as e:
         log.debug('Unable to send notification: %s' % str(e))
+
+
+def notification_broadcast(context, notification, orgs_or_groups):
+
+    sender = context.get('auth_user_obj')
+
+    def _get_members(group_id):
+        try:
+            return toolkit.get_action('member_list')(context, {
+                'id': group_id,
+                'object_type': 'user',
+            })
+        except Exception as e:
+            log.warning('Failed to get members list for group %s. Error: %s',
+                        group_id, str(e))
+            log.exception(e)
+        return []
+
+    def _send_notification(notification, user_id):
+        send_notif = {}
+        send_notif.update(notification)
+        send_notif['recepient'] = user_id
+
+        try:
+            toolkit.get_action('notification_create')(context, send_notif)
+        except Exception as e:
+            log.warning('Failed to send notification to user: %s. Error: %s',
+                        user_id, str(e))
+            log.exception(e)
+
+    users = set()
+    for group_id in orgs_or_groups:
+        members = _get_members(group_id)
+        if members:
+            for user_id, _, _ in members:
+                if sender and sender.id == user_id:
+                    continue
+                users.add(user_id)
+
+    log.debug('Broadcasting message to %d users.', len(users))
+    for user_id in users:
+        _send_notification(notification, user_id)
+    log.debug('Notifications sent.')

@@ -47,8 +47,32 @@
     <div class="controls">
       <select id="field_shared_with_users" name="shared_with_users" data-module="autocomplete" multiple=False>
         {% for user in users  %}
-        <option value="{{ user.name }}" {% if user.name in data.get('shared_with_users', []) %} selected="selected"
+        <option value="{{ user.name }}" {% if user.name in (data.get('shared_with_users') or []) %} selected="selected"
           {% endif %}>{{ user.display_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% set organizations = h.get_all_organizations()%}
+  <div class="control-group">
+    <label class="control-label" for="field_shared_with_organizations">{{ _("Functional Units") }}</label>
+    <div class="controls">
+      <select id="field_shared_with_organizations" name="shared_with_organizations" data-module="autocomplete" multiple=False>
+        {% for organization in organizations  %}
+        <option value="{{ organization.id }}" {% if organization.id in (data.get('shared_with_organizations') or []) %} selected="selected"
+          {% endif %}>{{ organization.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% set groups = h.get_all_groups()%}
+  <div class="control-group">
+    <label class="control-label" for="field_shared_with_groups">{{ _("Joint Analyses") }}</label>
+    <div class="controls">
+      <select id="field_shared_with_groups" name="shared_with_groups" data-module="autocomplete" multiple=False>
+        {% for group in groups  %}
+        <option value="{{ group.id }}" {% if group.id in (data.get('shared_with_groups') or []) %} selected="selected"
+          {% endif %}>{{ group.title }}</option>
         {% endfor %}
       </select>
     </div>

@@ -7,7 +7,6 @@ from ckan.logic.auth.get import (
 from ckan.logic import chained_action
 
 
-
 @toolkit.auth_allow_anonymous_access
 def research_question_show(context, data_dict):
     return {'success': True}
@@ -32,29 +31,17 @@ def dashboard_show(context, data_dict):
     else:
         return {'success': False}
 
+    # The search would take into consideration the type of authenticated user
+    # in the context and will perform a search based on the pemrission labels.
+    # If this document is not found, then the user does not have a permission
+    # to access this dashboard.
     docs = toolkit.get_action('search_dashboards')(
-        {'ignore_auth': True},
+        context,
         search_query
     )
-    if docs.get('count', 0) == 1:
-        dashboard = docs['results'][0]
 
-        user = context['auth_user_obj']
-        if user.name in dashboard.get('idx_shared_with_users', []):
-            return {'success': True}
-
-        datasets_str = dashboard.get('datasets', '')
-        if datasets_str:
-            datasets = datasets_str.split(', ')
-            for dataset in datasets:
-                try:
-                    context.pop('package', None)
-                    a = toolkit.check_access(
-                        'package_show', context, {'id': dataset})
-                except toolkit.NotAuthorized:
-                    return {'success': False}
-
-            return {'success': True}
+    if docs.get('count') > 0:
+        return {'success': True}
 
     return {'success': False}
 
@@ -169,3 +156,7 @@ def notification_list(context, data_dict=None):
 
 def notification_show(context, data_dict):
     return {'success': True}
+
+
+def get_groups_for_user(context, data_dict=None):
+    return {'success': False}

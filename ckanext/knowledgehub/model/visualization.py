@@ -10,7 +10,13 @@ from ckanext.knowledgehub.lib.solr import (
     unprefixed,
     DontIndexException
 )
+from ckanext.knowledgehub.model.research_question import ResearchQuestion
 import json
+from logging import getLogger
+
+
+log = getLogger(__name__)
+
 
 class Visualization(ResourceView, Indexed):
 
@@ -24,11 +30,12 @@ class Visualization(ResourceView, Indexed):
         'package_id',
         'keywords',
         mapped('tags', 'tags'),
-	    mapped('organizations', 'organizations'),
+        mapped('organizations', 'organizations'),
         mapped('groups', 'groups'),
         unprefixed('idx_keywords'),
         unprefixed('idx_tags'),
         unprefixed('idx_research_questions'),
+        unprefixed('permission_labels'),
     ]
 
     doctype = 'visualization'
@@ -36,8 +43,10 @@ class Visualization(ResourceView, Indexed):
     @staticmethod
     def before_index(data):
         # Index only charts
-        if data.get('view_type') not in  ['chart', 'map']:
+        if data.get('view_type') not in ['chart', 'map']:
             raise DontIndexException(data.get('id'))
+
+        permission_labels = []
 
         resource_view = get_action('resource_view_show')(
             {'ignore_auth': True},
@@ -49,10 +58,14 @@ class Visualization(ResourceView, Indexed):
             {'id': data['package_id'], 'include_tracking': True})
         if package:
             data['organizations'] = package.get('organization', {}).get('name')
+            organization_id = package.get('organization', {}).get('id')
+            if organization_id:
+                permission_labels.append('member-%s' % organization_id)
 
             data['groups'] = []
             for g in package.get('groups', []):
                 data['groups'].append(g['name'])
+                permission_labels.append('member-%s' % g['id'])
 
         if data.get('_sa_instance_state'):
             del data['_sa_instance_state']
@@ -64,7 +77,7 @@ class Visualization(ResourceView, Indexed):
                 return None
             extras = data_dict['__extras']
             if data['view_type'] == 'chart':
-                    return extras.get('chart_description', '')
+                return extras.get('chart_description', '')
             elif data['view_type'] == 'table':
                 return extras.get('table_description', '')
             elif data['view_type'] == 'map':
@@ -108,7 +121,19 @@ class Visualization(ResourceView, Indexed):
                         rq_ids.add(data_rq)
 
         if rq_ids:
-            data['idx_research_questions'] = list(rq_ids)
+            data['idx_research_questions'] = []
+            for rq_title in rq_ids:
+                try:
+                    rq_title = rq_title.strip('"')
+                    rq = ResearchQuestion.get_by_id_name_or_title(rq_title)
+                    if rq:
+                        data['idx_research_questions'].append(rq.id)
+                except Exception as e:
+                    log.warning('Failed to fetch research question %s. '
+                                'Error: %s',
+                                rq_title,
+                                str(e))
+                    log.exception(e)
 
         keywords = set()
         if data.get('tags'):
@@ -129,6 +154,9 @@ class Visualization(ResourceView, Indexed):
         if keywords:
             data['keywords'] = ','.join(keywords)
             data['idx_keywords'] = list(keywords)
+
+        if permission_labels:
+            data['permission_labels'] = permission_labels
 
         return data
 
@@ -155,12 +183,13 @@ def extend_resource_view_table():
         types.UnicodeText,
     ))
 
-    #ResourceView.tags = property(column_property(tag_table.c.tags))
     from sqlalchemy.orm import configure_mappers
 
-    # Hack to update the mapper for the class ResourceView that was already mapped
+    # Hack to update the mapper for the class ResourceView
+    # that was already mapped.
     delattr(ResourceView, '_sa_class_manager')
-    mapper(ResourceView, resource_view_table)  # Remap the ResourceView class again
+    # Remap the ResourceView class again
+    mapper(ResourceView, resource_view_table)
 
     if column_exists_in_db('tags', 'resource_view', engine):
         return
