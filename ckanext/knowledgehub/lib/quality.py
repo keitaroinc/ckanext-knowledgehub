@@ -553,7 +553,7 @@ class Completeness(DimensionMetric):
         return {
             'total': total,
             'complete': complete,
-            'value': float(complete)/float(total) * 100.0,
+            'value': float(complete)/float(total) * 100.0 if total else 0.0,
         }
 
 

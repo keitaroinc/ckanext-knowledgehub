@@ -1,0 +1,5 @@
+{% if type == 'dashboard'%}
+[UNHCR KnowledgeHub] Access granted to dashboard {{dashboard.title}}
+{% else %}
+[UNHCR KnowledgeHub] Access granted to dataset {{package.title}}
+{% endif%}

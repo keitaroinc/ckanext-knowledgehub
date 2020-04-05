@@ -50,7 +50,9 @@ from ckanext.knowledgehub.lib.profile import user_profile_service
 from ckanext.knowledgehub.lib.util import get_as_list
 from ckanext.knowledgehub.logic.jobs import (
     schedule_update_index,
-    update_dashboard_index
+    update_dashboard_index,
+    schedule_notification_email,
+    schedule_broadcast_notification_email,
 )
 
 from sqlalchemy.orm.attributes import flag_modified
@@ -551,12 +553,12 @@ def dashboard_update(context, data_dict):
     # Send notification for sharing with users
     if isinstance(existing_shared_users, unicode):
         if not isinstance(existing_shared_users, list):
-            existing_shared_users = existing_shared_users.split()
+            existing_shared_users = existing_shared_users.split(',')
 
     new_shared_users = dashboard.shared_with_users or []
-    if isinstance(new_shared_users, str):
-        if isinstance(new_shared_users, unicode):
-            new_shared_users = new_shared_users.split()
+    if isinstance(new_shared_users, str) or \
+            isinstance(new_shared_users, unicode):
+        new_shared_users = new_shared_users.split(',')
 
     plugin_helpers.shared_with_users_notification(
         context['auth_user_obj'],
@@ -565,6 +567,14 @@ def dashboard_update(context, data_dict):
         plugin_helpers.Entity.Dashboard,
         plugin_helpers.Permission.Revoked
     )
+    for recipient in (set(existing_shared_users) - set(new_shared_users)):
+        schedule_notification_email(
+            recipient,
+            'notification_access_revoked',
+            {
+                'type': 'dashboard',
+                'dashboard': dashboard_data,
+            })
 
     plugin_helpers.shared_with_users_notification(
         context['auth_user_obj'],
@@ -573,6 +583,14 @@ def dashboard_update(context, data_dict):
         plugin_helpers.Entity.Dashboard,
         plugin_helpers.Permission.Granted
     )
+    for recipient in (set(new_shared_users) - set(existing_shared_users)):
+        schedule_notification_email(
+            recipient,
+            'notification_access_granted',
+            {
+                'type': 'dashboard',
+                'dashboard': dashboard_data,
+            })
 
     sharing = [
         ['organization', shared_with_organizations,
@@ -604,6 +622,22 @@ def dashboard_update(context, data_dict):
             'link': url_for('dashboards_view', name=dashboard.name),
         }, notify_granted)
 
+        # Schedule email notifications
+        for groups, template in [
+                (notify_granted, 'notification_access_granted'),
+                (notify_revoked, 'notification_access_revoked')]:
+            for group_id in groups:
+                schedule_broadcast_notification_email(
+                    group_id,
+                    template,
+                    {
+                        'type': 'dashboard',
+                        'group_id': group_id,
+                        'group_type': _type,
+                        'dashboard': dashboard_data,
+                    }
+                )
+
     # Update kwh data
     try:
         data_dict = {
@@ -630,19 +664,13 @@ def package_update(context, data_dict):
         {'ignore_auth': True}, {'id': data_dict['id']}
     )
 
-    existing_shared_users = package.get('shared_with_users', [])
-    if existing_shared_users:
-        if existing_shared_users.startswith('{') and \
-                existing_shared_users.endswith('}'):
-            existing_shared_users = existing_shared_users[1:-1]
+    existing_shared_users = get_as_list('shared_with_users', package)
+    new_shared_users = get_as_list('shared_with_users', data_dict)
 
-        existing_shared_users = existing_shared_users.split(',')
-
-    new_shared_users = data_dict.get('shared_with_users', [])
-    if not new_shared_users:
-        data_dict['shared_with_users'] = new_shared_users
-    if isinstance(new_shared_users, unicode):
-        new_shared_users = new_shared_users.split()
+    shared_with_groups = get_as_list('shared_with_groups', data_dict)
+    shared_with_orgs = get_as_list('shared_with_organizations', data_dict)
+    already_shared_groups = get_as_list('shared_with_groups', package)
+    already_shared_orgs = get_as_list('shared_with_organizations', package)
 
     package_old_info = toolkit.get_action('package_show')(context, {
         'id': data_dict.get('id')
@@ -683,6 +711,67 @@ def package_update(context, data_dict):
         plugin_helpers.Entity.Dataset,
         plugin_helpers.Permission.Granted
     )
+
+    for recipients, template in [
+        (set(existing_shared_users) - set(new_shared_users),
+         'notification_access_revoked'),
+        (set(new_shared_users) - set(existing_shared_users),
+         'notification_access_granted')
+    ]:
+        for recipient in recipients:
+            schedule_notification_email(recipient, template, {
+                'type': 'package',
+                'package': result,
+            })
+
+    for old_shared, new_shared, _type in [
+            (already_shared_groups, shared_with_groups, 'group'),
+            (already_shared_orgs, shared_with_orgs, 'organization')]:
+        notify_granted = set(new_shared).difference(set(old_shared))
+        notify_revoked = set(old_shared).difference(set(new_shared))
+        plugin_helpers.notification_broadcast({
+            'ignore_auth': True,
+            'auth_user_obj': context.get('auth_user_obj'),
+        }, {
+            'title': _('Access granted to dataset'),
+            'description': _('You have been granted access '
+                             'to dataset {}').format(result['title']),
+            'link': url_for(controller='package', action='read',
+                            id=result['id']),
+        }, notify_granted)
+        plugin_helpers.notification_broadcast({
+            'ignore_auth': True,
+            'auth_user_obj': context.get('auth_user_obj'),
+        }, {
+            'title': _('Access revoked to dataset'),
+            'description': _('Your access to dataset {} '
+                             'has been revoked.').format(result['title']),
+            'link': url_for(controller='package', action='read',
+                            id=result['id']),
+        }, notify_revoked)
+        # notification emails
+        for group_id in notify_granted:
+            schedule_broadcast_notification_email(
+                group_id,
+                'notification_access_granted',
+                {
+                    'type': 'package',
+                    'package': result,
+                    'group_id': group_id,
+                    'group_type': _type,
+                }
+            )
+        for group_id in notify_revoked:
+            schedule_broadcast_notification_email(
+                group_id,
+                'notification_access_revoked',
+                {
+                    'type': 'package',
+                    'package': result,
+                    'group_id': group_id,
+                    'group_type': _type,
+                }
+            )
 
     try:
         data_dict = {

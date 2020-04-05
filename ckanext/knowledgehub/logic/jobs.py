@@ -16,7 +16,8 @@ from ckanext.knowledgehub.model import (
     Visualization,
 )
 from ckanext.knowledgehub.lib.solr import escape_str, Indexed, unprefixed
-
+from ckanext.knowledgehub.lib.email import send_notification_email
+from ckanext.knowledgehub.helpers import get_members
 
 from logging import getLogger
 
@@ -161,3 +162,15 @@ def update_dashboard_index(datasets):
 
 def schedule_update_index(query):
     jobs.enqueue(update_index, [query])
+
+
+def schedule_notification_email(recipient, template, data):
+    jobs.enqueue(send_notification_email, [recipient, template, data])
+
+
+def schedule_broadcast_notification_email(group, template, data):
+    group_members = [user_id for user_id, _, _ in get_members({
+        'ignore_auth': True,
+    }, group)]
+    for recipient in group_members:
+        schedule_notification_email(recipient, template, data)

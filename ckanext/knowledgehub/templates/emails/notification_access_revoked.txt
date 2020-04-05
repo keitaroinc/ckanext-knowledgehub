@@ -1,0 +1,22 @@
+{% if type == 'dashboard' %}
+{% set entity_type = 'dashboard' %}
+{% set title = dashboard.title %}
+{% set url = h.url_for('dashboards_view', name=dashboard.name) %}
+{% else %}
+{% set entity_type = 'dataset' %}
+{% set title = package.title %}
+{% set url = h.url_for(controller='package', action='read', id=package.id) %}
+{% endif %}
+Hello {{recipient.display_name or recipient.fullname or recipient.username}},
+
+Your access to {{entity_type}} "{{title}}" has been revoked on {{site_title}}.
+
+If you want to request access to this resource again, contact the administrator
+on {{site_title}} or visit the resource on the following link and click "Request Access".
+Request access on the following link:
+
+{{site_url}}{{url}}
+
+Thanks,
+
+UNHCR KnowledgeHub Team
