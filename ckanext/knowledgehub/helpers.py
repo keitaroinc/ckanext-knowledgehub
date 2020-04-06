@@ -7,9 +7,12 @@ import json
 import functools32
 import requests
 import re
+import pytz
+import humanize 
 
 from datetime import datetime, timedelta
 from dateutil import parser
+from dateutil.tz import tzlocal
 from flask import Blueprint
 from urllib import urlencode
 from six import string_types, iteritems
@@ -805,7 +808,8 @@ def remove_space_for_url(str):
     return str.replace(" ", "-")
 
 
-def format_date(date_str):
+def format_date(str):
+
     # split date & time
     if isinstance(date_str, datetime):
         date_str = date_str.isoformat()
@@ -816,6 +820,19 @@ def format_date(date_str):
     time_basic[0] = time_basic[0][:-3]
     display_date = date[0] + ' at ' + time_basic[0]
     return display_date
+
+def calculate_time_passed(str):
+
+    now = datetime.now(tzlocal())
+    new_date = str.split('T')
+    new_date = ' '.join(new_date)
+
+    date_time_obj = datetime.strptime(new_date, '%Y-%m-%d %H:%M:%S.%f')
+
+    now_aware = pytz.utc.localize(date_time_obj)
+    diff = humanize.naturaltime(now - now_aware)
+
+    return diff 
 
 
 def _get_pager(results, item_type):
@@ -1512,7 +1529,6 @@ def get_all_users():
         {'ignore_auth': True},
         {'all_fields': True}
     )
-
     sysadmins = [
         sysadmin.name for sysadmin in get_sysadmins()]
 

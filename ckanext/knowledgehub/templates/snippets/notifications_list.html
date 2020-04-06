@@ -23,6 +23,8 @@
                         {{ notification.description }}
                     </div>
                     {% endif %}
+                    
+                    {{ h.calculate_time_passed(notification.created_at) }}
 
                 </div>
                 <div class="col-md-1 col-sm-1 col-1">
