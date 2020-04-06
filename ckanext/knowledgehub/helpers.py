@@ -808,7 +808,7 @@ def remove_space_for_url(str):
     return str.replace(" ", "-")
 
 
-def format_date(str):
+def format_date(date_str):
 
     # split date & time
     if isinstance(date_str, datetime):
