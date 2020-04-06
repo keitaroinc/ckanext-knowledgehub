@@ -663,7 +663,7 @@ def get_geojson_resources():
     context = _get_context()
 
     q = model.Session.query(model.Resource) \
-         .filter(model.Resource.format == 'GeoJSON').all()
+        .filter(model.Resource.format == 'GeoJSON').all()
     list_resources = model_dictize.resource_list_dictize(q, context)
 
     return [{'text': r['name'], 'value': r['url']}
@@ -696,9 +696,11 @@ def get_map_data(geojson_url, map_key_field, data_key_field,
             'user': username
         }
     user_dict = model_dictize.user_dictize(user, context)
-    
+
     # give the apikey to requests, so the geojson file is accessible
-    resp = requests.get(geojson_url, headers={'Authorization': user_dict.get('apikey') })
+    resp = requests.get(geojson_url, headers={
+        'Authorization': user_dict.get('apikey'),
+    })
 
     try:
         geojson_data = resp.json()
@@ -755,7 +757,9 @@ def get_geojson_properties(url, username):
                 {'ignore_auth': True}, {'id': username})
 
     # give the apikey to requests, so the geojson file is accessible
-    resp = requests.get(url, headers={'Authorization': user_dict.get('apikey') })
+    resp = requests.get(url, headers={
+        'Authorization': user_dict.get('apikey'),
+    })
 
     geojson = resp.json()
     result = []
@@ -1662,18 +1666,6 @@ def notification_broadcast(context, notification, orgs_or_groups):
 
     sender = context.get('auth_user_obj')
 
-    def _get_members(group_id):
-        try:
-            return toolkit.get_action('member_list')(context, {
-                'id': group_id,
-                'object_type': 'user',
-            })
-        except Exception as e:
-            log.warning('Failed to get members list for group %s. Error: %s',
-                        group_id, str(e))
-            log.exception(e)
-        return []
-
     def _send_notification(notification, user_id):
         send_notif = {}
         send_notif.update(notification)
@@ -1688,7 +1680,7 @@ def notification_broadcast(context, notification, orgs_or_groups):
 
     users = set()
     for group_id in orgs_or_groups:
-        members = _get_members(group_id)
+        members = get_members(context, group_id)
         if members:
             for user_id, _, _ in members:
                 if sender and sender.id == user_id:
@@ -1699,3 +1691,16 @@ def notification_broadcast(context, notification, orgs_or_groups):
     for user_id in users:
         _send_notification(notification, user_id)
     log.debug('Notifications sent.')
+
+
+def get_members(context, group_id):
+    try:
+        return toolkit.get_action('member_list')(context, {
+            'id': group_id,
+            'object_type': 'user',
+        })
+    except Exception as e:
+        log.warning('Failed to get members list for group %s. Error: %s',
+                    group_id, str(e))
+        log.exception(e)
+    return []

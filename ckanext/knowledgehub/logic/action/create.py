@@ -50,7 +50,11 @@ from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.lib.profile import user_profile_service
 from ckanext.knowledgehub.lib.util import get_as_list
-from ckanext.knowledgehub.logic.jobs import schedule_update_index
+from ckanext.knowledgehub.logic.jobs import (
+    schedule_update_index,
+    schedule_notification_email,
+    schedule_broadcast_notification_email,
+)
 
 log = logging.getLogger(__name__)
 
@@ -514,6 +518,14 @@ def dashboard_create(context, data_dict):
             plugin_helpers.Entity.Dashboard,
             plugin_helpers.Permission.Granted
         )
+        for recipient in shared_with_users:
+            schedule_notification_email(
+                user,
+                'notification_access_granted',
+                {
+                    'type': 'dashboard',
+                    'dashboard': dashboard_data,
+                })
 
     # Add to kwh data
     try:
@@ -545,26 +557,76 @@ def dashboard_create(context, data_dict):
             'ignore_auth': True,
             'auth_user_obj': context.get('auth_user_obj'),
         }, _notification(_type), groups)
-
+        # schedule emails
+        for group_id in groups:
+            schedule_broadcast_notification_email(
+                group_id,
+                'notification_access_granted',
+                {
+                    'type': 'dashboard',
+                    'group_id': group_id,
+                    'group_type': _type,
+                    'dashboard': dashboard,
+                })
     return dashboard_data
 
 
 def package_create(context, data_dict):
     dataset = ckan_package_create(context, data_dict)
 
-    shared_with_users = dataset.get('shared_with_users')
+    shared_with_users = get_as_list('shared_with_users', data_dict)
     if shared_with_users:
-        if shared_with_users.startswith('{') and \
-                shared_with_users.endswith('}'):
-            shared_with_users = shared_with_users[1:-1]
-
         plugin_helpers.shared_with_users_notification(
             context['auth_user_obj'],
-            shared_with_users.split(','),
+            shared_with_users,
             dataset,
             plugin_helpers.Entity.Dataset,
             plugin_helpers.Permission.Granted
         )
+
+        for user_id in shared_with_users:
+            schedule_notification_email(
+                user_id,
+                'notification_access_granted',
+                {
+                    'type': 'package',
+                    'package': dataset,
+                })
+
+    shared_with_groups = get_as_list('shared_with_groups', data_dict)
+    shared_with_organizations = get_as_list('shared_with_organizations',
+                                            data_dict)
+
+    plugin_helpers.notification_broadcast({
+        'ignore_auth': True,
+        'auth_user_obj': context.get('auth_user_obj'),
+    }, {
+        'title': _('Access granted to dataset'),
+        'description': _('You have been granted '
+                         'access to {}').format(dataset['title']),
+        'link': url_for(controller='package', action='read', id=dataset['id'])
+    }, shared_with_groups + shared_with_organizations)
+
+    for group_id in shared_with_groups:
+        schedule_broadcast_notification_email(
+            group_id,
+            'notification_access_granted',
+            {
+                'type': 'package',
+                'package': dataset,
+                'group_id': group_id,
+                'group_type': 'group',
+            })
+    for group_id in shared_with_organizations:
+        schedule_broadcast_notification_email(
+            group_id,
+            'notification_access_granted',
+            {
+                'type': 'package',
+                'package': dataset,
+                'group_id': group_id,
+                'group_type': 'organization',
+            })
 
     try:
         data_dict = {

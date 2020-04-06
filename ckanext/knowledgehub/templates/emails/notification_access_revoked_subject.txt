@@ -1,0 +1,5 @@
+{% if type == 'dashboard'%}
+[UNHCR KnowledgeHub] Access revoked to dashboard {{dashboard.title}}
+{% else %}
+[UNHCR KnowledgeHub] Access revoked to dataset {{package.title}}
+{% endif%}
