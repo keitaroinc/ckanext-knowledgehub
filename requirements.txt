@@ -7,3 +7,4 @@ filelock==3.0.12
 spacy==2.2.3
 goodtables==1.5.1
 hdx-python-api==4.3.0
+humanize==1.0.0
