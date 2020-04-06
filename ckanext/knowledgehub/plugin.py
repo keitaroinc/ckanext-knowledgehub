@@ -179,6 +179,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'get_all_users': h.get_all_users,
             'get_all_organizations': h.get_all_organizations,
             'get_all_groups': h.get_all_groups,
+            'calculate_time_passed': h.calculate_time_passed
         }
 
     # IDatasetForm
