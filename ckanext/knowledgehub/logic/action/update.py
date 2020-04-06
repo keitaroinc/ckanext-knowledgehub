@@ -693,6 +693,11 @@ def package_update(context, data_dict):
                 str(e)
             ))
 
+    # Remap values to data_dict
+    data_dict['shared_with_users'] = ','.join(new_shared_users)
+    data_dict['shared_with_organizations'] = ','.join(shared_with_orgs)
+    data_dict['shared_with_groups'] = ','.join(shared_with_groups)
+
     result = ckan_package_update(context, data_dict)
     schedule_data_quality_check(result['id'])
 

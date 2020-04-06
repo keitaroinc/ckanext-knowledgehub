@@ -344,10 +344,10 @@ class Dashboard(DomainObject, Indexed):
         # dashboard as well to add access to those users to this dataset.
         shared_users = []
         for _, dataset in datasets.items():
+            user_with_access = set()
             if dataset.get('shared_with_users'):
                 shared_with = cls._get_safe_shared_with(
                     dataset['shared_with_users'])
-                user_with_access = set()
                 for user_id in map(lambda u: u.strip(),
                                    filter(lambda u: u and u.strip(),
                                           shared_with.split(','))):
@@ -356,10 +356,10 @@ class Dashboard(DomainObject, Indexed):
                     if user:
                         user_with_access.add(user['id'])
 
-                shared_users.append(user_with_access)
+            shared_users.append(user_with_access)
 
         if shared_users:
-            if len(shared_users) == 1:
+            if len(datasets) == 1:
                 for user_id in shared_users[0]:
                     permission_labels.append('user-%s' % user_id)
             else:

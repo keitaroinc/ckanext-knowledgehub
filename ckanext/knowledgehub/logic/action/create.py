@@ -572,9 +572,19 @@ def dashboard_create(context, data_dict):
 
 
 def package_create(context, data_dict):
+    shared_with_users = get_as_list('shared_with_users', data_dict)
+    shared_with_groups = get_as_list('shared_with_groups', data_dict)
+    shared_with_organizations = get_as_list('shared_with_organizations',
+                                            data_dict)
+
+    # Remap to comma separated values
+    data_dict['shared_with_users'] = ','.join(shared_with_users)
+    data_dict['shared_with_organizations'] = \
+        ','.join(shared_with_organizations)
+    data_dict['shared_with_groups'] = ','.join(shared_with_groups)
+
     dataset = ckan_package_create(context, data_dict)
 
-    shared_with_users = get_as_list('shared_with_users', data_dict)
     if shared_with_users:
         plugin_helpers.shared_with_users_notification(
             context['auth_user_obj'],
@@ -592,10 +602,6 @@ def package_create(context, data_dict):
                     'type': 'package',
                     'package': dataset,
                 })
-
-    shared_with_groups = get_as_list('shared_with_groups', data_dict)
-    shared_with_organizations = get_as_list('shared_with_organizations',
-                                            data_dict)
 
     plugin_helpers.notification_broadcast({
         'ignore_auth': True,
