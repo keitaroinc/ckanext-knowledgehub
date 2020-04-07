@@ -122,7 +122,7 @@ schema. In this case the version should be set to the next CKAN version number.
 
 
     <field name="capacity" type="string" indexed="true" stored="true" multiValued="false"/>
-    <field name="permission_labels" type="string" indexed="true" stored="false" multiValued="true"/>
+    <field name="permission_labels" type="string" indexed="true" stored="true" multiValued="true"/>
 
     <field name="res_name" type="textgen" indexed="true" stored="true" multiValued="true" />
     <field name="res_description" type="textgen" indexed="true" stored="true" multiValued="true"/>
