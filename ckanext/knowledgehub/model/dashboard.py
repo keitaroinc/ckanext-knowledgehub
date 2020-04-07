@@ -1,6 +1,7 @@
 import datetime
 import json
 import ast
+from itertools import product
 from sqlalchemy import (
     types,
     Column,
@@ -120,6 +121,8 @@ class Dashboard(DomainObject, Indexed):
         unprefixed('idx_shared_with_groups'),
         unprefixed('idx_datasets'),
         unprefixed('permission_labels'),
+        unprefixed('idx_groups'),
+        unprefixed('idx_organizations'),
     ]
     doctype = 'dashboard'
 
@@ -131,7 +134,9 @@ class Dashboard(DomainObject, Indexed):
 
         datasets = {}
         organizations = {}
+        pdorganizations = {}
         groups = {}
+        pdgroups = {}
         research_questions = {}
         visualizations = {}
         tags = {}
@@ -237,18 +242,24 @@ class Dashboard(DomainObject, Indexed):
 
         # set groups and organizations
         for _, pkg in datasets.items():
+            pdorganizations[pkg['id']] = {}
+            pdgroups[pkg['id']] = {}
             if pkg.get('organization'):
                 org = pkg['organization']
                 organizations[org['id']] = org
+                pdorganizations[pkg['id']][org['id']] = org
             if pkg.get('groups'):
                 for group in pkg['groups']:
                     groups[group['id']] = group
+                    pdgroups[pkg['id']][org['id']] = org
 
             # Handle if dataset is explicitly shared with an organization or
             # group: the dataset may be treated as it belongs to that group.
             exp_shared_orgs = get_as_list('shared_with_organizations', pkg)
             exp_shared_groups = get_as_list('shared_with_groups', pkg)
-            all_groups = set(organizations.keys()).union(set(groups.keys()))
+            all_groups = {}
+            all_groups.update(organizations)
+            all_groups.update(groups)
             for exp_groups, is_org in [(exp_shared_orgs, True),
                                        (exp_shared_groups, False)]:
                 for group_id in exp_groups:
@@ -257,8 +268,16 @@ class Dashboard(DomainObject, Indexed):
                         if group:
                             if is_org:
                                 organizations[group['id']] = group
+                                pdorganizations[pkg['id']][group['id']] = group
                             else:
                                 groups[group['id']] = group
+                                pdgroups[pkg['id']][group['id']] = group
+                    else:
+                        group = all_groups[group_id]
+                        if is_org:
+                            pdorganizations[pkg['id']][group['id']] = group
+                        else:
+                            pdgroups[pkg['id']][group['id']] = group
 
         # Set data
         data['datasets'] = ','.join(datasets.keys())
@@ -282,17 +301,14 @@ class Dashboard(DomainObject, Indexed):
         permission_labels = cls._generate_dashboard_permission_labels(
             data,
             datasets,
-            organizations,
-            groups,
+            pdorganizations,
+            pdgroups,
         )
         if permission_labels:
             data['permission_labels'] = permission_labels
 
-        # Remap 'shared_with_' properties
-        for field in ['shared_with_organizations',
-                      'shared_with_groups']:
-            if data.get(field):
-                data['idx_%s' % field] = data[field].split(',')
+        data['idx_organizations'] = list(organizations.keys())
+        data['idx_groups'] = list(groups.keys())
 
         return data
 
@@ -324,19 +340,33 @@ class Dashboard(DomainObject, Indexed):
         # organization or group)
         permission_labels += get_permission_labels(data)
 
-        # Add aggregated permission labels.
-        if organizations:
-            # The user must be member of ALL organizations related to the
-            #  datasets in this dashboard
-            permission_labels.append('member-%s' %
-                                     '-'.join(sorted(
-                                                list(organizations.keys()))))
-
-        if groups:
-            # The user must be member of ALL organizations related to the
-            #  datasets in this dashboard
-            permission_labels.append('member-%s' %
-                                     '-'.join(sorted(list(groups.keys()))))
+        # We generate a permission label that defines the access (implicit)
+        # to this dashboard. One dashboard can be accessed by a user that
+        # can also access ALL datasets that provide data to this dashboard.
+        # This is implicit access.
+        # One dashboard can use data from multiple datasets, each of those
+        # can be accessed by the users in multiple organizations or groups.
+        # For example a dashboard can have data from datasets D1 and D2, each
+        # of which can be accessed by the users of:
+        # D1(orgA, orgB, groupC) and D2(orgD, groupE)
+        # So a user can view this dashboard if he belongs to any of the: orgA,
+        # orgB or groupC AND at the same time belongs to orgD or groupE.
+        # To encode this, we generate a permission label like so:
+        # member-groups-orgA|orgB|groupC+orgD|groupE
+        # once the prefix 'member-groups-' is removed, we are left with the
+        # sets of groups separated with '+'. The user must belong to all of
+        # these sets. To belong to a set it means to be part of ANY of the
+        # group or organization in that set. The group/org ids are separeted
+        # with '|' in the set.
+        any_groups = []
+        for pkgid, _ in datasets.items():
+            pgroups = groups.get(pkgid, {}).keys()
+            porgs = organizations.get(pkgid, {}).keys()
+            if pgroups + porgs:
+                any_groups.append(pgroups + porgs)
+        if any_groups:
+            combined_label = '+'.join(['|'.join(_ids) for _ids in any_groups])
+            permission_labels.append('match-groups-{}'.format(combined_label))
 
         # Check each dataset, if explicitly shared with users.
         # If there are users that have access to all datasets, then we must

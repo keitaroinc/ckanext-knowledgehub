@@ -526,9 +526,8 @@ def dashboard_list(context, data_dict):
     if not (sysadmin_user or ignore_auth):
         if not ignore_permissions:
             permission_labels = get_user_permission_labels(context)
-            query['fq'] = [
-                get_fq_permission_labels(permission_labels)
-            ]
+            query = _get_dashboard_search_args(Dashboard, query,
+                                               permission_labels)
 
     docs = Dashboard.search_index(**query)
 
@@ -555,7 +554,8 @@ def knowledgehub_get_map_data(context, data_dict):
 def knowledgehub_get_geojson_properties(context, data_dict):
     map_resource_url = data_dict.get('map_resource')
 
-    return kh_helpers.get_geojson_properties(map_resource_url, context.get('user'))
+    return kh_helpers.get_geojson_properties(map_resource_url,
+                                             context.get('user'))
 
 
 @toolkit.side_effect_free
@@ -949,8 +949,16 @@ def _search_entity(index, ctx, data_dict):
                 fq = args.get('fq', [])
                 if isinstance(fq, str) or isinstance(fq, unicode):
                     fq = [fq]
-                fq.append(get_fq_permission_labels(permission_labels))
-                args['fq'] = fq
+                if index.doctype == 'dashboard':
+                    # In the case of dashboards, we must first execute a query
+                    # to obtain possible hits for the dashboards and then
+                    # decide which dashboards the user has access to based on
+                    # the user permission labels.
+                    args = _get_dashboard_search_args(index, args,
+                                                      permission_labels)
+                else:
+                    fq.append(get_fq_permission_labels(permission_labels))
+                    args['fq'] = fq
 
     results = index.search_index(**args)
 
@@ -987,6 +995,67 @@ def _search_entity(index, ctx, data_dict):
             return json.dumps(self, cls=DateTimeEncoder)
 
     return _results_wrapper(result_dict)
+
+
+def _get_dashboard_search_args(index, args, permission_labels):
+    results = index.search_index(**args)
+    accessible_dashboards = []
+
+    groups_set = set(
+        map(lambda _p: _p.strip('member-'),
+            filter(lambda _p: _p.startswith('member-'), permission_labels)))
+
+    perm_label_set = set(permission_labels)
+
+    def _get_match_permission(dashboard):
+        for perm in dashboard.get('permission_labels', []):
+            if perm.startswith('match-groups-'):
+                perm = perm[len('match-groups-'):]
+                match_all = perm.split('+')
+                permissions = []
+                if match_all:
+                    for match_any in match_all:
+                        match_any = match_any.split('|')
+                        permissions.append(
+                            ['member-{}'.format(p) for p in match_any])
+                return permissions
+        return None
+
+    def _has_any_of(perms):
+        return set(perms).intersection(perm_label_set)
+
+    def _has_all(perm_sets):
+        for perms in perm_sets:
+            if not _has_any_of(perms):
+                return False
+        return True
+
+    for dashboard in results.docs:
+        dashboard_permissions = set(dashboard.get('permission_labels', []))
+        if perm_label_set.intersection(dashboard_permissions):
+            # Basic membership, explicitly shared with user/org/group
+            accessible_dashboards.append(dashboard['id'])
+            continue
+
+        permissions = _get_match_permission(dashboard)
+        if permissions and _has_all(permissions):
+            # The user must have full permission to view every dataset that
+            # provides data to the dashboard, so we can enable implict access
+            # to this dashboard.
+            accessible_dashboards.append(dashboard['id'])
+
+    fq = None
+    if not accessible_dashboards:
+        fq = 'entity_id:__NONE__'
+    else:
+        fq = '+entity_id:({})'.format(
+            ' OR '.join(accessible_dashboards)
+        )
+    if 'fq' not in args:
+        args['fq'] = fq
+    else:
+        args['fq'].append(fq)
+    return args
 
 
 def _restructured_facets(facets, group_titles_by_name):
