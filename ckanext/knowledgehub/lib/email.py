@@ -1,7 +1,7 @@
 from ckan.common import config, _
 from ckan.lib.base import render_jinja2
 from ckan.lib import mailer
-from ckan.logic import get_action
+from ckan.plugins import toolkit
 from logging import getLogger
 from ckan.lib.helpers import url_for
 
@@ -42,8 +42,9 @@ def request_validation(admin, admin_email, resource_url):
 
 
 def send_notification_email(recipient, template, data):
-    user = get_action('user_show')({
+    user = toolkit.get_action('user_show')({
         'ignore_auth': True,
+        'keep_email': True,
     }, {
         'id': recipient,
     })
@@ -62,8 +63,8 @@ def send_notification_email(recipient, template, data):
         action = 'organization_show'
         if data.get('group_type') == 'group':
             action = 'group_show'
-        group = get_action(action)({'ignore_auth': True},
-                                   {'id': data['group_id']})
+        group = toolkit.get_action(action)({'ignore_auth': True},
+                                           {'id': data['group_id']})
         data['group'] = group
 
     site_title = config.get('ckan.site_title')
