@@ -4,6 +4,8 @@
 {% resource 'knowledgehub/javascript/resource_feedback.js' %}
 {% resource 'knowledgehub/javascript/copy_clipboard.js' %}
 {% resource 'knowledgehub/javascript/validation_form.js' %}
+{% resource 'knowledgehub/javascript/push_data_to_hdx.js' %}
+
 {% ckan_extends %}
 
 
@@ -58,6 +60,7 @@
 
   {% endif %}
 
+
   {% if res.url and h.is_url(res.url) %}
   <li>
     <div class="btn-group">
@@ -96,7 +99,16 @@
 
 
 </ul>
-
+<input id="package-name" value="{{ pkg.name }}" type="hidden" />
+<input id="resource-name" value="{{ res.name }}" type="hidden"/>
+    {% if h.check_access('package_update', {'id':pkg.id }) %}
+    <ul class="resource-item" style="text-align: end">
+      <div id="hdx-loader"></div>
+      <button class="btn btn-success" id="pushResourceHDX" type="submit">
+        <i class="fa fa-upload"></i>{{ _(' Remove resource from HDX') }}
+      </button>
+    </ul>
+    {% endif %}
 <div id="validationReport" class="pull-right">
 
   <form>

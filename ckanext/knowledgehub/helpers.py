@@ -1704,3 +1704,14 @@ def get_members(context, group_id):
                     group_id, str(e))
         log.exception(e)
     return []
+
+def check_if_resource_is_on_hdx(res_id):
+
+    try:
+        resource = get_action('resource_show')(
+            context, {'name': res_id})
+        return True
+    except (NotFound, NotAuthorized):
+        abort(404, _('Resource not found'))
+
+

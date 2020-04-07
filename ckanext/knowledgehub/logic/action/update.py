@@ -675,23 +675,22 @@ def package_update(context, data_dict):
     package_old_info = toolkit.get_action('package_show')(context, {
         'id': data_dict.get('id')
     })
-
-    try:
-        hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
-        if hdx_dataset:
-            upsert_dataset_to_hdx = {
-                'id': package_old_info.get('id'),
-                'metadata_only': False
-            }
-            logic.get_action('upsert_dataset_to_hdx')(
-                context,
-                upsert_dataset_to_hdx
-            )
-    except Exception as e:
-        log.debug(
-            'Connection to HDX: <error> {}'.format(
-                str(e)
-            ))
+    # try:
+    #     hdx_dataset = Dataset.read_from_hdx(package_old_info.get('name'))
+    #     if hdx_dataset:
+    #         upsert_dataset_to_hdx = {
+    #             'id': package_old_info.get('id'),
+    #             'metadata_only': False
+    #         }
+    #         logic.get_action('upsert_dataset_to_hdx')(
+    #             context,
+    #             upsert_dataset_to_hdx
+    #         )
+    # except Exception as e:
+    #     log.debug(
+    #         'Connection to HDX: <error> {}'.format(
+    #             str(e)
+    #         ))
 
     # Remap values to data_dict
     data_dict['shared_with_users'] = ','.join(new_shared_users)
