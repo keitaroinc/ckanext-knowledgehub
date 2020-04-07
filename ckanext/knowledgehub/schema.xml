@@ -118,6 +118,7 @@ schema. In this case the version should be set to the next CKAN version number.
     <field name="research_question" type="text" indexed="true" stored="true" multiValued="true"/>
     <field name="country_code_displacement" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="country_code_origin" type="string" indexed="true" stored="true" multiValued="true"/>
+    <field name="hdx_name" type="string" indexed="true" stored="true" multiValued="false"/>
 
 
 
@@ -205,5 +206,6 @@ schema. In this case the version should be set to the next CKAN version number.
 <copyField source="research_question" dest="text"/>
 <copyField source="country_code_displacement" dest="text"/>
 <copyField source="country_code_origin" dest="text"/>
+<copyField source="hdx_name" dest="text"/>
 
 </schema>

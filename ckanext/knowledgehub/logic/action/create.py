@@ -1438,10 +1438,18 @@ def upsert_resource_to_hdx(context, data_dict):
                 'url': rsc.get('url'),
             }
 
-            rsc = Resource(initial_data=data_dict)
-            rsc.check_url_filetoupload()
-            rsc.create_in_hdx()
-            rsc.create_datastore()
+            rsc_hdx = Resource(initial_data=data_dict)
+            rsc_hdx.check_url_filetoupload()
+            rsc_hdx.create_in_hdx()
+            rsc_hdx.create_datastore()
+            rsc['hdx_name_resource'] = rsc['name']
+            try:
+                toolkit.get_action('resource_update')(context, rsc)
+            except ValidationError as e:
+                try:
+                    raise ValidationError(e.error_dict)
+                except (KeyError, IndexError):
+                    raise ValidationError(e.error_dict)
             return rsc
     except Exception as e:
         log.debug('Unable to push resource in HDX: %s' % str(e))
@@ -1477,7 +1485,6 @@ def upsert_dataset_to_hdx(context, data_dict):
         dataset_source = config.get(u'ckanext.knowledgehub.hdx.dataset_source')
         maintainer = config.get(u'ckanext.knowledgehub.hdx.maintainer')
         dataset_date = unicode(datetime.datetime.utcnow())
-
         data_dict = {
             'name': data.get('name'),
             'notes': data.get('notes', ''),
@@ -1495,7 +1502,6 @@ def upsert_dataset_to_hdx(context, data_dict):
         }
 
         hdx_dataset = Dataset.read_from_hdx(data['name'])
-
         if hdx_dataset is not None:
             data_dict['id'] = hdx_dataset['id']
 
@@ -1572,6 +1578,15 @@ def upsert_dataset_to_hdx(context, data_dict):
                 hdx_newest_dataset['relationships_as_subject'],
             'is_requestdata_type': hdx_newest_dataset['is_requestdata_type'],
         }
+
+        data['hdx_name'] = hdx_newest_dataset_dict['name']
+        try:
+            toolkit.get_action('package_update')(context, data)
+        except ValidationError as e:
+            try:
+                raise ValidationError(e.error_dict)
+            except (KeyError, IndexError):
+                raise ValidationError(e.error_dict)
 
         return hdx_newest_dataset_dict
 

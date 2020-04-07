@@ -179,7 +179,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'get_all_users': h.get_all_users,
             'get_all_organizations': h.get_all_organizations,
             'get_all_groups': h.get_all_groups,
-            'calculate_time_passed': h.calculate_time_passed
+            'calculate_time_passed': h.calculate_time_passed,
+            'check_if_resource_is_on_hdx': h.check_if_resource_is_on_hdx
         }
 
     # IDatasetForm
@@ -210,6 +211,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'shared_with_users': package_defaults,
             'shared_with_organizations': package_defaults,
             'shared_with_groups': package_defaults,
+            'hdx_name': package_defaults,
         })
 
         schema['resources'].update({
@@ -258,6 +260,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'shared_with_users': package_defaults,
             'shared_with_organizations': package_defaults,
             'shared_with_groups': package_defaults,
+            'hdx_name': package_defaults,
         })
 
         schema['resources'].update({
@@ -272,6 +275,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'dq_timeliness_date_format': defaults,
             'dq_accuracy_column': defaults,
             'data_quality_completeness_column': defaults,
+            'hdx_name_resource': defaults,
         })
         return schema
 

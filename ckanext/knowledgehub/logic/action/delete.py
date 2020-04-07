@@ -12,6 +12,7 @@ from ckan import model
 from ckan.model import Session
 from ckan.logic.action.delete import package_delete as ckan_package_delete
 
+from hdx.data.dataset import Dataset
 
 from ckanext.knowledgehub import helpers as plugin_helpers
 from ckanext.knowledgehub.model import (
@@ -497,3 +498,60 @@ def package_delete(context, data_dict):
         KWHData.delete({'dataset': data_dict['id']})
     except Exception as e:
         log.debug('Cannot remove dataset from kwh data %s' % str(e))
+
+
+def delete_resource_from_hdx(context, data_dict):
+
+    check_access('package_update', context)
+
+    id = data_dict.get('id')
+    if not id:
+        raise ValidationError('Dataset id is missing!')
+
+    try:
+
+        data = logic.get_action('package_show')(
+            {'ignore_auth': True},
+            {'id': id})
+
+        hdx_dataset = Dataset.read_from_hdx(data['name'])
+
+        for hdx_resource in hdx_dataset.get_resources():
+            if hdx_resource['name'] == data_dict['resource_name']:
+                hdx_resource.delete_from_hdx()
+                return
+        return []
+    except Exception as e:
+        log.debug(e)
+        return "Please try again!" 
+
+def delete_package_from_hdx(context, data_dict):
+
+    check_access('package_update', context)
+
+    id = data_dict.get('id')
+    if not id:
+        raise ValidationError('Dataset id is missing!')
+
+    try:
+        data = logic.get_action('package_show')(
+            {'ignore_auth': True},
+            {'id': id})
+
+        hdx_dataset = Dataset.read_from_hdx(data['name'])
+        if hdx_dataset:
+            hdx_dataset.delete_from_hdx()
+            data['hdx_name'] = ""
+            try:
+                toolkit.get_action('package_update')(context, data)
+            except ValidationError as e:
+                try:
+                    raise ValidationError(e.error_dict)
+                except (KeyError, IndexError):
+                    raise ValidationError(e.error_dict)
+
+            return
+        return "Dataset not found!"
+    except Exception as e:
+        log.debug(e)
+        return "Please try again!" 
