@@ -526,9 +526,8 @@ def dashboard_list(context, data_dict):
     if not (sysadmin_user or ignore_auth):
         if not ignore_permissions:
             permission_labels = get_user_permission_labels(context)
-            query['fq'] = [
-                get_fq_permission_labels(permission_labels)
-            ]
+            query = _get_dashboard_search_args(Dashboard, query,
+                                               permission_labels)
 
     docs = Dashboard.search_index(**query)
 
