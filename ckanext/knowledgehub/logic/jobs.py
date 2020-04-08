@@ -1,6 +1,6 @@
 import ckan.lib.jobs as jobs
 from ckan.plugins import toolkit
-from ckan.lib.search import rebuild as ckan_index_rebuild
+import ckan.lib.search as ckan_search
 from ckanext.knowledgehub.lib.quality import (
     Accuracy,
     Completeness,
@@ -17,7 +17,7 @@ from ckanext.knowledgehub.model import (
 )
 from ckanext.knowledgehub.lib.solr import escape_str, Indexed, unprefixed
 from ckanext.knowledgehub.lib.email import send_notification_email
-from ckanext.knowledgehub.helpers import get_members
+import ckanext.knowledgehub.helpers as kwn_helpers
 
 from logging import getLogger
 
@@ -109,7 +109,7 @@ class DatasetIndexRefresh(IndexedModelsRefreshIndex):
         self.logger.debug('Rebuilding index for packages: %s', package_ids)
         if package_ids:
             for package_id in package_ids:
-                ckan_index_rebuild(package_id=package_id)
+                ckan_search.rebuild(package_id=package_id)
 
 
 def update_index(query):
@@ -169,7 +169,7 @@ def schedule_notification_email(recipient, template, data):
 
 
 def schedule_broadcast_notification_email(group, template, data):
-    group_members = [user_id for user_id, _, _ in get_members({
+    group_members = [user_id for user_id, _, _ in kwn_helpers.get_members({
         'ignore_auth': True,
     }, group)]
     for recipient in group_members:

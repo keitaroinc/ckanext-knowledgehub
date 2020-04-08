@@ -2,6 +2,7 @@ import uuid
 from ckan.tests import factories
 from ckan.plugins import toolkit
 from ckan import model
+from ckan.model.user import User as CkanUser
 
 
 class User(object):
@@ -74,9 +75,10 @@ def mock_pylons():
 
 def get_context():
     user = factories.Sysadmin()
+    auth_user_obj = CkanUser.get(user['id'])
     return {
         'user': user.get('name'),
-        'auth_user_obj': User(user.get('id')),
+        'auth_user_obj': auth_user_obj,
         'ignore_auth': True,
         'model': model,
         'session': model.Session
@@ -85,9 +87,10 @@ def get_context():
 
 def get_regular_user_context():
     user = factories.User()
+    auth_user_obj = CkanUser.get(user['id'])
     return {
         'user': user.get('name'),
-        'auth_user_obj': User(user.get('id')),
+        'auth_user_obj': auth_user_obj,
         'model': model,
         'session': model.Session,
         'ignore_auth': True,
