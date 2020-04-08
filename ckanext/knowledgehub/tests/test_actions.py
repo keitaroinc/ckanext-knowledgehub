@@ -588,7 +588,8 @@ class TestKWHCreateActions(ActionsBase):
         Dataset.__init__.return_value = None
         Dataset.get_resources.return_value = [{
             'package_id': dataset['id'],
-            'url': 'https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
+            'url':
+                'https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv',
             'description':'Some description here',
             'created':'2020-03-10 00:13:47.641641',
             'name':'resource name',
@@ -1155,6 +1156,63 @@ class TestKWHGetActions(ActionsBase):
         )
 
         assert(len(predicts) > 3)
+
+    def test_get_all_organizations(self):
+        ctx = get_context()
+        toolkit.get_action('organization_create')({
+            'ignore_auth': True,
+            'user': ctx['user'],
+        }, {
+            'name': 'organization-one',
+            'title': 'Organization One',
+        })
+
+        organizations = get_actions.get_all_organizations(ctx, {})
+        assert_true(organizations is not None)
+        assert_true(len(organizations) >= 1)
+
+    def test_get_all_groups(self):
+        ctx = get_context()
+        toolkit.get_action('group_create')({
+            'ignore_auth': True,
+            'user': ctx['user'],
+        }, {
+            'name': 'group-one',
+            'title': 'Group One',
+        })
+
+        groups = get_actions.get_all_groups(ctx, {})
+        assert_true(groups is not None)
+        assert_true(len(groups) >= 1)
+
+    def test_group_list_for_user(self):
+        ctx = get_regular_user_context()
+        adm = get_context()
+        group = toolkit.get_action('group_create')({
+            'ignore_auth': True,
+            'user': adm['user'],
+        }, {
+            'name': 'group-one',
+            'title': 'Group One',
+        })
+
+        resp = toolkit.get_action('group_member_create')({
+            'ignore_auth': True,
+            'user': adm['user'],
+        }, {
+            'id': group['id'],
+            'username': ctx['user'],
+            'role': 'member',
+        })
+
+        groups = get_actions.group_list_for_user({
+            'user': adm['user'],
+        }, {
+            'user': ctx['auth_user_obj'].id,
+        })
+
+        assert_true(groups is not None)
+        assert_equals(len(groups), 1)
 
 
 class TestKWHDeleteActions(ActionsBase):

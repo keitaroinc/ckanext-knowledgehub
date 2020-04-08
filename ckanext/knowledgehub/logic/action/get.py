@@ -2069,11 +2069,17 @@ def notification_show(context, data_dict):
 
 @toolkit.side_effect_free
 def get_all_organizations(context, data_dict):
+    '''Fetches all organizations available in the system.
+    This action is available for sysadmins only.
+    '''
     return _get_all_organizations_or_groups(context, data_dict, True)
 
 
 @toolkit.side_effect_free
 def get_all_groups(context, data_dict):
+    '''Fetches all groups available in the system.
+    This action is available for sysadmins only.
+    '''
     return _get_all_organizations_or_groups(context, data_dict, False)
 
 
@@ -2104,6 +2110,12 @@ def _get_all_organizations_or_groups(context, data_dict, is_organization=True):
 
 
 def group_list_for_user(context, data_dict):
+    '''Gets all groups to which the given user is part of.
+
+    :param user: `str`, the user name or ID.
+
+    :returns: `list` of `dict`, the groups which the given user is member of.
+    '''
     check_access('get_groups_for_user', context, data_dict)
 
     if 'user' not in data_dict or not data_dict.get('user'):

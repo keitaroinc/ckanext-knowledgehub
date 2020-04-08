@@ -47,6 +47,7 @@ from hdx.data.dataset import Dataset
 from hdx.hdx_configuration import Configuration
 
 assert_equals = nose.tools.assert_equals
+assert_true = nose.tools.assert_true
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
 raises = nose.tools.raises
@@ -705,32 +706,6 @@ class TestKWHHelpers(ActionsBase):
         res = kwh_helpers.get_geojson_properties(url, context.get('user'))
         assert_equals(len(res), 26)
 
-    # def test_get_map_data(self):
-    #     dataset = create_dataset()
-    #     data = {
-    #         "url" : "https://www.grandconcourse.ca/map/data/GCPoints.geojson",
-    #         "force": True
-    #     }
-    #     resource = factories.Resource(
-    #         schema='',
-    #         validation_options='',
-    #         package_id=dataset['id'],
-    #         datastore_active=True,
-    #         format='geojson'
-
-    #     )
-    #     data['resource_id'] = resource['id']
-
-    #     map_key_field = "Name"
-    #     data_key_field = "features"
-    #     data_value_field = "20"
-    #     from_where = ""
-    #     url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
-
-    #     helpers.call_action('datastore_create', **data)
-    #     res = kwh_helpers.get_map_data(url, map_key_field, data_key_field, data_value_field, from_where)
-    #     assert_equals(res, "")
-
     def test_format_date(self):
         date = "2019-11-21T10:09:05.900808"
         date_formated = kwh_helpers.format_date(date)
@@ -891,60 +866,6 @@ class TestKWHHelpers(ActionsBase):
     def test_is_rsc_upload_datastore_exception(self):
         b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
-
-    # @monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
-    # @monkey_patch(Visualization, 'update_index_doc', mock.Mock())
-    # def test_views_dashboards_groups_update(self):
-    #     dataset = create_dataset()
-    #     resource = factories.Resource(
-    #         schema='',
-    #         validation_options='',
-    #         package_id=dataset['id'],
-    #         url='https://jsonplaceholder.typicode.com/posts'
-    #     )
-
-    #     user = factories.Sysadmin()
-    #     context = {
-    #         'user': user.get('name'),
-    #         'auth_user_obj': User(user.get('id')),
-    #         'ignore_auth': True,
-    #         'model': model,
-    #         'session': model.Session
-    #     }
-
-    #     data_dict = {
-    #         'resource_id': resource.get('id'),
-    #         'title': 'Visualization title',
-    #         'description': 'Visualization description',
-    #         'view_type': 'chart',
-    #         'config': {
-    #             "color": "#59a14f",
-    #             "y_label": "Usage",
-    #             "show_legend": "Yes"
-    #         }
-    #     }
-    #     rsc_view = create_actions.resource_view_create(context, data_dict)
-
-    #     data_dict = {
-    #         'name': 'internal-dashboard',
-    #         'title': 'Internal Dashboard',
-    #         'description': 'Dashboard description',
-    #         'type': 'internal',
-    #         'indicators': [
-    #             {"research_question": "54be129c-9e6f-4a0b-938a-bb6f2493dc91",
-    #              "resource_view_id": rsc_view['id'],
-    #              "order": 1,
-    #              "size": "small"}
-    #         ]
-    #     }
-    #     dashboard = create_actions.dashboard_create(context, data_dict)
-
-    #     kwh_helpers.views_dashboards_groups_update(dataset['id'])
-
-    #     d = get_actions.dashboard_show(context, {'id': dashboard['id']})
-
-    #     assert_equals(d['name'], data_dict['name'])
-    #     assert_equals(d['type'], data_dict['type'])
 
     @raises
     def test_get_resource_validation_options(self):
@@ -1430,3 +1351,60 @@ class TestKWHHelpers(ActionsBase):
         )
 
         assert_equals(len(notifications), 2)
+
+    def test_get_members(self):
+        ctx = get_context()
+        grp = toolkit.get_action('group_create')({
+            'ignore_auth': True,
+            'user': ctx['user']
+        }, {
+            'title': 'Group Two',
+            'name': 'group-two'
+        })
+
+        toolkit.get_action('group_member_create')({
+            'ignore_auth': True,
+            'user': ctx['user'],
+        }, {
+            'id': grp['id'],
+            'username': ctx['user'],
+            'role': 'member',
+        })
+
+        members = kwh_helpers.get_members({
+            'ignore_auth': True,
+        }, grp['id'])
+
+        assert_true(members is not None)
+        assert_equals(len(members), 1)
+
+    def test_notification_broadcast(self):
+        ctx = get_context()
+        grp = toolkit.get_action('group_create')({
+            'ignore_auth': True,
+            'user': ctx['user']
+        }, {
+            'title': 'Group Notifications',
+            'name': 'group-notifications'
+        })
+
+        toolkit.get_action('group_member_create')({
+            'ignore_auth': True,
+            'user': ctx['user'],
+        }, {
+            'id': grp['id'],
+            'username': ctx['user'],
+            'role': 'member',
+        })
+
+        kwh_helpers.notification_broadcast({
+            'ignore_auth': True,
+        }, {
+            'title': 'Test Notification 5',
+            'description': 'Test Desc',
+        }, [grp['id']])
+
+        notifications = toolkit.get_action('notification_list')(ctx, {})
+
+        assert_true(notifications is not None)
+        assert_equals(notifications.get('count'), 1)
