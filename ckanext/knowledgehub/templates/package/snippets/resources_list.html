@@ -45,7 +45,6 @@ Example:
     </li>
     {% endif %}
 
-
     <input id="package-name" value="{{ pkg.name }}" type="hidden" />
     {% if h.check_access('package_update', {'id':pkg.id }) %}
     <li class="resource-item" style="text-align: end">

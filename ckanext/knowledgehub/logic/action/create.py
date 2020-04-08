@@ -1457,7 +1457,7 @@ def upsert_resource_to_hdx(context, data_dict):
             return rsc
     except Exception as e:
         log.debug('Unable to push resource in HDX: %s' % str(e))
-        return {}
+        return e
 
 
 def upsert_dataset_to_hdx(context, data_dict):
