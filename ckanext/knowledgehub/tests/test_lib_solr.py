@@ -13,6 +13,9 @@ from ckanext.knowledgehub.lib.solr import (
     unprefixed,
     to_indexed_doc,
     indexed_doc_to_data_dict,
+    boost_solr_params,
+    get_fq_permission_labels,
+    get_sort_string,
     )
 
 from nose.tools import (
@@ -233,6 +236,46 @@ class TestHelperMethods(helpers.FunctionalTestBase):
             'name': 'test',
             'prop': 'value',
         }, data)
+
+    def test_boost_solr_params(self):
+        params = boost_solr_params({
+            'normal': {
+                'field': ['value1', 'value2'],
+            },
+            '^10': {
+                'other_field': ['value3', 'value4'],
+            }
+        })
+        assert_true(params is not None)
+        assert_equals(params, {
+            'defType': 'edismax',
+            'bq': 'field:value1 + field:value2 + other_field:value3^10 + '
+                  'other_field:value4^10',
+        })
+
+    def test_get_fq_permission_labels(self):
+        fqlabels = get_fq_permission_labels([
+            'user-a',
+            'creator-a',
+            'member-b',
+            'member-c'])
+        assert_true(fqlabels is not None)
+        assert_equals(fqlabels, '+permission_labels:("user-a" OR "creator-a" '
+                                'OR "member-b" OR "member-c")')
+
+    def test_get_sort_string(self):
+
+        class _TestModel(Indexed):
+            indexed = [
+                'field_a',
+                unprefixed('field_c'),
+                mapped('field_d', 'pref_field_d'),
+            ]
+
+        sort = get_sort_string(_TestModel,
+                               'field_a, field_b asc, field_d desc')
+        assert_true(sort is not None)
+        assert_equals(sort, 'khe_field_a asc,field_b asc,pref_field_d desc')
 
 
 def model(data, model_name='_MockModel'):

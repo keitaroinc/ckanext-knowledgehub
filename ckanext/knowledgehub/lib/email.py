@@ -42,6 +42,18 @@ def request_validation(admin, admin_email, resource_url):
 
 
 def send_notification_email(recipient, template, data):
+    '''Sends a notification email to a recipient given a template and data to
+    render the email template.
+
+    :param recipient: `str`, the id or the name of the recipient (CKAN user).
+    :param template: `str`, the name of the template to render. The template
+        file should reside in `templates/emails`. The name of the template file
+        is generated from the template name by adding the suffix `.txt` for the
+        email body and `<template>_subject.txt` for the email subject. The
+        email subject can be overriden by providing `subject` value in the
+        data to the template.
+    :param data: `dict`, the data to be merged with the email template.
+    '''
     user = toolkit.get_action('user_show')({
         'ignore_auth': True,
         'keep_email': True,
