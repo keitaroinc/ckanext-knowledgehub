@@ -50,11 +50,12 @@ Example:
     {% if h.check_access('package_update', {'id':pkg.id }) %}
     <li class="resource-item" style="text-align: end">
       <div id="hdx-loader"></div>
+      {% if pkg.get('hdx_name') %}
       <button class="btn btn-success" id="removeHDX" type="submit">
-        {% if pkg.get('hdx_name') %}
         <i class="fa fa-download"></i>{{ _(' Remove dataset from HDX') }}
-        {% endif %}
       </button>
+      {% endif %}
+
     </li>
     {% endif %}
 

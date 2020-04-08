@@ -503,25 +503,36 @@ def package_delete(context, data_dict):
 def delete_resource_from_hdx(context, data_dict):
 
     check_access('package_update', context)
-
     id = data_dict.get('id')
     if not id:
         raise ValidationError('Dataset id is missing!')
+    res_id = data_dict.get('resource_id')
+    resource = toolkit.get_action('resource_show')(context,
+                                                   { 'id': res_id })
 
     try:
 
         data = logic.get_action('package_show')(
-            {'ignore_auth': True},
-            {'id': id})
+            {'ignore_auth': True },
+            {'id': id })
 
         hdx_dataset = Dataset.read_from_hdx(data['name'])
 
         for hdx_resource in hdx_dataset.get_resources():
             if hdx_resource['name'] == data_dict['resource_name']:
                 hdx_resource.delete_from_hdx()
+                resource['hdx_name_resource']=""
+                try:
+                    resource = toolkit.get_action('resource_update')(context, resource)
+                except ValidationError as e:
+                    try:
+                        raise ValidationError(e.error_dict)
+                    except (KeyError, IndexError):
+                        raise ValidationError(e.error_dict)
                 return
         return []
     except Exception as e:
+        log.exception(e)
         log.debug(e)
         return "Please try again!" 
 

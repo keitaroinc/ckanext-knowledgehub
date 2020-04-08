@@ -100,7 +100,8 @@
 
 </ul>
 <input id="package-name" value="{{ pkg.name }}" type="hidden" />
-<input id="resource-name" value="{{ res.name }}" type="hidden"/>
+<input id="resource-id" value="{{ res.id }}" type="hidden"/>
+<input id="resource-name" value="{{ res.name }}" type="hidden" />
     {% if h.check_access('package_update', {'id':pkg.id }) %}
     <ul class="resource-item" style="text-align: end">
       <div id="hdx-loader"></div>

@@ -1444,7 +1444,11 @@ def upsert_resource_to_hdx(context, data_dict):
             rsc_hdx.create_datastore()
             rsc['hdx_name_resource'] = rsc['name']
             try:
-                toolkit.get_action('resource_update')(context, rsc)
+                dict_res = {
+                    'id': rsc['id'],
+                    'hdx_name_resource': rsc['name']
+                }
+                resource = toolkit.get_action('resource_update')({ 'ignore_auth': True }, dict_res)
             except ValidationError as e:
                 try:
                     raise ValidationError(e.error_dict)
@@ -1517,14 +1521,17 @@ def upsert_dataset_to_hdx(context, data_dict):
 
             resources = data['resources']
             dataset = Dataset.read_from_hdx(data['name'])
-            for resource in resources:
+
+            for i in range(0, len(resources)):
+                resource = resources[i]
+            # for resource in resources:
                 data_dict = {
                     'resource_id': resource.get('id'),
                     'dataset_name': dataset.get('name')
                 }
                 if resource['name'] in hdx_resources:
                     data_dict.update({'hdx_rsc_name': resource['name']})
-                upsert_resource_to_hdx(context, data_dict)
+                resources[i] = upsert_resource_to_hdx(context, data_dict)
 
             kwh_resources = list(map(
                 lambda r: r.get('name'), resources
