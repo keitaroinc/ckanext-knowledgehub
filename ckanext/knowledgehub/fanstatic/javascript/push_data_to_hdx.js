@@ -42,13 +42,15 @@
     function removeResourceHDX(tr) {
         document.getElementById("hdx-loader").style.visibility = "visible";
         var id = $('#package-name').val();
+        var res_id = $('#resource-id').val();
         var res_name = $('#resource-name').val();
         var btn = $(this);
         var flash_messages = $('.flash-messages');
         btn.attr('disabled', true);
         api.post('delete_resource_from_hdx', {
             id: id,
-            resource_name: res_name
+            resource_name: res_name, 
+            resource_id : res_id
         })
             .done(function (data) {
                 if (data.success) {
