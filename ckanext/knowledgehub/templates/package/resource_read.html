@@ -102,14 +102,20 @@
 <input id="package-name" value="{{ pkg.name }}" type="hidden" />
 <input id="resource-id" value="{{ res.id }}" type="hidden"/>
 <input id="resource-name" value="{{ res.name }}" type="hidden" />
-    {% if h.check_access('package_update', {'id':pkg.id }) %}
-    <ul class="resource-item" style="text-align: end">
-      <div id="hdx-loader"></div>
-      <button class="btn btn-success" id="pushResourceHDX" type="submit">
-        <i class="fa fa-upload"></i>{{ _(' Remove resource from HDX') }}
-      </button>
-    </ul>
-    {% endif %}
+{% if h.check_access('package_update', {'id':pkg.id }) %}
+{% if h.check_if_dataset_is_on_hdx(pkg.name) %}
+<ul class="resource-item" style="text-align: end">
+  <div id="hdx-loader"></div>
+  <button class="btn btn-success" id="pushResourceHDX" type="submit" value = "{{ res.hdx_name_resource }}">
+  {% if res.get('hdx_name_resource') %}
+    <i class="fa fa-download"></i>{{ _(' Remove resource from HDX') }}
+  {% else %}
+    <i class="fa fa-upload"></i>{{ _(' Upload resource to HDX') }}
+  {% endif %}
+  </button>
+</ul>
+{% endif %}
+{% endif %}
 <div id="validationReport" class="pull-right">
 
   <form>

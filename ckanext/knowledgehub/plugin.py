@@ -180,7 +180,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'get_all_organizations': h.get_all_organizations,
             'get_all_groups': h.get_all_groups,
             'calculate_time_passed': h.calculate_time_passed,
-            'check_if_resource_is_on_hdx': h.check_if_resource_is_on_hdx
+            'check_if_dataset_is_on_hdx': h.check_if_dataset_is_on_hdx
         }
 
     # IDatasetForm

@@ -17,6 +17,8 @@ from flask import Blueprint
 from urllib import urlencode
 from six import string_types, iteritems
 from enum import Enum
+from hdx.data.dataset import Dataset
+
 
 try:
     # CKAN 2.7 and later
@@ -1705,13 +1707,9 @@ def get_members(context, group_id):
         log.exception(e)
     return []
 
-def check_if_resource_is_on_hdx(res_id):
+def check_if_dataset_is_on_hdx(dataset_name):
 
-    try:
-        resource = get_action('resource_show')(
-            context, {'name': res_id})
-        return True
-    except (NotFound, NotAuthorized):
-        abort(404, _('Resource not found'))
-
-
+    dataset = Dataset.read_from_hdx(dataset_name)
+    if not dataset:
+        return False
+    return True
