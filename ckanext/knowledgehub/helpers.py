@@ -8,7 +8,7 @@ import functools32
 import requests
 import re
 import pytz
-import humanize 
+import humanize
 
 from datetime import datetime, timedelta
 from dateutil import parser
@@ -827,6 +827,7 @@ def format_date(date_str):
     display_date = date[0] + ' at ' + time_basic[0]
     return display_date
 
+
 def calculate_time_passed(str):
 
     now = datetime.now(tzlocal())
@@ -838,7 +839,7 @@ def calculate_time_passed(str):
     now_aware = pytz.utc.localize(date_time_obj)
     diff = humanize.naturaltime(now - now_aware)
 
-    return diff 
+    return diff
 
 
 def _get_pager(results, item_type):
@@ -1027,10 +1028,15 @@ def dashboard_research_questions(context, dashboard):
             indicators = json.loads(indicators)
         for indicator in list(indicators):
             if indicator.get('research_question'):
-                question = research_question_show(context, {
-                    'id': indicator['research_question']
-                })
-                questions.append(question)
+                try:
+                    question = research_question_show(context, {
+                        'id': indicator['research_question']
+                    })
+                    questions.append(question)
+                except Exception as e:
+                    log.warning('Cannot access reserch question %s. Error: %s',
+                                indicator.get('research_question'), str(e))
+                    log.exception(e)
 
     return questions
 
@@ -1706,6 +1712,7 @@ def get_members(context, group_id):
                     group_id, str(e))
         log.exception(e)
     return []
+
 
 def check_if_dataset_is_on_hdx(dataset_name):
 
