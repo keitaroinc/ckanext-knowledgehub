@@ -1,0 +1,26 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('News Feed') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li class="active">{{ h.nav_link(_('News Feed'), named_route='news.index') }}</li>
+{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+
+{% block primary_content_inner %}
+  {% block dashboards_search_form %}
+    {% block search_sortby %} {% endblock %}
+    {% snippet 'snippets/search_form.html',
+               form_id='news-search-form', type='news',
+               query=q, sorting_selected=sort_by_selected,
+               count=page.item_count,
+               placeholder=_('Search posts...')%}
+  {% endblock %}
+  {% block news_posts_list %}
+  <div>
+    TODO: Add posts of all types here...
+  </div>
+  {% endblock %}
+{% endblock %}
