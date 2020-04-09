@@ -23,7 +23,7 @@ def _get_context():
                 session=model.Session)
 
 
-def news():
+def index():
     u'''List all news on the feed.
     '''
 
@@ -41,4 +41,4 @@ def news():
                        extra_vars=extra_vars)
 
 
-newsfeed.add_url_rule(u'/', view_func=news, strict_slashes=False)
+newsfeed.add_url_rule(u'/', view_func=index, strict_slashes=False)
