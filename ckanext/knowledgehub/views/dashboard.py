@@ -115,12 +115,17 @@ def view(name):
         for ind in dashboard_dict['indicators']:
             res_view_id = ind.get('resource_view_id')
             if res_view_id:
-                res_view = get_action('resource_view_show')({
-                    'ignore_auth': True
-                }, {
-                    'id': res_view_id
-                })
-                ind['resource_view'] = res_view
+                try:
+                    res_view = get_action('resource_view_show')({
+                        'ignore_auth': True
+                    }, {
+                        'id': res_view_id
+                    })
+                    ind['resource_view'] = res_view
+                except Exception as e:
+                    log.warning('Cannot access resource view %s. Error: %s',
+                                res_view_id, str(e))
+                    log.exception(e)
 
     extra_vars['dashboard'] = dashboard_dict
 
@@ -236,33 +241,45 @@ class CreateView(MethodView):
 
                 for ind in data_dict['indicators']:
                     res_view_id = ind.get('resource_view_id')
-                    res_view = get_action('resource_view_show')(
-                        _get_context(),
-                        {
-                            'id': res_view_id
-                        })
-                    ind['resource_view'] = res_view
-
-                    rq = get_action('research_question_show')(_get_context(), {
-                        'id': ind['research_question']
-                    })
+                    try:
+                        res_view = get_action('resource_view_show')(
+                            _get_context(),
+                            {
+                                'id': res_view_id
+                            })
+                        ind['resource_view'] = res_view
+                    except Exception as e:
+                        log.warning('Cannot access resource view %s. '
+                                    'Error: %s', res_view_id, str(e))
+                        log.exception(e)
 
                     viz_options = [{
                         'text': 'Choose visualization',
                         'value': '',
                     }]
-                    visualizations = get_action('visualizations_for_rq')(
-                        _get_context(),
-                        {
-                            'research_question': rq['id']
-                        })
+                    try:
+                        rq = get_action('research_question_show')(
+                            _get_context(),
+                            {
+                                'id': ind['research_question']
+                            }
+                        )
 
-                    for viz in visualizations:
-                        viz_options.append({
-                            'text': viz.get('title'),
-                            'value': viz.get('id'),
-                        })
+                        visualizations = get_action('visualizations_for_rq')(
+                            _get_context(),
+                            {
+                                'research_question': rq['id']
+                            })
 
+                        for viz in visualizations:
+                            viz_options.append({
+                                'text': viz.get('title'),
+                                'value': viz.get('id'),
+                            })
+                    except Exception as e:
+                        log.warning('Failed to fetch reserch questions and '
+                                    'visualizations. Error: %s', str(e))
+                        log.exception(e)
                     ind['viz_options'] = viz_options
 
             return self.get(data_dict,
@@ -311,31 +328,46 @@ class EditView(MethodView):
             for ind in data['indicators']:
                 res_view_id = ind.get('resource_view_id')
                 if res_view_id:
-                    res_view = get_action('resource_view_show')(
+                    try:
+                        res_view = get_action('resource_view_show')(
+                            _get_context(),
+                            {
+                                'id': res_view_id
+                            })
+                        ind['resource_view'] = res_view
+                    except Exception as e:
+                        log.warning('Cannot access resource view %s. '
+                                    'Error: %s', res_view_id, str(e))
+                try:
+                    rq = get_action('research_question_show')(
                         _get_context(),
                         {
-                            'id': res_view_id
+                            'id': ind['research_question']
+                        }
+                    )
+
+                    viz_options = [{
+                        'text': 'Choose visualization',
+                        'value': '',
+                    }]
+                    visualizations = get_action('visualizations_for_rq')(
+                        _get_context(),
+                        {
+                            'research_question': rq['id']
                         })
-                    ind['resource_view'] = res_view
 
-                rq = get_action('research_question_show')(_get_context(), {
-                    'id': ind['research_question']
-                })
+                    for viz in visualizations:
+                        viz_options.append({
+                            'text': viz.get('title'),
+                            'value': viz.get('id'),
+                        })
 
-                viz_options = [{'text': 'Choose visualization', 'value': ''}]
-                visualizations = get_action('visualizations_for_rq')(
-                    _get_context(),
-                    {
-                        'research_question': rq['id']
-                    })
-
-                for viz in visualizations:
-                    viz_options.append({
-                        'text': viz.get('title'),
-                        'value': viz.get('id'),
-                    })
-
-                ind['viz_options'] = viz_options
+                    ind['viz_options'] = viz_options
+                except Exception as e:
+                    ind['viz_options'] = []
+                    log.warning('Failed to load visualizations for research '
+                                'question. Error: %s', str(e))
+                    log.exception(e)
         else:
             if data.get('indicators'):
                 data['indicators'] = json.loads(data['indicators'])
@@ -417,28 +449,33 @@ class EditView(MethodView):
                         })
                     ind['resource_view'] = res_view
 
-                    rq = get_action('research_question_show')(
-                        _get_context(),
-                        {
-                            'id': ind['research_question']
-                        })
-
                     viz_options = [{
                         'text': 'Choose visualization',
                         'value': ''
                     }]
-                    visualizations = get_action('visualizations_for_rq')(
-                        _get_context(),
-                        {
-                            'research_question': rq['id']
-                        })
+                    try:
+                        rq = get_action('research_question_show')(
+                            _get_context(),
+                            {
+                                'id': ind['research_question']
+                            })
 
-                    for viz in visualizations:
-                        viz_options.append({
-                            'text': viz.get('title'),
-                            'value': viz.get('id'),
-                        })
+                        visualizations = get_action('visualizations_for_rq')(
+                            _get_context(),
+                            {
+                                'research_question': rq['id']
+                            })
 
+                        for viz in visualizations:
+                            viz_options.append({
+                                'text': viz.get('title'),
+                                'value': viz.get('id'),
+                            })
+                    except Exception as e:
+                        ind['viz_options'] = []
+                        log.warning('Failed to fetch visualizations for '
+                                    'research question. Error: %s', str(e))
+                        log.exception(e)
                     ind['viz_options'] = viz_options
 
             return self.get(name, data_dict,
