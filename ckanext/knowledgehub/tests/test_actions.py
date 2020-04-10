@@ -530,6 +530,17 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(rv.get('what'), 'The resource is invalid!')
         assert_equals(rv.get('resource'), resource.get('id'))
 
+
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
+    @monkey_patch(Resource, 'delete_from_hdx', mock.Mock())
+    def test_delete_package_from_hdx(self):
+
+        ctx = get_context()
+        dataset = create_dataset()
+        delete_pkg = delete_actions.delete_package_from_hdx(ctx, dataset)
+        assert_equals(delete_pkg, None)
+
+
     @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     @monkey_patch(Dataset, 'check_required_fields', mock.Mock())
     @monkey_patch(Dataset, 'create_in_hdx', mock.Mock())
