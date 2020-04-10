@@ -21,18 +21,20 @@
 {% block news_posts_list %}
 <div>
   TODO: Add posts of all types here...
+
+  <!-- the following template should work for dashboards and datasets -->
+
   <div class="container-fluid">
-    <div class="row" style="margin: 1rem 0">
-      <div class="col-lg-9 col-md-12">
+    <div class="row newsfeed-space">
+      <div class="col-lg-8 col-md-12 newsfeed-background">
         <h4>Interesting someone has posted this:</h4>
-        <div style="background-color:#f5f5f5; border: solid 1px #ddd; padding: 1rem 0;">
+        <div class="newsfeed-box">
           <row>
             <div class="col-ofsset-2">
-              <ul class="dataset-list list-unstyled" style="justify-content: center">
-
-                <li class="dataset-item" style="width: 50%">
-                  <div id="tabs-dashboards" class="dataset-content">
-                    <h3 class="dataset-heading text-ellipsis dashboard-heading">
+              <ul class="newsfeed-list list-unstyled">
+                <li class="newsfeed-item">
+                  <div class="newsfeed-content">
+                    <h3 class="newsfeed-heading text-ellipsis">
                       <span class="dataset-private label label-info text-ellipsis">label</span>
                       <a href="">TITLE</a>
                     </h3>
@@ -43,12 +45,11 @@
                       <div class="dataset-tag mr-2">tag</div>
                     </div>
                     <h5 class="dataset-text-wrap text-muted">
-                      <span style="color: #000">Date created:</span>
+                      <span class="span-text">Date created:</span>
                       <span class="text-muted">created at</span>
                     </h5>
-
                     <h5 class="dataset-text-wrap text-muted">
-                      <span style="color: #000">Functional Units:</span>
+                      <span class="span-text">Functional Units:</span>
                       <span class="text-muted text-capitalize">org </span>
                     </h5>
                   </div>
@@ -61,21 +62,19 @@
         <p><span>likes</span> <span>comments</span></p>
       </div>
     </div>
-    <div class="row " style="margin: 1rem 0">
-      <div class="col-lg-9 col-md-12">
+    <div class="row newsfeed-space">
+      <div class="col-lg-8 col-md-12 newsfeed-background">
         <h4>Interesting someone has posted this:</h4>
-        <div style="background-color:#f5f5f5; border: solid 1px #ddd; padding: 1rem 0;">
+        <div class="newsfeed-box">
           <row>
             <div class="col-ofsset-2">
-              <ul class="dataset-list list-unstyled" style="justify-content: center">
-
-                <li class="dataset-item" style="width: 50%">
-                  <div id="tabs-dashboards" class="dataset-content">
-                    <h3 class="dataset-heading text-ellipsis dashboard-heading">
+              <ul class="newsfeed-list list-unstyled">
+                <li class="newsfeed-item">
+                  <div class="newsfeed-content">
+                    <h3 class="newsfeed-heading text-ellipsis">
                       <span class="dataset-private label label-info text-ellipsis">label</span>
                       <a href="">TITLE</a>
                     </h3>
-
                     <p class="text-muted">
                       <small>description</small>
                     </p>
@@ -83,31 +82,39 @@
                       <div class="dataset-tag mr-2">tag</div>
                     </div>
                     <h5 class="dataset-text-wrap text-muted">
-                      <span style="color: #000">Date created:</span>
+                      <span class="span-text">Date created:</span>
                       <span class="text-muted">created at</span>
                     </h5>
-
                     <h5 class="dataset-text-wrap text-muted">
-                      <span style="color: #000">Functional Units:</span>
+                      <span class="span-text">Functional Units:</span>
                       <span class="text-muted text-capitalize">org </span>
                     </h5>
                   </div>
                 </li>
-
               </ul>
             </div>
           </row>
         </div>
+        <p>Some paragraph Some paragraph Some paragraphSome paragraph Some paragraph</p>
+        <p><span>likes</span> <span>comments</span></p>
       </div>
     </div>
-    <div class="row " style="margin: 1rem 0">
-      <div class="col-lg-9 col-md-12">
-        <h4>Interesting someone has posted this:</h4>
-        <div style="background-color:#f5f5f5; border: solid 1px #ddd; padding: 1rem 0;">
 
+    <!-- should be tested for visualization -->
+
+    <div class="row newsfeed-space">
+      <div class="col-lg-8 col-md-12 newsfeed-background">
+        <h4>Interesting someone has posted this:</h4>
+        <div class="newsfeed-box">
+          <row>
+            <div class="col-ofsset-2">
+              <p>Visualization</p>
+            </div>
+          </row>
         </div>
+        <p>Some paragraph Some paragraph Some paragraphSome paragraph Some paragraph</p>
+        <p><span>likes</span> <span>comments</span></p>
       </div>
     </div>
-  </div>
-  {% endblock %}
-  {% endblock %}
+    {% endblock %}
+    {% endblock %}
