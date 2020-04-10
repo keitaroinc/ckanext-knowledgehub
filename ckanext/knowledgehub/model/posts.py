@@ -25,19 +25,19 @@ posts_table = Table(
     'posts',
     metadata,
     Column('id',
-           types.String(lenght=256),
+           types.String(length=256),
            primary_key=True,
            default=make_uuid),
     Column('created_at',
            types.DateTime,
            default=datetime.datetime.utcnow),
-    Column('created_by', types.String(lenght=256))
+    Column('created_by', types.String(length=256)),
     Column('title', types.UnicodeText, nullable=False),
     Column('description', types.UnicodeText),
-    Column('entity_type', types.String(lenght=256)),
-    Column('entity_ref', types.String(lenght=256)),
-    Column('comment_count', types.Number, default=0),
-    Column('like_count', types.Number, default=0),
+    Column('entity_type', types.String(length=256)),
+    Column('entity_ref', types.String(length=256)),
+    Column('comment_count', types.Integer, default=0),
+    Column('like_count', types.Integer, default=0),
 )
 
 
