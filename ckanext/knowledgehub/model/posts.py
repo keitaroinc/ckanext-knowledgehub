@@ -18,6 +18,9 @@ import logging
 log = logging.getLogger(__name__)
 
 
+__all__ = ['Posts', 'posts_table']
+
+
 posts_table = Table(
     'posts',
     metadata,
@@ -41,7 +44,17 @@ posts_table = Table(
 class Posts(DomainObject, Indexed):
 
     doctype = 'post'
-    indexed = []
+    indexed = [
+        mapped('id', 'entity_id'),
+        'title',
+        'description',
+        'created_at',
+        'created_by',
+        'entity_type',
+        'entity_ref',
+        'comment_count',
+        'like_count',
+    ]
 
     @classmethod
     def get(cls, ref):

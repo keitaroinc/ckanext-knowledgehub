@@ -29,7 +29,8 @@ from ckanext.knowledgehub.model import (
     Keyword,
     ExtendedTag,
     UserProfile,
-    Notification
+    Notification,
+    Posts,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
@@ -2140,3 +2141,39 @@ def group_list_for_user(context, data_dict):
         groups.append(_table_dictize(group, context))
 
     return groups
+
+
+def post_show(context, data_dict):
+    check_access('post_show', context, data_dict)
+
+    post_id = data_dict.get('id')
+    with_comments = data_dict.get('with_comments', False)
+    with_related_entity = data_dict.get('with_related_entity', True)
+
+    if not post_id:
+        raise logic.ValidationError({'id': _('Missing value')})
+
+    post = Posts.get(post_id)
+    if not post:
+        raise logic.NotFound(_('Post not found'))
+
+    post_data = _table_dictize(post, context)
+
+    if with_related_entity:
+        entity_type = post_data.get('entity_type')
+        if entity_type:
+            action = '%s_show' % entity_type
+            entity = toolkit.get_action(action)({
+                'ignore_auth': True,
+            }, {
+                'id': post_data['entity_ref'],
+            })
+            post_data[entity_type] = entity
+    
+    if with_comments:
+        comments = toolkit.get_action('comments_list')(ctx, {
+            'post_id': post_data['id'],
+        })
+        post_data['comments'] = comments
+
+    return post_data
