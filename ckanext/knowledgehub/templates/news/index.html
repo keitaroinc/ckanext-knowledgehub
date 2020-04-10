@@ -3,24 +3,111 @@
 {% block subtitle %}{{ _('News Feed') }}{% endblock %}
 
 {% block breadcrumb_content %}
-  <li class="active">{{ h.nav_link(_('News Feed'), named_route='news.index') }}</li>
+<li class="active">{{ h.nav_link(_('News Feed'), named_route='news.index') }}</li>
 {% endblock %}
 
 {% block page_header %}{% endblock %}
 
 
 {% block primary_content_inner %}
-  {% block dashboards_search_form %}
-    {% block search_sortby %} {% endblock %}
-    {% snippet 'snippets/search_form.html',
+{% block dashboards_search_form %}
+{% block search_sortby %} {% endblock %}
+{% snippet 'snippets/search_form.html',
                form_id='news-search-form', type='news',
                query=q, sorting_selected=sort_by_selected,
                count=page.item_count,
                placeholder=_('Search posts...')%}
-  {% endblock %}
-  {% block news_posts_list %}
-  <div>
-    TODO: Add posts of all types here...
+{% endblock %}
+{% block news_posts_list %}
+<div>
+  TODO: Add posts of all types here...
+  <div class="container-fluid">
+    <div class="row" style="margin: 1rem 0">
+      <div class="col-lg-9 col-md-12">
+        <h4>Interesting someone has posted this:</h4>
+        <div style="background-color:#f5f5f5; border: solid 1px #ddd; padding: 1rem 0;">
+          <row>
+            <div class="col-ofsset-2">
+              <ul class="dataset-list list-unstyled" style="justify-content: center">
+
+                <li class="dataset-item" style="width: 50%">
+                  <div id="tabs-dashboards" class="dataset-content">
+                    <h3 class="dataset-heading text-ellipsis dashboard-heading">
+                      <span class="dataset-private label label-info text-ellipsis">label</span>
+                      <a href="">TITLE</a>
+                    </h3>
+                    <p class="text-muted">
+                      <small>description</small>
+                    </p>
+                    <div class="row flex flex-wrap dataset-tag-wrapper">
+                      <div class="dataset-tag mr-2">tag</div>
+                    </div>
+                    <h5 class="dataset-text-wrap text-muted">
+                      <span style="color: #000">Date created:</span>
+                      <span class="text-muted">created at</span>
+                    </h5>
+
+                    <h5 class="dataset-text-wrap text-muted">
+                      <span style="color: #000">Functional Units:</span>
+                      <span class="text-muted text-capitalize">org </span>
+                    </h5>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </row>
+        </div>
+        <p>Some paragraph Some paragraph Some paragraphSome paragraph Some paragraph</p>
+        <p><span>likes</span> <span>comments</span></p>
+      </div>
+    </div>
+    <div class="row " style="margin: 1rem 0">
+      <div class="col-lg-9 col-md-12">
+        <h4>Interesting someone has posted this:</h4>
+        <div style="background-color:#f5f5f5; border: solid 1px #ddd; padding: 1rem 0;">
+          <row>
+            <div class="col-ofsset-2">
+              <ul class="dataset-list list-unstyled" style="justify-content: center">
+
+                <li class="dataset-item" style="width: 50%">
+                  <div id="tabs-dashboards" class="dataset-content">
+                    <h3 class="dataset-heading text-ellipsis dashboard-heading">
+                      <span class="dataset-private label label-info text-ellipsis">label</span>
+                      <a href="">TITLE</a>
+                    </h3>
+
+                    <p class="text-muted">
+                      <small>description</small>
+                    </p>
+                    <div class="row flex flex-wrap dataset-tag-wrapper">
+                      <div class="dataset-tag mr-2">tag</div>
+                    </div>
+                    <h5 class="dataset-text-wrap text-muted">
+                      <span style="color: #000">Date created:</span>
+                      <span class="text-muted">created at</span>
+                    </h5>
+
+                    <h5 class="dataset-text-wrap text-muted">
+                      <span style="color: #000">Functional Units:</span>
+                      <span class="text-muted text-capitalize">org </span>
+                    </h5>
+                  </div>
+                </li>
+
+              </ul>
+            </div>
+          </row>
+        </div>
+      </div>
+    </div>
+    <div class="row " style="margin: 1rem 0">
+      <div class="col-lg-9 col-md-12">
+        <h4>Interesting someone has posted this:</h4>
+        <div style="background-color:#f5f5f5; border: solid 1px #ddd; padding: 1rem 0;">
+
+        </div>
+      </div>
+    </div>
   </div>
   {% endblock %}
-{% endblock %}
+  {% endblock %}
