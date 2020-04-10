@@ -1408,3 +1408,39 @@ class TestKWHHelpers(ActionsBase):
 
         assert_true(notifications is not None)
         assert_equals(notifications.get('count'), 1)
+
+
+
+
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
+    def test_check_if_dataset_is_on_hdx(self):
+        dataset = create_dataset()
+        dataset['license_id'] = 'cc-by'
+        dataset['private'] = True
+        dataset['dataset_source'] = 'knowledgehub'
+        dataset['dataset_date'] = '2020-03-11 14:37:05.887534'
+        dataset['data_update_frequency'] = -1
+        dataset['methodology'] = 'http://www.opendefinition.org/licenses/cc-by'
+        dataset['num_resources'] = 1
+        dataset['url'] = None
+
+
+        Dataset.read_from_hdx.return_value = {
+                'name': dataset['name'],
+                'title': dataset['title'],
+                'notes': dataset['notes'],
+                'maintainer': dataset['maintainer'],
+                'owner_org': dataset['name'],
+                'license_id': dataset['license_id'],
+                'private': dataset['private'],
+                'dataset_date': dataset['dataset_date'],
+                'dataset_source': dataset['dataset_source'],
+                'methodology': dataset['methodology'],
+                'num_resources': dataset['num_resources'],
+                'url': dataset['url'],
+                'id': 'f32e1366-aa9e-4233-b77e-178ac0597295'
+            }
+
+        exists = kwh_helpers.check_if_dataset_is_on_hdx(dataset['name'])
+        assert_equals(exists, True)
+    

@@ -530,11 +530,10 @@ def delete_resource_from_hdx(context, data_dict):
                     except (KeyError, IndexError):
                         raise ValidationError(e.error_dict)
                 return
-        return []
+        return "Dataset not found!"
     except Exception as e:
-        log.exception(e)
         log.debug(e)
-        return "Please try again!" 
+        return e 
 
 def delete_package_from_hdx(context, data_dict):
 
