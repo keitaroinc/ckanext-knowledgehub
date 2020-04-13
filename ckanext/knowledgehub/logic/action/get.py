@@ -2149,6 +2149,7 @@ def post_show(context, data_dict):
     post_id = data_dict.get('id')
     with_comments = data_dict.get('with_comments', False)
     with_related_entity = data_dict.get('with_related_entity', True)
+    with_user_info = data_dict.get('with_user_info', True)
 
     if not post_id:
         raise logic.ValidationError({'id': _('Missing value')})
@@ -2159,21 +2160,61 @@ def post_show(context, data_dict):
 
     post_data = _table_dictize(post, context)
 
+    actions = {
+        'dataset': 'package_show',
+        'research_question': 'research_question_show',
+        'dashboard': 'dashboard_show',
+        'visualization': 'resource_view_show',
+    }
+
     if with_related_entity:
         entity_type = post_data.get('entity_type')
         if entity_type:
-            action = '%s_show' % entity_type
+            action = actions[entity_type]
             entity = toolkit.get_action(action)({
                 'ignore_auth': True,
             }, {
                 'id': post_data['entity_ref'],
             })
             post_data[entity_type] = entity
-    
+
     if with_comments:
         comments = toolkit.get_action('comments_list')(ctx, {
             'post_id': post_data['id'],
         })
         post_data['comments'] = comments
 
+    if with_user_info and post.created_by:
+        author = toolkit.get_action('user_show')({
+            'ignore_auth': True,
+        }, {
+            'id': post.created_by,
+        })
+
+        post_data['author'] = {
+            'id': author['id'],
+            'name': author.get('display_name') or author.get('fullname')
+            or author.get('name'),
+            'email_hash': author.get('email_hash'),
+        }
+
     return post_data
+
+
+def post_search(context, data_dict):
+    check_access('post_search', context, data_dict)
+
+    if 'sort' in data_dict:
+        data_dict['sort'] = get_sort_string(Posts, data_dict['sort'])
+
+    posts = _search_entity(Posts, context, data_dict)
+
+    if data_dict.get('with_entity', True):
+        for i in range(0, len(posts.get('results', []))):
+            posts['results'][i] = toolkit.get_action('post_show')({
+                'ignore_auth': True,
+            }, {
+                'id': posts['results'][i]['id'],
+            })
+
+    return posts

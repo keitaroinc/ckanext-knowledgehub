@@ -58,9 +58,8 @@ class Posts(DomainObject, Indexed):
 
     @classmethod
     def get(cls, ref):
-        q = Session.query(cls).find(ref)
-        return q.first()
-    
+        return Session.query(cls).get(ref)
+
 
 mapper(Posts, posts_table)
 

@@ -1,0 +1,35 @@
+{# Preview an item in the post.
+    :param post: the post data as dict
+#}
+<ul class="newsfeed-list list-unstyled">
+    <li class="newsfeed-item">
+      <div class="newsfeed-content">
+        {% if post.entity_type == 'dataset' %}
+          <ul class="list-unstyled dataset-newsfeed-list">
+            {% snippet 'snippets/package_item.html',
+            package=post.dataset,
+            item_class='dataset-newsfeed-item',
+            hide_resources=True,
+            banner=False,
+            truncate=False,
+            truncate_title=False %}
+          </ul>
+        {% elif post.entity_type == 'dashboard' %}
+          <ul class="list-unstyled dataset-newsfeed-list">
+            {% snippet "dashboard/snippets/dashboard_item.html",
+              dashboard=post.dashboard,
+              position=0 %}
+          </ul>
+        {% elif post.entity_type == 'research_question' %}
+          <ul class="list-unstyled research-question-newsfeed-list">
+            {% snippet "research_question/snippets/research_question_item.html",
+               rq=post.research_question %}
+          </ul>
+        {% elif post.entity_type == 'visualization' %}
+          {% snippet 'news/snippets/visualization.html',
+             resource_view=post.visualization %}
+        {% endif %}
+      </div>
+      
+    </li>
+  </ul>

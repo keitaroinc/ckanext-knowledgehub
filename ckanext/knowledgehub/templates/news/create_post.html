@@ -1,0 +1,8 @@
+{% extends "news/base_page.html" %}
+
+
+{% block posts_search_form %}{% endblock%}
+
+{% block posts_content %}
+  {% snippet 'news/snippets/post_form.html', data=data, errors=errors %}
+{% endblock %}

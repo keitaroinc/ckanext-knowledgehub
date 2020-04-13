@@ -1,0 +1,37 @@
+{# Renders a single newsd post.
+  :param post: the post data as dict.
+  #}
+<div class="row newsfeed-space">
+    <div class="col-lg-8 col-md-12 newsfeed-background">
+      <h4><a href="{{ h.url_for('news.view', id=post.id) }}">{{post.title}}</a></h4>
+      {% if post.author %}
+      <div class="row post-info">
+        <div class="col-lg-8 col-md-12">
+          <div class="author-avatar pull-left">
+            {{ h.gravatar(post.author.email_hash, size=48) }}
+          </div>
+          <div class="author-info">
+            {{post.author.name}}
+            <p class="small">
+              {{h.human_elapsed_time(post.created_at)}}
+            </p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% if post.entity_type and post.entity_ref %}
+      <div class="newsfeed-box">
+        <row>
+          <div class="col-ofsset-2">
+            {% snippet 'news/snippets/entity_preview.html', post=post %}
+          </div>
+        </row>
+      </div>
+      {% endif %}
+      <p>{{post.description}}</p>
+      <p>
+          <span><i class="fa fa-thumbs-o-up"></i> {{post.like_count}}</span> 
+          <span><i class="fa fa-comments-o"></i> {{post.comment_count}}</span>
+      </p>
+    </div>
+</div>

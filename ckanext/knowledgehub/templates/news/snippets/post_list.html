@@ -1,0 +1,7 @@
+{# Renders a list of posts.
+
+    :param posts: list of posts dicts.
+#}
+{% for post in posts %}
+    {% snippet 'news/snippets/post.html', post=post %}
+{% endfor %}

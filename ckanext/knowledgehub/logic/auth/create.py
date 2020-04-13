@@ -143,3 +143,6 @@ def notification_create(context, data_dict=None):
 def member_create(context, data_dict=None):
     return ckan_member_create(context, data_dict)
 
+
+def post_create(context, data_dict=None):
+    return {'success': True}
