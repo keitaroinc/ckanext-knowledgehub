@@ -2,6 +2,7 @@
 
     :param posts: list of posts dicts.
 #}
+{% set allow_delete = allow_delete if allow_delete is not none else False%}
 {% for post in posts %}
-    {% snippet 'news/snippets/post.html', post=post %}
+    {% snippet 'news/snippets/post.html', post=post, allow_delete=allow_delete %}
 {% endfor %}

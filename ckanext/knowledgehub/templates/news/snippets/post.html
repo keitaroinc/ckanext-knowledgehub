@@ -1,8 +1,17 @@
 {# Renders a single newsd post.
   :param post: the post data as dict.
   #}
-<div class="row newsfeed-space">
-    <div class="col-lg-8 col-md-12 newsfeed-background">
+{% set show_delete_action = allow_delete if not none else False %}
+<div class="row newsfeed-space newsfeed-wrapper">
+    <div class="col-lg-8 col-md-12 newsfeed-background newsfeed-post">
+      {% set user = g.userobj %}
+      {% if show_delete_action and ((post.author and post.author.id == user.id) or user.sysadmin) %}
+      <button class="btn btn-danger pull-right"
+              data-module="confirm-action"
+              data-module-content="{{ _('Are you sure you want to delete this post?') }}"
+              href="{{ h.url_for('news.delete', id=post.id)}}">
+        <i class="fa fa-trash strong"></i></button>
+      {% endif %}
       <h4><a href="{{ h.url_for('news.view', id=post.id) }}">{{post.title}}</a></h4>
       {% if post.author %}
       <div class="row post-info">

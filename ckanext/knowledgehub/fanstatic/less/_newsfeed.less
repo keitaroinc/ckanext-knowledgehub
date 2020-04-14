@@ -76,3 +76,16 @@
 .span-text {
   color: @gray-base;
 }
+
+.user-newsfeed-posts {
+  display: flex;
+  flex-wrap: wrap;
+  .newsfeed-wrapper {
+    flex: 0 0 50%;
+    .newsfeed-post{
+      width: 95%;
+      box-shadow: 0px 0px 30px lighten(@gray, 40%);
+    }
+    
+  }
+}

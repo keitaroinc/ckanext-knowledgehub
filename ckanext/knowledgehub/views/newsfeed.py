@@ -72,6 +72,7 @@ def index():
 
     extra_vars = {
         'posts': posts.get('results', []),
+        'user': context.get('auth_user_obj'),
     }
 
     extra_vars["page"] = h.Page(
@@ -108,6 +109,7 @@ def view(id):
 
     extra_vars = {
         'post': post,
+        'user': context.get('auth_user_obj'),
     }
 
     extra_vars["page"] = h.Page(
@@ -117,6 +119,37 @@ def view(id):
         items_per_page=20)
 
     return base.render(u'news/view_post.html', extra_vars=extra_vars)
+
+
+def delete(id):
+    print 'DELETEEEE'
+    context = _get_context()
+
+    try:
+        check_access('post_delete', context, {'id': id})
+    except logic.NotAuthorized:
+        base.abort(403, _('You do not have sufficient privileges '
+                          'to delete this post.'))
+        return
+
+    try:
+        get_action('post_delete')(context, {
+            'id': id,
+        })
+    except logic.NotFound:
+        base.abort(404, _('That post does not exist.'))
+        return
+    except logic.NotAuthorized:
+        base.abort(403, _('You do not have sufficient privileges '
+                          'to delete this post.'))
+        return
+    except Exception as e:
+        log.error('Failed to delete post %s. Error: %s', id, str(e))
+        log.exception(e)
+        base.abort(500, _('Unexpected error has occured while trying '
+                          'to delete this post.'))
+        return
+    return h.redirect_to(u'news.index')
 
 
 class CreateView(MethodView):
@@ -252,3 +285,4 @@ class CreateView(MethodView):
 newsfeed.add_url_rule(u'/', view_func=index, strict_slashes=False)
 newsfeed.add_url_rule(u'/new', view_func=CreateView.as_view('new'))
 newsfeed.add_url_rule(u'/<id>', view_func=view)
+newsfeed.add_url_rule(u'/delete/<id>', view_func=delete, methods=['POST'])

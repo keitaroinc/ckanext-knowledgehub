@@ -1,0 +1,18 @@
+{% resource 'knowledgehub/newsfeed' %}
+{% extends "user/dashboard.html" %}
+
+{% block dashboard_activity_stream_context %}{% endblock %}
+
+{% block page_primary_action %}
+  
+{% endblock %}
+
+{% block primary_content_inner %}
+ {% set query = request.args.get('q', '*')%}
+  <div class="container-fluid user-newsfeed-posts"
+       pagination-container="true"
+       pagination-per-page="20"
+       pagination-url="{{ h.url_for('news.index', partial='true', q=query)}}">
+    {% snippet 'news/snippets/post_list.html', posts=posts, allow_delete=True %}
+  </div>
+{% endblock %}

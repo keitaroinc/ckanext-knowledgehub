@@ -4,5 +4,5 @@
 {% block posts_search_form %}{% endblock%}
 
 {% block posts_content %}
-  {% snippet 'news/snippets/post.html', post=post %}
+  {% snippet 'news/snippets/post.html', post=post, allow_delete=True %}
 {% endblock %}
