@@ -1654,6 +1654,19 @@ def notification_create(context, data_dict):
 
 
 def post_create(context, data_dict):
+    '''Creates a new post to be shown in the news feed.
+
+    :param title: `str`, the post title. Required.
+    :param description: `str`, the post description. Optional.
+    :param entity_type: `str`, the type of the referenced entity. May be one of
+        `dashboard`, `dataset`, `research_question` or `visualization`.
+        Optional.
+    :param entity_ref: `str`, the ID (reference, like dataset ID or dashboard
+        ID) of the refrenced entity in the post. Required if `entity_type`
+        is set.
+
+    :returns: `dict`, the newly created post data.
+    '''
     entities_actions = {
         'dashboard': 'dashboard_show',
         'dataset': 'package_show',

@@ -571,6 +571,12 @@ def delete_package_from_hdx(context, data_dict):
 
 
 def post_delete(context, data_dict):
+    '''Deletes a newsfeed post.
+
+    Only sysadmins and the post author can delete the post.
+
+    :param id: `str`, the post ID. Required.
+    '''
     if 'id' not in data_dict:
         raise logic.ValidationError({
             'id': _('Missing Value'),

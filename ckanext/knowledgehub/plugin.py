@@ -47,8 +47,20 @@ from ckanext.datastore.backend import (
 ValidationError = logic.ValidationError
 
 _TIMEOUT = 60000  # milliseconds
+_DB_INITIALIZED = False
 
 log = getLogger(__name__)
+
+
+def _init_knowledgehub_database():
+    global _DB_INITIALIZED
+    if _DB_INITIALIZED:
+        log.debug('Database already initialized')
+        return
+
+    from ckanext.knowledgehub.cli.db import init_db
+
+    init_db()
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
@@ -91,6 +103,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             user_agent='admin',
             hdx_key=hdx_api_key
         )
+
+        # Eliminates the need to re-initialize the database when model changes.
+        _init_knowledgehub_database()
 
     # IBlueprint
     def get_blueprint(self):

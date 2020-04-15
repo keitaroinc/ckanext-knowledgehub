@@ -405,6 +405,7 @@ def profile_set_interests():
 
 
 def user_posts():
+    default_limit = int(config.get('ckanext.knowledgehub.news_per_page', '20'))
     page = request.args.get('page', '').strip()
     limit = request.args.get('limit', '').strip()
     partial = request.args.get('partial', 'false').lower()
@@ -418,9 +419,9 @@ def user_posts():
     if limit:
         limit = int(limit)
         if limit < 0:
-            limit = 20
+            limit = default_limit
     else:
-        limit = 20
+        limit = default_limit
 
     partial = partial in ['true', 'yes', '1', 't']
     context = {

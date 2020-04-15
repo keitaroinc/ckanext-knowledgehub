@@ -44,6 +44,10 @@ def db():
 
 @db.command(u'init', short_help=u'Initialize Knowledgehub tables')
 def init():
+    init_db()
+
+
+def init_db():
     u'''Initialising the Knowledgehub tables'''
     log.info(u"Initialize Knowledgehub tables")
     try:
