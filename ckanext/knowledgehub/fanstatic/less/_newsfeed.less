@@ -18,11 +18,11 @@
     .flex-column;
     .justify-content-between;
     background-color: @white;
-    width: 75%;
+    width: 80%;
     margin: 1%;
     margin-top: @grid-gutter-width / 2.5;
     border: 1px solid @gray-line;
-    padding-bottom: 10px;
+    padding: 10px 0;
     .shadow;
 
     ul {
@@ -62,6 +62,7 @@
   background-color: #f5f5f5;
   border: solid 1px #ddd;
   padding: 4rem 0;
+  margin: 1.5rem 0;
 }
 
 .newsfeed-background {
@@ -81,17 +82,21 @@
   columns: 2;
   column-gap: 2.5rem;
   column-width: 50%;
+
   .newsfeed-wrapper {
     width: 100%;
     display: inline-block;
     margin: 1rem 1rem;
-    .newsfeed-post{
+
+    .newsfeed-post {
       width: 100%;
       box-shadow: 0px 0px 30px lighten(@gray, 40%);
     }
-    
+
   }
 }
+
+
 
 .research-question-newsfeed-list {
   .rq-box {
@@ -109,7 +114,7 @@
     margin: 0px;
     border: none;
     background: none;
-    
+
     .newsfeed-item {
       width: 100%;
       border: none;
@@ -120,4 +125,8 @@
   .post-content-research_question {
     padding: 0px !important;
   }
+}
+
+.author-avatar {
+  margin-right: 1%;
 }
