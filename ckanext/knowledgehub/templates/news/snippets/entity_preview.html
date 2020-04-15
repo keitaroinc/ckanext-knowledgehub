@@ -21,10 +21,10 @@
               position=0 %}
           </ul>
         {% elif post.entity_type == 'research_question' %}
-          <ul class="list-unstyled research-question-newsfeed-list">
-            {% snippet "research_question/snippets/research_question_item.html",
-               rq=post.research_question %}
-          </ul>
+          <div class="list-unstyled research-question-newsfeed-list">
+            {% snippet "news/snippets/research_question_item.html",
+            rq=post.research_question %}
+          </div>
         {% elif post.entity_type == 'visualization' %}
           {% snippet 'news/snippets/visualization.html',
              resource_view=post.visualization %}

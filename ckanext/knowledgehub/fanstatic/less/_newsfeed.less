@@ -78,14 +78,27 @@
 }
 
 .user-newsfeed-posts {
-  display: flex;
-  flex-wrap: wrap;
+  columns: 2;
+  column-gap: 2.5rem;
+  column-width: 50%;
   .newsfeed-wrapper {
-    flex: 0 0 50%;
+    width: 100%;
+    display: inline-block;
+    margin: 1rem 1rem;
     .newsfeed-post{
-      width: 95%;
+      width: 100%;
       box-shadow: 0px 0px 30px lighten(@gray, 40%);
     }
     
+  }
+}
+
+.research-question-newsfeed-list {
+  .rq-box {
+    padding: 0px;
+    margin: 0px;
+    background-color: @gray;
+    width: 100%;
+    background-size: cover;
   }
 }
