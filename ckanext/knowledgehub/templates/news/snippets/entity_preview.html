@@ -1,9 +1,10 @@
 {# Preview an item in the post.
     :param post: the post data as dict
 #}
+{% set post_content_class = post.entity_type or 'empty' %}
 <ul class="newsfeed-list list-unstyled">
     <li class="newsfeed-item">
-      <div class="newsfeed-content">
+      <div class="newsfeed-content post-content-{{post_content_class}}">
         {% if post.entity_type == 'dataset' %}
           <ul class="list-unstyled dataset-newsfeed-list">
             {% snippet 'snippets/package_item.html',

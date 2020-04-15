@@ -2,7 +2,8 @@
   :param post: the post data as dict.
   #}
 {% set show_delete_action = allow_delete if not none else False %}
-<div class="row newsfeed-space newsfeed-wrapper">
+{% set post_type_class = post.entity_type if post.entity_type else 'empty'%}
+<div class="row newsfeed-space newsfeed-wrapper newsfeed-post-{{post_type_class}}">
     <div class="col-lg-8 col-md-12 newsfeed-background newsfeed-post">
       {% set user = g.userobj %}
       {% if show_delete_action and ((post.author and post.author.id == user.id) or user.sysadmin) %}
