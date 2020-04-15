@@ -77,9 +77,10 @@ def index():
 
     extra_vars["page"] = h.Page(
         collection=posts.get('results', []),
-        page=1,
+        page=page,
         url=h.pager_url,
-        items_per_page=20)
+        items_per_page=limit,
+        item_count=posts.get('count'))
 
     extra_vars['page'].items = posts.get('results', [])
 
@@ -116,13 +117,13 @@ def view(id):
         collection=[],
         page=1,
         url=h.pager_url,
-        items_per_page=20)
+        items_per_page=20,
+        item_count=1)
 
     return base.render(u'news/view_post.html', extra_vars=extra_vars)
 
 
 def delete(id):
-    print 'DELETEEEE'
     context = _get_context()
 
     try:
@@ -202,6 +203,7 @@ class CreateView(MethodView):
         return base.render(u'news/create_post.html', {
             'data': data,
             'errors': errors,
+            'page': {},
         })
 
     def post(self):
@@ -257,6 +259,7 @@ class CreateView(MethodView):
             return base.render(u'news/create_post.html', {
                 'data': data,
                 'errors': errors,
+                'page': {},
             })
 
         try:
@@ -277,6 +280,7 @@ class CreateView(MethodView):
             return base.render(u'news/create_post.html', {
                 'data': data,
                 'errors': errors,
+                'page': {},
             })
 
         return h.redirect_to(u'news.index')

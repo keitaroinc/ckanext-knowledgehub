@@ -1,3 +1,4 @@
+{% resource 'knowledgehub/newsfeed' %}
 {% extends "page.html" %}
 
 {% block subtitle %}{{ _('News Feed') }}{% endblock %}
@@ -14,13 +15,18 @@
         {% block search_sortby %} {% endblock %}
 
         {% snippet 'snippets/search_form.html',
-                    form_id='news-search-form', type='news',
+                    form_id='news-search-form', type='post',
                     query=q, sorting_selected=sort_by_selected,
                     count=page.item_count,
-                    placeholder=_('Search posts...')%}
+                    placeholder=_('Search posts...'),
+                    no_sorting=True%}
     {% endblock %}
-
-    <div class="container-fluid">
+    <div class="container-fluid"
+         pagination-container="true"
+         pagination-page="{{request.args.get('page', '1')}}"
+         pagination-per-page="{{page.items_per_page}}"
+         pagination-total="{{page.item_count}}"
+         pagination-url="{{ h.url_for('news.index', partial='true', q=request.args.get('q', '*')) }}">
     {% block posts_content %}
 
     {% endblock%}

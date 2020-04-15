@@ -446,6 +446,11 @@ def user_posts():
     })
 
     extra_vars['posts'] = posts.get('results', [])
+    extra_vars['page'] = {
+        'page': page,
+        'items_per_page': limit,
+        'item_count': posts.get('count'),
+    }
 
     if partial:
         return base.render(u'news/snippets/post_list.html',
