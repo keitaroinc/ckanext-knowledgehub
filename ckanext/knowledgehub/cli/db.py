@@ -31,6 +31,7 @@ from ckanext.knowledgehub.model.visualization import (
     setup as extend_resource_view_setup
 )
 from ckanext.knowledgehub.model.notification import setup as notification_setup
+from ckanext.knowledgehub.model.posts import setup as posts_setup
 
 
 log = logging.getLogger(__name__)
@@ -43,6 +44,10 @@ def db():
 
 @db.command(u'init', short_help=u'Initialize Knowledgehub tables')
 def init():
+    init_db()
+
+
+def init_db():
     u'''Initialising the Knowledgehub tables'''
     log.info(u"Initialize Knowledgehub tables")
     try:
@@ -63,6 +68,7 @@ def init():
         keyword_setup()
         extend_resource_view_setup()
         notification_setup()
+        posts_setup()
     except Exception as e:
         error_shout(e)
     else:

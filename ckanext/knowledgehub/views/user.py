@@ -17,6 +17,13 @@ kwh_user = Blueprint(
     url_prefix=u'/user'
 )
 
+# Handles the requests to /dashboard/posts - user's own news posts
+user_dashboard = Blueprint(
+    u'user_dashboard',
+    __name__,
+    url_prefix='/dashboard'
+)
+
 
 def _extra_template_variables(context, data_dict):
     is_sysadmin = authz.is_sysadmin(g.user)
@@ -311,7 +318,7 @@ def keyword_delete(id):
         logic.get_action('keyword_delete')(context, {
             'id': id,
         })
-    except:
+    except Exception as e:
         base.abort(500, _('Server error'))
 
     return h.redirect_to('/user/keywords')
@@ -397,6 +404,62 @@ def profile_set_interests():
     return base.render('user/profile/set_interests_page.html', extra_vars)
 
 
+def user_posts():
+    default_limit = int(config.get('ckanext.knowledgehub.news_per_page', '20'))
+    page = request.args.get('page', '').strip()
+    limit = request.args.get('limit', '').strip()
+    partial = request.args.get('partial', 'false').lower()
+
+    if not page:
+        page = 1
+    else:
+        page = int(page)
+        if page < 1:
+            page = 1
+    if limit:
+        limit = int(limit)
+        if limit < 0:
+            limit = default_limit
+    else:
+        limit = default_limit
+
+    partial = partial in ['true', 'yes', '1', 't']
+    context = {
+        u'model': model,
+        u'session': model.Session,
+        u'user': g.user,
+        u'auth_user_obj': g.userobj,
+        u'for_view': True
+    }
+    extra_vars = _extra_template_variables(context, {
+        'user_obj': g.userobj,
+        'user': g.userobj,
+    })
+
+    posts = logic.get_action('post_search')(context, {
+        'text': '*',
+        'fq': [
+            'khe_created_by:"{}"'.format(g.userobj.id),
+        ],
+        'page': page,
+        'limit': limit,
+        'sort': 'created_at desc',
+    })
+
+    extra_vars['posts'] = posts.get('results', [])
+    extra_vars['page'] = {
+        'page': page,
+        'items_per_page': limit,
+        'item_count': posts.get('count'),
+    }
+
+    if partial:
+        return base.render(u'news/snippets/post_list.html',
+                           extra_vars=extra_vars)
+
+    return base.render(u'user/dashboard_posts.html', extra_vars=extra_vars)
+
+
 kwh_user.add_url_rule(u'/intents/<id>', view_func=intents)
 kwh_user.add_url_rule(u'/keywords', view_func=keywords)
 kwh_user.add_url_rule(u'/keywords/delete/<id>', methods=['GET', 'POST'],
@@ -414,6 +477,8 @@ kwh_user.add_url_rule(u'/tags/<id>', view_func=tags)
 kwh_user.add_url_rule(u'/profile', view_func=profile)
 kwh_user.add_url_rule(u'/profile/set_interests',
                       view_func=profile_set_interests)
+user_dashboard.add_url_rule(u'/posts', view_func=user_posts,
+                            strict_slashes=False)
 
 
 @kwh_user.before_app_request

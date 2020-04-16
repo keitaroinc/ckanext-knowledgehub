@@ -1,0 +1,44 @@
+{% import 'macros/form.html' as form %}
+
+<form id='post-create-form' class="post-form" method="post" data-module="basic-form" novalidate>
+    {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
+    {{ form.input('title',
+                  label=_('Title'),
+                  id='field-title',
+                  placeholder=_('Post Title'),
+                  value=data.title,
+                  error=errors.title,
+                  classes=['control-full'],
+                  attrs=attrs,
+                  is_required=true) }}
+    
+    {{ form.markdown('description',
+                     label=_('Description'),
+                     id='field-description',
+                     placeholder=_('Write your post here...'),
+                     value=data.description,
+                     error=errors.description,
+                     is_required=false) }}
+    {% if data.entity_type and data.entity_ref %}
+    <input type="hidden" name="entity_type" value="{{data.entity_type}}" />
+    <input type="hidden" name="entity_ref" value="{{data.entity_ref}}" />
+    <div class="entity-preview">
+        <div class="newsfeed-box">
+            <row>
+              <div class="col-ofsset-2">
+                {% if errors.entity %}
+                    <div class="alert alert-warning">
+                        {{errors.entity}}
+                    </div>
+                {% else %}
+                    {% snippet 'news/snippets/entity_preview.html', post=data %}
+                {% endif %}
+              </div>
+            </row>
+          </div>
+    </div>
+    {% endif %}
+    <div class="form-actions">
+        <button class="btn btn-warning" name="save" type="submit"><i class="fa fa-share-square"></i>{{_('Post to news feed')}}</button>
+    </div>
+</form>

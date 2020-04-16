@@ -33,6 +33,11 @@
                         </li>
                     </ol>
                     {% endblock %}
+                    <a class="btn btn-warning pull-right"
+                       href="{{ h.url_for('news.new', entity_type='dashboard', entity_ref=dashboard.id)}}">
+                        <i class="fa fa-share-square"></i>
+                        {{ _('Post to news feed') }}
+                    </a>
                 </div>
             </div>
         </div>

@@ -160,3 +160,11 @@ def notification_show(context, data_dict):
 
 def get_groups_for_user(context, data_dict=None):
     return {'success': False}
+
+
+def post_show(context, data_dict=None):
+    return {'success': True}
+
+
+def post_search(context, data_dict=None):
+    return {'success': True}

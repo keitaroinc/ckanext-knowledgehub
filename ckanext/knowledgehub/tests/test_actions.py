@@ -9,6 +9,7 @@ from ckan.tests import factories
 from ckan import plugins
 from ckan.tests import helpers
 from ckan.plugins import toolkit
+from ckan import logic
 from ckan import model
 from datetime import datetime
 from ckan.common import config
@@ -44,6 +45,7 @@ from ckanext.knowledgehub.model import (
     Visualization,
     DataQualityMetrics as DataQualityMetricsModel,
     ResourceValidate,
+    Posts,
 )
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
@@ -530,7 +532,6 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(rv.get('what'), 'The resource is invalid!')
         assert_equals(rv.get('resource'), resource.get('id'))
 
-
     @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     @monkey_patch(Resource, 'delete_from_hdx', mock.Mock())
     def test_delete_package_from_hdx(self):
@@ -539,7 +540,6 @@ class TestKWHCreateActions(ActionsBase):
         dataset = create_dataset()
         delete_pkg = delete_actions.delete_package_from_hdx(ctx, dataset)
         assert_equals(delete_pkg, None)
-
 
     @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     @monkey_patch(Dataset, 'check_required_fields', mock.Mock())
@@ -628,6 +628,35 @@ class TestKWHCreateActions(ActionsBase):
         push_to_hdx = create_actions.upsert_dataset_to_hdx(context, data_dict)
 
         assert_equals(push_to_hdx, None)
+
+    def test_post_create(self):
+        context = get_context()
+        rq = toolkit.get_action('research_question_create')(
+            context,
+            {
+                'title': 'Test research question for post',
+                'name': 'test-research-question-for-post',
+            }
+        )
+
+        post = toolkit.get_action('post_create')(
+            context,
+            {
+                'title': 'Test post rq 1',
+                'description': 'Test post description',
+                'entity_type': 'research_question',
+                'entity_ref': rq['id']
+            }
+        )
+
+        assert_true(post is not None)
+        assert_true(post.get('id') is not None)
+        assert_equals(post.get('title'), 'Test post rq 1')
+        assert_equals(post.get('description'), 'Test post description')
+        assert_equals(post.get('entity_type'), 'research_question')
+        assert_equals(post.get('entity_ref'), rq['id'])
+        assert_true(post.get('created_by') is not None)
+        assert_true(post.get('created_at') is not None)
 
 
 class TestKWHGetActions(ActionsBase):
@@ -1225,6 +1254,55 @@ class TestKWHGetActions(ActionsBase):
         assert_true(groups is not None)
         assert_equals(len(groups), 1)
 
+    def test_post_show(self):
+        context = get_context()
+        post = toolkit.get_action('post_create')(context, {
+            'title': 'Post 3',
+            'description': 'Post 3 description',
+        })
+
+        result = toolkit.get_action('post_show')(context, {
+            'id': post['id'],
+        })
+
+        assert_true(result is not None)
+        assert_true(result.get('author') is not None)
+
+    @monkey_patch(Posts, 'search_index', mock.Mock())
+    def test_post_search(self):
+        context = get_context()
+        p1 = toolkit.get_action('post_create')(context, {
+            'title': 'Simple test',
+            'description': 'simple test',
+        })
+
+        p2 = toolkit.get_action('post_create')(context, {
+            'title': 'Other value',
+            'description': 'other',
+        })
+
+        class _Results:
+
+            def __init__(self, hits, docs, page, page_size, facets, stats):
+                self.hits = hits
+                self.docs = docs
+                self.page = page
+                self.page_size = page_size
+                self.facets = facets
+                self.stats = stats
+
+        Posts.search_index.return_value = _Results(2, [p1, p2], 1, 20, {}, {})
+
+        results = toolkit.get_action('post_search')(
+            context,
+            {
+                'text': '*',
+            }
+        )
+
+        assert_true(results is not None)
+        assert_true(results.get('count', 0) == 2)
+
 
 class TestKWHDeleteActions(ActionsBase):
 
@@ -1447,6 +1525,28 @@ class TestKWHDeleteActions(ActionsBase):
         r = delete_actions.package_delete(get_context(), {'id': dataset['id']})
 
         assert_equals(r, None)
+
+    def test_post_delete(self):
+        context = get_context()
+        post = toolkit.get_action('post_create')(context, {
+            'title': 'Post 2',
+            'description': 'Post 2 description',
+        })
+
+        result = toolkit.get_action('post_show')(context, {
+            'id': post['id'],
+        })
+
+        assert_true(result is not None)
+
+        toolkit.get_action('post_delete')(context, {'id': post['id']})
+
+        not_found = False
+        try:
+            toolkit.get_action('post_show')(context, {'id': post['id']})
+        except logic.NotFound:
+            not_found = True
+        assert_true(not_found)
 
 
 class TestKWHUpdateActions(ActionsBase):

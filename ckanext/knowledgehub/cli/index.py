@@ -7,6 +7,7 @@ from ckanext.knowledgehub.model import (
     Theme,
     SubThemes,
     Visualization,
+    Posts,
 )
 
 logger = getLogger(__name__)
@@ -33,6 +34,7 @@ INDEX_EXECUTORS = {
     'research-question': ResearchQuestion,
     'visualization': Visualization,
     'ckan': CkanCoreIndex(),
+    'post': Posts,
 }
 
 

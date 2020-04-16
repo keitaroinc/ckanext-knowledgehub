@@ -14,6 +14,7 @@ from ckanext.knowledgehub.model.resource_validate import ResourceValidate
 from ckanext.knowledgehub.model.user_profile import UserProfile
 from ckanext.knowledgehub.model.keyword import Keyword, ExtendedTag
 from ckanext.knowledgehub.model.notification import Notification
+from ckanext.knowledgehub.model.posts import Posts
 
 
 __all__ = [

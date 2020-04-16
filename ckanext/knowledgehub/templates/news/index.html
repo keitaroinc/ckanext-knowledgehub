@@ -1,0 +1,5 @@
+{% extends "news/base_page.html" %}
+
+{% block posts_content %}
+  {% snippet 'news/snippets/post_list.html', posts=posts %}
+{% endblock %}

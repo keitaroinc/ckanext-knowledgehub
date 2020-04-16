@@ -24,7 +24,8 @@ from ckanext.knowledgehub.model import (
     UserIntents,
     ResourceValidate,
     Keyword,
-    KWHData
+    KWHData,
+    Posts,
 )
 from ckanext.knowledgehub.logic.jobs import schedule_update_index
 
@@ -431,7 +432,7 @@ def tag_delete(context, data_dict):
 
     model = context['model']
 
-    if not data_dict.has_key('id') or not data_dict['id']:
+    if 'id' not in data_dict or not data_dict['id']:
         raise ValidationError({'id': _('id not in data')})
     tag_id_or_name = _get_or_bust(data_dict, 'id')
 
@@ -508,22 +509,23 @@ def delete_resource_from_hdx(context, data_dict):
         raise ValidationError('Dataset id is missing!')
     res_id = data_dict.get('resource_id')
     resource = toolkit.get_action('resource_show')(context,
-                                                   { 'id': res_id })
+                                                   {'id': res_id})
 
     try:
 
         data = logic.get_action('package_show')(
-            {'ignore_auth': True },
-            {'id': id })
+            {'ignore_auth': True},
+            {'id': id})
 
         hdx_dataset = Dataset.read_from_hdx(data['name'])
 
         for hdx_resource in hdx_dataset.get_resources():
             if hdx_resource['name'] == data_dict['resource_name']:
                 hdx_resource.delete_from_hdx()
-                resource['hdx_name_resource']=""
+                resource['hdx_name_resource'] = ""
                 try:
-                    resource = toolkit.get_action('resource_update')(context, resource)
+                    resource = toolkit.get_action('resource_update')(context,
+                                                                     resource)
                 except ValidationError as e:
                     try:
                         raise ValidationError(e.error_dict)
@@ -533,7 +535,8 @@ def delete_resource_from_hdx(context, data_dict):
         return "Dataset not found!"
     except Exception as e:
         log.debug(e)
-        return e 
+        return e
+
 
 def delete_package_from_hdx(context, data_dict):
 
@@ -564,4 +567,49 @@ def delete_package_from_hdx(context, data_dict):
         return "Dataset not found!"
     except Exception as e:
         log.debug(e)
-        return "Please try again!" 
+        return "Please try again!"
+
+
+def post_delete(context, data_dict):
+    '''Deletes a newsfeed post.
+
+    Only sysadmins and the post author can delete the post.
+
+    :param id: `str`, the post ID. Required.
+    '''
+    if 'id' not in data_dict:
+        raise logic.ValidationError({
+            'id': _('Missing Value'),
+        })
+
+    user = context.get('auth_user_obj')
+    if not user:
+        raise logic.NotAuthorized(_('You are not authorized to '
+                                    'delete this post'))
+
+    post = Posts.get(data_dict['id'])
+    if not post:
+        raise logic.NotFound(_('Post not found'))
+
+    is_sysadmin = hasattr(user, 'sysadmin') and user.sysadmin
+    skip_auth = context.get('ignore_authentication')
+
+    if not (is_sysadmin or skip_auth):
+        if post.created_by != user.id:
+            raise logic.NotAuthorized(_('You are not authorized to '
+                                        'delete this post'))
+    try:
+        toolkit.get_action('delete_comments')(context, {
+            'post_id': post.id,
+        })
+        model.Session.delete(post)
+        model.Session.commit()
+        Posts.delete_from_index(data_dict)
+    except Exception as e:
+        log.error('Failed to delete comments. Error: %s', str(e))
+        log.exception(e)
+        model.Session.rollback()
+
+
+def delete_comments(context, data_dict):
+    pass

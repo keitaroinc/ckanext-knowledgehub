@@ -1,5 +1,14 @@
 {% ckan_extends %}
 {{ super() }}
+
+{% block content_action %}
+<a class="btn btn-default"
+   href="{{ h.url_for('news.new', entity_type='dataset', entity_ref=pkg.id ) }}">
+    <i class="fa fa-share-square"></i>
+    {{_('Post to news feed')}}</a>
+  {{ super() }}
+{% endblock %}
+
 {% block package_description %}
 {% if error_message %}
 <div class="alert alert-danger alert-dismissible">

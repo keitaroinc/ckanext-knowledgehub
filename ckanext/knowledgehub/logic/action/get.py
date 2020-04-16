@@ -29,7 +29,8 @@ from ckanext.knowledgehub.model import (
     Keyword,
     ExtendedTag,
     UserProfile,
-    Notification
+    Notification,
+    Posts,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
@@ -2140,3 +2141,105 @@ def group_list_for_user(context, data_dict):
         groups.append(_table_dictize(group, context))
 
     return groups
+
+
+def post_show(context, data_dict):
+    '''Looks up a newsfeed post by its id.
+
+    :param id: `str`, the post id.
+    :param with_comments: `bool`, default `False`, if set to `True`, returns
+        the comments to this post as well.
+    :param with_related_entity: `bool`, default `True`, if set to `True` and
+        the post has a related entity (such as dataset, dashboard etc), it will
+        fetch the data for that entity as well.
+    :param with_user_info: `bool`, default `True`. If set to true, returns the
+        post author info.
+
+    :returns: `dict`, the post data.
+    '''
+    check_access('post_show', context, data_dict)
+
+    post_id = data_dict.get('id')
+    with_comments = data_dict.get('with_comments', False)
+    with_related_entity = data_dict.get('with_related_entity', True)
+    with_user_info = data_dict.get('with_user_info', True)
+
+    if not post_id:
+        raise logic.ValidationError({'id': _('Missing value')})
+
+    post = Posts.get(post_id)
+    if not post:
+        raise logic.NotFound(_('Post not found'))
+
+    post_data = _table_dictize(post, context)
+
+    actions = {
+        'dataset': 'package_show',
+        'research_question': 'research_question_show',
+        'dashboard': 'dashboard_show',
+        'visualization': 'resource_view_show',
+    }
+
+    if with_related_entity:
+        entity_type = post_data.get('entity_type')
+        if entity_type:
+            action = actions[entity_type]
+            entity = toolkit.get_action(action)({
+                'ignore_auth': True,
+            }, {
+                'id': post_data['entity_ref'],
+            })
+            post_data[entity_type] = entity
+
+    if with_comments:
+        comments = toolkit.get_action('comments_list')(ctx, {
+            'post_id': post_data['id'],
+        })
+        post_data['comments'] = comments
+
+    if with_user_info and post.created_by:
+        author = toolkit.get_action('user_show')({
+            'ignore_auth': True,
+        }, {
+            'id': post.created_by,
+        })
+
+        post_data['author'] = {
+            'id': author['id'],
+            'name': author.get('display_name') or author.get('fullname')
+            or author.get('name'),
+            'email_hash': author.get('email_hash'),
+        }
+
+    return post_data
+
+
+def post_search(context, data_dict):
+    '''Performs a search for posts based on a user query.
+
+    :param text: `str`, the search query string. Required.
+    :param sort: `str`, the sort string. Optional.
+    :param page: `int`, which page to fetch (starting from 1). Optional,
+        default is 1.
+    :param limit: `int`, how many items per page to fetch. Optional, default is
+        20.
+
+    :returns: `dict`, the search result dict containing: `count` - the number
+        of results and `items` - a `list` of posts.
+    '''
+    check_access('post_search', context, data_dict)
+
+    if 'sort' in data_dict:
+        data_dict['sort'] = get_sort_string(Posts, data_dict['sort'])
+
+    posts = _search_entity(Posts, context, data_dict)
+
+    if data_dict.get('with_entity', True):
+        for i in range(0, len(posts.get('results', []))):
+            posts['results'][i] = toolkit.get_action('post_show')({
+                'ignore_auth': True,
+            }, {
+                'id': posts['results'][i]['id'],
+            })
+
+    return posts

@@ -1,0 +1,9 @@
+{# Displays a research question with the image
+    :param rq: the research question data dict.
+    #}
+<div class="col-lg-2 rq-box rq-item"
+    style="background-image: url({{ rq.get('image_url') }});">
+    <h3 class="rq-heading text-wrap">
+        <a href="{% url_for 'research_question.read', name=rq.get('name') %}">{{ rq.get('title') }}</a>
+    </h3>
+</div>

@@ -29,22 +29,25 @@ from ckan.lib.helpers import url_for
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.logic.action.get import user_query_show
 from ckanext.knowledgehub.model.theme import Theme
-from ckanext.knowledgehub.model import SubThemes
-from ckanext.knowledgehub.model import ResearchQuestion
-from ckanext.knowledgehub.model import Dashboard
-from ckanext.knowledgehub.model import ResourceFeedbacks
-from ckanext.knowledgehub.model import ResourceValidate
-from ckanext.knowledgehub.model import ResourceValidation
-from ckanext.knowledgehub.model import KWHData
-from ckanext.knowledgehub.model import RNNCorpus
-from ckanext.knowledgehub.model import Visualization
-from ckanext.knowledgehub.model import UserIntents
-from ckanext.knowledgehub.model import UserQuery
-from ckanext.knowledgehub.model import UserQueryResult
-from ckanext.knowledgehub.model import Keyword
-from ckanext.knowledgehub.model import UserProfile
-from ckanext.knowledgehub.model import ExtendedTag
-from ckanext.knowledgehub.model import Notification
+from ckanext.knowledgehub.model import (
+    SubThemes,
+    ResearchQuestion,
+    Dashboard,
+    ResourceFeedbacks,
+    ResourceValidate,
+    ResourceValidation,
+    KWHData,
+    RNNCorpus,
+    Visualization,
+    UserIntents,
+    UserQuery,
+    UserQueryResult,
+    Keyword,
+    UserProfile,
+    ExtendedTag,
+    Notification,
+    Posts,
+)
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -1448,7 +1451,9 @@ def upsert_resource_to_hdx(context, data_dict):
                     'id': rsc['id'],
                     'hdx_name_resource': rsc['name']
                 }
-                resource = toolkit.get_action('resource_update')({ 'ignore_auth': True }, dict_res)
+                resource = toolkit.get_action('resource_update')({
+                    'ignore_auth': True,
+                }, dict_res)
             except ValidationError as e:
                 try:
                     raise ValidationError(e.error_dict)
@@ -1646,3 +1651,76 @@ def notification_create(context, data_dict):
     model.Session.flush()
 
     return _table_dictize(notification, context)
+
+
+def post_create(context, data_dict):
+    '''Creates a new post to be shown in the news feed.
+
+    :param title: `str`, the post title. Required.
+    :param description: `str`, the post description. Optional.
+    :param entity_type: `str`, the type of the referenced entity. May be one of
+        `dashboard`, `dataset`, `research_question` or `visualization`.
+        Optional.
+    :param entity_ref: `str`, the ID (reference, like dataset ID or dashboard
+        ID) of the refrenced entity in the post. Required if `entity_type`
+        is set.
+
+    :returns: `dict`, the newly created post data.
+    '''
+    entities_actions = {
+        'dashboard': 'dashboard_show',
+        'dataset': 'package_show',
+        'research_question': 'research_question_show',
+        'visualization': 'resource_view_show',
+    }
+
+    errors = {}
+    if 'title' not in data_dict:
+        errors['title'] = _('Missing Value')
+
+    entity_type = data_dict.get('entity_type')
+
+    if entity_type:
+        if 'entity_ref' not in data_dict:
+            errors['entity_ref'] = _('Missing Value')
+        if entity_type not in entities_actions:
+            errors['entity_type'] = _('Invalid value. '
+                                      'Must be one of: %s' % ', '.join(
+                                          entities_actions.keys()))
+
+    if errors:
+        raise logic.ValidationError(errors)
+
+    check_access('post_create', context, data_dict)
+
+    user = context.get('auth_user_obj')
+    if not user:
+        raise logic.NotAuthorized()
+
+    entity_ref = None
+
+    if entity_type:
+        action = entities_actions[entity_type]
+
+        entity = toolkit.get_action(action)(context, {
+            'id': data_dict['entity_ref'],
+        })
+
+        entity_ref = entity['id']
+
+    post = Posts(
+        title=data_dict['title'],
+        description=data_dict.get('description'),
+        entity_type=entity_type,
+        entity_ref=entity_ref,
+        created_by=user.id,
+    )
+
+    post.save()
+    model.Session.commit()
+
+    post_data = _table_dictize(post, context)
+
+    Posts.add_to_index(post_data)
+
+    return post_data
