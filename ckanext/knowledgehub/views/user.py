@@ -5,7 +5,7 @@ import ckan.model as model
 from ckan import authz
 import ckan.logic as logic
 import ckan.lib.helpers as h
-from ckan.common import _, g, request
+from ckan.common import _, g, request, config
 from flask.views import MethodView
 import ckan.lib.navl.dictization_functions as dict_fns
 from ckanext.knowledgehub.helpers import check_user_profile_preferences
