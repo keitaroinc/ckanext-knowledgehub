@@ -8,7 +8,7 @@ import ckan.lib.helpers as h
 import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
-from ckan.common import _, config, g, request
+from ckan.common import _, config, g, request, c
 import ckanext.knowledgehub.helpers as kwh_helpers
 import ckan.lib.navl.dictization_functions as dict_fns
 
@@ -46,6 +46,8 @@ def index():
     page = request.args.get('page', '').strip()
     limit = request.args.get('limit', '').strip()
     partial = request.args.get('partial', 'false').lower()
+    post_types = request.args.getlist('khe_entity_type')
+    fq = []
 
     if not text:
         text = '*'
@@ -62,19 +64,85 @@ def index():
     else:
         limit = default_limit
 
+    for post_type in post_types:
+        fq.append('khe_entity_type:"{}"'.format(post_type))
+
     partial = partial in ['true', 'yes', '1', 't']
 
     posts = get_action('post_search')(context, {
         'text': text,
         'page': page,
         'limit': limit,
-        'sort': 'created_at desc'
+        'sort': 'created_at desc',
+        'facet': True,
+        'facet.field': ['khe_entity_type'],
+        'fq': fq,
     })
 
     extra_vars = {
         'posts': posts.get('results', []),
         'user': context.get('auth_user_obj'),
     }
+
+    traslated_fields = {
+        'dashboard': _('Dashboards'),
+        'research_question': _('Research Questions'),
+        'dataset': _('Datasets'),
+        'visualization': _('Visualizations'),
+    }
+
+    search_facets = {}
+    if posts.get('facets', {}).get('khe_entity_type'):
+        facet_items = []
+        search_facets['khe_entity_type'] = {'items': facet_items}
+        for field, count in posts['facets']['khe_entity_type'].items():
+            facet_items.append({
+                'name': field,
+                'display_name': traslated_fields.get(field, field),
+                'count': count,
+            })
+
+    c.search_facets = search_facets
+    c.search_facets_limits = {}
+    for facet in c.search_facets.keys():
+        limit = int(request.args.get('_%s_limit' % facet,
+                    config.get('search.facets.default', 10)))
+        c.search_facets_limits[facet] = limit
+
+    def remove_field(field, value):
+        query_params = []
+        for argn in request.args:
+            values = request.args.getlist(argn)
+            for val in values:
+                if field == argn and val == value:
+                    continue
+                query_params.append('{}={}'.format(argn, val))
+
+        url = h.url_for('news.index')
+        if query_params:
+            return url + '?' + '&'.join(query_params)
+        return url
+
+    facets = {
+        'search': search_facets,
+        'remove_field': remove_field,
+    }
+
+    facets['titles'] = {'khe_entity_type': _('Post type')}
+    fields_grouped = {}
+    if post_types:
+        facets['fields'] = {'khe_entity_type': post_types}
+
+    for argn in request.args:
+        if argn == 'q':
+            continue
+        values = request.args.getlist(argn)
+        for value in values:
+            fields_grouped[(argn, value)] = value
+
+    facets['fields_grouped'] = fields_grouped
+
+    extra_vars['facets'] = facets
 
     extra_vars["page"] = h.Page(
         collection=posts.get('results', []),
@@ -113,6 +181,7 @@ def view(id):
     extra_vars = {
         'post': post,
         'user': context.get('auth_user_obj'),
+        'facets': {},
     }
 
     extra_vars["page"] = h.Page(
@@ -208,6 +277,7 @@ class CreateView(MethodView):
             'data': data,
             'errors': errors,
             'page': {},
+            'facets': {},
         })
 
     def post(self):
@@ -264,6 +334,7 @@ class CreateView(MethodView):
                 'data': data,
                 'errors': errors,
                 'page': {},
+                'facets': {},
             })
 
         try:
@@ -285,6 +356,7 @@ class CreateView(MethodView):
                 'data': data,
                 'errors': errors,
                 'page': {},
+                'facets': {},
             })
 
         return h.redirect_to(u'news.index')
