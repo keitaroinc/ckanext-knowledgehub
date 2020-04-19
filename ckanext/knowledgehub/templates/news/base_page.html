@@ -14,12 +14,16 @@
     {% block posts_search_form %}
         {% block search_sortby %} {% endblock %}
 
+        {% set facets = facets if not none%}
+        {% set q = request.args.get('q', '')%}
         {% snippet 'snippets/search_form.html',
                     form_id='news-search-form', type='post',
                     query=q, sorting_selected=sort_by_selected,
                     count=page.item_count,
                     placeholder=_('Search posts...'),
-                    no_sorting=True%}
+                    no_sorting=True,
+                    facets=facets,
+                    fields=facets.fields_grouped%}
     {% endblock %}
     <div class="container-fluid"
          pagination-container="true"
@@ -31,4 +35,17 @@
 
     {% endblock%}
     </div>
+{% endblock %}
+
+{% block secondary_content %}
+<div class="col-lg-12" id="filter">
+    <div>
+        {% for facet in facets.titles %}
+            {% set title = facets.titles[facet] %}
+            {{ h.snippet('snippets/facet_list.html', title=title, name=facet) }}
+        {% endfor %}
+    </div>
+    <a class="close no-text hide-filters"><i class="fa fa-times-circle"></i><span
+            class="text">close</span></a>
+</div>
 {% endblock %}
