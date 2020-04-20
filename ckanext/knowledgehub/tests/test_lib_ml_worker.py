@@ -59,7 +59,7 @@ class TestWorker(helpers.FunctionalTestBase):
         worker = Worker('test_worker', 100000, redis=redis_mock)
         worker.run()
 
-        expect.join(timeout=10)
+        expect.join(timeout=30)
         redis_mock.setex.assert_called_once_with(
             'ckan:worker:test_worker:heartbeat', 'RUNNING', 101)
         redis_mock.delete.assert_called_once()
@@ -98,7 +98,7 @@ class TestWorker(helpers.FunctionalTestBase):
         worker = _worker('test_worker', 400, redis=redis_mock)
         worker.run()
 
-        expect.join(timeout=10)
+        expect.join(timeout=30)
 
         redis_mock.setex.assert_called_with(
             'ckan:worker:test_worker:heartbeat', 'RUNNING', 1)
