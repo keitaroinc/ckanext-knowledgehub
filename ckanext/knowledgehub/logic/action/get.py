@@ -2232,6 +2232,9 @@ def post_search(context, data_dict):
     if 'sort' in data_dict:
         data_dict['sort'] = get_sort_string(Posts, data_dict['sort'])
 
+    # Ignore permissions label, because everyone should be able to see posts.
+    data_dict['ignore_permissions'] = True
+
     posts = _search_entity(Posts, context, data_dict)
 
     if data_dict.get('with_entity', True):

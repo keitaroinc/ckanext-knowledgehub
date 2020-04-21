@@ -546,7 +546,7 @@ class KWHPackageController(PackageController):
         except NotFound:
             abort(404, _('Dataset not found'))
         except NotAuthorized:
-            abort(403, _('Not authorize to see the page'))
+            abort(403, _('Not authorized to see the page'))
 
         # used by disqus plugin
         c.current_package_id = c.pkg.id
