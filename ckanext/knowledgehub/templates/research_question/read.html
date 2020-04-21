@@ -15,8 +15,8 @@
 {% block subtitle %}{{ h.dataset_display_name(rq) }} {{ g.template_title_delimiter }} {{ super() }}{% endblock %}
 
 {% block content_action %}
-{% if h.check_access('research_question_update') %}
 {% link_for _('Post to news feed'), named_route='news.new', entity_ref=rq.id, entity_type='research_question', class_='btn btn-default', icon='share-square' %}
+{% if h.check_access('research_question_update') %}
 {% link_for _('Manage'), named_route='research_question.edit', name=rq.name, class_='btn btn-default', icon='wrench' %}
 {% endif %}
 {% endblock %}

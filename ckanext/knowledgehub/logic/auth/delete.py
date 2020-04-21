@@ -72,3 +72,7 @@ def package_delete(context, data_dict):
     otherwise a recursion error is thrown.
     '''
     return ckan_package_delete(context, data_dict)
+
+
+def post_delete(context, data_dict=None):
+    return {'success': True}
