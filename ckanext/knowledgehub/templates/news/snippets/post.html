@@ -29,9 +29,26 @@
     </div>
     {% endif %}
     {% if post.entity_type and post.entity_ref %}
-    <div class="newsfeed-box row">
-      {% snippet 'news/snippets/entity_preview.html', post=post %}
-    </div>
+      {% if post.get('entity_deleted') or post.get('entity_error')%}
+      <div class="newsfeed-box row">
+        <ul class="newsfeed-list list-unstyled">
+          <li class="">
+            <div class="alert alert-danger">
+              <i class="fa fa-minus-circle"></i>
+              {% if post.get('entity_deleted') %}
+              {{ _('Related {} was deleted.'.format(post.entity_type)) }}
+              {% else %}
+              {{ _('An error occured while displaying this content.') }}
+              {% endif %}
+            </div>
+          </li>
+        </ul>
+      </div>
+      {% else %}
+        <div class="newsfeed-box row">
+          {% snippet 'news/snippets/entity_preview.html', post=post %}
+        </div>
+      {% endif %}
     {% endif %}
     <p>{{h.render_markdown(post.description)}}</p>
     <p>
