@@ -2,6 +2,8 @@
 
 import ckan.plugins.toolkit as toolkit
 import ckan.lib.uploader as uploader
+import ckan.lib.helpers as helpers
+from ckan.model import Session, User, user_table
 from ckanext.knowledgehub.model.data_quality import (
     DataQualityMetrics as DataQualityMetricsModel
 )
@@ -11,6 +13,10 @@ from datetime import datetime, timedelta
 import dateutil
 import json
 import re
+import csv
+from tempfile import TemporaryFile
+import paste.fileapp
+import os.path
 
 import requests
 from goodtables import validate
@@ -84,6 +90,317 @@ class LazyStreamingList(object):
 
     def __iter__(self):
         return self.iterator()
+
+    def rewind(self):
+        self.buffer = None
+        self.page = 0
+        self.total = 0
+
+
+class ResourceCSVData(object):
+    '''Represents a CSV data source that can be read with pagination.
+
+    It fetches the CSV data (for a resource) and generates metadata related to
+    the CSV file data.
+    The column names and data types for each column are calculated:
+        * column names are calculated from the firs row in the CSV file. If
+            there are multiple columns with the same name, then the column
+            names are suffixed with index `_<i>`, for example:
+                - if we have the following columns: `a`, `b`, `a`, `a`, then
+                the generated columns will have the following names: `a_1`,
+                `b`, `a_2` and `a_3`.
+        * the data types are guessed from the first row with data (second row
+        in the file).
+
+    The data is rerieved in pages. Each page is a `dict` containing:
+        * `total` - total number of data rows in the CSV file (the header row
+            is not counted)
+        * `records` - the records in the requested page - a `list` of `dict`
+        * `fields` - `list` of `dict` describing the columns in the CSV file.
+
+    The constructor takes one argument - the data loader for the CSV. This is a
+    function (callable) that is called without arguments to load the actual
+    data from the CSV file. The expected output of this function is a `list`
+    of rows where each row is itself a `list` of values.
+    '''
+
+    def __init__(self, resource_loader):
+        csv_data = resource_loader()
+        self.data = csv_data
+        self.fields = self._get_field_types(self._get_fields(csv_data),
+                                            csv_data)
+        self.column_names = [f['id'] for f in self.fields]
+        self.total = 0
+        if len(csv_data):
+            self.total = len(csv_data) - 1
+        log.debug('%s, Resource CSV data. Total: %d, columns=%s, fields=%s',
+                  str(self), self.total, self.column_names, self.fields)
+
+    def _get_fields(self, csv_data):
+        if not csv_data:
+            return {}
+        columns = csv_data[0]
+        columns_count = {}
+        for column in columns:
+            columns_count[column] = columns_count.get(column, 0) + 1
+        numbered = {}
+        fields = []
+        for column in columns:
+            if columns_count[column] > 1:
+                numbered[column] = numbered.get(column, 0) + 1
+                column = '{}_{}'.format(column, numbered[column])
+            fields.append({'id': column})
+        return fields
+
+    def _get_field_types(self, fields, csv_data):
+        if not csv_data or len(csv_data) == 1:
+            for field in fields:
+                field['type'] = 'text'
+            return fields
+        row = csv_data[1]
+        for i, field in enumerate(fields):
+            field['type'] = self._guess_type(row[i])
+        return fields
+
+    def _guess_type(self, value):
+        if value is None:
+            return 'text'
+        if detect_numeric_format(value):
+            return 'numeric'
+        if detect_date_format(value):
+            return 'timestamp'
+        return 'text'
+
+    def fetch_page(self, page, limit):
+        '''Retrieves one page from the CSV data.
+
+        :param page: `int`, the number of the page to fetch, 0-based.
+        :param limit: `int`, the page size.
+
+        :returns: the data page, which is a `dict` containing:
+            * `total` - total number of records.
+            * `records` - `list` of `dict`, the row (records) in this page.
+            * `fields` - `list` of `dict`, metadata for the columns.
+        '''
+        start = max(page, 0) * limit + 1
+        limit = min(start + limit, self.total + 1)
+        items = []
+        if start < (self.total + 1):
+            for i in range(start, limit):
+                data_row = self.data[i]
+                row_dict = {self.column_names[j]: value
+                            for j, value in enumerate(data_row)}
+                items.append(row_dict)
+        log.debug('ResourceCSVData.fetch_page: '
+                  'page=%d, limit=%d, of total %d. Got %d results.',
+                  page, limit, self.total, len(items))
+        return {
+            'total': self.total,
+            'records': items,
+            'fields': self.fields,
+        }
+
+
+class ResourceFetchData(object):
+    '''A callable wrapper for fetching the resource data.
+
+    Based on the availability of the data, when called it will fetch a page of
+    the resource data.
+    The data for a particular resource may be stored in the Data Store, in CKAN
+    storage path or on a remote server. Ideally we want to read the data from
+    the data store, however if the data is not available there, we should try
+    to download the CSV data directly - either from CKAN or if the resource was
+    set as a link to an external server, by downloading it from that server.
+
+    :param resource: `dict`, the resource metadata as retrieved from CKAN
+        action `resource_show`.
+    '''
+
+    def __init__(self, resource):
+        self.resource = resource
+        self.download_resource = False
+        self.resource_csv = None
+
+    def __call__(self, page, limit):
+        '''Fetches one page (with size of `limit`) of data from the resource
+        CSV data.
+
+        This call will first try to load the data from the datastore. If that
+        fails and the data is not available in the data store, then it will try
+        to load the data directly (from CKAN uploads or by downloading the CSV
+        file directly from the remote server). Once this happens, and the data
+        is loaded into `ResourceCSVData`, then every subsequent call will load
+        the data from the cached instance of `ResourceCSVData` and will not try
+        to load it from the data store.
+
+        :param page: `int`, the page to fetch, 0-based.
+        :param limit: `int`, page size.
+
+        :returns: `dict`, the requested page as `dict` containing:
+            * `total` - total number of records in the data.
+            * `records` - a `list` of records for this page. Each record is a
+                `dict` of format `<column_name>:<row_value>`.
+            * `fields` - the records metadata describing each column. It is a
+                `list` of `dict`, where each element describes one column. The
+                order of the columns is the same as it is appears in the CSV
+                file. Each element has:
+                    * `id` - `str`, the name of the column
+                    * `type` - `str`, the column type (ex. `numeric`, `text`)
+        '''
+        try:
+            page = self.fetch_page(page, limit)
+            return page
+        except Exception as e:
+            log.error('Failed to fetch page %d (limit %d) of resource %s. '
+                      'Error: %s',
+                      page,
+                      limit,
+                      self.resource.get('id'),
+                      str(e))
+            log.exception(e)
+            return {
+                'total': 0,
+                'records': [],
+                'fields': {},
+            }
+
+    def _fetch_data_datastore(self, page, limit):
+        log.debug('Fetch page from datastore: page %d, limit %d', page, limit)
+        return toolkit.get_action('datastore_search')({
+            'ignore_auth': True,
+        }, {
+            'resource_id': self.resource['id'],
+            'offset': page*limit,
+            'limit': limit,
+        })
+
+    def _download_resource_from_url(self, url, headers=None):
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()  # Raise an error if request to file failed.
+        data = []
+        with TemporaryFile(mode='w+b') as tmpf:
+            for chunk in resp.iter_content():
+                tmpf.write(chunk)
+            tmpf.flush()
+            tmpf.seek(0, 0)  # rewind to start
+            reader = csv.reader(tmpf)
+            for row in reader:
+                data.append(row)
+        return data
+
+    def _download_resource_from_ckan(self, resource):
+        upload = uploader.get_resource_uploader(resource)
+        filepath = upload.get_path(resource['id'])
+        try:
+            data = []
+            if os.path.isfile(filepath):
+                data = []
+                with open(filepath) as csvf:
+                    reader = csv.reader(csvf)
+                    for row in reader:
+                        data.append(row)
+                return data
+            else:
+                # The worker is not in the same machine as CKAN, so it cannot
+                # read the resource files from the local file system.
+                # We need to retrieve the resource data from the resource URL.
+                if 'url' not in resource:
+                    raise Exception('Cannot access the resource because the '
+                                    'resource URL is not set.')
+                log.debug('Resource data is not in this file system '
+                          '(File %s does not exist).'
+                          'Fetching data from CKAN download url directly.',
+                          filepath)
+                headers = None
+                sysadmin_api_key = _get_sysadmin_user_key()
+                if sysadmin_api_key:
+                    headers = {'Authorization': sysadmin_api_key}
+                return self._download_resource_from_url(
+                    resource['url'],
+                    headers
+                )
+        except OSError as e:
+            log.error('Failed to download resource from CKAN upload. '
+                      'Error: %s', str(e))
+            log.exception(e)
+            raise e
+
+    def _fetch_data_directly(self):
+        if self.resource.get('url_type') == 'upload':
+            log.debug('Getting data from CKAN...')
+            return self._download_resource_from_ckan(self.resource)
+        if self.resource.get('url'):
+            log.debug('Getting data from remote URL...')
+            return self._download_resource_from_url(self.resource['url'])
+        raise Exception('Resource {} is not available '
+                        'for download.'.format(self.resource.get('id')))
+
+    def fetch_page(self, page, limit):
+        '''Fetches one page (with size of `limit`) of data from the resource
+        CSV data.
+
+        This call will first try to load the data from the datastore. If that
+        fails and the data is not available in the data store, then it will try
+        to load the data directly (from CKAN uploads or by downloading the CSV
+        file directly from the remote server). Once this happens, and the data
+        is loaded into `ResourceCSVData`, then every subsequent call will load
+        the data from the cached instance of `ResourceCSVData` and will not try
+        to load it from the data store.
+
+        :param page: `int`, the page to fetch, 0-based.
+        :param limit: `int`, page size.
+
+        :returns: `dict`, the requested page as `dict` containing:
+            * `total` - total number of records in the data.
+            * `records` - a `list` of records for this page. Each record is a
+                `dict` of format `<column_name>:<row_value>`.
+            * `fields` - the records metadata describing each column. It is a
+                `list` of `dict`, where each element describes one column. The
+                order of the columns is the same as it is appears in the CSV
+                file. Each element has:
+                    * `id` - `str`, the name of the column
+                    * `type` - `str`, the column type (ex. `numeric`, `text`)
+        '''
+        if self.download_resource:
+            if not self.resource_csv:
+                self.resource_csv = ResourceCSVData(self._fetch_data_directly)
+                log.debug('Resource data downloaded directly.')
+            return self.resource_csv.fetch_page(page, limit)
+        try:
+            page = self._fetch_data_datastore(page, limit)
+            log.debug('Data is available in DataStore. '
+                      'Using datastore for data retrieval.')
+            return page
+        except Exception as e:
+            log.warning('Failed to load resource data from DataStore. '
+                        'Error: %s', str(e))
+            log.exception(e)
+            self.download_resource = True
+            log.debug('Will try to download the data directly.')
+            return self.fetch_page(page, limit)
+
+
+def _get_sysadmin_user():
+    '''Find a sysadmin user in the CKAN database.
+    '''
+    q = Session.query(User)
+    q = q.filter(user_table.c.state == 'active')
+    q = q.filter(user_table.c.sysadmin == True)
+
+    return q.first()
+
+
+def _get_sysadmin_user_key():
+    '''Returns the API key of a sysadmin user of CKAN (if any).
+    The API key may be of any of the sysadmin users of the portal, there is no
+    guarantee to which user this key belongs to.
+
+    If no admin users exist (or are not active), then `None` is returned.
+    '''
+    sysadmin = _get_sysadmin_user()
+    if sysadmin:
+        return sysadmin.apikey
+    return None
 
 
 class DimensionMetric(object):
@@ -215,7 +532,7 @@ class DataQualityMetrics(object):
         def _fetch_page(page, page_size):
             try:
                 context = {'ignore_auth': True}
-                return toolkit.get_action('datastore_search')(context, {
+                return toolkit.get_action('datastore_search')(None, {
                     'resource_id': resource['id'],
                     'offset': page*page_size,
                     'limit': page_size,
@@ -228,6 +545,8 @@ class DataQualityMetrics(object):
                     'total': 0,
                     'records': [],
                 }
+
+        _fetch_page = ResourceFetchData(resource)
 
         result = _fetch_page(0, 1)  # to calculate the total from start
         return {
@@ -365,6 +684,7 @@ class DataQualityMetrics(object):
 
         data_quality.resource_last_modified = last_modified
         results = {}
+        data_stream = None
         for metric in self.metrics:
             try:
                 if cached_calculation and getattr(data_quality,
@@ -382,7 +702,14 @@ class DataQualityMetrics(object):
                         continue
 
                 self.logger.debug('Calculating dimension: %s...', metric)
-                data_stream = self._fetch_resource_data(resource)
+                if not data_stream:
+                    data_stream = self._fetch_resource_data(resource)
+                else:
+                    if data_stream.get('records') and \
+                            hasattr(data_stream['records'], 'rewind'):
+                        data_stream['records'].rewind()
+                    else:
+                        data_stream = self._fetch_resource_data(resource)
                 results[metric.name] = metric.calculate_metric(resource,
                                                                data_stream)
             except Exception as e:
@@ -505,7 +832,9 @@ class Completeness(DimensionMetric):
         for row in data['records']:
             total_complete_values += self._completenes_row(row)
 
-        result = float(total_complete_values)/float(total_values_count) * 100.0
+        result = \
+            float(total_complete_values)/float(total_values_count) * 100.0 if \
+            total_values_count else 0
         self.logger.debug('Complete (non-empty) values: %s',
                           total_complete_values)
         self.logger.debug('Completeness score: %f%%', result)
@@ -1154,7 +1483,7 @@ class Consistency(DimensionMetric):
 
         total = sum([f.get('count', 0) for _, f in report.items()])
         consistent = sum([f.get('consistent', 0) for _, f in report.items()])
-        value = float(consistent)/float(total) * 100.0
+        value = float(consistent)/float(total) * 100.0 if total else 0.0
         return {
             'total': total,
             'consistent': consistent,
@@ -1182,7 +1511,7 @@ class Consistency(DimensionMetric):
 
         # FIXME: This is not the proper calculation. We need to merge all
         # data to calculate the consistency properly.
-        value = float(consistent)/float(total) * 100.0
+        value = float(consistent)/float(total) * 100.0 if total else 0.0
         return {
             'total': total,
             'consistent': consistent,
