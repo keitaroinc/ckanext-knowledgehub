@@ -51,11 +51,11 @@ RUN python -m spacy download en_core_web_sm
 ENV CKAN__PLUGINS envvars \
                   recline_view \
                   validation \
+                  knowledgehub \
                   disqus \
                   stats \
                   datastore \
                   datapusher \
-                  knowledgehub \
                   datarequests
 
 
