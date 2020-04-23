@@ -2184,12 +2184,26 @@ def post_show(context, data_dict):
         entity_type = post_data.get('entity_type')
         if entity_type:
             action = actions[entity_type]
-            entity = toolkit.get_action(action)({
-                'ignore_auth': True,
-            }, {
-                'id': post_data['entity_ref'],
-            })
-            post_data[entity_type] = entity
+            try:
+                entity = toolkit.get_action(action)({
+                    'ignore_auth': True,
+                }, {
+                    'id': post_data['entity_ref'],
+                })
+                post_data[entity_type] = entity
+            except logic.NotFound:
+                log.warning('Entity %s with id %s was not found.',
+                            entity_type, post_data.get('entity_ref'))
+                post_data['entity_deleted'] = True
+            except Exception as e:
+                log.error('Failed to fetch related entity '
+                          '%s with id %s. Error: %s',
+                          entity_type,
+                          post_data.get('entity_ref'),
+                          str(e))
+                log.exception(e)
+                post_data[entity_type] = {}
+                post_data['entity_error'] = True
 
     if with_comments:
         comments = toolkit.get_action('comments_list')(ctx, {
