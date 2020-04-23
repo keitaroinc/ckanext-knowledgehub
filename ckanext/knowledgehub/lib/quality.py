@@ -498,10 +498,13 @@ class DataQualityMetrics(object):
     are stored in database.
 
     :param metrics: `list` of `DimensionMetric`, the dimensions for which to
-    calculate Data Quality on a given dataset.
+        calculate Data Quality on a given dataset.
+    :param force_recalculate: `boolean`, force recalculation of the data
+        quality metrics even if the data has not been modified.
     '''
-    def __init__(self, metrics=None):
+    def __init__(self, metrics=None, force_recalculate=False):
         self.metrics = metrics or []
+        self.force_recalculate = force_recalculate
         self.logger = getLogger('ckanext.DataQualityMetrics')
 
     def _fetch_dataset(self, package_id):
@@ -685,12 +688,16 @@ class DataQualityMetrics(object):
         data_quality.resource_last_modified = last_modified
         results = {}
         data_stream = None
+        if self.force_recalculate:
+            log.info('Forcing recalculation of the data metrics '
+                     'has been set. All except the manually set metric data '
+                     'will be recalculated.')
         for metric in self.metrics:
             try:
                 if cached_calculation and getattr(data_quality,
                                                   metric.name) is not None:
                     cached = data_quality.metrics[metric.name]
-                    if not cached.get('failed'):
+                    if not self.force_recalculate and not cached.get('failed'):
                         self.logger.debug('Dimension %s already calculated. '
                                           'Skipping...', metric.name)
                         results[metric.name] = cached
