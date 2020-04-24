@@ -40,7 +40,8 @@ class TestMetrics:
     @monkey_patch(jobs, 'enqueue', Mock())
     def test_schedule_data_quality_check(self):
         schedule_data_quality_check('pkg-001')
-        jobs.enqueue.assert_called_once_with(calculate_metrics, ['pkg-001'])
+        jobs.enqueue.assert_called_once_with(calculate_metrics,
+                                             ['pkg-001', False])
 
 
 class TestModelIndexRefresh:

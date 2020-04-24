@@ -28,6 +28,7 @@ from ckanext.datastore.backend.postgres import create_indexes
 from ckanext.datastore.backend.postgres import create_alias
 from ckanext.datastore.backend.postgres import _unrename_json_field
 from ckanext.datastore.backend.postgres import _guess_type
+from ckanext.datapusher.interfaces import IDataPusher
 
 import ckanext.knowledgehub.helpers as h
 from ckanext.knowledgehub.helpers import _register_blueprints
@@ -76,6 +77,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
     plugins.implements(interfaces.IDatastoreBackend, inherit=True)
     plugins.implements(plugins.IAuthenticator, inherit=True)
     plugins.implements(plugins.IPermissionLabels)
+    plugins.implements(IDataPusher, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -564,6 +566,12 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
         labels.extend(u'member-%s' % g[u'id'] for g in groups)
 
         return labels
+
+    # IDataPusher
+    def after_upload(self, context, resource_dict, dataset_dict):
+        from ckanext.knowledgehub.logic.jobs import schedule_data_quality_check
+
+        schedule_data_quality_check(dataset_dict['id'], force_recalculate=True)
 
 
 class DatastorePostgresqlBackend(DatastorePostgresqlBackend):
