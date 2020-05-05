@@ -199,6 +199,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'calculate_time_passed': h.calculate_time_passed,
             'check_if_dataset_is_on_hdx': h.check_if_dataset_is_on_hdx,
             'human_elapsed_time': h.human_elapsed_time,
+            'get_requested_resource_type_and_ref':
+                h.get_requested_resource_type_and_ref,
         }
 
     # IDatasetForm

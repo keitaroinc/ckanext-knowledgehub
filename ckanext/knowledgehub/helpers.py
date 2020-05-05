@@ -1727,3 +1727,28 @@ def human_elapsed_time(dt):
     if isinstance(dt, str) or isinstance(dt, unicode):
         dt = parser.parse(dt)
     return humanize.naturaltime(now - dt)
+
+
+def get_requested_resource_type_and_ref():
+    if 'pylons.original_request' not in request.environ:
+        raise Exception('Cannot determine original request.')
+
+    path = request.environ['pylons.original_request'].path_qs
+
+    patterns = {
+        'dataset': r'^/dataset/(?P<ref>[^/]+)$',
+        'dashboard': r'^/dashboards/(?P<ref>[^/]+)/view$',
+        'visualization':
+            r'^/dataset/[^/]+/resource/[^/]+$\?view_id=(?P<ref>[a-f0-9\-]+)',
+    }
+
+    for entity_type, pattern in patterns.items():
+        match = re.match(pattern, path)
+        if match:
+            entity_ref = match.group('ref')
+            return {
+                'entity_type': entity_type,
+                'entity_ref': entity_ref,
+            }
+
+    return None
