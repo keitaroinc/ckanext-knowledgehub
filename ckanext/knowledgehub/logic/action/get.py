@@ -14,6 +14,8 @@ from ckan import lib
 from ckan import model
 from ckan.model.meta import Session
 from ckanext.knowledgehub.model import (
+    AccessRequest,
+    AssignedAccessRequest,
     Theme,
     SubThemes,
     ResearchQuestion,
@@ -2260,3 +2262,48 @@ def post_search(context, data_dict):
             })
 
     return posts
+
+
+def access_request_list(context, data_dict):
+    check_access('access_request_list', context, data_dict)
+
+    user = context.get('auth_user_obj')
+    is_sysadmin = hasattr(user, 'sysadmin') and user.sysadmin
+
+    page = int(data_dict.get('page', 1))
+    limit = int(data_dict.get('limit', 20))
+    status = data_dict.get('status', '').lower()
+    requested_by = data_dict.get('requested_by', '').strip()
+    offset = max(0, (page-1) * limit)
+
+    count = AccessRequest.get_all_count(
+        assigned_to=user.id,
+        requested_by=requested_by,
+        status=status,
+    )
+
+    results = AccessRequest.get_all(
+        assigned_to=user.id,
+        requested_by=requested_by,
+        status=status,
+        offset=offset,
+        limit=limit,
+    )
+
+    items = []
+    for access_req, requested_by in results:
+        access_req = _table_dictize(access_req, context)
+        access_req['user'] = {
+            'id': requested_by.id,
+            'username': requested_by.name,
+            'full_name': requested_by.display_name or
+            requested_by.full_name or requested_by.name,
+        }
+        items.append(access_req)
+
+    return {
+        'count': count,
+        'results': items,
+        'page': page,
+        'limit': limit,
+    }

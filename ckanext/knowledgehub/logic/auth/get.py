@@ -168,3 +168,7 @@ def post_show(context, data_dict=None):
 
 def post_search(context, data_dict=None):
     return {'success': True}
+
+
+def access_request_list(context, data_dict=None):
+    return {'success': True}

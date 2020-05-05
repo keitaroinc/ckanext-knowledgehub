@@ -106,3 +106,11 @@ def datastore_create(action, context, data_dict=None):
 
 def notifications_read(context, data_dict):
     return {'success': True}
+
+
+def access_request_grant(context, data_dict):
+    return {'success': True}
+
+
+def access_request_decline(context, data_dict):
+    return {'success': True}
