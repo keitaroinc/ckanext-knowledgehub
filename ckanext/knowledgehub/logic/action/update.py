@@ -42,6 +42,10 @@ from ckanext.knowledgehub.model import Keyword
 from ckanext.knowledgehub.model import UserProfile
 from ckanext.knowledgehub.model.keyword import ExtendedTag
 from ckanext.knowledgehub.model import Notification
+from ckanext.knowledgehub.model import (
+    AccessRequest,
+    AssignedAccessRequest,
+)
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
 from ckanext.knowledgehub import helpers as plugin_helpers
@@ -1743,3 +1747,51 @@ def notifications_read(context, data_dict):
     Notification.mark_read(user.id, data_dict.get('notifications'))
 
     return {}
+
+
+def _access_request_update(context, data_dict, granted=True):
+    check_access(
+        'access_request_grant' if granted else 'access_request_declined',
+        context,
+        data_dict
+    )
+
+    if 'id' not in data_dict:
+        raise ValidationError({'id': [_('Missing value')]})
+
+    request_id = data_dict.get('id').strip()
+
+    user = context.get('auth_user_obj')
+    is_sysamidn = hasattr(user, 'sysadmin') and user.sysadmin
+
+    access_request = AccessRequest.get(request_id)
+    if not access_request:
+        raise logic.NotFound(_('Access request not found'))
+
+    record = AssignedAccessRequest.get_assigned_request(request_id, user.id)
+    if not record:
+        if not is_sysamidn:
+            raise logic.NotAuthorized(
+                    _('You are not authorized to {} '
+                      'this request'.format('grant' if granted else 'decline'))
+            )
+
+    access_request.modified_at = datetime.datetime.now()
+    access_request.status = 'granted' if granted else 'declined'
+    access_request.resolved_by = user.id
+
+    AssignedAccessRequest.delete_assigned_requests(request_id)
+
+    access_request.save()
+
+    # TODO: Send notifications
+
+    return _table_dictize(access_request, context)
+
+
+def access_request_grant(context, data_dict):
+    return _access_request_update(context, data_dict, granted=True)
+
+
+def access_request_decline(context, data_dict):
+    return _access_request_update(context, data_dict, granted=False)

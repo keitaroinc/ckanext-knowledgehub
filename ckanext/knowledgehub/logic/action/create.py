@@ -30,6 +30,8 @@ from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.logic.action.get import user_query_show
 from ckanext.knowledgehub.model.theme import Theme
 from ckanext.knowledgehub.model import (
+    AccessRequest,
+    AssignedAccessRequest,
     SubThemes,
     ResearchQuestion,
     Dashboard,
@@ -1724,3 +1726,156 @@ def post_create(context, data_dict):
     Posts.add_to_index(post_data)
 
     return post_data
+
+
+def request_access(context, data_dict):
+    check_access('request_access', context, data_dict)
+    user = context.get('auth_user_obj')
+    if not user:
+        raise logic.NotAuthorized(_('Must be logged in to request access.'))
+
+    entity_type = data_dict.get('entity_type', '').lower()
+    entity_ref = data_dict.get('entity_ref')
+    errors = {}
+    if not entity_type:
+        errors['entity_type'] = [_('Missing Value')]
+    if not entity_ref:
+        errors['entity_ref'] = [_('Missing Value')]
+
+    if entity_type not in ['dashboard', 'visualization', 'dataset']:
+        errors['entity_type'] = errors.get('entity_type', [])
+        errors['entity_type'].append(_('Invalid value'))
+
+    if errors:
+        raise ValidationError(errors)
+
+    existing_request = AccessRequest.get_active_for_user_and_entity(
+        entity_type,
+        entity_ref,
+        user.id
+    )
+
+    if existing_request:
+        raise ValidationError({'id': [_('Request already created.')]})
+
+    entities_actions = {
+        'dashboard': 'dashboard_show',
+        'dataset': 'package_show',
+        'visualization': 'resource_view_show',
+    }
+
+    entity = None
+    action = entities_actions[entity_type]
+    try:
+        entity = toolkit.get_action(action)(context, {
+            'id': entity_ref,
+        })
+    except logic.NotFound as e:
+        raise e
+    except Exception as e:
+        log.error('Failed to get entity using %s. Error: %s', action, str(e))
+        log.exception(e)
+        raise e
+
+    # Lookup organization admins and system admins
+    organizations = set()
+    if entity_type == 'dataset':
+        organizations.add(entity['organization']['id'])
+    elif entity_type == 'visualization':
+        try:
+            dataset = toolkit.get_action('package_show')({
+                'ignore_auth': True,
+            }, {
+                'id': entity['package_id'],
+            })
+        except logic.NotFound as e:
+            raise e
+        except Exception as e:
+            log.error('Failed to fetch dataset for visualization. '
+                      'Dataset: %s. Error: %s', entity['package_id'], str(e))
+            log.exception(e)
+            raise e
+        organizations.add(dataset['organization']['id'])
+    elif entity_type == 'dashboard':
+        datasets = entity.get('datasets', '').split(',')
+        for dataset in datasets:
+            dataset = dataset.strip()
+            if not dataset:
+                continue
+            try:
+                dataset = toolkit.get_action('package_show')({
+                    'igore_auth': True,
+                }, {
+                    'id': dataset,
+                })
+            except logic.NotFound as e:
+                raise e
+            except Exception as e:
+                log.error('Failed to fetch dataset for dashboard. '
+                          'Dataset: %s. Error: %s', dataset, str(e))
+                log.exception(e)
+                raise e
+
+            organizations.add(dataset['organization']['id'])
+    else:
+        log.warning('Entity type is %s', entity_type)
+
+    users = set()
+    for organization in organizations:
+        try:
+            members = toolkit.get_action('member_list')({
+                'ignore_auth': True,
+            }, {
+                'id': organization,
+                'object_type': 'user',
+                'capacity': 'admin',
+            })
+            for member in members:
+                users.add(member[0])
+        except Exception as e:
+            log.warning('Failed to fetch admins for organization %s. '
+                        'Error: %s', organization, str(e))
+            log.exception(e)
+
+    sysadmins = _find_sysadmins()
+    for sysadmin in sysadmins:
+        users.add(sysadmin.id)
+
+    try:
+        model.Session.begin(subtransactions=True)
+        access_request = AccessRequest(
+            user_id=user.id,
+            entity_type=entity_type,
+            entity_ref=entity_ref,
+        )
+
+        access_request.save()
+
+        for user_id in users:
+            assigned = AssignedAccessRequest(
+                request_id=access_request.id,
+                user_id=user_id,
+            )
+            assigned.save()
+
+        model.Session.commit()
+        model.Session.flush()
+    except Exception as e:
+        log.exception(e)
+        model.Session.rollback()
+        raise e
+
+    access_request_dict = _table_dictize(access_request, context)
+
+    # TODO: send notifications
+
+    return access_request_dict
+
+
+def _find_sysadmins():
+    q = model.Session.query(model.User)
+    q = q.filter(model.user_table.c.sysadmin is True)
+    sysadmins = []
+    for user in q.all():
+        sysadmins.append(user)
+    return sysadmins

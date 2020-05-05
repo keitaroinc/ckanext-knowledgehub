@@ -146,3 +146,7 @@ def member_create(context, data_dict=None):
 
 def post_create(context, data_dict=None):
     return {'success': True}
+
+
+def request_access(context, data_dict=None):
+    return {'success': True}

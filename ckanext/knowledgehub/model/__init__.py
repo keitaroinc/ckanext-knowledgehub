@@ -15,9 +15,15 @@ from ckanext.knowledgehub.model.user_profile import UserProfile
 from ckanext.knowledgehub.model.keyword import Keyword, ExtendedTag
 from ckanext.knowledgehub.model.notification import Notification
 from ckanext.knowledgehub.model.posts import Posts
+from ckanext.knowledgehub.model.access_request import (
+    AccessRequest,
+    AssignedAccessRequest,
+)
 
 
 __all__ = [
+    'AccessRequest',
+    'AssignedAccessRequest',
     'Theme',
     'SubThemes',
     'ResearchQuestion',
