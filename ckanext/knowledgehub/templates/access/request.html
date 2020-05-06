@@ -1,5 +1,23 @@
 {% extends "page.html" %}
 
 {% block primary_content %}
-    REQUEST SENT
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            {% if errors %}
+                <h3>{{ _('An error has occured while requesting access') }}</h3>
+                <ul>
+                    {% for err in errors %}
+                    <li>{{ err }}</li>
+                    {% endfor%}
+                </ul>
+                <a href="{{ h.url_for('/') }}" class="btn btn-primary pull-right">{{ _('OK') }}</a>
+            {% else %}
+                <h3>{{ _('Request sent') }}</h3>
+                {{ _('Your request has been successfully sent to be approved.') }}
+                <a href="{{ h.url_for('/') }}" class="btn btn-primary pull-right">{{ _('OK') }}</a>
+            {% endif%}
+        </div>
+    </div>
+</div>
 {% endblock %}
