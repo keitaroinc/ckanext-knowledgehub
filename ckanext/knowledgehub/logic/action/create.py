@@ -1767,7 +1767,9 @@ def request_access(context, data_dict):
     entity = None
     action = entities_actions[entity_type]
     try:
-        entity = toolkit.get_action(action)(context, {
+        entity = toolkit.get_action(action)({
+            'ignore_auth': True,
+        }, {
             'id': entity_ref,
         })
     except logic.NotFound as e:
@@ -1780,7 +1782,7 @@ def request_access(context, data_dict):
     # Lookup organization admins and system admins
     organizations = set()
     if entity_type == 'dataset':
-        organizations.add(entity['organization']['id'])
+        organizations.add(entity.get('owner_org'))
     elif entity_type == 'visualization':
         try:
             dataset = toolkit.get_action('package_show')({
@@ -1795,7 +1797,7 @@ def request_access(context, data_dict):
                       'Dataset: %s. Error: %s', entity['package_id'], str(e))
             log.exception(e)
             raise e
-        organizations.add(dataset['organization']['id'])
+        organizations.add(dataset.get('owner_org'))
     elif entity_type == 'dashboard':
         datasets = entity.get('datasets', '').split(',')
         for dataset in datasets:
@@ -1816,7 +1818,7 @@ def request_access(context, data_dict):
                 log.exception(e)
                 raise e
 
-            organizations.add(dataset['organization']['id'])
+            organizations.add(dataset.get('owner_org'))
     else:
         log.warning('Entity type is %s', entity_type)
 
