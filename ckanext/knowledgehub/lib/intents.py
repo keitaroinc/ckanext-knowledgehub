@@ -171,6 +171,9 @@ class UserIntentsExtractor:
         }
 
     def _extract_research_question(self, query_text):
+        query_text = query_text.strip()
+        if not query_text:
+            return (None, None, None)
         results = self.research_question.search_index(q='text:' + query_text,
                                                       rows=1)
         if results.hits:

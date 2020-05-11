@@ -7,6 +7,7 @@ import ckan.lib.helpers as h
 import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
+from ckan import authz
 from ckan.common import _, config, g, request
 from ckan.logic import (
     get_action,
@@ -33,7 +34,28 @@ def _get_context():
                 session=model.Session)
 
 
-def request(entity_type, entity_ref):
+def _extra_template_variables(context, data_dict):
+    is_sysadmin = authz.is_sysadmin(g.user)
+    try:
+        user_dict = logic.get_action(u'user_show')(context, data_dict)
+    except logic.NotFound:
+        h.flash_error(_(u'Not authorized to see this page'))
+        return
+    except logic.NotAuthorized:
+        base.abort(403, _(u'Not authorized to see this page'))
+
+    is_myself = user_dict[u'name'] == g.user
+    about_formatted = h.render_markdown(user_dict[u'about'])
+    extra = {
+        u'is_sysadmin': is_sysadmin,
+        u'user_dict': user_dict,
+        u'is_myself': is_myself,
+        u'about_formatted': about_formatted
+    }
+    return extra
+
+
+def request_access(entity_type, entity_ref):
     context = _get_context()
     try:
         check_access('request_access', context, {})
@@ -70,4 +92,98 @@ def request(entity_type, entity_ref):
     return base.render('access/request.html', extra_vars=extra_vars)
 
 
-access.add_url_rule('/request/<entity_type>/<entity_ref>', view_func=request)
+def requests_list():
+    context = _get_context()
+    check_access('access_request_list', context, {})
+
+    context = {
+        u'model': model,
+        u'session': model.Session,
+        u'user': g.user,
+        u'auth_user_obj': g.userobj,
+        u'for_view': True
+    }
+    extra_vars = _extra_template_variables(context, {
+        'user_obj': g.userobj,
+        'user': g.userobj,
+    })
+
+    return base.render('access/requests_list.html', extra_vars=extra_vars)
+
+
+def grant(id):
+    context = _get_context()
+    try:
+        check_access('access_request_grant', context, {})
+    except NotAuthorized:
+        base.abort(403, _('You do not have permission to grant '
+                          'access to this resource.'))
+
+    access_request = get_action('access_request_grant')(context, {'id': id})
+
+    try:
+        user = get_action('user_show')({'ignore_auth': True},
+                                       {'id': access_request.get('user_id')})
+        access_request['user'] = user
+    except Exception as e:
+        log.error('Error while fetching user for access request. Error: %s',
+                  str(e))
+        log.exception(e)
+        base.abort(500, _('An unexpected error occured while trying to '
+                          'grant access. Error: {}').format(str(e)))
+
+    extra_vars = _extra_template_variables(context, {
+        'user_obj': g.userobj,
+        'user': g.userobj,
+    })
+
+    extra_vars.update({
+        'access_request': access_request,
+    })
+
+    return base.render('access/granted.html', extra_vars)
+
+
+def decline(id):
+    context = _get_context()
+    try:
+        check_access('access_request_decline', context, {})
+    except NotAuthorized:
+        base.abort(403, _('You do not have permission to decline the request '
+                          'for access to this resource.'))
+
+    access_request = get_action('access_request_decline')(context, {'id': id})
+
+    try:
+        user = get_action('user_show')({'ignore_auth': True},
+                                       {'id': access_request.get('user_id')})
+        access_request['user'] = user
+    except Exception as e:
+        log.error('Error while fetching user for access request. Error: %s',
+                  str(e))
+        log.exception(e)
+        base.abort(500, _('An unexpected error occured while trying to '
+                          'grant access. Error: {}').format(str(e)))
+
+    extra_vars = _extra_template_variables(context, {
+        'user_obj': g.userobj,
+        'user': g.userobj,
+    })
+
+    extra_vars.update({
+        'access_request': access_request,
+    })
+
+    return base.render('access/declined.html', extra_vars)
+
+
+def register_url_rules(user_dashboard_blueprint):
+    user_dashboard_blueprint.add_url_rule('/access_requests',
+                                          view_func=requests_list,
+                                          strict_slashes=False)
+
+
+access.add_url_rule('/request/<id>/grant', view_func=grant)
+access.add_url_rule('/request/<id>/decline', view_func=decline)
+access.add_url_rule('/request/<entity_type>/<entity_ref>',
+                    view_func=request_access)

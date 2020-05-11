@@ -1751,7 +1751,7 @@ def notifications_read(context, data_dict):
 
 def _access_request_update(context, data_dict, granted=True):
     check_access(
-        'access_request_grant' if granted else 'access_request_declined',
+        'access_request_grant' if granted else 'access_request_decline',
         context,
         data_dict
     )

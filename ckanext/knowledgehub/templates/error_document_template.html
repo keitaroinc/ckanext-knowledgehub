@@ -7,7 +7,7 @@
     {% if status_code == '403' %}
         {% set entity = h.get_requested_resource_type_and_ref() %}
         {% if entity %}
-            <a href="{{ h.url_for('access.request', entity_type=entity.entity_type, entity_ref=entity.entity_ref) }}" class="btn btn-primary">
+            <a href="{{ h.url_for('access.request_access', entity_type=entity.entity_type, entity_ref=entity.entity_ref) }}" class="btn btn-primary">
                 {{ _('Request Access') }}
             </a>
         {% endif %}

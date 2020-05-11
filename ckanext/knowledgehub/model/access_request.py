@@ -49,6 +49,8 @@ access_request_table = Table(
            default=datetime.datetime.utcnow),
     Column('entity_type', types.String(20), nullable=False),
     Column('entity_ref', types.UnicodeText, nullable=False),
+    Column('entity_title', types.UnicodeText),
+    Column('entity_link', types.UnicodeText),
     Column('status', types.String(20), nullable=False, default='pending'),
     Column('resolved_by', types.UnicodeText),
 )
@@ -77,7 +79,6 @@ class AccessRequest(DomainObject):
         q = q.filter(access_request_table.c.entity_ref == entity_ref)
         q = q.filter(access_request_table.c.user_id == user_id)
         q = q.filter(access_request_table.c.status == 'pending')
-        print q
         return q.first()
 
     @classmethod
@@ -86,6 +87,7 @@ class AccessRequest(DomainObject):
                 requested_by=None,
                 order_by='created_at desc',
                 status='pending',
+                search='',
                 offset=0,
                 limit=20):
         q = Session.query(AccessRequest, User).join(AssignedAccessRequest)
@@ -97,6 +99,9 @@ class AccessRequest(DomainObject):
             q = q.filter(access_request_table.c.user_id == requested_by)
         if status:
             q = q.filter(access_request_table.c.status == status)
+        if search:
+            q = q.filter(func.lower(access_request_table.c.entity_title).like(
+                func.lower('%{}%'.format(search))))
 
         q = q.order_by(order_by)
         q = q.limit(limit).offset(offset)
@@ -108,7 +113,8 @@ class AccessRequest(DomainObject):
                       assigned_to=None,
                       requested_by=None,
                       order_by='created_at desc',
-                      status='pending'):
+                      status='pending',
+                      search=''):
         q = Session.query(func.count(func.distinct(access_request_table.c.id)))
         if assigned_to:
             q = q.join(AssignedAccessRequest)
@@ -118,6 +124,10 @@ class AccessRequest(DomainObject):
             q = q.filter(access_request_table.c.user_id == requested_by)
         if status:
             q = q.filter(access_request_table.c.status == status)
+
+        if search:
+            q = q.filter(func.lower(access_request_table.c.entity_title).like(
+                func.lower('%{}%'.format(search))))
 
         return q.scalar()
 
@@ -134,7 +144,10 @@ class AssignedAccessRequest(DomainObject):
 
     @classmethod
     def delete_assigned_requests(cls, request_id):
-        pass
+        d = assigned_access_requests_table.delete().where(
+            assigned_access_requests_table.c.request_id == request_id
+        )
+        d.execute()
 
 
 mapper(AccessRequest, access_request_table)

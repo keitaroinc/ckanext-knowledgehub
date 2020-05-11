@@ -1806,7 +1806,7 @@ def request_access(context, data_dict):
                 continue
             try:
                 dataset = toolkit.get_action('package_show')({
-                    'igore_auth': True,
+                    'ignore_auth': True,
                 }, {
                     'id': dataset,
                 })
@@ -1844,11 +1844,31 @@ def request_access(context, data_dict):
         users.add(sysadmin.id)
 
     try:
+        entity_link = None
+        if entity_type == 'dataset':
+            entity_link = url_for(
+                controller='package',
+                action='read',
+                id=entity.get('name'))
+        elif entity_type == 'visualization':
+            entity_link = url_for(
+                controller='package',
+                action='resource_read',
+                id=entity.get('package_id'),
+                resource_id=entity.get('resource_id'),
+                view_id=entity.get('id'))
+        elif entity_type == 'dashboard':
+            entity_link = url_for(
+                'dashboards.view',
+                name=entity.get('name'))
+
         model.Session.begin(subtransactions=True)
         access_request = AccessRequest(
             user_id=user.id,
             entity_type=entity_type,
             entity_ref=entity_ref,
+            entity_title=entity.get('title'),
+            entity_link=entity_link,
         )
 
         access_request.save()
@@ -1876,7 +1896,7 @@ def request_access(context, data_dict):
 
 def _find_sysadmins():
     q = model.Session.query(model.User)
-    q = q.filter(model.user_table.c.sysadmin is True)
+    q = q.filter(model.user_table.c.sysadmin == True)
     sysadmins = []
     for user in q.all():
         sysadmins.append(user)
