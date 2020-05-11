@@ -2274,6 +2274,7 @@ def access_request_list(context, data_dict):
     limit = int(data_dict.get('limit', 20))
     status = data_dict.get('status', '').lower()
     requested_by = data_dict.get('requested_by', '').strip()
+    search = data_dict.get('search', '').strip()
     offset = max(0, (page-1) * limit)
 
     count = AccessRequest.get_all_count(
@@ -2286,6 +2287,7 @@ def access_request_list(context, data_dict):
         assigned_to=user.id,
         requested_by=requested_by,
         status=status,
+        search=search,
         offset=offset,
         limit=limit,
     )
@@ -2299,6 +2301,10 @@ def access_request_list(context, data_dict):
             'full_name': requested_by.display_name or
             requested_by.full_name or requested_by.name,
         }
+        access_req['grant_url'] = h.url_for('access.grant',
+                                            id=access_req['id'])
+        access_req['decline_url'] = h.url_for('access.decline',
+                                              id=access_req['id'])
         items.append(access_req)
 
     return {

@@ -1,0 +1,82 @@
+{% resource 'knowledgehub/table' %}
+{% resource 'knowledgehub/javascript/access_requests.js' %}
+
+{% extends "user/dashboard.html" %}
+
+{% block dashboard_activity_stream_context %}{% endblock %}
+
+{% block page_primary_action %}
+  
+{% endblock %}
+
+{% block primary_content_inner %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>{{ _('Requests for acces to data') }}</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table id="access_requests" class="table table-hover dataTable dataTables_wrapper">
+                <thead>
+                    <tr id="access_requests-header">
+                        <th>{{ _('Requested') }}</th>
+                        <th>{{ _('Type') }}</th>
+                        <th>{{ _('Requested By') }}</th>
+                        <th>{{ _('Requested At') }}</th>
+                        <th>{{ _('Action') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalGrant" tabindex="-1" role="dialog" aria-labelledby="modalDelete" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title">{{ _('Grant Access') }}
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </h5>
+            </div>
+            <div class="modal-body mx-3">
+                <p class="text-center">
+                    {{ _('You are about to grant access to this resource. Continue?') }}
+                </p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center deleteButtonsWrapper">
+                <button type="button" class="btn btn-danger btnYesClass" id="btnYes" data-dismiss="modal">{{ _('Yes') }}</button>
+                <button type="button" class="btn btn-primary btnNoClass" id="btnNo" data-dismiss="modal">{{ _('No') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalDecline" tabindex="-1" role="dialog" aria-labelledby="modalDelete" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title">
+                    {{ _('Decline request') }}
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </h5>
+            </div>
+            <div class="modal-body mx-3">
+                <p class="text-center">
+                    {{ _('Are you sure you want to decline this request?') }}
+                </p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center deleteButtonsWrapper">
+                <button type="button" class="btn btn-danger btnYesClass" id="btnYes" data-dismiss="modal">{{ _('Yes') }}</button>
+                <button type="button" class="btn btn-primary btnNoClass" id="btnNo" data-dismiss="modal">{{ _('No') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

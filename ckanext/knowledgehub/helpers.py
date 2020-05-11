@@ -1715,11 +1715,15 @@ def get_members(context, group_id):
 
 
 def check_if_dataset_is_on_hdx(dataset_name):
-
-    dataset = Dataset.read_from_hdx(dataset_name)
-    if not dataset:
-        return False
-    return True
+    try:
+        dataset = Dataset.read_from_hdx(dataset_name)
+        if not dataset:
+            return False
+        return True
+    except Exception as e:
+        log.error('Failed to read from HDX. Error: %s', str(e))
+        log.exception(e)
+    return False
 
 
 def human_elapsed_time(dt):
