@@ -1831,8 +1831,36 @@ def _access_request_update(context, data_dict, granted=True):
     access_request.save()
 
     if granted:
-        # TODO: Notifications.
-        pass
+        try:
+            toolkit.get_action('notification_create')({
+                'ignore_auth': True,
+                'auth_user_obj': user,
+            }, {
+                'title': _('Request for access approved'),
+                'description': _('Your request for access has been approved.'),
+                'link': access_request.entity_link,
+                'recipient': access_request.user_id,
+            })
+        except Exception as e:
+            log.error('Failed to send notification for access granted. '
+                      'Error: %s', str(e))
+            log.exception(e)
+
+        try:
+            schedule_notification_email(access_request.user_id,
+                                        'access_request_granted',
+                                        {
+                                            'entity_type':
+                                                access_request.entity_type,
+                                            'entity_title':
+                                                access_request.entity_title,
+                                            'entity_link':
+                                                access_request.entity_link,
+                                        })
+        except Exception as e:
+            log.error('Failed to schedule email notification. Error: %s',
+                      str(e))
+            log.exception(e)
 
     return _table_dictize(access_request, context)
 

@@ -1,0 +1,11 @@
+Hello {{recipient.display_name or recipient.fullname or recipient.username}},
+
+Your request to access "{{ entity_title }}" was granted.
+
+You can access the resource on the URL bellow:
+
+{{site_url}}{{entity_link}}
+
+Thanks,
+
+UNHCR KnowledgeHub Team
