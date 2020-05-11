@@ -1749,6 +1749,33 @@ def notifications_read(context, data_dict):
     return {}
 
 
+def _grant_access_dataset(context, id, user_id):
+    dataset = toolkit.get_action('package_show')(context, {'id': id})
+    shared_with_users = get_as_list('shared_with_users', dataset)
+    if user_id in shared_with_users:
+        return
+    shared_with_users.append(user_id)
+    toolkit.get_action('package_update')(context, {
+        'id': id,
+        'shared_with_users': shared_with_users,
+    })
+
+
+def _grant_access_dashboard(context, id, user_id):
+    dashboard = toolkit.get_action('dashboard_show')(context, {'id': id})
+    shared_with_users = get_as_list('shared_with_users', dashboard)
+    if user_id in shared_with_users:
+        return
+    shared_with_users.append(user_id)
+    dashboard['shared_with_users'] = shared_with_users
+    toolkit.get_action('dashboard_update')(context, dashboard)
+
+
+def _grant_access_visualization(context, id, user_id):
+    rv = toolkit.get_action('resource_view_show')(context, {'id': id})
+    return _grant_access_dataset(context, rv['package_id'], user_id)
+
+
 def _access_request_update(context, data_dict, granted=True):
     check_access(
         'access_request_grant' if granted else 'access_request_decline',
@@ -1776,6 +1803,25 @@ def _access_request_update(context, data_dict, granted=True):
                       'this request'.format('grant' if granted else 'decline'))
             )
 
+    if granted:
+        entity_type = access_request.entity_type
+        entity_ref = access_request.entity_ref
+        user_id = access_request.user_id
+        grant_actions = {
+            'dataset': _grant_access_dataset,
+            'dashboard': _grant_access_dashboard,
+            'visualization': _grant_access_visualization,
+        }
+
+        if entity_type not in grant_actions:
+            raise ValidationError({'entity_type': [
+                _('Invalid value. Expected one of {}.').format(
+                    ', '.join(grant_actions.keys())
+                )
+            ]})
+
+        grant_actions[entity_type](context, entity_ref, user_id)
+
     access_request.modified_at = datetime.datetime.now()
     access_request.status = 'granted' if granted else 'declined'
     access_request.resolved_by = user.id
@@ -1784,7 +1830,9 @@ def _access_request_update(context, data_dict, granted=True):
 
     access_request.save()
 
-    # TODO: Send notifications
+    if granted:
+        # TODO: Notifications.
+        pass
 
     return _table_dictize(access_request, context)
 
