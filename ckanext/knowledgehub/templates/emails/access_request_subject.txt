@@ -1,1 +1,1 @@
-[UNHCR KnowledgeHub] Access Requested to {{ entity_title }}
+[UNHCR KnowledgeHub] Access requested to {{ entity_title }}
