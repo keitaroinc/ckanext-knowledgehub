@@ -1,0 +1,15 @@
+Hello {{recipient.display_name or recipient.fullname or recipient.username}},
+
+User {{ requested_by.display_name or requested_by.fullname or requested_by.username }} has requested access to "{{ entity_title }}".
+
+Follow the link bellow to check the requests for access that you can approve:
+
+{{site_url}}/dashboard/access_requests
+
+You can view the resource here:
+
+{{site_url}}{{entity_link}}
+
+Thanks,
+
+UNHCR KnowledgeHub Team

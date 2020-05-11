@@ -1889,7 +1889,38 @@ def request_access(context, data_dict):
 
     access_request_dict = _table_dictize(access_request, context)
 
-    # TODO: send notifications
+    for recipient in users:
+        # Send notification to approvers
+        try:
+            toolkit.get_action('notification_create')({
+                'ignore_auth': True,
+                'auth_user_obj': user,
+            }, {
+                'title': _('Request for access'),
+                'description': _('Access was requested to {}.').format(
+                    access_request.entity_title),
+                'link': url_for('user_dashboard.requests_list'),
+                'recepient': recipient,
+            })
+        except Exception as e:
+            log.error('Failed to send notification for access request '
+                      'to user %s. Error: %s',
+                      recipient,
+                      str(e))
+            log.exception(e)
+
+        # Send notification email approver
+        try:
+            schedule_notification_email(recipient, 'access_request', {
+                'entity_type': access_request.entity_type,
+                'entity_title': access_request.entity_title,
+                'entity_link': access_request.entity_link,
+                'requested_by': user,
+            })
+        except Exception as e:
+            log.error('Failed to schedule notification email to %s. Error: %s',
+                      recipient, str(e))
+            log.exception(e)
 
     return access_request_dict
 
