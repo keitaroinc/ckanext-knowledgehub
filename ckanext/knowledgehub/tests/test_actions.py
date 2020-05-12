@@ -4,6 +4,7 @@ import os
 import mock
 import nose.tools
 import json
+from itertools import product
 
 from ckan.tests import factories
 from ckan import plugins
@@ -46,6 +47,8 @@ from ckanext.knowledgehub.model import (
     DataQualityMetrics as DataQualityMetricsModel,
     ResourceValidate,
     Posts,
+    AssignedAccessRequest,
+    AccessRequest,
 )
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
@@ -657,6 +660,32 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(post.get('entity_ref'), rq['id'])
         assert_true(post.get('created_by') is not None)
         assert_true(post.get('created_at') is not None)
+
+    def test_request_access(self):
+        model.Session.query(AssignedAccessRequest).delete()
+        model.Session.query(AccessRequest).delete()
+        ctx = get_context()
+        usr_ctx = get_regular_user_context()
+
+        dataset = toolkit.get_action('package_create')(ctx, {
+            'name': 'test-dataset',
+            'title': 'Test Dataset',
+        })
+
+        req = toolkit.get_action('request_access')(usr_ctx, {
+            'entity_type': 'dataset',
+            'entity_ref': dataset['id'],
+        })
+
+        assert_true(req is not None)
+        assert_equals(req.get('entity_type'), 'dataset')
+        assert_equals(req.get('entity_ref'), dataset['id'])
+        assert_equals(req.get('entity_title'), 'Test Dataset')
+        assert_equals(req.get('user_id'), usr_ctx.get('auth_user_obj').id)
+
+        result = toolkit.get_action('access_request_list')(ctx, {})
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 1)
 
 
 class TestKWHGetActions(ActionsBase):
@@ -1302,6 +1331,44 @@ class TestKWHGetActions(ActionsBase):
 
         assert_true(results is not None)
         assert_true(results.get('count', 0) == 2)
+
+    def test_access_request_list(self):
+        model.Session.query(AssignedAccessRequest).delete()
+        model.Session.query(AccessRequest).delete()
+
+        adm_ctx = get_context()
+        usr1_ctx = get_regular_user_context()
+        usr2_ctx = get_regular_user_context()
+
+        dataset1 = toolkit.get_action('package_create')({
+            'ignore_auth': True,
+            'user': adm_ctx.get('user'),
+            'auth_user_obj': adm_ctx.get('auth_user_obj'),
+        }, {
+            'name': 'acc-req-test-dataset-1',
+            'title': 'Test Dataset 1',
+        })
+
+        dataset2 = toolkit.get_action('package_create')({
+            'ignore_auth': True,
+            'user': adm_ctx.get('user'),
+            'auth_user_obj': adm_ctx.get('auth_user_obj'),
+        }, {
+            'name': 'acc-req-test-dataset-2',
+            'title': 'Test Dataset 2',
+        })
+
+        for ctx, dst in product([usr1_ctx, usr2_ctx], [dataset1, dataset2]):
+            toolkit.get_action('request_access')(ctx, {
+                'entity_type': 'dataset',
+                'entity_ref': dst['id'],
+            })
+
+        result = toolkit.get_action('access_request_list')(adm_ctx, {})
+
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 4)
+        assert_equals(len(result.get('results', [])), 4)
 
 
 class TestKWHDeleteActions(ActionsBase):
@@ -2046,140 +2113,79 @@ class TestKWHUpdateActions(ActionsBase):
 
         assert_equals(len(res_data), 7)
 
-    # TODO: the next two tests give error when we add filters, the end result
-    #       is written for printing errors only
+    def test_access_request_grant(self):
+        model.Session.query(AssignedAccessRequest).delete()
+        model.Session.query(AccessRequest).delete()
+        adm_ctx = get_context()
+        usr_ctx = get_regular_user_context()
 
-    # def test_get_chart_data(self):
+        dataset = toolkit.get_action('package_create')(adm_ctx, {
+            'name': 'acc-req-test-dataset-3',
+            'title': 'Access Req Test Dataset 3',
+        })
 
-    #     user = factories.Sysadmin()
-    #     context = {
-    #         'user': user.get('name'),
-    #         'auth_user_obj': User(user.get('id')),
-    #         'ignore_auth': True,
-    #         'model': model,
-    #         'session': model.Session
-    #     }
-    #     dataset = create_dataset()
-    #     data = {
-    #        "fields": [{"id": "value", "type": "numeric"}],
-    #         "records": [
-    #             {"value": 0},
-    #             {"value": 1},
-    #             {"value": 2},
-    #             {"value": 3},
-    #             {"value": 5},
-    #             {"value": 6},
-    #             {"value": 7},
-    #         ],
-    #         "filters": {"value" : 0},
-    #         "force": True
-    #     }
-    #     resource = factories.Resource(
-    #         schema='',
-    #         validation_options='',
-    #         package_id=dataset['id'],
-    #         datastore_active=True,
-    #     )
-    #     data['resource_id'] = resource['id']
-    #     helpers.call_action('datastore_create', **data)
-    #     sql_str = u'''SELECT DISTINCT "{column}"
-    #     FROM "{resource}" GROUP BY "{column}"'''.format(
-    #         column="value",
-    #         resource=resource['id']
-    #     )
-    #     data_dict = {
-    #         'resource_id': resource['id'],
-    #         'category': "records",
-    #         'sql_string': sql_str,
-    #         'filters': { "value": 0 },
-    #         'x_axis': "value",
-    #         'y_axis': "value"
+        req = AccessRequest(
+            entity_type='dataset',
+            entity_ref=dataset['id'],
+            entity_title=dataset['title'],
+            entity_link='/dataset/link',
+            user_id=usr_ctx['auth_user_obj'].id,
+        )
 
-    #     }
-    #     chart_data = get_actions.get_chart_data(context, data_dict)
-    #     assert_equals(chart_data, "")
+        req.save()
 
-    # def test_visualizations_for_rq(self):
+        assigned = AssignedAccessRequest(
+            request_id=req.id,
+            user_id=adm_ctx['auth_user_obj'].id,
+        )
+        assigned.save()
 
-    #     user = factories.Sysadmin()
-    #     context = {
-    #         'user': user.get('name'),
-    #         'auth_user_obj': User(user.get('id')),
-    #         'ignore_auth': True,
-    #         'model': model,
-    #         'session': model.Session
-    #     }
+        model.Session.flush()
 
-    #     data_dict = {
-    #         'name': 'theme-name',
-    #         'title': 'Test theme',
-    #         'description': 'Test description'
-    #     }
-    #     theme = create_actions.theme_create(context, data_dict)
+        result = toolkit.get_action('access_request_grant')(adm_ctx, {
+            'id': req.id,
+        })
 
-    #     data_dict = {
-    #         'name': 'sub-theme-name',
-    #         'title': 'Test sub-theme',
-    #         'description': 'Test description',
-    #         'theme': theme.get('id')
-    #     }
-    #     sub_theme = create_actions.sub_theme_create(context, data_dict)
+        assert_true(result is not None)
+        assert_equals(result.get('status'), 'granted')
+        assert_equals(result.get('resolved_by'), adm_ctx['auth_user_obj'].id)
 
-    #     data_dict = {
-    #         'name': 'rq',
-    #         'title': 'rq',
-    #         'content': 'random',
-    #         'theme': theme.get('id'),
-    #         'sub_theme': sub_theme.get('id')
-    #     }
+    def test_access_request_decline(self):
+        model.Session.query(AssignedAccessRequest).delete()
+        model.Session.query(AccessRequest).delete()
+        adm_ctx = get_context()
+        usr_ctx = get_regular_user_context()
 
-    #     rq = create_actions.research_question_create(context, data_dict)
-    #     dataset = create_dataset(
-    #         extras= [{"research_question": "Random"}]
-    #     )
-    #     print(dataset)
-    #     resource = factories.Resource(
-    #         schema='',
-    #         validation_options='',
-    #         package_id=dataset['id'],
-    #     )
-    #     data = {
-    #        "fields": [{"id": "value", "type": "numeric"}],
-    #         "records": [
-    #             {"value": 0},
-    #             {"value": 1},
-    #             {"value": 2},
-    #             {"value": 3},
-    #             {"value": 5},
-    #             {"value": 6},
-    #             {"value": 7},
-    #         ],
-    #         "force": True,
-    #         "resource_id": resource.get('id'),
-    #         "research_question": "random"
-    #     }
+        dataset = toolkit.get_action('package_create')(adm_ctx, {
+            'name': 'acc-req-test-dataset-4',
+            'title': 'Access Req Test Dataset 4',
+        })
 
-    #     data_dict = {
-    #             'resource_id': resource.get('id'),
-    #             'title': 'Visualization title',
-    #             'description': 'Visualization description',
-    #             'view_type': 'chart',
-    #             'config': {
-    #                 "color": "#59a14f",
-    #                 "y_label": "Usage",
-    #                 "show_legend": "Yes"
-    #             }
-    #         }
-    #     data['resource_id'] = resource.get('id')
-    #     helpers.call_action('datastore_create', **data)
-    #     rsc_view = create_actions.resource_view_create(context, data_dict)
-    #     #print(rsc_view)
-    #     data_dict_rq = {
-    #         'research_question': "random"
-    #     }
+        req = AccessRequest(
+            entity_type='dataset',
+            entity_ref=dataset['id'],
+            entity_title=dataset['title'],
+            entity_link='/dataset/link',
+            user_id=usr_ctx['auth_user_obj'].id,
+        )
 
-    #     res = get_actions.visualizations_for_rq(context, data_dict_rq)
-    #     assert_equals(res, "")
+        req.save()
+
+        assigned = AssignedAccessRequest(
+            request_id=req.id,
+            user_id=adm_ctx['auth_user_obj'].id,
+        )
+        assigned.save()
+
+        model.Session.flush()
+
+        result = toolkit.get_action('access_request_decline')(adm_ctx, {
+            'id': req.id,
+        })
+
+        assert_true(result is not None)
+        assert_equals(result.get('status'), 'declined')
+        assert_equals(result.get('resolved_by'), adm_ctx['auth_user_obj'].id)
 
 
 class TestSearchIndexActions(helpers.FunctionalTestBase):
