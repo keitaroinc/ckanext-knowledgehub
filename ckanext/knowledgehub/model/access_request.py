@@ -70,10 +70,25 @@ class AccessRequest(DomainObject):
 
     @classmethod
     def get(cls, ref):
+        '''Looks up an access request by its ID.
+
+        :param ref: `str`, the access request ID.
+
+        :returns: `AccessRequest` object or `None`.
+        '''
         return Session.query(cls).get(ref)
 
     @classmethod
     def get_active_for_user_and_entity(cls, entity_type, entity_ref, user_id):
+        '''Looks up an active (status `pending`) access request that has not
+        been granted or declined yet.
+
+        :param entity_type: `str`, the entity type.
+        :param entity_ref: `str`, the entity ID (reference).
+        :param user_id: `str`, the id of the user that requested access.
+
+        :returns: `AccessRequest` object or `None`.
+        '''
         q = Session.query(cls)
         q = q.filter(access_request_table.c.entity_type == entity_type)
         q = q.filter(access_request_table.c.entity_ref == entity_ref)
@@ -90,6 +105,22 @@ class AccessRequest(DomainObject):
                 search='',
                 offset=0,
                 limit=20):
+        '''Queries for access requests assigned to a user. Additional filtering
+        is also possible.
+
+        :param assigned_to: `str`, the ID of the user that the access requests
+            are assigned to.
+        :param requested_by: `str`, the ID of the user that requested the
+            access.
+        :param order_by: `str`, order by clause.
+        :param status: `str`, access request status. Default is `pending`.
+        :param search: `str`, search string to be matched against the entity
+            title.
+        :param offset: `int`, pagination offset.
+        :param limit: `int`, pagination limit.
+
+        :returns: iterable of matching `AccessRequest` objects.
+        '''
         q = Session.query(AccessRequest, User).join(AssignedAccessRequest)
         q = q.join(User, user_table.c.id == access_request_table.c.user_id)
         if assigned_to:
@@ -115,6 +146,20 @@ class AccessRequest(DomainObject):
                       order_by='created_at desc',
                       status='pending',
                       search=''):
+        '''Counts the total number of matching access requests based on the
+        provided criteria.
+
+        :param assigned_to: `str`, the ID of the user that the access requests
+            are assigned to.
+        :param requested_by: `str`, the ID of the user that requested the
+            access.
+        :param order_by: `str`, order by clause.
+        :param status: `str`, access request status. Default is `pending`.
+        :param search: `str`, search string to be matched against the entity
+            title.
+
+        :returns: `int`, total number of matching records.
+        '''
         q = Session.query(func.count(func.distinct(access_request_table.c.id)))
         if assigned_to:
             q = q.join(AssignedAccessRequest)
@@ -136,6 +181,15 @@ class AssignedAccessRequest(DomainObject):
 
     @classmethod
     def get_assigned_request(cls, request_id, user_id):
+        '''Looks up if there is an assigned access request for the given user
+        and the given request id.
+
+        :param request_id: `str`, the access request ID.
+        :param user_id: `str`, the ID of the user that the request is assigned
+            to.
+
+        :returns: `AssignedAccessRequest` object or `None`.
+        '''
         q = Session.query(cls)
         q = q.filter(assigned_access_requests_table.c.user_id == user_id)
         q = q.filter(assigned_access_requests_table.c.request_id == request_id)
@@ -144,6 +198,11 @@ class AssignedAccessRequest(DomainObject):
 
     @classmethod
     def delete_assigned_requests(cls, request_id):
+        '''Deletes all assigned records for a particular request.
+
+        :param request_id: `str`, the ID of the request for which to delete the
+            assigned records.
+        '''
         d = assigned_access_requests_table.delete().where(
             assigned_access_requests_table.c.request_id == request_id
         )

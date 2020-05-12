@@ -1729,6 +1729,23 @@ def post_create(context, data_dict):
 
 
 def request_access(context, data_dict):
+    '''Creates a request for access to data (dataset, dashboard or
+    visualization).
+
+    The request will be automatically assigned to the organization
+    administrators to which the entity belongs to and to the system admins,
+    that have access and can grant this request.
+
+    User authentication must be supplied. This action is avaialble for all
+    logged in users.
+
+    :param entity_type: `str`, the type of entity: dataset, dashboard or
+        visualization.
+    :param entity_ref: `str`, the ID (reference) of the entity requested, like
+        the ID of the dataset or dashboard.
+
+    :returns: `dict`, dict representation of the request object.
+    '''
     check_access('request_access', context, data_dict)
     user = context.get('auth_user_obj')
     if not user:
@@ -1799,7 +1816,8 @@ def request_access(context, data_dict):
             raise e
         organizations.add(dataset.get('owner_org'))
     elif entity_type == 'dashboard':
-        datasets = entity.get('datasets', '').split(',')
+        datasets = entity.get('datasets') or ''
+        datasets = datasets.split(',')
         for dataset in datasets:
             dataset = dataset.strip()
             if not dataset:
@@ -1891,6 +1909,9 @@ def request_access(context, data_dict):
 
     access_request_dict = _table_dictize(access_request, context)
 
+    if user.id in users:
+        users.remove(user.id)
+
     for recipient in users:
         # Send notification to approvers
         try:
@@ -1928,6 +1949,8 @@ def request_access(context, data_dict):
 
 
 def _find_sysadmins():
+    '''Locates the system admins of the portal.
+    '''
     q = model.Session.query(model.User)
     q = q.filter(model.user_table.c.sysadmin == True)
     sysadmins = []
