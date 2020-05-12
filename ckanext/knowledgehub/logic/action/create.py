@@ -1824,6 +1824,8 @@ def request_access(context, data_dict):
 
     users = set()
     for organization in organizations:
+        if not organization:
+            continue
         try:
             members = toolkit.get_action('member_list')({
                 'ignore_auth': True,
@@ -1909,7 +1911,7 @@ def request_access(context, data_dict):
                       str(e))
             log.exception(e)
 
-        # Send notification email approver
+        # Send notification email to approver
         try:
             schedule_notification_email(recipient, 'access_request', {
                 'entity_type': access_request.entity_type,
