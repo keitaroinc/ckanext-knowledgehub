@@ -2265,6 +2265,18 @@ def post_search(context, data_dict):
 
 
 def access_request_list(context, data_dict):
+    '''Looks up the requests for access assigned to the current user.
+
+    :param page: `int`, the page of results to return (1-based).
+    :param limit: `int`, number of results per page (default 20).
+    :param requested_by: `str`, the ID of the user that created the requests
+        for access.
+    :param search: `str`, search string to match against the entity title.
+
+    :returns: `list` of `dict`, list of access requests in dict form. The
+        related entity (dataset, dashboard, resource_view) and user info for
+        each request is also populated.
+    '''
     check_access('access_request_list', context, data_dict)
 
     user = context.get('auth_user_obj')

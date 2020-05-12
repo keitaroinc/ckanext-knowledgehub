@@ -7,13 +7,16 @@
 {% endblock %}
 
 {% block primary_content_inner %}
-{% set user_name = access_request.get('user', {}).get('name') or access_request.get('user_id') %}
-<div class="container-fluid">
+{% set user_name = access_request.get('user', {}).get('display_name') or access_request.get('user_id') %}
+<div class="container">
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-6">
             <h2>{{ _('Access Granted') }}</h2>
             <p>
-                {{ _('You have granted access to {} to user {}.').format(access_request.get('entity_title'), user_name) }}
+                {{ _('You have granted access to ') }}
+                <a href="{{access_request.entity_link}}">{{access_request.entity_title}}</a>
+                {{ _('to user')}}
+                <a href="{{ h.url_for('/user/{}'.format(access_request.get('user', {}).get('name'))) }}">{{user_name}}</a>.
             </p>
         </div>
     </div>

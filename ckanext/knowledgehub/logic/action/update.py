@@ -1866,8 +1866,24 @@ def _access_request_update(context, data_dict, granted=True):
 
 
 def access_request_grant(context, data_dict):
+    '''Grants access to the data to the user that made this access request -
+    approves the access request.
+
+    Appropriate notifications are sent to the user that created the request.
+
+    :param id: `str`, the ID of the access request.
+
+    :returns: `dict`, the dict representation of the access request.
+    '''
     return _access_request_update(context, data_dict, granted=True)
 
 
 def access_request_decline(context, data_dict):
+    '''Declines access to the data to the user that made this access request -
+    declines the access request.
+
+    :param id: `str`, the ID of the access request.
+
+    :returns: `dict`, the dict representation of the access request.
+    '''
     return _access_request_update(context, data_dict, granted=False)

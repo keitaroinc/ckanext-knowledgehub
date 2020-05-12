@@ -1734,10 +1734,13 @@ def human_elapsed_time(dt):
 
 
 def get_requested_resource_type_and_ref():
-    if 'pylons.original_request' not in request.environ:
-        raise Exception('Cannot determine original request.')
+    if 'pylons.original_request' in request.environ:
+        path = request.environ['pylons.original_request'].path_qs
+    else:
+        path = request.path
 
-    path = request.environ['pylons.original_request'].path_qs
+    if not path:
+        return None
 
     patterns = {
         'dataset': r'^/dataset/(?P<ref>[^/]+)$',

@@ -2,9 +2,8 @@
 
 {% block primary %}
     {{ super() }}
-
     {% set status_code = code[0] %}
-    {% if status_code == '403' %}
+    {% if status_code == '403' or status_code == 403 %}
         {% set entity = h.get_requested_resource_type_and_ref() %}
         {% if entity %}
             <a href="{{ h.url_for('access.request_access', entity_type=entity.entity_type, entity_ref=entity.entity_ref) }}" class="btn btn-primary">
