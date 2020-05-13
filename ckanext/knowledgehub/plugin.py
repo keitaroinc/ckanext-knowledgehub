@@ -466,10 +466,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
                         if resource_view.get('view_type') != 'recline_view':
                             rqs = resource_view.get('__extras', {}).\
                                 get('research_questions', '')
+                            if isinstance(rqs, str) or \
+                                    isinstance(rqs, unicode):
+                                rqs = map(lambda r: r.strip(),
+                                          filter(lambda r: r and r.strip(),
+                                                 rqs.split(',')))
                             if rqs:
-                                for rq in map(lambda r: r.strip(),
-                                              filter(lambda r: r and r.strip(),
-                                                     rqs.split(','))):
+                                for rq in rqs:
                                     try:
                                         rq = toolkit.get_action(
                                             'research_question_show')({
@@ -555,6 +558,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
 
         labels.append(u'creator-%s' % user_obj.id)
         labels.append(u'user-%s' % user_obj.name)
+        labels.append(u'user-%s' % user_obj.id)
 
         orgs = logic.get_action(u'organization_list_for_user')(
             {u'user': user_obj.id}, {u'permission': u'read'})

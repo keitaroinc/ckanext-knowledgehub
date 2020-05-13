@@ -1549,6 +1549,7 @@ def get_all_users():
         if user.get('name') not in sysadmins:
             users.append(
                 {
+                    'id': user.get('id'),
                     'name': user.get('name'),
                     'display_name': user.get('fullname') or user.get('name')
                 }

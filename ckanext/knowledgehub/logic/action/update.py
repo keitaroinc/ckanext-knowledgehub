@@ -1839,7 +1839,7 @@ def _access_request_update(context, data_dict, granted=True):
                 'title': _('Request for access approved'),
                 'description': _('Your request for access has been approved.'),
                 'link': access_request.entity_link,
-                'recipient': access_request.user_id,
+                'recepient': access_request.user_id,
             })
         except Exception as e:
             log.error('Failed to send notification for access granted. '
