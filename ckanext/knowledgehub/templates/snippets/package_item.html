@@ -1,7 +1,7 @@
 {% ckan_extends %}
 
 {% block heading %}
-<h3 class="dataset-heading text-ellipsis">
+<h3 class="dataset-heading ">
     {% block heading_private %}
     {% if package.private %}
     <span class="dataset-private label label-inverse text-ellipsis">
@@ -49,7 +49,7 @@
 {% endif %} -->
 {% if package.metadata_created %}
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Date created:
-</span><span class="text-muted">{{ h.format_date(package.metadata_created) }}</span></h5></a>
+    </span><span class="text-muted">{{ h.format_date(package.metadata_created) }}</span></h5></a>
 {% endif %}
 
 {% if package.country_code_displacement %}
@@ -59,7 +59,7 @@
 {% set country_code_displacement = package.country_code_displacement %}
 {% endif %}
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country of displacement:
-</span><span class="text-muted">{{ country_code_displacement }}</span></h5></a>
+    </span><span class="text-muted">{{ country_code_displacement }}</span></h5></a>
 {% endif %}
 
 {% if package.country_code_origin %}
@@ -71,17 +71,17 @@
 {% endif %}
 
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country of origin:
-</span><span class="text-muted">{{ country_code_origin }}</span></h5></a>
+    </span><span class="text-muted">{{ country_code_origin }}</span></h5></a>
 {% endif %}
 
 {% if package.organization %}
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Functional unit:
-</span><span class="text-muted">{{ package.organization.title }}</span></h5></a>
+    </span><span class="text-muted">{{ package.organization.title }}</span></h5></a>
 {% endif %}
 
 {% if package.author %}
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Author:
-</span><span class="text-muted">{{ package.author }}</span></h5></a>
+    </span><span class="text-muted">{{ package.author }}</span></h5></a>
 {% endif %}
 
 <input type="hidden" id="dataset-id" name="dataset_id" value="{{ package.id }}">
