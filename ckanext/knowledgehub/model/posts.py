@@ -188,10 +188,13 @@ class Posts(DomainObject, Indexed):
     def load_related_data_dashboard(cls, _id, related_data_ids):
         dashboard = cls._call_action('dashboard_show', {'id': _id})
 
+        if not dashboard:
+            return
+
         tags = cls._try_clean_list(dashboard, 'tags')
         cls._load_tags_and_keywords(tags, related_data_ids)
 
-        indicators = dashboard.get('indicators', '').strip()
+        indicators = (dashboard.get('indicators', '') or '').strip()
         if indicators:
             indicators = json.loads(indicators)
             for indicator in indicators:
