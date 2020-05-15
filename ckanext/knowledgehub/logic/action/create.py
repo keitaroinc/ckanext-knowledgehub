@@ -49,6 +49,7 @@ from ckanext.knowledgehub.model import (
     ExtendedTag,
     Notification,
     Posts,
+    Comment,
 )
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -1957,3 +1958,54 @@ def _find_sysadmins():
     for user in q.all():
         sysadmins.append(user)
     return sysadmins
+
+
+def comment_create(context, data_dict):
+    check_access('comment_create', context, data_dict)
+
+    user = context.get('auth_user_obj')
+
+    ref = data_dict.get('ref', '').strip()
+    content = data_dict.get('content', '').strip()
+    reply_to = data_dict.get('reply_to')
+    if reply_to:
+        reply_to = reply_to.strip()
+
+    errors = {}
+
+    if not ref:
+        errors['ref'] = [_('Missing value')]
+    if not content:
+        errors['content'] = [_('Missing value')]
+
+    if errors:
+        raise ValidationError(errors)
+
+    comment = Comment(
+        ref=ref,
+        content=content,
+        reply_to=reply_to,
+    )
+
+    if reply_to:
+        parent = Comment.get(reply_to)
+        if not parent:
+            raise NotFound('Reply to comment not found')
+        if parent.thread_id is None:
+            comment.thread_id = parent.id
+        else:
+            comment.thread_id = parent.thread_id
+
+    comment.save()
+    if reply_to:
+        Comment.increment_reply_count(ref, reply_to)
+
+    comment = _table_dictize(comment, context)
+
+    comment['user'] = {
+        'id': user.id,
+        'name': user.name,
+        'display_name': user.display_name or user.name,
+    }
+
+    return comment

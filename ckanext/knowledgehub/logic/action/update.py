@@ -45,6 +45,7 @@ from ckanext.knowledgehub.model import Notification
 from ckanext.knowledgehub.model import (
     AccessRequest,
     AssignedAccessRequest,
+    Comment,
 )
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -1887,3 +1888,43 @@ def access_request_decline(context, data_dict):
     :returns: `dict`, the dict representation of the access request.
     '''
     return _access_request_update(context, data_dict, granted=False)
+
+
+def comment_update(context, data_dict):
+    check_access('comment_update', context, data_dict)
+
+    user = context.get('auth_user_obj')
+    is_sysamidn = hasattr(user, 'sysadmin') and user.sysadmin
+
+    comment_id = data_dict.get('id', '').strip()
+    content = data_dict.get('content', '').strip()
+
+    errors = {}
+    if not comment_id:
+        errors['id'] = [_('Missing value')]
+    if not content:
+        errors['content'] = [_('Missing value')]
+
+    if errors:
+        raise ValidationError(errors)
+
+    comment = Comment.get(comment_id)
+    if not comment:
+        raise NotFound(_('Not found'))
+
+    if comment.created_by != user.id:
+        if not is_sysamidn:
+            raise NotAuthorized(_('You cannot update this comment'))
+
+    comment.content = content
+    comment.save()
+    model.Session.flush()
+
+    comment = _table_dictize(comment, context)
+    comment['user'] = {
+        'id': user.id,
+        'name': user.name,
+        'display_name': user.display_name or user.name
+    }
+
+    return comment

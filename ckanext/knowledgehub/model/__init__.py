@@ -19,11 +19,12 @@ from ckanext.knowledgehub.model.access_request import (
     AccessRequest,
     AssignedAccessRequest,
 )
-
+from ckanext.knowledgehub.model.comments import Comment
 
 __all__ = [
     'AccessRequest',
     'AssignedAccessRequest',
+    'Comment',
     'Theme',
     'SubThemes',
     'ResearchQuestion',

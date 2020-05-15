@@ -33,6 +33,7 @@ from ckanext.knowledgehub.model import (
     UserProfile,
     Notification,
     Posts,
+    Comment,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
@@ -2325,3 +2326,124 @@ def access_request_list(context, data_dict):
         'page': page,
         'limit': limit,
     }
+
+
+def _dictize_comment(comment, context):
+    comment = _table_dictize(comment, context)
+    if comment.get('deleted'):
+        comment['content'] = ''
+    return comment
+
+
+def _get_comment_user(user_id):
+    try:
+        user = toolkit.get_action('user_show')({
+            'ignore_auth': True,
+        }, {
+            'id': user_id,
+        })
+        return {
+            'id': user['id'],
+            'name': user['name'],
+            'display_name': user.get('display_name') or user['name'],
+        }
+    except Exception as e:
+        log.error('Cannot get user %s. Error: %s', user_id, str(e))
+        log.exception(e)
+
+    return {
+        'id': user_id,
+        'name': user_id,
+        'display_name': user_id,
+    }
+
+
+def comments_list(context, data_dict):
+    check_access('comments_list', context, data_dict)
+
+    ref = data_dict.get('ref', '').strip()
+    page = int(data_dict.get('page', 1))
+    limit = int(data_dict.get('limit', 20))
+
+    if page < 1:
+        page = 1
+    if limit > 500:
+        limit = 500
+
+    offset = (page-1)*limit
+
+    if not ref:
+        raise ValidationError({'ref': [_('Missing value')]})
+
+    comments = Comment.get_comments(ref, offset=offset, limit=limit)
+    total = Comment.get_comments_count(ref)
+
+    results = []
+
+    users = {}
+
+    for cmnt in comments:
+        comment = _dictize_comment(cmnt['comment'], context)
+        comment['replies'] = map(lambda reply: _dictize_comment(reply,
+                                                                context),
+                                 cmnt['replies'])
+        results.append(comment)
+        user = users.get(comment['created_by'])
+        if not user:
+            user = _get_comment_user(comment['created_by'])
+            users[user['id']] = user
+        comment['user'] = user
+
+    return {
+        'page': page,
+        'limit': limit,
+        'count': total,
+        'results': results,
+    }
+
+
+def comments_thread_show(context, data_dict):
+    check_access('comments_thread_show', context, data_dict)
+
+    ref = data_dict.get('ref', '').strip()
+    thread_id = data_dict.get('thread_id', '').strip()
+
+    errors = {}
+    if not ref:
+        errors['ref'] = [_('Missing value')]
+    if not thread_id:
+        errors['thread_id'] = [_('Missing value')]
+
+    if errors:
+        raise ValidationError(errors)
+
+    comments = Comment.get_thread(ref, thread_id)
+
+    if not comments:
+        return []
+
+    comments = map(lambda comment: _dictize_comment(comment,
+                                                    context), comments)
+
+    users = {}
+
+    thr = {}
+    results = []
+
+    for comment in comments:
+        if thr.get(comment['id']):
+            comment.update(thr[comment['id']])
+
+        parent = thr.get(comment['reply_to'])
+        if not parent:
+            parent = {'replies': []}
+            thr[comment['reply_to']] = parent
+        thr[comment['id']] = comment
+        parent['replies'].append(comment)
+        user = users.get(comment['created_by'])
+        if not user:
+            user = _get_comment_user(comment['created_by'])
+            users[user['id']] = user
+        comment['user'] = user
+
+    return thr[thread_id]['replies']

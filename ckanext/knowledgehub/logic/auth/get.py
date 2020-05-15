@@ -172,3 +172,11 @@ def post_search(context, data_dict=None):
 
 def access_request_list(context, data_dict=None):
     return {'success': True}
+
+
+def comments_list(context, data_dict=None):
+    return {'success': True}
+
+
+def comments_thread_show(context, data_dict=None):
+    return {'success': True}

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from ckan.model.meta import Session
 
@@ -26,6 +27,7 @@ from ckanext.knowledgehub.model import (
     Keyword,
     KWHData,
     Posts,
+    Comment,
 )
 from ckanext.knowledgehub.logic.jobs import schedule_update_index
 
@@ -600,7 +602,7 @@ def post_delete(context, data_dict):
                                         'delete this post'))
     try:
         toolkit.get_action('delete_comments')(context, {
-            'post_id': post.id,
+            'ref': post.id,
         })
         model.Session.delete(post)
         model.Session.commit()
@@ -613,3 +615,39 @@ def post_delete(context, data_dict):
 
 def delete_comments(context, data_dict):
     pass
+
+
+def comment_delete(context, data_dict):
+    check_access('comment_delete', context, data_dict)
+
+    user = context.get('auth_user_obj')
+    is_sysadmin = hasattr(user, 'sysadmin') and user.sysadmin
+
+    comment_id = data_dict.get('id', '').strip()
+    if not comment_id:
+        raise ValidationError({'id': [_('Missing value')]})
+
+    comment = Comment.get(comment_id)
+    if not comment:
+        raise NotFound(_('Comment not found'))
+
+    if comment.created_by != user.id:
+        if not is_sysadmin:
+            raise NotAuthorized(_('You cannot delete this comment.'))
+
+    if not comment.replies_count:
+        # we can delete this comment completely
+        Session.delete(comment)
+
+        if comment.reply_to:
+            Comment.decrement_reply_count(comment.ref, comment.reply_to)
+
+        Session.flush()
+        return
+
+    # Comment has replies, so we just mark as deleted
+    comment.delete = True
+    comment.modified_at = datetime.now()
+    comment.save()
+
+    Session.flush()
