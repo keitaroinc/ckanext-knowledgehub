@@ -42,7 +42,7 @@ RUN pip install cython && \
     # hdx 
     pip uninstall psycopg2-binary -y && \
     pip uninstall psycopg2 -y && \
-    pip install --no-cache-dir psycopg2==2.7.3.2
+    pip install --no-cache-dir psycopg2==2.7.3.2 && \
 
     # oauth2
     pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-oauth2.git@kh_stable#egg=ckanext-oauth2"
