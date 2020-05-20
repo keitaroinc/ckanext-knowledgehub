@@ -416,6 +416,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             m.connect('organization_read', '/organization/{id}', action='read')
             m.connect('organization_bulk_process',
                       '/organization/bulk_process/{id}', action='bulk_process')
+
+        with SubMapper(
+            map,
+            controller='ckanext.oauth2.controller:OAuth2Controller'
+        ) as m:
+            m.connect('user_login_azure', '/user/login/azure', action='login')    
+        
         return map
 
     # IPackageController
