@@ -44,6 +44,9 @@ RUN pip install cython && \
     pip uninstall psycopg2 -y && \
     pip install --no-cache-dir psycopg2==2.7.3.2
 
+    # oauth2
+    pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-oauth2.git@kh_stable#egg=ckanext-oauth2"
+
 # Download spaCy language model for english language
 RUN python -m spacy download en_core_web_sm
 
