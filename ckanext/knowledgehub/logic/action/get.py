@@ -2332,6 +2332,10 @@ def _dictize_comment(comment, context):
     comment = _table_dictize(comment, context)
     if comment.get('deleted'):
         comment['content'] = ''
+    comment['human_timestamp'] = kh_helpers.human_elapsed_time(
+        comment['created_at'])
+    comment['display_content'] = h.render_markdown(
+        comment.get('content') or '')
     return comment
 
 
@@ -2346,6 +2350,7 @@ def _get_comment_user(user_id):
             'id': user['id'],
             'name': user['name'],
             'display_name': user.get('display_name') or user['name'],
+            'email_hash': user.get('email_hash'),
         }
     except Exception as e:
         log.error('Cannot get user %s. Error: %s', user_id, str(e))
@@ -2376,7 +2381,7 @@ def comments_list(context, data_dict):
         raise ValidationError({'ref': [_('Missing value')]})
 
     comments = Comment.get_comments(ref, offset=offset, limit=limit)
-    total = Comment.get_comments_count(ref)
+    total = Comment.get_comments_count(ref) or 0
 
     results = []
 
@@ -2393,6 +2398,13 @@ def comments_list(context, data_dict):
             user = _get_comment_user(comment['created_by'])
             users[user['id']] = user
         comment['user'] = user
+        if comment.get('replies'):
+            for reply in comment['replies']:
+                user = users.get(reply['created_by'])
+                if not user:
+                    user = _get_comment_user(reply['created_by'])
+                    users[user['id']] = user
+                reply['user'] = user
 
     return {
         'page': page,

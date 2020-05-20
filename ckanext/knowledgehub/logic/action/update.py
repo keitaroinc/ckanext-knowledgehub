@@ -26,7 +26,7 @@ from ckan.logic.action.update import resource_update as ckan_rsc_update
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.update import package_update as ckan_package_update
-from ckan.lib.helpers import url_for
+from ckan.lib.helpers import url_for, render_markdown
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
@@ -1926,5 +1926,7 @@ def comment_update(context, data_dict):
         'name': user.name,
         'display_name': user.display_name or user.name
     }
+
+    comment['display_content'] = render_markdown(comment.get('content') or '')
 
     return comment

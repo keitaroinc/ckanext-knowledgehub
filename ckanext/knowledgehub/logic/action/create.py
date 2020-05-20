@@ -24,7 +24,7 @@ import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.create import (
     package_create as ckan_package_create,
 )
-from ckan.lib.helpers import url_for
+from ckan.lib.helpers import url_for, render_markdown
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.logic.action.get import user_query_show
@@ -1981,24 +1981,34 @@ def comment_create(context, data_dict):
     if errors:
         raise ValidationError(errors)
 
-    comment = Comment(
-        ref=ref,
-        content=content,
-        reply_to=reply_to,
-    )
+    try:
+        model.Session.begin(subtransactions=True)
+        comment = Comment(
+            ref=ref,
+            content=content,
+            reply_to=reply_to,
+            created_by=user.id,
+        )
 
-    if reply_to:
-        parent = Comment.get(reply_to)
-        if not parent:
-            raise NotFound('Reply to comment not found')
-        if parent.thread_id is None:
-            comment.thread_id = parent.id
-        else:
-            comment.thread_id = parent.thread_id
+        if reply_to:
+            parent = Comment.get(reply_to)
+            if not parent:
+                raise NotFound('Reply to comment not found')
+            if parent.thread_id is None:
+                comment.thread_id = parent.id
+            else:
+                comment.thread_id = parent.thread_id
 
-    comment.save()
-    if reply_to:
-        Comment.increment_reply_count(ref, reply_to)
+        comment.save()
+
+        Comment.increment_comment_count(comment)
+
+        model.Session.commit()
+    except Exception as e:
+        log.error('Failed to created comment. Error: %s', str(e))
+        log.exception(e)
+        model.Session.rollback()
+        raise e
 
     comment = _table_dictize(comment, context)
 
@@ -2006,6 +2016,10 @@ def comment_create(context, data_dict):
         'id': user.id,
         'name': user.name,
         'display_name': user.display_name or user.name,
+        'email_hash': user.email_hash,
     }
+    comment['human_timestamp'] = plugin_helpers.human_elapsed_time(
+        comment['created_at'])
+    comment['display_content'] = render_markdown(comment.get('content') or '')
 
     return comment

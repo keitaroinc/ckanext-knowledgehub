@@ -38,8 +38,9 @@ comments_table = Table(
     Column('content', types.UnicodeText, default='', nullable=False),
     Column('thread_id', types.String(128), nullable=True, index=True),
     Column('reply_to', types.String(128), nullable=True, index=True),
-    Column('deleted', types.Boolean, nullable=False, default=True),
+    Column('deleted', types.Boolean, nullable=False, default=False),
     Column('replies_count', types.Integer, nullable=False, default=0),
+    Column('thread_replies_count', types.Integer, nullable=False, default=0),
 )
 
 
@@ -118,35 +119,49 @@ class Comment(DomainObject):
         return q.all()
 
     @classmethod
-    def increment_reply_count(cls, ref, comment_id):
-        Session.query().filter(
-            comments_table.c.comment_id == comment_id,
-        ).update({
-            'reply_count': (comments_table.c.reply_count + 1)
-        })
+    def increment_comment_count(cls, comment):
+        if comment.reply_to:
+            parent = cls.get(comment.reply_to)
+            parent.replies_count += 1
+            parent.save()
+        if comment.thread_id:
+            thread = cls.get(comment.thread_id)
+            thread.thread_replies_count += 1
+            thread.save()
 
-        Session.query.filter(
-            comments_refs_stats_table.c.ref == ref,
-        ).update({
-            'comment_count': (comments_refs_stats_table.c.comment_count + 1),
-        })
+        stats = CommentsRefStats.get(comment.ref)
+        if not stats:
+            stats = CommentsRefStats(ref=comment.ref, comment_count=0)
+        stats.comment_count += 1
+        stats.save()
 
     @classmethod
-    def decrement_reply_count(cls, ref, comment_id):
-        Session.query().filter(
-            comments_table.c.comment_id == comment_id,
-        ).update({
-            'reply_count': (comments_table.c.reply_count - 1)
-        })
+    def decrement_comment_count(cls, comment):
+        if comment.reply_to:
+            parent = cls.get(comment.reply_to)
+            parent.replies_count -= 1
+            parent.save()
+        if comment.thread_id:
+            thread = cls.get(comment.thread_id)
+            thread.thread_replies_count -= 1
+            thread.save()
 
-        Session.query.filter(
-            comments_refs_stats_table.c.ref == ref,
-        ).update({
-            'comment_count': (comments_refs_stats_table.c.comment_count - 1),
-        })
+        stats = CommentsRefStats.get(comment.ref)
+        if not stats:
+            stats = CommentsRefStats(ref=comment.ref, comment_count=1)
+        stats.comment_count -= 1
+        stats.save()
+
+
+class CommentsRefStats(DomainObject):
+
+    @classmethod
+    def get(cls, ref):
+        return Session.query(CommentsRefStats).get(ref)
 
 
 mapper(Comment, comments_table)
+mapper(CommentsRefStats, comments_refs_stats_table)
 
 
 def setup():

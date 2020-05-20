@@ -1,0 +1,136 @@
+@comments-backgroud: #f5f5f5;
+
+.add-comment-box{
+    .comment-input {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 5px;
+        .gravatar {
+            margin-right: 10px;
+            flex: 0;
+        }
+        input {
+            flex: 1;
+        }
+    }
+
+    .status {
+        color: darken(@comments-backgroud, 20%);
+        padding-left: 2rem;
+
+        i.fa {
+            font-size: 1.5rem;
+        }
+    }
+}
+
+.comment-box {
+    .comment-info {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 0.5rem;
+        .gravatar {
+            width: 32px;
+            height: 32px;
+            flex: 0;
+            margin-right: 10px;
+        }
+        .info-data {
+            flex: 1;
+            .comment-user {
+                font-weight: bold;
+            }
+            .comment-time {
+                font-size: 0.9rem;
+                color: darken(@comments-backgroud, 40%);
+            }
+        }
+    }
+
+    .replies-container {
+        padding: 0px;
+        margin-left: 15px;
+        padding-right: 15px;
+        border-left: solid 1px darken(@comments-backgroud, 10%);
+    }
+
+    .action-reply {
+        color: darken(@comments-backgroud, 40%);
+        font-size: 1.1rem;
+    }
+    .add-comment-box {
+        margin-top: 1rem;
+    }
+
+    .comment-main {
+        padding: 0.5rem;
+    }
+    .comment-main:hover {
+        background-color: darken(@comments-backgroud, 3%);
+    }
+}
+
+.comments-wrapper {
+    padding: 3rem 0 3rem 0;
+    background-color: @comments-backgroud;
+    border-top: solid 1px darken(@comments-backgroud, 3%);
+    border-bottom: solid 2px darken(@comments-backgroud, 10%);
+
+    .add-new-comment {
+        margin-bottom: 3rem;
+    }
+
+    .no-comments {
+        text-align: center;
+        color: darken(@comments-backgroud, 10%);
+        font-style: italic;
+        display: none;
+    }
+
+    .btn-inverse {
+        border: 0px;
+        background-color: inherit;
+    }
+
+    .btn-inverse.btn-primary {
+        color: @brand-primary;
+    }
+
+    .btn-inverse.btn-secondary {
+        color: @brand-primary;
+    }
+
+    .btn-inverse.btn-info {
+        color: @brand-info;
+    }
+
+    .btn-inverse.btn-danger {
+        color: @brand-danger;
+    }
+
+    .row {
+        padding: 0px;
+    }
+    h1,h2,h3,h4,h5,h6{
+        font-size: 1.5rem;
+    }
+
+}
+
+.comment-deleted-content {
+    padding: 1rem 1rem 1rem 0rem;
+    color: lighten(@gray, 30%);
+    font-style: italic;
+
+    i.fa {
+        font-size: 2rem;
+    }
+}
+
+.loader {
+    text-align: center;
+    color: darken(@comments-backgroud, 10%);
+    i.fa {
+        font-size: 2rem;
+    }
+}

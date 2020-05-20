@@ -38,6 +38,7 @@ from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceValidation
+from ckanext.knowledgehub.model import Comment
 
 
 log = logging.getLogger(__name__)
@@ -1759,3 +1760,7 @@ def get_requested_resource_type_and_ref():
             }
 
     return None
+
+
+def get_comments_count(ref):
+    return Comment.get_comments_count(ref) or 0

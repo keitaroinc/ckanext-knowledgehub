@@ -613,10 +613,6 @@ def post_delete(context, data_dict):
         model.Session.rollback()
 
 
-def delete_comments(context, data_dict):
-    pass
-
-
 def comment_delete(context, data_dict):
     check_access('comment_delete', context, data_dict)
 
@@ -639,14 +635,13 @@ def comment_delete(context, data_dict):
         # we can delete this comment completely
         Session.delete(comment)
 
-        if comment.reply_to:
-            Comment.decrement_reply_count(comment.ref, comment.reply_to)
+        Comment.decrement_comment_count(comment)
 
         Session.flush()
         return
 
     # Comment has replies, so we just mark as deleted
-    comment.delete = True
+    comment.deleted = True
     comment.modified_at = datetime.now()
     comment.save()
 
