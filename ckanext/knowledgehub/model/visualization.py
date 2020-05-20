@@ -57,8 +57,9 @@ class Visualization(ResourceView, Indexed):
             {'ignore_auth': True},
             {'id': data['package_id'], 'include_tracking': True})
         if package:
-            data['organizations'] = package.get('organization', {}).get('name')
-            organization_id = package.get('organization', {}).get('id')
+            data['organizations'] = (package.get('organization',
+                                                 {}) or {}).get('name')
+            organization_id = (package.get('organization', {}) or {}).get('id')
             if organization_id:
                 permission_labels.append('member-%s' % organization_id)
 

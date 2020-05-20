@@ -312,3 +312,28 @@ This example shows how to run the above command through the API action:
 ```
 curl -v 'http://hostname/api/3/action/run_command' -H'Authorization: API-KEY' -d '{"command": "predictive_search train"}'
 ```
+
+
+# Oauth2 extension installation steps 
+
+Install the extension, following the instructions provided: https://github.com/conwetlab/ckanext-oauth2
+
+In the .ini file, add the following settings:
+```
+ckan.oauth2.jwt.enable = true
+ckan.oauth2.authorization_endpoint = <YOUR_AUTH_ENDPOINT>
+ckan.oauth2.token_endpoint = <YOUR_TOKEN_ENDPOINT>
+ckan.oauth2.profile_api_url = https://graph.microsoft.com/v1.0/me
+ckan.oauth2.client_id = <YOUR_CLIENT_ID>
+ckan.oauth2.client_secret = <YOUR_CLIENT_SECRET>
+ckan.oauth2.scope = profile openid email
+ckan.oauth2.profile_api_user_field = unique_name
+ckan.oauth2.profile_api_fullname_field = name
+ckan.oauth2.profile_api_mail_field = unique_name
+ckan.oauth2.authorization_header = Authorization
+```
+
+Note: The authorization endpoint, as well as the token endpoint, can be found in the Azure AD. After you navigate to your application, in the Overview tab, there will be a button called Endpoints. After you click it, a new tab will be opened with the information you need. Alternatively, the data can be found in the OpenID Connect metadata document. 
+Below this Overview tab, there will be one called Certificates and Secrets, where you can create a secret and add it in the .ini file.
+
+```

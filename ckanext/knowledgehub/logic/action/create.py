@@ -1954,6 +1954,7 @@ def _find_sysadmins():
     '''
     q = model.Session.query(model.User)
     q = q.filter(model.user_table.c.sysadmin == True)
+    q = q.filter(model.user_table.c.state == 'active')
     sysadmins = []
     for user in q.all():
         sysadmins.append(user)
