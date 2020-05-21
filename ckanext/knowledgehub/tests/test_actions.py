@@ -49,6 +49,8 @@ from ckanext.knowledgehub.model import (
     Posts,
     AssignedAccessRequest,
     AccessRequest,
+    Comment,
+    CommentsRefStats,
 )
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
@@ -686,6 +688,31 @@ class TestKWHCreateActions(ActionsBase):
         result = toolkit.get_action('access_request_list')(ctx, {})
         assert_true(result is not None)
         assert_equals(result.get('count'), 1)
+
+    def test_comment_create(self):
+        context = get_regular_user_context()
+        result = create_actions.comment_create(context, {
+            'ref': 'ref-0',
+            'content': 'Test comment',
+        })
+
+        assert_true(result is not None)
+        assert_true(result.get('id') is not None)
+        assert_equals(result.get('ref'), 'ref-0')
+        assert_equals(result.get('content'), 'Test comment')
+
+        reply = create_actions.comment_create(context, {
+            'ref': 'ref-0',
+            'content': 'Test reply',
+            'reply_to': result['id'],
+        })
+
+        assert_true(reply is not None)
+        assert_true(reply.get('id') is not None)
+        assert_equals(reply.get('ref'), 'ref-0')
+        assert_equals(reply.get('content'), 'Test reply')
+        assert_equals(reply.get('thread_id'), result['id'])
+        assert_equals(reply.get('reply_to'), result['id'])
 
 
 class TestKWHGetActions(ActionsBase):
@@ -1370,6 +1397,70 @@ class TestKWHGetActions(ActionsBase):
         assert_equals(result.get('count'), 4)
         assert_equals(len(result.get('results', [])), 4)
 
+    def test_comments_list(self):
+        context = get_regular_user_context()
+        user_id = context.get('auth_user_obj').id
+        model.Session.query(Comment).delete()
+        model.Session.query(CommentsRefStats).delete()
+
+        c1 = Comment(ref='ref-0', content='c1', created_by=user_id)
+        c1.save()
+        for i in range(0, 5):
+            r = Comment(ref='ref-0', content='reply %d' % i,
+                        created_by=user_id, reply_to=c1.id, thread_id=c1.id)
+            r.save()
+        c2 = Comment(ref='ref-0', content='c2', created_by=user_id)
+        c2.save()
+        for i in range(0, 2):
+            r = Comment(ref='ref-0', content='[c2]reply %d' % i,
+                        created_by=user_id, reply_to=c2.id, thread_id=c2.id)
+            r.save()
+
+        result = get_actions.comments_list(context, {
+            'page': 1,
+            'limit': 10,
+            'ref': 'ref-0',
+        })
+
+        assert_true(result is not None)
+        assert_true(result.get('results') is not None)
+
+        comments = result.get('results')
+        assert_equals(len(comments), 2)  # 2 top level comments
+        assert_equals(set([c['id'] for c in comments]), {c1.id, c2.id})
+        for c in comments:
+            if c['id'] == c1.id:
+                assert_equals(len(c.get('replies')), 3)
+            else:
+                assert_equals(len(c.get('replies')), 2)
+
+    def test_comments_thread_show(self):
+        context = get_regular_user_context()
+        user_id = context.get('auth_user_obj').id
+        model.Session.query(Comment).delete()
+        model.Session.query(CommentsRefStats).delete()
+
+        c = Comment(ref='ref-0', content='comment', created_by=user_id)
+        c.save()
+        for i in range(0, 2):
+            r = Comment(ref='ref-0', content='reply to c', created_by=user_id,
+                        reply_to=c.id, thread_id=c.id)
+            r.save()
+            for j in range(0, 2):
+                rr = Comment(ref='ref-0', content='reply to reply to c',
+                             created_by=user_id, reply_to=r.id, thread_id=c.id)
+                rr.save()
+
+        result = get_actions.comments_thread_show(context, {
+            'ref': 'ref-0',
+            'thread_id': c.id,
+        })
+
+        assert_true(result is not None)
+        assert_equals(len(result), 2)
+        for reply in result:
+            assert_equals(len(reply.get('replies')), 2)
+
 
 class TestKWHDeleteActions(ActionsBase):
 
@@ -1614,6 +1705,64 @@ class TestKWHDeleteActions(ActionsBase):
         except logic.NotFound:
             not_found = True
         assert_true(not_found)
+
+    def test_comment_delete(self):
+        context = get_regular_user_context()
+        user_id = context.get('auth_user_obj').id
+        model.Session.query(Comment).delete()
+        model.Session.query(CommentsRefStats).delete()
+
+        comment = Comment(
+            ref='ref-0',
+            content='top level comment',
+            replies_count=1,
+            thread_replies_count=1,
+            created_by=user_id
+        )
+        comment.save()
+
+        reply = Comment(
+            ref='ref-0',
+            content='top level comment',
+            reply_to=comment.id,
+            thread_id=comment.id,
+            created_by=user_id
+        )
+        reply.save()
+
+        stats = CommentsRefStats(ref='ref-0', comment_count=2)
+        stats.save()
+
+        assert_equals(comment.deleted, False)
+        assert_equals(reply.deleted, False)
+
+        # Try to delete top comment first
+        delete_actions.comment_delete(context, {
+            'id': comment.id
+        })
+
+        comment = Comment.get(comment.id)
+
+        assert_true(comment is not None)
+        assert_equals(comment.deleted, True)
+
+        # Now try to delete the reply
+        delete_actions.comment_delete(context, {
+            'id': reply.id
+        })
+
+        reply = Comment.get(reply.id)
+        assert_true(reply is None)  # reply was completely deleted
+
+        comment = Comment.get(comment.id)
+
+        assert_true(comment is not None)  # parent comment should still exists
+        assert_equals(comment.replies_count, 0)  # replies decreased
+        assert_equals(comment.thread_replies_count, 0)  # thread size decreased
+
+        stats = CommentsRefStats.get('ref-0')
+        assert_true(stats is not None)
+        assert_true(stats.comment_count, 1)  # total comment count decreased
 
 
 class TestKWHUpdateActions(ActionsBase):
@@ -2186,6 +2335,29 @@ class TestKWHUpdateActions(ActionsBase):
         assert_true(result is not None)
         assert_equals(result.get('status'), 'declined')
         assert_equals(result.get('resolved_by'), adm_ctx['auth_user_obj'].id)
+
+    def test_comment_update(self):
+        context = get_regular_user_context()
+        user_id = context.get('auth_user_obj').id
+        model.Session.query(Comment).delete()
+        model.Session.query(CommentsRefStats).delete()
+
+        comment = Comment(
+            ref='ref-0',
+            content='Test comment',
+            created_by=user_id,
+        )
+        comment.save()
+
+        result = update_actions.comment_update(context, {
+            'id': comment.id,
+            'content': 'Updated comment',
+        })
+
+        assert_true(result is not None)
+        assert_equals(result.get('id'), comment.id)
+        assert_equals(result.get('content'), 'Updated comment')
+        assert_true(result.get('display_content') is not None)
 
 
 class TestSearchIndexActions(helpers.FunctionalTestBase):

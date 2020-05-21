@@ -24,7 +24,7 @@ import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.create import (
     package_create as ckan_package_create,
 )
-from ckan.lib.helpers import url_for
+from ckan.lib.helpers import url_for, render_markdown
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.logic.action.get import user_query_show
@@ -49,6 +49,7 @@ from ckanext.knowledgehub.model import (
     ExtendedTag,
     Notification,
     Posts,
+    Comment,
 )
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -1958,3 +1959,81 @@ def _find_sysadmins():
     for user in q.all():
         sysadmins.append(user)
     return sysadmins
+
+
+def comment_create(context, data_dict):
+    '''Creates a comment.
+
+    The comment can be directly to an entity (ref), or can be a reply to other
+    comment.
+
+    :param ref: `str`, reference to the entity being commented on (post,
+        dataset, research question etc)
+    :param content: `str`, the comment content.
+    :param reply_to: `str`, optional, if provided, then this comment is a reply
+        to another comment with the ID given in this parameter.
+
+    :returns: `dict`, dictized representation of the comment.
+    '''
+    check_access('comment_create', context, data_dict)
+
+    user = context.get('auth_user_obj')
+
+    ref = data_dict.get('ref', '').strip()
+    content = data_dict.get('content', '').strip()
+    reply_to = data_dict.get('reply_to')
+    if reply_to:
+        reply_to = reply_to.strip()
+
+    errors = {}
+
+    if not ref:
+        errors['ref'] = [_('Missing value')]
+    if not content:
+        errors['content'] = [_('Missing value')]
+
+    if errors:
+        raise ValidationError(errors)
+
+    try:
+        model.Session.begin(subtransactions=True)
+        comment = Comment(
+            ref=ref,
+            content=content,
+            reply_to=reply_to,
+            created_by=user.id,
+        )
+
+        if reply_to:
+            parent = Comment.get(reply_to)
+            if not parent:
+                raise NotFound('Reply to comment not found')
+            if parent.thread_id is None:
+                comment.thread_id = parent.id
+            else:
+                comment.thread_id = parent.thread_id
+
+        comment.save()
+
+        Comment.increment_comment_count(comment)
+
+        model.Session.commit()
+    except Exception as e:
+        log.error('Failed to created comment. Error: %s', str(e))
+        log.exception(e)
+        model.Session.rollback()
+        raise e
+
+    comment = _table_dictize(comment, context)
+
+    comment['user'] = {
+        'id': user.id,
+        'name': user.name,
+        'display_name': user.display_name or user.name,
+        'email_hash': user.email_hash,
+    }
+    comment['human_timestamp'] = plugin_helpers.human_elapsed_time(
+        comment['created_at'])
+    comment['display_content'] = render_markdown(comment.get('content') or '')
+
+    return comment

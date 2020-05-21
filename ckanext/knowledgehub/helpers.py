@@ -38,6 +38,7 @@ from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceValidation
+from ckanext.knowledgehub.model import Comment
 
 
 log = logging.getLogger(__name__)
@@ -1760,3 +1761,14 @@ def get_requested_resource_type_and_ref():
             }
 
     return None
+
+
+def get_comments_count(ref):
+    '''Returns the total number of comments for this entity identified by
+    its reference (`ref`).
+
+    :param ref: `str`, the reference to the entity.
+
+    :returns: `int`, total number of comments (including replies).
+    '''
+    return Comment.get_comments_count(ref) or 0

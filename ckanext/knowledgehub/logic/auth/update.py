@@ -114,3 +114,7 @@ def access_request_grant(context, data_dict):
 
 def access_request_decline(context, data_dict):
     return {'success': True}
+
+
+def comment_update(context, data_dict=None):
+    return {'success': True}
