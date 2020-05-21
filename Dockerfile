@@ -52,6 +52,7 @@ RUN python -m spacy download en_core_web_sm
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
+                  oauth2 \
                   recline_view \
                   validation \
                   knowledgehub \
