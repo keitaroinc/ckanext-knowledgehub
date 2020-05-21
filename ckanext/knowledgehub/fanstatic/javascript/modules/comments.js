@@ -187,108 +187,115 @@
                 // top level comment
                 if (comment.thread_replies_count > replies.length) {
                     var repliesLeft = comment.thread_replies_count - replies.length;
-                    $(showMoreRepliesEl).html('<i class="fa fa-caret-down"></i> Show ' + repliesLeft + ' more replies')
+                    var message = '<i class="fa fa-caret-down"></i> Show ' + repliesLeft + ' more replies';
+                    if (repliesLeft == 1) {
+                        message = '<i class="fa fa-caret-down"></i> Show ' + repliesLeft + ' more reply';
+                    }
+                    $(showMoreRepliesEl).html(message)
                     $(showMoreRepliesEl).show()
                 }
             }
 
             // setup actions
 
-            // reply to comment
-            $(actionReplyEl).click(function(){
-                $(actionReplyEl).hide()
-                var replyTextBox = addCommentBox({
-                    showAvatar: true,
-                    showCancel: true,
-                    okLabel: 'Reply',
-                    onOk: function(content){
-                        content = content.trim();
-                        if (content === ''){
-                            return
-                        }
-                        var loader = newLoader()
-                        $('.status', replyTextBox).html('')
-                        $('.status', replyTextBox).append(loader)
+            if (shouldAppend){ // if not appending, we're merging the data and we don't want to bind actions twice
+                // reply to comment
+                $(actionReplyEl).click(function(){
+                    console.log('Clicked ->', this, $(actionReplyEl))
+                    $(actionReplyEl).hide()
+                    var replyTextBox = addCommentBox({
+                        showAvatar: true,
+                        showCancel: true,
+                        okLabel: 'Reply',
+                        onOk: function(content){
+                            content = content.trim();
+                            if (content === ''){
+                                return
+                            }
+                            var loader = newLoader()
+                            $('.status', replyTextBox).html('')
+                            $('.status', replyTextBox).append(loader)
 
-                        api.addComment({
-                            content: content,
-                            ref: comment.ref,
-                            replyTo: comment.id,
-                        }, function(reply){
-                            addComment(commentEl, reply, currentUser, true)
+                            api.addComment({
+                                content: content,
+                                ref: comment.ref,
+                                replyTo: comment.id,
+                            }, function(reply){
+                                addComment(commentEl, reply, currentUser, true)
+                                $(replyTextBox).remove()
+                                $(actionReplyEl).show();
+                            }, function(err){
+                                $(loader).remove()
+                                $('.status', replyTextBox).html('Something went wrong. Try again...')
+                            })
+                        },
+                        onCancel: function(){
                             $(replyTextBox).remove()
                             $(actionReplyEl).show();
-                        }, function(err){
-                            $(loader).remove()
-                            $('.status', replyTextBox).html('Something went wrong. Try again...')
-                        })
-                    },
-                    onCancel: function(){
-                        $(replyTextBox).remove()
-                        $(actionReplyEl).show();
-                    }
-                })
-                $(replyBoxContainer).append(replyTextBox)
-            })
-
-            $(showMoreRepliesEl).click(function(){
-                var loader = newLoader()
-                $(showMoreRepliesEl).parent().prepend(loader);
-                api.getCommentThread(comment.ref, comment.id, function(replies){
-                    replies.forEach(function(reply){
-                        addComment(commentEl, reply, currentUser)
-                    })
-                    $(showMoreRepliesEl).hide()
-                    $(loader).remove()
-                }, function(err){
-                    $(loader).remove()
-                })
-            })
-
-            $('.action-delete', commentActionsEl).click(function(){
-                var modal = showModalPrompt('Delete', 'Are you sure you want to delete this comment?', function(){
-                    var loader = newLoader()
-                    $('.status', modal).html('').append(loader);
-                    api.deleteComment(comment.id, function(){
-                        $(contentEl).html('').append($(deletedCommentContentTemplate).clone())
-                        $(modal).modal('hide');
-                        $(commentActionsEl).hide();
-                    }, function(){
-                        $(loader).remove()
-                        $('.status', modal).html('Something went wrong. Please try again...')
-                    })
-                })
-            })
-
-            $('.action-edit', commentActionsEl).click(function(){
-                var contentBox = addCommentBox({
-                    showAvatar: false,
-                    showCancel: true,
-                    okLabel: 'Update',
-                    content: comment.content,
-                    onOk: function(content){
-                        content = (content || '').trim()
-                        if (!content) {
-                            return
                         }
-                        var loader = newLoader()
-                        $('.status', contentBox).html('').append(loader)
-                        api.updateComment(comment.id, content, function(result){
-                            $(contentBox).remove();
-                            $(contentEl).html(result.display_content);
-                            comment.content = result.content
-                        }, function(err){
-                            $(loader).remove()
-                            $('.status', contentBox).html('Something went wrong. Please try again...')
+                    })
+                    $(replyBoxContainer).append(replyTextBox)
+                })
+
+                $(showMoreRepliesEl).click(function(){
+                    var loader = newLoader()
+                    $(showMoreRepliesEl).parent().prepend(loader);
+                    api.getCommentThread(comment.ref, comment.id, function(replies){
+                        replies.forEach(function(reply){
+                            addComment(commentEl, reply, currentUser)
                         })
-                    },
-                    onCancel: function(){
-                        $(contentBox).remove();
-                        $(contentEl).html(comment.content);
-                    }
-                });
-                $(contentEl).html('').append(contentBox);
-            })
+                        $(showMoreRepliesEl).hide()
+                        $(loader).remove()
+                    }, function(err){
+                        $(loader).remove()
+                    })
+                })
+
+                $('.action-delete', commentActionsEl).click(function(){
+                    var modal = showModalPrompt('Delete', 'Are you sure you want to delete this comment?', function(){
+                        var loader = newLoader()
+                        $('.status', modal).html('').append(loader);
+                        api.deleteComment(comment.id, function(){
+                            $(contentEl).html('').append($(deletedCommentContentTemplate).clone())
+                            $(modal).modal('hide');
+                            $(commentActionsEl).hide();
+                        }, function(){
+                            $(loader).remove()
+                            $('.status', modal).html('Something went wrong. Please try again...')
+                        })
+                    })
+                })
+
+                $('.action-edit', commentActionsEl).click(function(){
+                    var contentBox = addCommentBox({
+                        showAvatar: false,
+                        showCancel: true,
+                        okLabel: 'Update',
+                        content: comment.content,
+                        onOk: function(content){
+                            content = (content || '').trim()
+                            if (!content) {
+                                return
+                            }
+                            var loader = newLoader()
+                            $('.status', contentBox).html('').append(loader)
+                            api.updateComment(comment.id, content, function(result){
+                                $(contentBox).remove();
+                                $(contentEl).html(result.display_content);
+                                comment.content = result.content
+                            }, function(err){
+                                $(loader).remove()
+                                $('.status', contentBox).html('Something went wrong. Please try again...')
+                            })
+                        },
+                        onCancel: function(){
+                            $(contentBox).remove();
+                            $(contentEl).html(comment.content);
+                        }
+                    });
+                    $(contentEl).html('').append(contentBox);
+                })
+            }
 
             // add replies, if any
             replies.forEach(function(reply){
