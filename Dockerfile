@@ -52,7 +52,6 @@ RUN python -m spacy download en_core_web_sm
 
 # Set plugins
 ENV CKAN__PLUGINS envvars \
-                  oauth2 \
                   recline_view \
                   validation \
                   knowledgehub \
@@ -60,7 +59,8 @@ ENV CKAN__PLUGINS envvars \
                   stats \
                   datastore \
                   datapusher \
-                  datarequests
+                  datarequests \
+                  oauth2
 
 
 RUN mkdir -p /var/lib/ckan/default && chown -R ckan:ckan /var/lib/ckan/default
