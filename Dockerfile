@@ -59,7 +59,8 @@ ENV CKAN__PLUGINS envvars \
                   stats \
                   datastore \
                   datapusher \
-                  datarequests
+                  datarequests \
+                  oauth2
 
 
 RUN mkdir -p /var/lib/ckan/default && chown -R ckan:ckan /var/lib/ckan/default
