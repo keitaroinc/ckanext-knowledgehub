@@ -79,4 +79,4 @@ def post_delete(context, data_dict=None):
 
 
 def comment_delete(context, data_dict=None):
-    return {'succes': True}
+    return {'success': True}
