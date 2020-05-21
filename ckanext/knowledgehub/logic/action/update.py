@@ -1891,6 +1891,15 @@ def access_request_decline(context, data_dict):
 
 
 def comment_update(context, data_dict):
+    '''Updates a comment content.
+
+    Only the comment content and updated timestamp are updated with this call.
+
+    :param id: `str`, the comment ID.
+    :param content: `str`, the comment updated content.
+
+    :returns: `dict`, dictized comment object with the updated values.
+    '''
     check_access('comment_update', context, data_dict)
 
     user = context.get('auth_user_obj')

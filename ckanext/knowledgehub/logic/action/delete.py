@@ -601,9 +601,6 @@ def post_delete(context, data_dict):
             raise logic.NotAuthorized(_('You are not authorized to '
                                         'delete this post'))
     try:
-        toolkit.get_action('delete_comments')(context, {
-            'ref': post.id,
-        })
         model.Session.delete(post)
         model.Session.commit()
         Posts.delete_from_index(data_dict)
@@ -614,6 +611,19 @@ def post_delete(context, data_dict):
 
 
 def comment_delete(context, data_dict):
+    '''Deletes a comment.
+
+    If the comment has replies tied to it, then it will not be removed, just
+    marked as deleted. Comments marked as deleted always have their content set
+    to empty when retrieved via the API.
+
+    If the comment has no replies, then it is completely removed.
+
+    The counters for number of comments and replies are decreased only if the
+    comment is completely removed.
+
+    :param id: `str`, the ID of the comment to be deleted.
+    '''
     check_access('comment_delete', context, data_dict)
 
     user = context.get('auth_user_obj')

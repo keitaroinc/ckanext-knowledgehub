@@ -35,7 +35,7 @@ comments_table = Table(
            default=datetime.datetime.utcnow),
     Column('created_by', types.String(128), nullable=False, index=True),
     Column('ref', types.String(128), nullable=False, index=True),
-    Column('content', types.UnicodeText, default='', nullable=False),
+    Column('content', types.UnicodeText, default=u'', nullable=False),
     Column('thread_id', types.String(128), nullable=True, index=True),
     Column('reply_to', types.String(128), nullable=True, index=True),
     Column('deleted', types.Boolean, nullable=False, default=False),
@@ -76,7 +76,7 @@ class Comment(DomainObject):
                 'replies': [],
             }
 
-        if comments:
+        if comments and max_replies:
             sub = Session.query(cls, func.rank().over(
                 order_by=comments_table.c.created_at.desc(),
                 partition_by=comments_table.c.thread_id,

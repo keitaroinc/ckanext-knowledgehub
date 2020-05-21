@@ -1764,4 +1764,11 @@ def get_requested_resource_type_and_ref():
 
 
 def get_comments_count(ref):
+    '''Returns the total number of comments for this entity identified by
+    its reference (`ref`).
+
+    :param ref: `str`, the reference to the entity.
+
+    :returns: `int`, total number of comments (including replies).
+    '''
     return Comment.get_comments_count(ref) or 0

@@ -1962,6 +1962,19 @@ def _find_sysadmins():
 
 
 def comment_create(context, data_dict):
+    '''Creates a comment.
+
+    The comment can be directly to an entity (ref), or can be a reply to other
+    comment.
+
+    :param ref: `str`, reference to the entity being commented on (post,
+        dataset, research question etc)
+    :param content: `str`, the comment content.
+    :param reply_to: `str`, optional, if provided, then this comment is a reply
+        to another comment with the ID given in this parameter.
+
+    :returns: `dict`, dictized representation of the comment.
+    '''
     check_access('comment_create', context, data_dict)
 
     user = context.get('auth_user_obj')
