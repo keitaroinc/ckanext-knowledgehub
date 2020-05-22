@@ -23,6 +23,10 @@ from ckanext.knowledgehub.model.comments import (
     Comment,
     CommentsRefStats
 )
+from ckanext.knowledgehub.model.likes import (
+    LikesCount,
+    LikesRef,
+)
 
 __all__ = [
     'AccessRequest',
@@ -36,6 +40,8 @@ __all__ = [
     'DataQualityMetrics',
     'Keyword',
     'KWHData',
+    'LikesCount',
+    'LikesRef',
     'Notification',
     'ResourceFeedbacks',
     'ResourceValidate',
