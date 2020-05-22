@@ -1,4 +1,4 @@
-@comments-backgroud: #f5f5f5;
+@comments-background: #f7f7f7;
 
 .add-comment-box{
     .comment-input {
@@ -15,7 +15,7 @@
     }
 
     .status {
-        color: darken(@comments-backgroud, 20%);
+        color: darken(@comments-background, 20%);
         padding-left: 2rem;
 
         i.fa {
@@ -42,7 +42,7 @@
             }
             .comment-time {
                 font-size: 0.9rem;
-                color: darken(@comments-backgroud, 40%);
+                color: darken(@comments-background, 40%);
             }
         }
     }
@@ -50,12 +50,13 @@
     .replies-container {
         padding: 0px;
         margin-left: 15px;
+        margin-bottom: ;
         padding-right: 15px;
-        border-left: solid 1px darken(@comments-backgroud, 10%);
+        border-left: solid 2px darken(@comments-background, 10%);
     }
 
     .action-reply {
-        color: darken(@comments-backgroud, 40%);
+        color: darken(@comments-background, 40%);
         font-size: 1.1rem;
     }
     .add-comment-box {
@@ -65,16 +66,26 @@
     .comment-main {
         padding: 0.5rem;
     }
-    .comment-main:hover {
-        background-color: darken(@comments-backgroud, 3%);
+
+    .comments-thread {
+        background-color: darken(@comments-background, 1%);
     }
+}
+
+.top-level-comment {
+    .comments-thread {
+        margin-bottom: 1.5rem;
+    }
+}
+.top-level-comment:last-child {
+    margin-bottom: 0rem;
 }
 
 .comments-wrapper {
     padding: 3rem 0 3rem 0;
-    background-color: @comments-backgroud;
-    border-top: solid 1px darken(@comments-backgroud, 3%);
-    border-bottom: solid 2px darken(@comments-backgroud, 10%);
+    background-color: @comments-background;
+    border-top: solid 1px darken(@comments-background, 3%);
+    border-bottom: solid 2px darken(@comments-background, 10%);
 
     .add-new-comment {
         margin-bottom: 3rem;
@@ -82,7 +93,7 @@
 
     .no-comments {
         text-align: center;
-        color: darken(@comments-backgroud, 10%);
+        color: darken(@comments-background, 10%);
         font-style: italic;
         display: none;
     }
@@ -129,7 +140,7 @@
 
 .loader {
     text-align: center;
-    color: darken(@comments-backgroud, 10%);
+    color: darken(@comments-background, 10%);
     i.fa {
         font-size: 2rem;
     }
