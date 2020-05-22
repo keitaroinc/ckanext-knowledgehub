@@ -40,8 +40,14 @@ def _get_context():
 def index():
     u'''List all news on the feed.
     '''
-    default_limit = int(config.get('ckanext.knowledgehub.news_per_page', '20'))
     context = _get_context()
+    try:
+        check_access('post_search', context, {})
+    except logic.NotAuthorized:
+        base.abort(403, _('Only logged in users can view news feed.'))
+        return
+
+    default_limit = int(config.get('ckanext.knowledgehub.news_per_page', '20'))
     text = request.args.get('q', '').strip()
     page = request.args.get('page', '').strip()
     limit = request.args.get('limit', '').strip()
