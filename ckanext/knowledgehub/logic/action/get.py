@@ -33,6 +33,7 @@ from ckanext.knowledgehub.model import (
     UserProfile,
     Notification,
     Posts,
+    Comment,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
@@ -2325,3 +2326,219 @@ def access_request_list(context, data_dict):
         'page': page,
         'limit': limit,
     }
+
+
+def _dictize_comment(comment, context):
+    comment = _table_dictize(comment, context)
+    if comment.get('deleted'):
+        comment['content'] = ''
+    comment['human_timestamp'] = kh_helpers.human_elapsed_time(
+        comment['created_at'])
+    comment['display_content'] = h.render_markdown(
+        comment.get('content') or '')
+    return comment
+
+
+def _get_comment_user(user_id):
+    try:
+        user = toolkit.get_action('user_show')({
+            'ignore_auth': True,
+        }, {
+            'id': user_id,
+        })
+        return {
+            'id': user['id'],
+            'name': user['name'],
+            'display_name': user.get('display_name') or user['name'],
+            'email_hash': user.get('email_hash'),
+        }
+    except Exception as e:
+        log.error('Cannot get user %s. Error: %s', user_id, str(e))
+        log.exception(e)
+
+    return {
+        'id': user_id,
+        'name': user_id,
+        'display_name': user_id,
+    }
+
+
+def comments_list(context, data_dict):
+    '''Retrieves a pagined list of comments for a particular entity identified
+    by `ref`.
+
+    The list retrieves just the top level comments (comments directly to the
+    ref entity, that are not replies to another comment) and a couple of
+    replies for those comment - first level replies only up to `max_replies`,
+    which is set to `3` by default.
+
+    For example, given the following comments threads:
+
+        comment1
+            reply1
+                reply1.1
+            reply2
+                reply2.1
+                reply2.2
+            reply3
+            reply4
+        comment2
+            reply1
+            reply2
+
+    The action will return the following list (with max replies 3):
+
+        comment1
+            reply1
+            reply2
+            reply3
+        comment2
+            reply1
+            reply2
+
+    This gives an overview of the conversation, and individual threads can be
+    retrieved by using the `comments_thread_show` action.
+
+    :param ref: `str`, the reference to the entity for this comments
+        conversation - ID of post, dataset, research question etc.
+    :param page: `int`, the page to fetch (1-based).
+    :param limit: `int`, number of items per page. This is the number of top
+        level comments and does not count the replies. Default is `20`.
+    :param max_replies: `int`, maximal number of replies per comment. Default
+        is `3`.
+
+    :returns: `dict`, containing:
+        * `count` - total number of comments to this entity (including all
+            replies)
+        * `results`, `list` of comment dicts, representing the top level
+            comments, ordered by time of creation in descending order. Comment
+            replies are also ordered by time of creation in descending order.
+    '''
+    check_access('comments_list', context, data_dict)
+
+    ref = data_dict.get('ref', '').strip()
+    page = int(data_dict.get('page', 1))
+    limit = int(data_dict.get('limit', 20))
+    max_replies = int(data_dict.get('max_replies', 3))
+
+    if page < 1:
+        page = 1
+    if limit > 500:
+        limit = 500
+
+    offset = (page-1)*limit
+
+    if not ref:
+        raise ValidationError({'ref': [_('Missing value')]})
+
+    comments = Comment.get_comments(ref, offset=offset, limit=limit,
+                                    max_replies=max_replies)
+    total = Comment.get_comments_count(ref) or 0
+
+    results = []
+
+    users = {}
+
+    for cmnt in comments:
+        comment = _dictize_comment(cmnt['comment'], context)
+        comment['replies'] = map(lambda reply: _dictize_comment(reply,
+                                                                context),
+                                 cmnt['replies'])
+        results.append(comment)
+        user = users.get(comment['created_by'])
+        if not user:
+            user = _get_comment_user(comment['created_by'])
+            users[user['id']] = user
+        comment['user'] = user
+        if comment.get('replies'):
+            for reply in comment['replies']:
+                user = users.get(reply['created_by'])
+                if not user:
+                    user = _get_comment_user(reply['created_by'])
+                    users[user['id']] = user
+                reply['user'] = user
+
+    return {
+        'page': page,
+        'limit': limit,
+        'count': total,
+        'results': results,
+    }
+
+
+def comments_thread_show(context, data_dict):
+    '''Retrieves all replies for a given thread. A thread is a top level
+    comment (comment that is not a reply to any other comment).
+
+    The response for a given thread id is a list of all replies, which in turn
+    hold their respective replies. For example, for thread we can have a
+    structure that looks like this:
+
+        reply1
+            sub-reply1
+                sub-reply1
+                sub-reply2
+            sub-reply2
+            sub-reply3
+                sub-reply1
+        reply2
+            sub-reply1
+            sub-reply2
+                sub-reply1
+                    sub-reply1
+        reply3
+
+    The full tree of replies for the given thread will be returned.
+
+    :param ref: `str`, the reference to the entity for this comments
+        conversation - ID of post, dataset, research question etc.
+    :param thread_id: `str`, the ID of the thread (top level comment) for which
+        to return all replies.
+
+    :returns: `list` of comment dicts, the replies for the requested thread.
+        Each reply in turn may contain a list of its replies.
+    '''
+    check_access('comments_thread_show', context, data_dict)
+
+    ref = data_dict.get('ref', '').strip()
+    thread_id = data_dict.get('thread_id', '').strip()
+
+    errors = {}
+    if not ref:
+        errors['ref'] = [_('Missing value')]
+    if not thread_id:
+        errors['thread_id'] = [_('Missing value')]
+
+    if errors:
+        raise ValidationError(errors)
+
+    comments = Comment.get_thread(ref, thread_id)
+
+    if not comments:
+        return []
+
+    comments = map(lambda comment: _dictize_comment(comment,
+                                                    context), comments)
+
+    users = {}
+
+    thr = {}
+    results = []
+
+    for comment in comments:
+        if thr.get(comment['id']):
+            comment.update(thr[comment['id']])
+
+        parent = thr.get(comment['reply_to'])
+        if not parent:
+            parent = {'replies': []}
+            thr[comment['reply_to']] = parent
+        thr[comment['id']] = comment
+        parent['replies'].append(comment)
+        user = users.get(comment['created_by'])
+        if not user:
+            user = _get_comment_user(comment['created_by'])
+            users[user['id']] = user
+        comment['user'] = user
+
+    return thr[thread_id]['replies']

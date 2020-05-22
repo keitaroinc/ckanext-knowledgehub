@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from ckan.model.meta import Session
 
@@ -26,6 +27,7 @@ from ckanext.knowledgehub.model import (
     Keyword,
     KWHData,
     Posts,
+    Comment,
 )
 from ckanext.knowledgehub.logic.jobs import schedule_update_index
 
@@ -599,9 +601,6 @@ def post_delete(context, data_dict):
             raise logic.NotAuthorized(_('You are not authorized to '
                                         'delete this post'))
     try:
-        toolkit.get_action('delete_comments')(context, {
-            'post_id': post.id,
-        })
         model.Session.delete(post)
         model.Session.commit()
         Posts.delete_from_index(data_dict)
@@ -611,5 +610,49 @@ def post_delete(context, data_dict):
         model.Session.rollback()
 
 
-def delete_comments(context, data_dict):
-    pass
+def comment_delete(context, data_dict):
+    '''Deletes a comment.
+
+    If the comment has replies tied to it, then it will not be removed, just
+    marked as deleted. Comments marked as deleted always have their content set
+    to empty when retrieved via the API.
+
+    If the comment has no replies, then it is completely removed.
+
+    The counters for number of comments and replies are decreased only if the
+    comment is completely removed.
+
+    :param id: `str`, the ID of the comment to be deleted.
+    '''
+    check_access('comment_delete', context, data_dict)
+
+    user = context.get('auth_user_obj')
+    is_sysadmin = hasattr(user, 'sysadmin') and user.sysadmin
+
+    comment_id = data_dict.get('id', '').strip()
+    if not comment_id:
+        raise ValidationError({'id': [_('Missing value')]})
+
+    comment = Comment.get(comment_id)
+    if not comment:
+        raise NotFound(_('Comment not found'))
+
+    if comment.created_by != user.id:
+        if not is_sysadmin:
+            raise NotAuthorized(_('You cannot delete this comment.'))
+
+    if not comment.replies_count:
+        # we can delete this comment completely
+        Session.delete(comment)
+
+        Comment.decrement_comment_count(comment)
+
+        Session.flush()
+        return
+
+    # Comment has replies, so we just mark as deleted
+    comment.deleted = True
+    comment.modified_at = datetime.now()
+    comment.save()
+
+    Session.flush()

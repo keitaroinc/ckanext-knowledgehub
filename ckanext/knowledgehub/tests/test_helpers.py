@@ -31,6 +31,7 @@ from ckanext.knowledgehub.model.resource_feedback import (
 from ckanext.knowledgehub.model.kwh_data import (
     setup as kwh_data_setup
 )
+from ckanext.knowledgehub.model.comments import CommentsRefStats
 from ckanext.knowledgehub import helpers as kwh_helpers
 from ckanext.knowledgehub.logic.action import create as create_actions
 from ckanext.knowledgehub.logic.action import get as get_actions
@@ -1409,9 +1410,6 @@ class TestKWHHelpers(ActionsBase):
         assert_true(notifications is not None)
         assert_equals(notifications.get('count'), 1)
 
-
-
-
     @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_check_if_dataset_is_on_hdx(self):
         dataset = create_dataset()
@@ -1423,7 +1421,6 @@ class TestKWHHelpers(ActionsBase):
         dataset['methodology'] = 'http://www.opendefinition.org/licenses/cc-by'
         dataset['num_resources'] = 1
         dataset['url'] = None
-
 
         Dataset.read_from_hdx.return_value = {
                 'name': dataset['name'],
@@ -1443,4 +1440,11 @@ class TestKWHHelpers(ActionsBase):
 
         exists = kwh_helpers.check_if_dataset_is_on_hdx(dataset['name'])
         assert_equals(exists, True)
-    
+
+    def test_get_comments_count(self):
+        model.Session.query(CommentsRefStats).delete()
+        stats = CommentsRefStats(ref='ref-0', comment_count=42)
+        stats.save()
+
+        count = kwh_helpers.get_comments_count('ref-0')
+        assert_equals(count, 42)

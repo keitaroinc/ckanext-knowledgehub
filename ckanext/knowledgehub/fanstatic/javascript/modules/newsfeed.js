@@ -3,7 +3,6 @@ ckan.module('newsfeed', function($){
     var InfiniteScroll = function() {
         this.scroll = function() {
             return new Promise(function(resolve) {
-                console.log('::scroll with:', this.onScroll)
                 if(this.onScroll) {
                     this.onScroll().then(function(){
                         resolve();
@@ -24,7 +23,6 @@ ckan.module('newsfeed', function($){
             if ($(document).height() - $(this).height() == $(this).scrollTop()) {
                 if(shouldScroll){
                     shouldScroll = false;
-                    console.log('Do a scroll')
                     infiniteScroll.scroll().then(function(){
                         setTimeout(function(){
                             shouldScroll = true;
@@ -96,12 +94,10 @@ ckan.module('newsfeed', function($){
     $(function(){
         var el = $('[pagination-container]');
         if (el.length) {
-            console.log('Pagination container ->', el)
             var pagination = new Pagination(el);
             infiniteScroll.onScroll = function(){
                 return pagination.getNextPage();
             }
-            console.log()
         }
     });
 });

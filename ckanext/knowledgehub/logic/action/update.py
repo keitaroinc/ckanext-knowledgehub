@@ -26,7 +26,7 @@ from ckan.logic.action.update import resource_update as ckan_rsc_update
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
 from ckan.logic.action.update import package_update as ckan_package_update
-from ckan.lib.helpers import url_for
+from ckan.lib.helpers import url_for, render_markdown
 
 from ckanext.knowledgehub.logic import schema as knowledgehub_schema
 from ckanext.knowledgehub.model.theme import Theme
@@ -45,6 +45,7 @@ from ckanext.knowledgehub.model import Notification
 from ckanext.knowledgehub.model import (
     AccessRequest,
     AssignedAccessRequest,
+    Comment,
 )
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -1887,3 +1888,54 @@ def access_request_decline(context, data_dict):
     :returns: `dict`, the dict representation of the access request.
     '''
     return _access_request_update(context, data_dict, granted=False)
+
+
+def comment_update(context, data_dict):
+    '''Updates a comment content.
+
+    Only the comment content and updated timestamp are updated with this call.
+
+    :param id: `str`, the comment ID.
+    :param content: `str`, the comment updated content.
+
+    :returns: `dict`, dictized comment object with the updated values.
+    '''
+    check_access('comment_update', context, data_dict)
+
+    user = context.get('auth_user_obj')
+    is_sysamidn = hasattr(user, 'sysadmin') and user.sysadmin
+
+    comment_id = data_dict.get('id', '').strip()
+    content = data_dict.get('content', '').strip()
+
+    errors = {}
+    if not comment_id:
+        errors['id'] = [_('Missing value')]
+    if not content:
+        errors['content'] = [_('Missing value')]
+
+    if errors:
+        raise ValidationError(errors)
+
+    comment = Comment.get(comment_id)
+    if not comment:
+        raise NotFound(_('Not found'))
+
+    if comment.created_by != user.id:
+        if not is_sysamidn:
+            raise NotAuthorized(_('You cannot update this comment'))
+
+    comment.content = content
+    comment.save()
+    model.Session.flush()
+
+    comment = _table_dictize(comment, context)
+    comment['user'] = {
+        'id': user.id,
+        'name': user.name,
+        'display_name': user.display_name or user.name
+    }
+
+    comment['display_content'] = render_markdown(comment.get('content') or '')
+
+    return comment

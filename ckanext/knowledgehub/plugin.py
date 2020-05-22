@@ -201,6 +201,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'human_elapsed_time': h.human_elapsed_time,
             'get_requested_resource_type_and_ref':
                 h.get_requested_resource_type_and_ref,
+            'get_comments_count': h.get_comments_count,
         }
 
     # IDatasetForm

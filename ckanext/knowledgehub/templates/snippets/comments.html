@@ -1,0 +1,112 @@
+{% resource 'knowledgehub/comments' %}
+
+<div class="container-fluid comments-wrapper" user="{{user.id}}" show-comments-for="{{ref}}">
+    <div class="row">
+        <div class="col-md-12 add-new-comment"></div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 comments-container">
+            <div class="no-comments">
+                {{ _('There are no comments.') }}
+            </div>
+        </div>
+    </div>
+    <div class="row loading-comments">
+        <div class="col-md-12 loader">
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+        </div>
+    </div>
+</div>
+
+<div class="comments-templates" style="display: none;">
+    <div class="container-fluid comment-template comment-box">
+        <div class="comment-main">
+            <div class="row">
+                <div class="col-md-12 comment-info">
+                    <image class="gravatar" src=""></image>
+                    <div class="info-data">
+                        <div class="comment-user">
+                            <span class="user-name">User Name</span>
+                            <div class="btn-group pull-right comment-actions">
+                                <button class="btn btn-default btn-inverse action-edit"><i class="fa fa-pencil"></i></button>
+                                <button class="btn btn-danger btn-inverse action-delete"><i class="fa fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="comment-time"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 comment-content"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <button class="btn btn-default btn-inverse action-reply"><i class="fa fa-reply"></i> Reply</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 reply-box-container"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <button class="btn-link btn-default action-show-more-replies pull-left">Show all replies</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 replies-container comments-container quote">
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid add-comment-box add-comment-template">
+        <div class="row">
+            <div class="col-md-12 comment-input">
+                {{ h.gravatar((user.email_hash if user.email_hash else ''), size=32) }}
+                <textarea type="text" class="form-control comment-content" 
+                       placeholder="{{_('Commenting as {}...').format(user.display_name or user.name)}}"></textarea>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="status"></div>
+            </div>
+            <div class="col-md-6">
+                <div class="pull-right">
+                    <button class="btn-link btn-default action-cancel">Cancel</button>
+                    <button class="btn btn-default action-ok">Comment</button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="comment-deleted-content">
+        <i class="fa fa-minus-circle"></i> {{ _('Comment was deleted') }}
+    </div>
+
+    <div class="modal prompt-template" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">
+                <span class="title-content"></span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+              </h5>
+            </div>
+            <div class="modal-body">
+              <p></p>
+            </div>
+            <div class="modal-footer">
+              <span class="status"></span>
+              <button type="button" class="btn btn-primary action-ok">OK</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <span class="generic-loader"><i class="fa fa-circle-o-notch fa-spin"></i></span>
+</div>
