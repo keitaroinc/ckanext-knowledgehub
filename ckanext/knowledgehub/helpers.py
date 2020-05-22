@@ -1729,7 +1729,7 @@ def check_if_dataset_is_on_hdx(dataset_name):
 
 
 def human_elapsed_time(dt):
-    now = datetime.now()
+    now = datetime.utcnow()
     if isinstance(dt, str) or isinstance(dt, unicode):
         dt = parser.parse(dt)
     return humanize.naturaltime(now - dt)

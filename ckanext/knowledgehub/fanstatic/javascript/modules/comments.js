@@ -1,3 +1,20 @@
+/**
+ * Comments module.
+ * 
+ * Exposes a self-contained comments component with full conversation functionality.
+ * 
+ * The module initializes on an attribute present in the HTML DOM:
+ *  - 'show-comments-for', this must contain the ref (the ID) of the entity being
+ *      commented on.
+ * Addtional attribute can be used to control the behaviour of the replies:
+ * 'enable-multilevel-replies', which switches the converstion to multi-level
+ *  replies i.e you can reply to a reply, and the thread is rendered as tree.
+ * 
+ * This module is not intended to be used in conjuction with 'snippets/comments.html'
+ * where the whole HTML structure and templates are set for the component.
+ * 
+ * To set up comments see the documentation of the comments snippet: 'snippets/comments.html'.
+ */
 (function(){
     $(function(){
         var commentTemplate = $('.comment-template').clone();
@@ -143,7 +160,7 @@
             return el;
         }
 
-        function addComment(ctx, comment, currentUser, prepend) {
+        function addComment(ctx, comment, currentUser, prepend, oneLevelReplies) {
             var commentEl = $('#comment-' + comment.id, ctx);
             var shouldAppend = true;
             if (commentEl.length) {
@@ -155,8 +172,7 @@
             }else{
                 commentEl = commentEl[0];
             }
-            
-            
+
             var gravatarEl = $('.gravatar', commentEl)[0];
             var usernameEl = $('.comment-info .comment-user .user-name', commentEl)[0];
             var timeEl = $('.comment-info .comment-time', commentEl)[0];
@@ -196,12 +212,15 @@
                 }
             }
 
+            if (!comment.thread_id) {
+                $(commentEl).addClass('top-level-comment')
+            }
+
             // setup actions
 
             if (shouldAppend){ // if not appending, we're merging the data and we don't want to bind actions twice
                 // reply to comment
                 $(actionReplyEl).click(function(){
-                    console.log('Clicked ->', this, $(actionReplyEl))
                     $(actionReplyEl).hide()
                     var replyTextBox = addCommentBox({
                         showAvatar: true,
@@ -215,13 +234,15 @@
                             var loader = newLoader()
                             $('.status', replyTextBox).html('')
                             $('.status', replyTextBox).append(loader)
-
+                            var thread_id = comment.thread_id || comment.id;
+                            var threadEl = $('#comment-' + thread_id)
                             api.addComment({
                                 content: content,
                                 ref: comment.ref,
-                                replyTo: comment.id,
+                                replyTo: oneLevelReplies ? thread_id : comment.id,
                             }, function(reply){
-                                addComment(commentEl, reply, currentUser, true)
+                                var ctxEl = oneLevelReplies ? threadEl : commentEl;
+                                addComment(ctxEl, reply, currentUser, false, oneLevelReplies)
                                 $(replyTextBox).remove()
                                 $(actionReplyEl).show();
                             }, function(err){
@@ -242,7 +263,7 @@
                     $(showMoreRepliesEl).parent().prepend(loader);
                     api.getCommentThread(comment.ref, comment.id, function(replies){
                         replies.forEach(function(reply){
-                            addComment(commentEl, reply, currentUser)
+                            addComment(commentEl, reply, currentUser, false, oneLevelReplies)
                         })
                         $(showMoreRepliesEl).hide()
                         $(loader).remove()
@@ -299,7 +320,7 @@
 
             // add replies, if any
             replies.forEach(function(reply){
-                addComment(commentEl, reply, currentUser);
+                addComment(commentEl, reply, currentUser, false, oneLevelReplies);
             });
 
             if (shouldAppend){
@@ -318,7 +339,11 @@
             var ref = $(el).attr('show-comments-for')
             var currentUser = $(el).attr('user')
             var loaderEl = $('.loading-comments')[0];
-            
+            var oneLevelReplies = true;
+            if($(el).attr('enable-multilevel-replies')) {
+                oneLevelReplies = false;
+            }
+
             el.shouldScroll = true;
             $(window).scroll(function(){
                 if ($(document).height() - $(this).height() == $(this).scrollTop()) {
@@ -358,7 +383,7 @@
                     }
                     page++;
                     result.results.forEach(function(comment) {
-                        addComment(el, comment, currentUser);
+                        addComment(el, comment, currentUser, false, oneLevelReplies);
                     })
                     pageLoading = false
                     onComplete()
@@ -385,7 +410,7 @@
                         content: content,
                         ref: ref,
                     }, function(comment){
-                        addComment(el, comment, currentUser, true);
+                        addComment(el, comment, currentUser, true, oneLevelReplies);
                         $('.comment-content', addNewCommentBox).val('')
                         $(loader).remove()
                         $('.no-comments', el).remove();

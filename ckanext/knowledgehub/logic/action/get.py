@@ -2534,6 +2534,8 @@ def comments_thread_show(context, data_dict):
             parent = {'replies': []}
             thr[comment['reply_to']] = parent
         thr[comment['id']] = comment
+        if not parent.get('replies'):
+            parent['replies'] = []
         parent['replies'].append(comment)
         user = users.get(comment['created_by'])
         if not user:
