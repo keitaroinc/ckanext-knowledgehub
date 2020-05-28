@@ -484,13 +484,13 @@ def get_last_visuals():
     return data_dict_format
 
 
-def get_rqs_dashboards(rq_tit):
+def get_rqs_dashboards(rq_id):
 
     visualizations = toolkit.get_action('dashboards_for_rq')(_get_context(), {
-        'research_question': rq_tit
+        'research_question': rq_id
     })
 
-    return(visualizations)
+    return visualizations
 
 
 def get_filter_values(resource_id, filter_name, previous_filters=[]):
