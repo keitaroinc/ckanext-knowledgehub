@@ -1025,7 +1025,7 @@ def _patch_data_quality(context, data_dict, _type):
         db_metric.metrics[field] = values
         db_metric.metrics[field]['manual'] = values.get('manual', True)
 
-    db_metric.modified_at = datetime.datetime.now()
+    db_metric.modified_at = datetime.datetime.utcnow()
     db_metric.save()
 
     results = {}
@@ -1823,7 +1823,7 @@ def _access_request_update(context, data_dict, granted=True):
 
         grant_actions[entity_type](context, entity_ref, user_id)
 
-    access_request.modified_at = datetime.datetime.now()
+    access_request.modified_at = datetime.datetime.utcnow()
     access_request.status = 'granted' if granted else 'declined'
     access_request.resolved_by = user.id
 
@@ -1926,6 +1926,7 @@ def comment_update(context, data_dict):
             raise NotAuthorized(_('You cannot update this comment'))
 
     comment.content = content
+    comment.modified_at = datetime.datetime.utcnow()
     comment.save()
     model.Session.flush()
 

@@ -59,7 +59,7 @@
   </div>
   {% if show_comments %}
   <div class="post-comments col-md-8">
-    {% snippet 'snippets/comments.html', user=user, ref=post.id %}
+    {% snippet 'snippets/comments.html', user=user, ref=post.id, enable_multilevel_replies=False %}
   </div>
   {% endif %}
 </div>

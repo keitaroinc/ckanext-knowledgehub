@@ -78,7 +78,7 @@ class Comment(DomainObject):
 
         if comments and max_replies:
             sub = Session.query(cls, func.rank().over(
-                order_by=comments_table.c.created_at.desc(),
+                order_by=comments_table.c.created_at.asc(),
                 partition_by=comments_table.c.thread_id,
             ).label('rank')).filter(
                 comments_table.c.thread_id.in_(comments.keys())
@@ -113,7 +113,7 @@ class Comment(DomainObject):
         ).filter(
             comments_table.c.thread_id == thread_id
         ).order_by(
-            comments_table.c.created_at.desc()
+            comments_table.c.created_at.asc()
         )
 
         return q.all()

@@ -1,6 +1,39 @@
-{% resource 'knowledgehub/comments' %}
+{# Snippet to render comments to a component.
+    The comments is a self-contained component that can be attached to any entity
+    on the portal. The comments are related to the entity ID via the 'ref' parameter.
+    Once attached to the enitity it will render fully featured comments with replies.
 
-<div class="container-fluid comments-wrapper" user="{{user.id}}" show-comments-for="{{ref}}">
+    The reply behaviour is controlled by a flag 'enable_multilevel_replies' which
+    determines whether the replies thread is a single level deep, or a full multi-level
+    replies thread.
+
+    An example of the usage:
+
+        <div>
+            <h1>{{pkg.title}}</h1>
+            <div>
+                {{pkg.content}}
+            </div>
+            <div>
+                <!-- we want to render comments here-->
+                {% snippet 'snippets/comments.html', user=user, ref=pkg.id %}
+            </div>
+        </div>
+
+    
+    Parameters:
+        * 'ref', required, the ID of the entity that is being commented on. Ususally the dataset
+            ID, or post ID
+        * 'user', required, current user as dict. Must contain: 'id', 'display_name' and 'email_hash'.
+            Used to render the user name and gravatar.
+        * 'enable_multilevel_replies', optional, if set to True, the replies can go multiple levels - 
+            there can be a reply to a reply and so on. This is rendered appropriately.
+            If set to False, then all replies are to the top level comment and a Reply to a reply
+            just adds the comment as a last reply to the top level comment.
+#}
+{% resource 'knowledgehub/comments' %}
+{% set enable_multilevel_replies = enable_multilevel_replies if not none else False %}
+<div class="container-fluid comments-wrapper" user="{{user.id}}" show-comments-for="{{ref}}" {%if enable_multilevel_replies %} enable-multilevel-replies="true" {% endif %}>
     <div class="row">
         <div class="col-md-12 add-new-comment"></div>
     </div>
@@ -53,7 +86,7 @@
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div class="row comments-thread">
             <div class="col-md-12 replies-container comments-container quote">
             </div>
         </div>
