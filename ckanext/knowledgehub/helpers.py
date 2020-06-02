@@ -487,7 +487,8 @@ def get_last_visuals():
 def get_rqs_dashboards(rq_id):
 
     visualizations = toolkit.get_action('dashboards_for_rq')(_get_context(), {
-        'research_question': rq_id
+        'research_question': rq_id,
+        'ignore_permissions': True,
     })
 
     return visualizations
