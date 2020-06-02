@@ -612,24 +612,27 @@ def visualizations_for_rq(context, data_dict):
 
 
 def dashboards_for_rq(context, data_dict):
+
     research_question = data_dict.get('research_question')
+    ignore_permissions = data_dict.get('ignore_permissions')
 
     if not research_question:
         raise toolkit.ValidationError(
             'Query parameter `research_question` is required')
 
     views = []
+    search_dict = {}
 
-    datasets = toolkit.get_action('package_search')(context, {
-        'fq': '+extras_research_question:{0}'.format(research_question)
-    })
+    search_dict['text'] = research_question
+    search_dict['fq'] = "idx_research_questions:" + research_question            
+    if ignore_permissions:
+        search_dict['ignore_permissions'] = ignore_permissions
+    dashboards = toolkit.get_action('search_dashboards')(context, search_dict)
 
-    for dataset in datasets.get('results'):
-        for resource in dataset.get('resources'):
-            dash_list = toolkit.get_action('dashboard_list')(
-                context, {'id': resource.get('id')})
-            for res_view in dash_list['data']:
-                views.append(res_view)
+    for dash in dashboards.get('results'):
+        dash = toolkit.get_action('dashboard_show')(
+                context, {'id': dash.get('id')})
+        views.append(dash)
 
     return views
 
@@ -1058,6 +1061,8 @@ def _get_dashboard_search_args(index, args, permission_labels):
     if 'fq' not in args:
         args['fq'] = fq
     else:
+        if isinstance(args['fq'], str) or isinstance(args['fq'], unicode):
+            args['fq'] = [args['fq']]
         args['fq'].append(fq)
     return args
 
