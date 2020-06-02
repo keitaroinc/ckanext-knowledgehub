@@ -180,3 +180,7 @@ def comments_list(context, data_dict=None):
 
 def comments_thread_show(context, data_dict=None):
     return {'success': True}
+
+
+def get_liked_by_user(context, data_dict=None):
+    return {'success': True}

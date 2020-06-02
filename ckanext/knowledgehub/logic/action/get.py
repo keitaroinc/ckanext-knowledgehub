@@ -34,6 +34,8 @@ from ckanext.knowledgehub.model import (
     Notification,
     Posts,
     Comment,
+    LikesCount,
+    LikesRef,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
@@ -2157,6 +2159,8 @@ def post_show(context, data_dict):
         fetch the data for that entity as well.
     :param with_user_info: `bool`, default `True`. If set to true, returns the
         post author info.
+    :param with_likes_count: `bool`, default `True`. If set to true, returns
+        the number of likes for this post.
 
     :returns: `dict`, the post data.
     '''
@@ -2166,9 +2170,12 @@ def post_show(context, data_dict):
     with_comments = data_dict.get('with_comments', False)
     with_related_entity = data_dict.get('with_related_entity', True)
     with_user_info = data_dict.get('with_user_info', True)
+    with_likes_count = data_dict.get('with_likes_count', True)
 
     if not post_id:
         raise logic.ValidationError({'id': _('Missing value')})
+
+    user = context.get('auth_user_obj')
 
     post = Posts.get(post_id)
     if not post:
@@ -2228,6 +2235,14 @@ def post_show(context, data_dict):
             'email_hash': author.get('email_hash'),
         }
 
+    if with_likes_count:
+        count = LikesCount.get_likes_count(post_data['id'])
+        user_liked = LikesRef.get(user.id, post_data['id'])
+        post_data.update({
+            'like_count': count,
+            'user_liked': True if user_liked else False,
+        })
+
     return post_data
 
 
@@ -2246,6 +2261,8 @@ def post_search(context, data_dict):
     '''
     check_access('post_search', context, data_dict)
 
+    user = context.get('auth_user_obj')
+
     if 'sort' in data_dict:
         data_dict['sort'] = get_sort_string(Posts, data_dict['sort'])
 
@@ -2260,7 +2277,21 @@ def post_search(context, data_dict):
                 'ignore_auth': True,
             }, {
                 'id': posts['results'][i]['id'],
+                'with_likes_count': False,
             })
+
+    post_ids = map(lambda p: p['id'], posts['results'])
+    liked = set()
+    likes_count = {}
+    if post_ids:
+        liked = LikesRef.get_user_liked_refs(user.id, post_ids)
+        if liked:
+            likes_count = LikesCount.get_likes_count_all(liked)
+
+    for post in posts['results']:
+        if post['id'] in liked:
+            post['user_liked'] = True
+        post['like_count'] = likes_count.get(post['id'], 0)
 
     return posts
 
@@ -2544,3 +2575,19 @@ def comments_thread_show(context, data_dict):
         comment['user'] = user
 
     return thr[thread_id]['replies']
+
+
+def get_likes_count(context, data_dict):
+    '''Returns the number of likes for the requested object (by ref).
+
+    :param ref: `str`, the ID of the object for which to count likes.
+
+    :returns: `int`, the number of likes.
+    '''
+    if 'ref' not in data_dict:
+        raise ValidationError({'ref': [_('Missing value')]})
+
+    ref = data_dict['ref']
+
+    count = LikesCount.get_likes_count(ref)
+    return count

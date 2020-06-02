@@ -51,6 +51,8 @@ from ckanext.knowledgehub.model import (
     AccessRequest,
     Comment,
     CommentsRefStats,
+    LikesCount,
+    LikesRef,
 )
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
@@ -713,6 +715,23 @@ class TestKWHCreateActions(ActionsBase):
         assert_equals(reply.get('content'), 'Test reply')
         assert_equals(reply.get('thread_id'), result['id'])
         assert_equals(reply.get('reply_to'), result['id'])
+
+    def test_like_create(self):
+        model.Session.query(LikesCount).delete()
+        model.Session.query(LikesRef).delete()
+        context = get_regular_user_context()
+
+        user = context.get('auth_user_obj')
+        create_actions.like_create(context, {
+            'ref': 'ref-001',
+        })
+
+        result = LikesCount.get('ref-001')
+        assert_true(result is not None)
+        assert_equals(result.count, 1)
+
+        result = LikesRef.get(user.id, 'ref-001')
+        assert_true(result is not None)
 
 
 class TestKWHGetActions(ActionsBase):
@@ -1461,6 +1480,22 @@ class TestKWHGetActions(ActionsBase):
         for reply in result:
             assert_equals(len(reply.get('replies')), 2)
 
+    def test_get_likes_count(self):
+        model.Session.query(LikesCount).delete()
+        model.Session.query(LikesRef).delete()
+
+        context = get_regular_user_context()
+        user = context.get('auth_user_obj')
+
+        c = LikesCount(ref='ref-001', count=100)
+        c.save()
+
+        result = get_actions.get_likes_count(context, {
+            'ref': 'ref-001',
+        })
+
+        assert_equals(result, 100)
+
 
 class TestKWHDeleteActions(ActionsBase):
 
@@ -1763,6 +1798,30 @@ class TestKWHDeleteActions(ActionsBase):
         stats = CommentsRefStats.get('ref-0')
         assert_true(stats is not None)
         assert_true(stats.comment_count, 1)  # total comment count decreased
+
+    def test_like_delete(self):
+        model.Session.query(LikesCount).delete()
+        model.Session.query(LikesRef).delete()
+
+        context = get_regular_user_context()
+        user = context.get('auth_user_obj')
+
+        lr = LikesRef(user_id=user.id, ref='ref-001')
+        lr.save()
+
+        lc = LikesCount(ref='ref-001', count=10)
+        lc.save()
+
+        delete_actions.like_delete(context, {
+            'ref': 'ref-001',
+        })
+
+        result = LikesCount.get('ref-001')
+        assert_true(result is not None)
+        assert_equals(result.count, 9)
+
+        result = LikesRef.get(user.id, 'ref-001')
+        assert_true(result is None)
 
 
 class TestKWHUpdateActions(ActionsBase):
