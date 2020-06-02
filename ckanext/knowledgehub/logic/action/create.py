@@ -50,6 +50,8 @@ from ckanext.knowledgehub.model import (
     Notification,
     Posts,
     Comment,
+    LikesCount,
+    LikesRef,
 )
 from ckanext.knowledgehub.backend.factory import get_backend
 from ckanext.knowledgehub.lib.writer import WriterService
@@ -2037,3 +2039,42 @@ def comment_create(context, data_dict):
     comment['display_content'] = render_markdown(comment.get('content') or '')
 
     return comment
+
+
+def like_create(context, data_dict):
+    '''Creates a like for the current user for a particular object in the
+    backend identified by 'ref' (ID).
+
+    This action is available only for authenticated users.
+
+    :param ref: `str`, the ID of the object (for example newsfeed post ID)
+    '''
+    check_access('like_create', context, data_dict)
+
+    if 'ref' not in data_dict:
+        raise ValidationError({'ref': [_('Missing value')]})
+
+    ref = data_dict['ref']
+    user = context.get('auth_user_obj')
+
+    try:
+        model.Session.begin(subtransactions=True)
+
+        like_ref = LikesRef.get(user.id, ref)
+        if like_ref:
+            raise ValidationError({'ref': [_('Already liked this item')]})
+        like_ref = LikesRef(user_id=user.id, ref=ref)
+        like_ref.save()
+
+        count = LikesCount.get(ref)
+        if not count:
+            count = LikesCount(ref=ref, count=0)
+        count.count += 1
+        count.save()
+
+        model.Session.commit()
+    except Exception as e:
+        log.error('Failed to add like. Error: %s', str(e))
+        log.exception(e)
+        model.Session.rollback()
+        raise e

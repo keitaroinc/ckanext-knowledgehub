@@ -28,6 +28,8 @@ from ckanext.knowledgehub.model import (
     KWHData,
     Posts,
     Comment,
+    LikesCount,
+    LikesRef,
 )
 from ckanext.knowledgehub.logic.jobs import schedule_update_index
 
@@ -656,3 +658,38 @@ def comment_delete(context, data_dict):
     comment.save()
 
     Session.flush()
+
+
+def like_delete(context, data_dict):
+    '''Deletes a like from a given object for the current user.
+
+    This action is only available for an authenticated user.
+
+    :param ref: `str`, the ID of the object (for example news feed post ID).
+    '''
+    check_access('like_delete', context, data_dict)
+
+    if 'ref' not in data_dict:
+        raise ValidationError({'ref': [_('Missing value')]})
+
+    ref = data_dict['ref']
+    user = context.get('auth_user_obj')
+
+    try:
+        model.Session.begin(subtransactions=True)
+
+        like_ref = LikesRef.get(user.id, ref)
+        if not like_ref:
+            raise logic.NotFound(_('Not found'))
+        like_ref.delete()
+
+        count = LikesCount.get(ref)
+        if count and count.count:
+            count.count -= 1
+        count.save()
+
+        model.Session.commit()
+    except Exception as e:
+        log.error('Failed to delete a like. Error: %s', str(e))
+        log.exception(e)
+        model.Session.rollback()

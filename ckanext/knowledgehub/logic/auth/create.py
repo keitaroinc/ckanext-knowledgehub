@@ -154,3 +154,7 @@ def request_access(context, data_dict=None):
 
 def comment_create(context, data_dict=None):
     return {'success': True}
+
+
+def like_create(context, data_dict=None):
+    return {'success': True}

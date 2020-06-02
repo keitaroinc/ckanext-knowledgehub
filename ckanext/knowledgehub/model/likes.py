@@ -43,6 +43,14 @@ likes_count_table = Table(
 class LikesRef(DomainObject):
 
     @classmethod
+    def get(cls, user_id, ref):
+        return Session.query(cls).filter(
+            likes_ref_table.c.user_id == user_id
+        ).filter(
+            likes_ref_table.c.ref == ref
+        ).first()
+
+    @classmethod
     def get_user_liked_refs(cls, user_id, refs):
         q = Session.query(cls).filter(
             likes_ref_table.c.user_id == user_id
@@ -60,11 +68,24 @@ class LikesRef(DomainObject):
 class LikesCount(DomainObject):
 
     @classmethod
+    def get(cls, ref):
+        return Session.query(cls).get(ref)
+
+    @classmethod
     def get_likes_count(cls, ref):
         likes_count = Session.query(cls).get(ref)
         if likes_count:
             return likes_count.count
         return 0
+
+    @classmethod
+    def get_likes_count_all(cls, refs):
+        counts = {}
+        for count in Session.query(cls).filter(
+            likes_count_table.c.ref.in_(refs)
+        ).all():
+            counts[count.ref] = count.count
+        return counts
 
 
 mapper(LikesRef, likes_ref_table)
