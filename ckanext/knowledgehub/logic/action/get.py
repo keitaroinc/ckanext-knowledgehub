@@ -2290,8 +2290,7 @@ def post_search(context, data_dict):
     likes_count = {}
     if post_ids:
         liked = LikesRef.get_user_liked_refs(user.id, post_ids)
-        if liked:
-            likes_count = LikesCount.get_likes_count_all(liked)
+        likes_count = LikesCount.get_likes_count_all(post_ids)
 
     for post in posts['results']:
         if post['id'] in liked:
