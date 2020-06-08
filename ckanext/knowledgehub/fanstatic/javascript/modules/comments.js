@@ -304,6 +304,7 @@
                                 $(contentBox).remove();
                                 $(contentEl).html(result.display_content);
                                 comment.content = result.content
+                                comment.display_content = result.display_content
                             }, function(err){
                                 $(loader).remove()
                                 $('.status', contentBox).html('Something went wrong. Please try again...')
@@ -311,7 +312,7 @@
                         },
                         onCancel: function(){
                             $(contentBox).remove();
-                            $(contentEl).html(comment.content);
+                            $(contentEl).html(comment.display_content);
                         }
                     });
                     $(contentEl).html('').append(contentBox);

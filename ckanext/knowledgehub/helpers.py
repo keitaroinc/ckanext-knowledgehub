@@ -1773,3 +1773,37 @@ def get_comments_count(ref):
     :returns: `int`, total number of comments (including replies).
     '''
     return Comment.get_comments_count(ref) or 0
+
+
+def extract_mentions(text):
+    mentions = []
+
+    for m in re.finditer(r'@([a-zA-Z_-]+)', text):
+        if m:
+            mentions.append((m.group(1), m.start(), m.end()))
+
+    resolved = toolkit.get_action('resolve_mentions')({
+        'ignore_auth': True,
+    }, {
+        'mentions': [m[0] for m in mentions],
+    })
+
+    resolved_mentions = []
+    tagged_text = ''
+    pos = 0
+    for mention, start, end in mentions:
+        tagged_text += text[pos:start]
+        res_mention = resolved.get(mention)
+        if res_mention:
+            tagged_text += '[@{}]({})'.format(
+                res_mention['label'],
+                res_mention['link']
+            )
+            resolved_mentions.append(res_mention)
+        else:
+            tagged_text += '@' + mention
+        pos = end
+
+    tagged_text += text[pos:]
+
+    return tagged_text

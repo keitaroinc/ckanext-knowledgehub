@@ -1711,9 +1711,18 @@ def post_create(context, data_dict):
 
         entity_ref = entity['id']
 
+    post_title = render_markdown(
+        plugin_helpers.extract_mentions(data_dict.get('title', ''))).strip()
+    if post_title.lower().startswith('<p>') and \
+            post_title.lower().endswith('</p>'):
+        post_title = post_title[len('<p>'):-len('</p>')].strip()
+
+    post_desc = plugin_helpers.extract_mentions(
+        data_dict.get('description', ''))
+
     post = Posts(
-        title=data_dict['title'],
-        description=data_dict.get('description'),
+        title=post_title,
+        description=post_desc,
         entity_type=entity_type,
         entity_ref=entity_ref,
         created_by=user.id,
@@ -2004,6 +2013,9 @@ def comment_create(context, data_dict):
             created_by=user.id,
         )
 
+        content_marked_mentions = plugin_helpers.extract_mentions(content)
+        comment.display_content = render_markdown(content_marked_mentions)
+
         if reply_to:
             parent = Comment.get(reply_to)
             if not parent:
@@ -2034,6 +2046,5 @@ def comment_create(context, data_dict):
     }
     comment['human_timestamp'] = plugin_helpers.human_elapsed_time(
         comment['created_at'])
-    comment['display_content'] = render_markdown(comment.get('content') or '')
 
     return comment

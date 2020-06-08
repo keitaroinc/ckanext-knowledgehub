@@ -180,3 +180,7 @@ def comments_list(context, data_dict=None):
 
 def comments_thread_show(context, data_dict=None):
     return {'success': True}
+
+
+def resolve_mentions(context, data_dict=None):
+    return {'success': False}

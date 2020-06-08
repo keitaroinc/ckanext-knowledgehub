@@ -13,7 +13,7 @@
       href="{{ h.url_for('news.delete', id=post.id)}}">
       <i class="fa fa-trash strong"></i></button>
     {% endif %}
-    <h4><a href="{{ h.url_for('news.view', id=post.id) }}">{{post.title}}</a></h4>
+    <h4><a href="{{ h.url_for('news.view', id=post.id) }}">{{post.title|safe}}</a></h4>
     {% if post.author %}
     <div class="row post-info">
       <div class="col-lg-8 col-md-12">

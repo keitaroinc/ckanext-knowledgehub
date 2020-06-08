@@ -45,6 +45,7 @@ from ckanext.knowledgehub.lib.solr import (
 )
 from ckanext.knowledgehub.logic.auth import get_user_permission_labels
 from ckan.lib import helpers as h
+from ckan.lib.redis import connect_to_redis
 from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.backend.factory import get_backend
@@ -624,7 +625,7 @@ def dashboards_for_rq(context, data_dict):
     search_dict = {}
 
     search_dict['text'] = research_question
-    search_dict['fq'] = "idx_research_questions:" + research_question            
+    search_dict['fq'] = "idx_research_questions:" + research_question
     if ignore_permissions:
         search_dict['ignore_permissions'] = ignore_permissions
     dashboards = toolkit.get_action('search_dashboards')(context, search_dict)
@@ -2339,8 +2340,12 @@ def _dictize_comment(comment, context):
         comment['content'] = ''
     comment['human_timestamp'] = kh_helpers.human_elapsed_time(
         comment['created_at'])
-    comment['display_content'] = h.render_markdown(
-        comment.get('content') or '')
+    if not comment.get('display_content'):
+        if comment.get('deleted'):
+            comment['display_content'] = ''
+        else:
+            comment['display_content'] = h.render_markdown(
+                comment.get('content') or '')
     return comment
 
 
@@ -2549,3 +2554,97 @@ def comments_thread_show(context, data_dict):
         comment['user'] = user
 
     return thr[thread_id]['replies']
+
+
+def _get_cached_users_and_groups():
+    try:
+        conn = connect_to_redis()
+        value = conn.get('knowledgehub.cache.users_groups')
+        if value:
+            return json.loads(value)
+    except Exception as e:
+        log.error('Failed to load from redis. Error: %s', str(e))
+        log.exception(e)
+    return None
+
+
+def _store_cached(value):
+    value = json.dumps(value, default=str)
+    try:
+        conn = connect_to_redis()
+        conn.setex('knowledgehub.cache.users_groups',
+                   value,
+                   config.get('ckanext.knowledgehub.cache_timeout', 5*60))
+    except Exception as e:
+        log.error('Failed to store to cache. Exception: %s', str(e))
+        log.exception(e)
+
+
+def _get_all_users_and_groups():
+    result = _get_cached_users_and_groups()
+    if not result:
+        users = _find_users()
+        groups = _find_organizations_or_groups()
+        result = users + groups
+        _store_cached(result)
+    return result
+
+
+@toolkit.side_effect_free
+def query_mentions(context, data_dict):
+    q = data_dict.get('q')
+    results = _get_all_users_and_groups()
+    if not q:
+        return results
+    q = q.lower()
+    return filter(lambda r: q in r.get('label', '').lower() or
+                  q in r.get('name', '').lower(), results)
+
+
+def _find_users(usernames=None):
+    q = model.Session.query(model.User)
+    q = q.filter(model.user_table.c.state == 'active')
+    if usernames:
+        q = q.filter(model.user_table.c.name.in_(usernames))
+    return map(lambda u: {
+        'id': u.id,
+        'label': u.display_name or u.name,
+        'value': u.name,
+        'link': 'url_for',
+        'image': 'gravatar',
+        'type': 'user',
+    }, q.all())
+
+
+def _find_organizations_or_groups(names=None):
+    q = model.Session.query(model.Group)
+    q = q.filter(model.group_table.c.state == 'active')
+    if names:
+        q = q.filter(model.group_table.c.name.in_(names))
+    return map(lambda g: {
+        'id': g.id,
+        'label': g.title or g.name,
+        'value': g.name,
+        'link': 'url_for',
+        'image': g.image_url or ('/base/images/placeholder-organization.png' if
+                                 g.is_organization else
+                                 '/base/images/placeholder-group.png'),
+        'type': 'organization' if g.is_organization else 'group',
+    }, q.all())
+
+
+def resolve_mentions(context, data_dict):
+    check_access('resolve_mentions', context, data_dict)
+
+    mentions = data_dict.get('mentions', [])
+    if not mentions:
+        return mentions
+
+    users = {u['value']: u for u in _find_users(mentions)}
+    orgs = {g['value']: g for g in _find_organizations_or_groups(mentions)}
+
+    result = {}
+    result.update(orgs)
+    result.update(users)
+
+    return result

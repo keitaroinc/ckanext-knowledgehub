@@ -36,6 +36,7 @@ comments_table = Table(
     Column('created_by', types.String(128), nullable=False, index=True),
     Column('ref', types.String(128), nullable=False, index=True),
     Column('content', types.UnicodeText, default=u'', nullable=False),
+    Column('display_content', types.UnicodeText, default=u'', nullable=False),
     Column('thread_id', types.String(128), nullable=True, index=True),
     Column('reply_to', types.String(128), nullable=True, index=True),
     Column('deleted', types.Boolean, nullable=False, default=False),
