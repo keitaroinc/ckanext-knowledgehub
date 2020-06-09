@@ -10,13 +10,14 @@
 
 <!-- TODO: Add the countries in a helper function  -->
 {% block basic_fields_country_of_displacement %}
-{% set country_codes = ['Egypt', 'Iraq', 'Jordan', 'Lebanon', 'Syria', 'Turkey'] %}
+{% set country_codes = h.get_countries() %}
+
 <div class="control-group">
   <label class="control-label" for="field-country_code_displacement">{{ _("Country of Displacement") }}</label>
   <div class="controls">
     <select id="field-country_code_displacement" name="country_code_displacement" data-module="autocomplete" multiple=True>
       {% for country_code in country_codes  %}
-        <option value="{{ country_code }}" {% if country_code in data.get('country_code_displacement', []) %}selected="selected"{% endif %}>{{ country_code }}</option>
+        <option value="{{ country_code.name }}" {% if country_code.name in data.get('country_code_displacement', []) %}selected="selected"{% endif %}>{{ country_code.name }}</option>
       {% endfor %}
     </select>
   </div>
@@ -24,13 +25,13 @@
 {% endblock %}
 
 {% block basic_fields_country_of_origin %}
-{% set country_codes = ['Egypt', 'Iraq', 'Jordan', 'Lebanon', 'Syria', 'Turkey'] %}
+{% set country_codes = h.get_countries() %}
 <div class="control-group">
   <label class="control-label" for="field-country_code_origin">{{ _("Country of Origin") }}</label>
   <div class="controls">
     <select id="field-country_code_origin" name="country_code_origin" data-module="autocomplete" multiple=True>
       {% for country_code in country_codes  %}
-        <option value="{{ country_code }}" {% if country_code in data.get('country_code_origin', []) %}selected="selected"{% endif %}>{{ country_code }}</option>
+        <option value="{{ country_code.name }}" {% if country_code.name in data.get('country_code_origin', []) %}selected="selected"{% endif %}>{{ country_code.name }}</option>
       {% endfor %}
     </select>
   </div>

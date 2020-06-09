@@ -202,6 +202,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'get_requested_resource_type_and_ref':
                 h.get_requested_resource_type_and_ref,
             'get_comments_count': h.get_comments_count,
+            'get_countries': h.get_countries,
         }
 
     # IDatasetForm

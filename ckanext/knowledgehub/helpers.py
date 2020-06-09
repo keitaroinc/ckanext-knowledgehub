@@ -9,6 +9,7 @@ import requests
 import re
 import pytz
 import humanize
+import pycountry
 
 from datetime import datetime, timedelta
 from dateutil import parser
@@ -1773,3 +1774,9 @@ def get_comments_count(ref):
     :returns: `int`, total number of comments (including replies).
     '''
     return Comment.get_comments_count(ref) or 0
+
+def get_countries():
+    ''' Returns list of all countries
+    '''
+
+    return pycountry.countries
