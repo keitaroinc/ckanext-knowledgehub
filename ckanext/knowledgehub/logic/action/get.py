@@ -2610,8 +2610,9 @@ def _find_users(usernames=None):
         'id': u.id,
         'label': u.display_name or u.name,
         'value': u.name,
-        'link': 'url_for',
-        'image': 'gravatar',
+        'link': h.url_for('/users/{}'.format(u.name)),
+        'image':
+            '//gravatar.com/avatar/{}?s=32&d=identicon'.format(u.email_hash),
         'type': 'user',
     }, q.all())
 
@@ -2621,14 +2622,24 @@ def _find_organizations_or_groups(names=None):
     q = q.filter(model.group_table.c.state == 'active')
     if names:
         q = q.filter(model.group_table.c.name.in_(names))
+
+    def _org_image(org):
+        gtype = 'organization' if org.is_organization else 'group'
+        if not org.image_url:
+            return '/base/images/placeholder-{}.png'.format(gtype)
+        return '/uploads/group/{}'.format(org.image_url)
+
+    def _org_link(org):
+        if org.is_organization:
+            return h.url_for('/organization/{}'.format(org.name))
+        return h.url_for('/group/{}'.format(org.name))
+
     return map(lambda g: {
         'id': g.id,
         'label': g.title or g.name,
         'value': g.name,
-        'link': 'url_for',
-        'image': g.image_url or ('/base/images/placeholder-organization.png' if
-                                 g.is_organization else
-                                 '/base/images/placeholder-group.png'),
+        'link':  _org_link(g),
+        'image': _org_image(g),
         'type': 'organization' if g.is_organization else 'group',
     }, q.all())
 

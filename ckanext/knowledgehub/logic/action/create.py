@@ -1711,14 +1711,18 @@ def post_create(context, data_dict):
 
         entity_ref = entity['id']
 
-    post_title = render_markdown(
-        plugin_helpers.extract_mentions(data_dict.get('title', ''))).strip()
+    post_title, pt_mentions = plugin_helpers.tag_mentions(
+        data_dict.get('title', ''))
+    post_title = render_markdown(post_title)
     if post_title.lower().startswith('<p>') and \
             post_title.lower().endswith('</p>'):
         post_title = post_title[len('<p>'):-len('</p>')].strip()
 
-    post_desc = plugin_helpers.extract_mentions(
+    post_desc, pd_mentions = plugin_helpers.tag_mentions(
         data_dict.get('description', ''))
+
+    mentions = {m['value'] + m['type']: m for m in pt_mentions + pd_mentions}
+    mentions = mentions.values()
 
     post = Posts(
         title=post_title,
@@ -1734,6 +1738,16 @@ def post_create(context, data_dict):
     post_data = _table_dictize(post, context)
 
     Posts.add_to_index(post_data)
+
+    if mentions:
+        _safe_notify_tagged({
+            'ignore_auth': True,
+        }, {
+            'mentions': mentions,
+            'user': user.id,
+            'source_type': 'post',
+            'source_url': url_for('news.view', id=post_data['id']),
+        })
 
     return post_data
 
@@ -1978,6 +1992,8 @@ def comment_create(context, data_dict):
 
     :param ref: `str`, reference to the entity being commented on (post,
         dataset, research question etc)
+    :param ref_type: `str`, the type of the referenced entity: `post`,
+        `dataset`, `resource` etc.
     :param content: `str`, the comment content.
     :param reply_to: `str`, optional, if provided, then this comment is a reply
         to another comment with the ID given in this parameter.
@@ -1993,6 +2009,7 @@ def comment_create(context, data_dict):
     reply_to = data_dict.get('reply_to')
     if reply_to:
         reply_to = reply_to.strip()
+    ref_type = data_dict.get('ref_type', '').strip()
 
     errors = {}
 
@@ -2000,6 +2017,8 @@ def comment_create(context, data_dict):
         errors['ref'] = [_('Missing value')]
     if not content:
         errors['content'] = [_('Missing value')]
+    if not ref_type:
+        errors['ref_type'] = [_('Missing value')]
 
     if errors:
         raise ValidationError(errors)
@@ -2008,12 +2027,14 @@ def comment_create(context, data_dict):
         model.Session.begin(subtransactions=True)
         comment = Comment(
             ref=ref,
+            ref_type=ref_type,
             content=content,
             reply_to=reply_to,
             created_by=user.id,
         )
 
-        content_marked_mentions = plugin_helpers.extract_mentions(content)
+        content_marked_mentions, mentions = \
+            plugin_helpers.tag_mentions(content)
         comment.display_content = render_markdown(content_marked_mentions)
 
         if reply_to:
@@ -2030,6 +2051,16 @@ def comment_create(context, data_dict):
         Comment.increment_comment_count(comment)
 
         model.Session.commit()
+        if mentions:
+            _safe_notify_tagged({
+                'ignore_auth': True,
+            }, {
+                'mentions': mentions,
+                'user': user.id,
+                'source_type': 'comment',
+                'source_url':
+                    plugin_helpers.generate_ref_type_url(ref_type, ref),
+            })
     except Exception as e:
         log.error('Failed to created comment. Error: %s', str(e))
         log.exception(e)
@@ -2048,3 +2079,98 @@ def comment_create(context, data_dict):
         comment['created_at'])
 
     return comment
+
+
+def notify_tagged(context, data_dict):
+    check_access('notify_tagged', context, data_dict)
+
+    mentions = data_dict.get('mentions')
+    if not mentions:
+        raise ValidationError({'mentions': [_('Missing value')]})
+
+    user = data_dict.get('user')
+    if not user:
+        raise ValidationError({'user': [_('Missing value')]})
+
+    source_type = data_dict.get('source_type')
+    if not source_type:
+        raise ValidationError({'source_type': [_('Missing value')]})
+    source_url = data_dict.get('source_url')
+    source_image_url = data_dict.get('source_image_url')
+
+    def _notify_single_user(user, data):
+        # create portal notification
+        notification_create(context, {
+            'recepient': user,
+            'title': data.get('title'),
+            'description': data.get('description'),
+            'link': source_url,
+            'image': source_image_url,
+        })
+
+        schedule_notification_email(user, 'mention_email_notification', data)
+
+    def _notify_group_or_org(group_id):
+        # locate group admin
+        admins = toolkit.get_action('member_list')(context, {
+            'id': group_id,
+            'object_type': 'user',
+            'capacity': 'admin',
+        })
+
+        try:
+            group = toolkit.get_action('group_show')(context, {
+                'id': group_id,
+            })
+        except logic.NotFound:
+            group = toolkit.get_action('organization_show')(context, {
+                'id': group_id,
+            })
+
+        title = _('Mentioned in news post') if source_type == 'post' \
+            else _('Mentioned in comment')
+        description = _('{} was mentioned in a post.').format(group['title']) \
+            if source_type == 'post' else \
+            _('{} was mentioned in a comment.').format(group['title'])
+
+        for admin, _type, _capacity in admins:
+            data = {
+                'title': title,
+                'description': description,
+                'source_type': source_type,
+                'link': source_url,
+                'image': source_image_url,
+                'user': admin,
+                'mentioned': 'organization'
+                             if group.get('is_organization') else 'group',
+            }
+            _notify_single_user(admin, data)
+
+    def _notify_user(user):
+        title = _('Mentioned in news post') if source_type == 'post' \
+            else _('Mentioned in comment')
+        description = _('Someone mentioned you in a post.') if \
+            source_type == 'post' \
+            else _('Someone mentioned you in a comment.')
+
+        _notify_single_user(user, {
+            'title': title,
+            'description': description,
+            'source_type': source_type,
+            'link': source_url,
+            'image': source_image_url,
+            'mentioned': 'user',
+        })
+
+    for mention in mentions:
+        notify_handler = _notify_user if mention['type'] == 'user' else \
+            _notify_group_or_org
+        notify_handler(mention['value'])
+
+
+def _safe_notify_tagged(context, data_dict):
+    try:
+        notify_tagged(context, data_dict)
+    except Exception as e:
+        log.error('Failed to notify tagged users. Error: %s', str(e))
+        log.exception(e)

@@ -23,7 +23,7 @@ ckan.module('mentions', function($){
                 if (record.image) {
                     markup.push('<img class="mention-image" src="' + record.image + '"></img>')
                 }
-                markup.push('<span class="">' + record.label + '</span>')
+                markup.push('<div class="mention-label">' + record.label + '</div>')
                 markup.push('</div>')
                 return {
                     text: markup.join(''),

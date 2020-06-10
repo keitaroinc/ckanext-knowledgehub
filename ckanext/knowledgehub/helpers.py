@@ -1775,7 +1775,7 @@ def get_comments_count(ref):
     return Comment.get_comments_count(ref) or 0
 
 
-def extract_mentions(text):
+def tag_mentions(text):
     mentions = []
 
     for m in re.finditer(r'@([a-zA-Z_-]+)', text):
@@ -1806,4 +1806,34 @@ def extract_mentions(text):
 
     tagged_text += text[pos:]
 
-    return tagged_text
+    return (tagged_text, resolved_mentions)
+
+
+def generate_ref_type_url(ref_type, ref):
+
+    def _post_url():
+        return h.url_for('news.view', id=ref)
+
+    def _dataset_url():
+        return h.url_for(controller='package', action='read', name=ref)
+
+    def _resource_url():
+        resource = toolkit.get_action('resource_read')({
+            'ignore_auth': True,
+        },  {
+            'id': ref,
+        })
+        return h.url_for(controller='package',
+                         action='resource_read',
+                         package_id=resource['id'],
+                         id=ref)
+
+    generators = {
+        'post': _post_url,
+        'dataset': _dataset_url,
+        'resource': _resource_url,
+    }
+    if ref_type not in generators:
+        raise ValidationError({'ref_type': [_('Invalid value')]})
+
+    return generators[ref_type]()

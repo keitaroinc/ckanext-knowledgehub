@@ -35,6 +35,7 @@ comments_table = Table(
            default=datetime.datetime.utcnow),
     Column('created_by', types.String(128), nullable=False, index=True),
     Column('ref', types.String(128), nullable=False, index=True),
+    Column('ref_type', types.String(128), nullable=False, index=True),
     Column('content', types.UnicodeText, default=u'', nullable=False),
     Column('display_content', types.UnicodeText, default=u'', nullable=False),
     Column('thread_id', types.String(128), nullable=True, index=True),
