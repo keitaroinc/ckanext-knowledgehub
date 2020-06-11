@@ -37,8 +37,6 @@ RUN pip install cython && \
     pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt" && \
     # datarequests
     pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests" && \
-    # disqus
-    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus" && \
     # hdx 
     pip uninstall psycopg2-binary -y && \
     pip uninstall psycopg2 -y && \
@@ -55,7 +53,6 @@ ENV CKAN__PLUGINS envvars \
                   recline_view \
                   validation \
                   knowledgehub \
-                  disqus \
                   stats \
                   datastore \
                   datapusher \
