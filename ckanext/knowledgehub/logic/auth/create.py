@@ -158,3 +158,6 @@ def comment_create(context, data_dict=None):
 
 def notify_tagged(context, data_dict):
     return {'success': false}
+
+def like_create(context, data_dict=None):
+    return {'success': True}

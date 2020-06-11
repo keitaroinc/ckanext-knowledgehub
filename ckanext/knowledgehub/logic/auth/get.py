@@ -184,3 +184,7 @@ def comments_thread_show(context, data_dict=None):
 
 def resolve_mentions(context, data_dict=None):
     return {'success': False}
+
+
+def get_liked_by_user(context, data_dict=None):
+    return {'success': True}

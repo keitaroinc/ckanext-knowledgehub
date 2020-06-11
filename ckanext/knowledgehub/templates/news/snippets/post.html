@@ -1,6 +1,7 @@
 {# Renders a single newsd post.
   :param post: the post data as dict.
   #}
+{% resource 'knowledgehub/likes' %}
 {% set show_delete_action = allow_delete if not none else False %}
 {% set post_type_class = post.entity_type if post.entity_type else 'empty'%}
 {% set show_comments = show_comments if not none else False%}
@@ -52,10 +53,13 @@
       {% endif %}
     {% endif %}
     <p>{{h.render_markdown(post.description)}}</p>
-    <p>
-      <span><i class="fa fa-thumbs-o-up"></i> {{post.like_count}}</span>
+    <div>
+      <button class="likes-action {% if post.user_liked %} likes-active {% endif %}"
+              like-ref="{{post.id}}"
+              liked="{{post.user_liked}}"><i class="fa fa-thumbs-o-up"></i> <span class="likes-count">{{post.like_count}}</span></button>
       <span><i class="fa fa-comments-o"></i> {{h.get_comments_count(post.id)}}</span>
-    </p>
+      <div class="like-action-error"></div>
+    </div>
   </div>
   {% if show_comments %}
   <div class="post-comments col-md-8">

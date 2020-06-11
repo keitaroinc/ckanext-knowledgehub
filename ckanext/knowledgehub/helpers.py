@@ -9,6 +9,7 @@ import requests
 import re
 import pytz
 import humanize
+import pycountry
 
 from datetime import datetime, timedelta
 from dateutil import parser
@@ -1837,3 +1838,10 @@ def generate_ref_type_url(ref_type, ref):
         raise ValidationError({'ref_type': [_('Invalid value')]})
 
     return generators[ref_type]()
+
+
+def get_countries():
+    ''' Returns list of all countries
+    '''
+
+    return pycountry.countries

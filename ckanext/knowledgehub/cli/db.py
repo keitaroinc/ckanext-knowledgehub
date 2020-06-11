@@ -33,7 +33,7 @@ from ckanext.knowledgehub.model.visualization import (
 from ckanext.knowledgehub.model.notification import setup as notification_setup
 from ckanext.knowledgehub.model.posts import setup as posts_setup
 from ckanext.knowledgehub.model.comments import setup as comments_setup
-
+from ckanext.knowledgehub.model.likes import setup as likes_setup
 
 log = logging.getLogger(__name__)
 
@@ -71,6 +71,7 @@ def init_db():
         notification_setup()
         posts_setup()
         comments_setup()
+        likes_setup()
     except Exception as e:
         error_shout(e)
     else:
