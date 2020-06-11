@@ -1,0 +1,5 @@
+{% if source_type == 'post' %}
+Someone mentioned {%if mentioned == 'user' %}you{% elif mentioned == 'group'%}your joint analysis{% else %}your functional unit{% endif%} in a post
+{% else %}
+Someone mentioned {%if mentioned == 'user' %}you{% elif mentioned == 'group'%}your joint analysis{% else %}your functional unit{% endif%} in a comment
+{% endif %}

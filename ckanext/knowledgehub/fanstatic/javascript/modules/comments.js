@@ -66,7 +66,8 @@
                     'data': {
                         'ref': data.ref,
                         'content': data.content,
-                        'reply_to': data.replyTo
+                        'reply_to': data.replyTo,
+                        'ref_type': data.refType,
                     },
                     'dataType': 'json',
                     'success': function(resp){
@@ -160,7 +161,7 @@
             return el;
         }
 
-        function addComment(ctx, comment, currentUser, prepend, oneLevelReplies) {
+        function addComment(ctx, comment, currentUser, refType, prepend, oneLevelReplies) {
             var commentEl = $('#comment-' + comment.id, ctx);
             var shouldAppend = true;
             if (commentEl.length) {
@@ -239,10 +240,11 @@
                             api.addComment({
                                 content: content,
                                 ref: comment.ref,
+                                refType: refType,
                                 replyTo: oneLevelReplies ? thread_id : comment.id,
                             }, function(reply){
                                 var ctxEl = oneLevelReplies ? threadEl : commentEl;
-                                addComment(ctxEl, reply, currentUser, false, oneLevelReplies)
+                                addComment(ctxEl, reply, currentUser, refType, false, oneLevelReplies)
                                 $(replyTextBox).remove()
                                 $(actionReplyEl).show();
                             }, function(err){
@@ -263,7 +265,7 @@
                     $(showMoreRepliesEl).parent().prepend(loader);
                     api.getCommentThread(comment.ref, comment.id, function(replies){
                         replies.forEach(function(reply){
-                            addComment(commentEl, reply, currentUser, false, oneLevelReplies)
+                            addComment(commentEl, reply, currentUser, refType, false, oneLevelReplies)
                         })
                         $(showMoreRepliesEl).hide()
                         $(loader).remove()
@@ -304,6 +306,7 @@
                                 $(contentBox).remove();
                                 $(contentEl).html(result.display_content);
                                 comment.content = result.content
+                                comment.display_content = result.display_content
                             }, function(err){
                                 $(loader).remove()
                                 $('.status', contentBox).html('Something went wrong. Please try again...')
@@ -311,7 +314,7 @@
                         },
                         onCancel: function(){
                             $(contentBox).remove();
-                            $(contentEl).html(comment.content);
+                            $(contentEl).html(comment.display_content);
                         }
                     });
                     $(contentEl).html('').append(contentBox);
@@ -320,7 +323,7 @@
 
             // add replies, if any
             replies.forEach(function(reply){
-                addComment(commentEl, reply, currentUser, false, oneLevelReplies);
+                addComment(commentEl, reply, currentUser, refType, false, oneLevelReplies);
             });
 
             if (shouldAppend){
@@ -338,12 +341,13 @@
         function showComments(el) {
             var ref = $(el).attr('show-comments-for')
             var currentUser = $(el).attr('user')
+            var refType = $(el).attr('ref-type')
             var loaderEl = $('.loading-comments')[0];
             var oneLevelReplies = true;
             if($(el).attr('enable-multilevel-replies')) {
                 oneLevelReplies = false;
             }
-
+            refType = refType || 'post';
             el.shouldScroll = true;
             $(window).scroll(function(){
                 if ($(document).height() - $(this).height() == $(this).scrollTop()) {
@@ -383,7 +387,7 @@
                     }
                     page++;
                     result.results.forEach(function(comment) {
-                        addComment(el, comment, currentUser, false, oneLevelReplies);
+                        addComment(el, comment, currentUser, refType, false, oneLevelReplies);
                     })
                     pageLoading = false
                     onComplete()
@@ -409,8 +413,9 @@
                     api.addComment({
                         content: content,
                         ref: ref,
+                        refType: refType
                     }, function(comment){
-                        addComment(el, comment, currentUser, true, oneLevelReplies);
+                        addComment(el, comment, currentUser, refType, true, oneLevelReplies);
                         $('.comment-content', addNewCommentBox).val('')
                         $(loader).remove()
                         $('.no-comments', el).remove();

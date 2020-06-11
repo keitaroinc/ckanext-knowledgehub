@@ -1775,6 +1775,96 @@ def get_comments_count(ref):
     '''
     return Comment.get_comments_count(ref) or 0
 
+
+def tag_mentions(text):
+    '''Tags the given text with mentions.
+
+    Parses the text to locate potential mentions. A mention starts with `@` and
+    is followed by a name of a user, group or organization. For example:
+    `@user-a`, `@group-b`, `@some_other_user` etc.
+    The name must not contain a white space, it can contain alpha-numeric
+    characters and underscore (`_`) or minus sign (`-`).
+
+    The list of extracted mentions is then resolved to find out which of those
+    are actual names of users, groups or organizations.
+    The valid (resolved) mentions are then processed and replaced in the text
+    with markdown markup for link. For example:
+
+        This mention of @john-smith-02 is an example.
+
+    will be converted to:
+
+        This mention of [@John Smith](/users/john-smith-02) is an example.
+
+    The mention is replaced by the markdown representation of the mention using
+    the real name (display name in case of a user or title for org/group) and
+    a link to the user profile or a link to the organization.
+
+    This helper returns the processed text and a list of the valid (resolved)
+    mentions.
+
+    :param text: `str`, the text to parse and tag.
+
+    :returns: `str` the tagged text and a `list` of resolved mentions.
+    '''
+    mentions = []
+
+    for m in re.finditer(r'@([a-zA-Z0-9_-]+)', text):
+        if m:
+            mentions.append((m.group(1), m.start(), m.end()))
+
+    resolved = toolkit.get_action('resolve_mentions')({
+        'ignore_auth': True,
+    }, {
+        'mentions': [m[0] for m in mentions],
+    })
+
+    resolved_mentions = []
+    tagged_text = ''
+    pos = 0
+    for mention, start, end in mentions:
+        tagged_text += text[pos:start]
+        res_mention = resolved.get(mention)
+        if res_mention:
+            tagged_text += '[@{}]({})'.format(
+                res_mention['label'],
+                res_mention['link']
+            )
+            resolved_mentions.append(res_mention)
+        else:
+            tagged_text += '@' + mention
+        pos = end
+
+    tagged_text += text[pos:]
+
+    return (tagged_text, resolved_mentions)
+
+
+def generate_ref_type_url(ref_type, ref):
+    '''Generates a URL reference to the object with given type and ID.
+
+    :param ref_type: `str`, type of object: `dataset`, `resource`, `post` etc
+    :param ref: `str`, the reference to the object (ID or name).
+
+    :returns: `str`, the URL for that object on the site.
+    '''
+    def _post_url():
+        return h.url_for('news.view', id=ref)
+
+    def _dataset_url():
+        return h.url_for('dataset_read', controller='package',
+                         action='read', id=ref)
+
+    generators = {
+        'post': _post_url,
+        'dataset': _dataset_url,
+    }
+    if ref_type not in generators:
+        raise ValidationError({'ref_type': [_('Invalid value')]})
+
+    return generators[ref_type]()
+
+
 def get_countries():
     ''' Returns list of all countries
     '''

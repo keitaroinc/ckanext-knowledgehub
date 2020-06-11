@@ -32,6 +32,7 @@
             just adds the comment as a last reply to the top level comment.
 #}
 {% resource 'knowledgehub/comments' %}
+{% resource 'knowledgehub/mentions' %}
 {% set enable_multilevel_replies = enable_multilevel_replies if not none else False %}
 <div class="container-fluid comments-wrapper" user="{{user.id}}" show-comments-for="{{ref}}" {%if enable_multilevel_replies %} enable-multilevel-replies="true" {% endif %}>
     <div class="row">
@@ -97,7 +98,8 @@
             <div class="col-md-12 comment-input">
                 {{ h.gravatar((user.email_hash if user.email_hash else ''), size=32) }}
                 <textarea type="text" class="form-control comment-content" 
-                       placeholder="{{_('Commenting as {}...').format(user.display_name or user.name)}}"></textarea>
+                       placeholder="{{_('Commenting as {}...').format(user.display_name or user.name)}}"
+                       mentions='true'></textarea>
             </div>
         </div>
         <div class="row">

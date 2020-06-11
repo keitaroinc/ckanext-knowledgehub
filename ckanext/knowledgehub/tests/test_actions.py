@@ -57,6 +57,8 @@ from ckanext.knowledgehub.model import (
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
 from ckanext.knowledgehub.lib.util import monkey_patch
+import ckan.lib.jobs as jobs
+from ckan.lib import redis as ckan_redis
 from ckanext.datastore.logic.action import datastore_create
 from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
@@ -695,6 +697,7 @@ class TestKWHCreateActions(ActionsBase):
         context = get_regular_user_context()
         result = create_actions.comment_create(context, {
             'ref': 'ref-0',
+            'ref_type': 'post',
             'content': 'Test comment',
         })
 
@@ -705,6 +708,7 @@ class TestKWHCreateActions(ActionsBase):
 
         reply = create_actions.comment_create(context, {
             'ref': 'ref-0',
+            'ref_type': 'post',
             'content': 'Test reply',
             'reply_to': result['id'],
         })
@@ -732,6 +736,67 @@ class TestKWHCreateActions(ActionsBase):
 
         result = LikesRef.get(user.id, 'ref-001')
         assert_true(result is not None)
+
+    @monkey_patch(jobs, 'enqueue', mock.Mock())
+    @monkey_patch(toolkit, 'get_action', mock.Mock())
+    def test_notify_tagged(self):
+        ctx1 = get_regular_user_context()
+        user1 = ctx1.get('auth_user_obj')
+        ctx2 = get_regular_user_context()
+        user2 = ctx2.get('auth_user_obj')
+
+        def _mock_get_action(name):
+            if name == 'member_list':
+                return lambda c, d: [(ctx1['auth_user_obj'].id,
+                                      'user',
+                                      'admin')]
+            elif name == 'organization_show':
+                return lambda c, d: {
+                    'id': 'org-1',
+                    'title': 'Organization One'
+                }
+            elif name == 'group_show':
+                return lambda c, d: {
+                    'id': 'group-1',
+                    'title': 'Group One',
+                }
+            else:
+                return logic.get_action(name)
+
+        toolkit.get_action.side_effect = _mock_get_action
+
+        create_actions.notify_tagged({
+            'ignore_auth': True,
+        }, {
+            'mentions': [{
+                'id': user1.id,
+                'label': user1.name,
+                'value': user1.name,
+                'type': 'user',
+                'link': '/users/user-1',
+                'image': '/user1.png',
+            }, {
+                'id': 'org-1',
+                'label': 'Organization One',
+                'value': 'org-1',
+                'type': 'organization',
+                'link': '/organization/org-1',
+                'image': '/org1.png',
+            }, {
+                'id': 'group-1',
+                'label': 'Group One',
+                'value': 'grp-1',
+                'type': 'group',
+                'link': '/group/grp-1',
+                'image': '/grp.png',
+            }],
+            'user': ctx2['auth_user_obj'].id,
+            'source_type': 'post',
+            'source_url': '/news/post-1',
+            'source_image_url': '/news/image1.png',
+        })
+
+        assert_equals(jobs.enqueue.call_count, 3)
 
 
 class TestKWHGetActions(ActionsBase):
@@ -1422,17 +1487,21 @@ class TestKWHGetActions(ActionsBase):
         model.Session.query(Comment).delete()
         model.Session.query(CommentsRefStats).delete()
 
-        c1 = Comment(ref='ref-0', content='c1', created_by=user_id)
+        c1 = Comment(ref='ref-0', content='c1', created_by=user_id,
+                     ref_type='post')
         c1.save()
         for i in range(0, 5):
             r = Comment(ref='ref-0', content='reply %d' % i,
-                        created_by=user_id, reply_to=c1.id, thread_id=c1.id)
+                        created_by=user_id, reply_to=c1.id, thread_id=c1.id,
+                        ref_type='post')
             r.save()
-        c2 = Comment(ref='ref-0', content='c2', created_by=user_id)
+        c2 = Comment(ref='ref-0', content='c2', created_by=user_id,
+                     ref_type='post')
         c2.save()
         for i in range(0, 2):
             r = Comment(ref='ref-0', content='[c2]reply %d' % i,
-                        created_by=user_id, reply_to=c2.id, thread_id=c2.id)
+                        created_by=user_id, reply_to=c2.id, thread_id=c2.id,
+                        ref_type='post')
             r.save()
 
         result = get_actions.comments_list(context, {
@@ -1459,15 +1528,18 @@ class TestKWHGetActions(ActionsBase):
         model.Session.query(Comment).delete()
         model.Session.query(CommentsRefStats).delete()
 
-        c = Comment(ref='ref-0', content='comment', created_by=user_id)
+        c = Comment(ref='ref-0', content='comment', created_by=user_id,
+                    ref_type='post')
         c.save()
         for i in range(0, 2):
             r = Comment(ref='ref-0', content='reply to c', created_by=user_id,
-                        reply_to=c.id, thread_id=c.id)
+                        reply_to=c.id, thread_id=c.id,
+                        ref_type='post')
             r.save()
             for j in range(0, 2):
                 rr = Comment(ref='ref-0', content='reply to reply to c',
-                             created_by=user_id, reply_to=r.id, thread_id=c.id)
+                             created_by=user_id, reply_to=r.id, thread_id=c.id,
+                             ref_type='post')
                 rr.save()
 
         result = get_actions.comments_thread_show(context, {
@@ -1495,6 +1567,67 @@ class TestKWHGetActions(ActionsBase):
         })
 
         assert_equals(result, 100)
+
+    @monkey_patch(ckan_redis, 'connect_to_redis', mock.Mock())
+    def test_query_mentions(self):
+        ctx = get_regular_user_context()
+        try:
+            model.Session.begin(subtransactions=True)
+            u1 = model.User(
+                id='qm-usr-1',
+                name='qm-usr-1',
+                password='*******',
+                fullname='QM User One',
+                email='qmuser1@example.com',
+                state='active',
+            )
+            u1.save()
+            u2 = model.User(
+                id='qm-usr-2',
+                name='qm-usr-2',
+                password='*******',
+                fullname='QM User Two',
+                email='qmuser2@example.com',
+                state='active',
+            )
+            u2.save()
+
+            results = get_actions.query_mentions(ctx, {
+                'q': 'qm',
+            })
+            assert_true(len(results) >= 2)
+        finally:
+            model.Session.rollback()
+
+    def test_resolve_mentions(self):
+        ctx = get_regular_user_context()
+        try:
+            model.Session.begin(subtransactions=True)
+            u1 = model.User(
+                id='qm-usr-1',
+                name='qm-usr-1',
+                password='*******',
+                fullname='QM User One',
+                email='qmuser1@example.com',
+                state='active',
+            )
+            u1.save()
+            u2 = model.User(
+                id='qm-usr-2',
+                name='qm-usr-2',
+                password='*******',
+                fullname='QM User Two',
+                email='qmuser2@example.com',
+                state='active',
+            )
+            u2.save()
+
+            results = get_actions.resolve_mentions(ctx, {
+                'mentions': ['qm-usr-1', 'qm-usr-2', 'non-existing']
+            })
+            assert_equals(len(results), 2)
+        finally:
+            model.Session.rollback()
 
 
 class TestKWHDeleteActions(ActionsBase):
@@ -1749,6 +1882,7 @@ class TestKWHDeleteActions(ActionsBase):
 
         comment = Comment(
             ref='ref-0',
+            ref_type='post',
             content='top level comment',
             replies_count=1,
             thread_replies_count=1,
@@ -1758,6 +1892,7 @@ class TestKWHDeleteActions(ActionsBase):
 
         reply = Comment(
             ref='ref-0',
+            ref_type='post',
             content='top level comment',
             reply_to=comment.id,
             thread_id=comment.id,
@@ -2405,6 +2540,7 @@ class TestKWHUpdateActions(ActionsBase):
             ref='ref-0',
             content='Test comment',
             created_by=user_id,
+            ref_type='post',
         )
         comment.save()
 

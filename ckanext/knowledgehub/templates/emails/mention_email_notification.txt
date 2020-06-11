@@ -1,0 +1,14 @@
+Hello {{recipient.display_name or recipient.fullname or recipient.username}},
+
+{%if mentioned == 'user' %}You{% elif mentioned == 'group'%}Your joint analysis{% else %}Your functional unit{% endif%} were mentioned in a {% if source_type == 'post'%}post{% else %}comment{% endif%}.
+
+{% if link %}
+You can check this out at:
+
+{{site_url}}{{link}}
+
+{% endif %}
+
+Thanks,
+
+UNHCR KnowledgeHub Team
