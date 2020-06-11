@@ -15,6 +15,17 @@
   {% set show_organizations_selector = organizations_available %}
   {% set show_visibility_selector = dataset_has_organization or (organizations_available and (user_is_sysadmin or dataset_is_draft)) %}
 
+
+  {{ form.input('short_title', id='field-short-title', label=_('Short Title'), placeholder=_('eg. A short title'), value=data.short_title, error=errors.short_title) }}
+  {% block package_basic_fields_sensitivity %}
+  {{ form.input('data_sensitivity', id='field-data-sensitivity', label=_('Data Sensitivity'), placeholder=_('eg. Yes'), value=data.data_sensitivity, error=errors.data_sensitivity) }}
+  {% endblock %}
+
+  {% block package_basic_fields_original_id %}
+  {{ form.input('original_id', id='field-data-original-id', label=_('Original ID'), placeholder=_('If the dataset already has an ID '), value=data.original_id, error=errors.original_id) }}
+  {% endblock %}
+
+
   {% if show_organizations_selector and show_visibility_selector %}
   <div data-module="dataset-visibility">
     {% endif %}
