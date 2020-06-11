@@ -1925,7 +1925,9 @@ def comment_update(context, data_dict):
         if not is_sysamidn:
             raise NotAuthorized(_('You cannot update this comment'))
 
+    comment_marked_mentions, mentions = plugin_helpers.tag_mentions(content)
     comment.content = content
+    comment.display_content = render_markdown(comment_marked_mentions)
     comment.modified_at = datetime.datetime.utcnow()
     comment.save()
     model.Session.flush()
@@ -1937,6 +1939,21 @@ def comment_update(context, data_dict):
         'display_name': user.display_name or user.name
     }
 
-    comment['display_content'] = render_markdown(comment.get('content') or '')
+    try:
+        if mentions:
+            toolkit.get_action('notify_tagged')({
+                    'ignore_auth': True,
+                }, {
+                    'mentions': mentions,
+                    'user': user.id,
+                    'source_type': 'comment',
+                    'source_url': plugin_helpers.generate_ref_type_url(
+                        comment['ref_type'],
+                        comment['ref'],
+                    ),
+                })
+    except Exception as e:
+        log.error('Failed to notify tagged users. Error: %s', str(e))
+        log.exception(e)
 
     return comment

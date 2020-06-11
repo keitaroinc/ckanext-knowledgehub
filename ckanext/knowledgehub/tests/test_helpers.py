@@ -1448,3 +1448,41 @@ class TestKWHHelpers(ActionsBase):
 
         count = kwh_helpers.get_comments_count('ref-0')
         assert_equals(count, 42)
+
+    @monkey_patch(toolkit, 'get_action', mock.Mock())
+    def test_tag_mentions(self):
+
+        def resolve_mentions(resolved):
+
+            def _mock_resolve_mentions(*args, **kwargs):
+                return resolved
+
+            return _mock_resolve_mentions
+
+        toolkit.get_action.side_effect = lambda n: resolve_mentions({
+            'user-1': {
+                'value': 'user-1',
+                'label': 'User 1',
+                'link': '/users/user-1',
+            },
+            'organization-a': {
+                'label': 'Organization A',
+                'link': '/organizations/organization-a',
+            }
+        })
+
+        tagged_text, mentions = kwh_helpers.tag_mentions(
+            'Some mention of @user-1 and @organization-a but not @user-2')
+
+        assert_equals(
+            tagged_text,
+            'Some mention of [@User 1](/users/user-1) and ' +
+            '[@Organization A](/organizations/organization-a) but not @user-2'
+        )
+        assert_equals(len(mentions), 2)
+
+    def test_generate_ref_type_url(self):
+        url_post = kwh_helpers.generate_ref_type_url('post', 'post-1')
+        assert_true(url_post is not None)
+        dataset_url = kwh_helpers.generate_ref_type_url('dataset', 'dataset-1')
+        assert_equals(dataset_url, '/dataset/dataset-1')

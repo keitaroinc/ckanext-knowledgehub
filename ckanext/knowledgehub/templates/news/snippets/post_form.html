@@ -1,7 +1,8 @@
 {% import 'macros/form.html' as form %}
+{% resource 'knowledgehub/mentions' %}
 
 <form id='post-create-form' class="post-form" method="post" data-module="basic-form" novalidate>
-    {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
+    {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control', 'mentions': 'true'} %}
     {{ form.input('title',
                   label=_('Title'),
                   id='field-title',
@@ -18,7 +19,8 @@
                      placeholder=_('Write your post here...'),
                      value=data.description,
                      error=errors.description,
-                     is_required=false) }}
+                     is_required=false,
+                     attrs={'class': 'form-control', 'mentions': 'true'}) }}
     {% if data.entity_type and data.entity_ref %}
     <input type="hidden" name="entity_type" value="{{data.entity_type}}" />
     <input type="hidden" name="entity_ref" value="{{data.entity_ref}}" />
