@@ -2084,6 +2084,28 @@ def comment_create(context, data_dict):
 
 
 def notify_tagged(context, data_dict):
+    '''Sends notification to tagged (mentioned) users and groups.
+
+    When the mention is user, it sends in-site notification and a notification
+    email.
+    When the mention is a group or organization, first locates the group
+    admin users and then notifies them in-site and via email notification.
+
+    :param mentions: `list` of `dict`, list of mentions. Each mention is a dict
+        containing:
+        * `type`, a `str`, the mention type: `user`, `group` or `organization`.
+        * `value`, a `str`, the user/group/organization unique name.
+    :param user: `str`, the name or id of the user that created the mentions.
+    :param source_type: `str`, type of the source of the mentions. A mention
+        can be created in a post or a comment, so the type is either `post` or
+        `comment`.
+    :param source_url: `str`, the URL of the source of the mention. For example
+        this can be the URL to the post in which the mention occurs or an URL
+        to the post, dataset, resource if a mention occurs in the comments of
+        that object.
+    :param source_image_url: `str`, optional URL of an image related to the
+        source object - image to the dataset, resource etc.
+    '''
     check_access('notify_tagged', context, data_dict)
 
     mentions = data_dict.get('mentions')
@@ -2101,7 +2123,6 @@ def notify_tagged(context, data_dict):
     source_image_url = data_dict.get('source_image_url')
 
     def _notify_single_user(user, data):
-        # create portal notification
         notification_create(context, {
             'recepient': user,
             'title': data.get('title'),
@@ -2113,7 +2134,6 @@ def notify_tagged(context, data_dict):
         schedule_notification_email(user, 'mention_email_notification', data)
 
     def _notify_group_or_org(group_id):
-        # locate group admin
         admins = toolkit.get_action('member_list')(context, {
             'id': group_id,
             'object_type': 'user',
@@ -2171,6 +2191,9 @@ def notify_tagged(context, data_dict):
 
 
 def _safe_notify_tagged(context, data_dict):
+    '''Wraps notify_tagged in a try-except block so it can be safely used in
+    other actions.
+    '''
     try:
         notify_tagged(context, data_dict)
     except Exception as e:

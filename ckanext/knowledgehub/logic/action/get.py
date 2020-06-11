@@ -47,7 +47,7 @@ from ckanext.knowledgehub.lib.solr import (
 )
 from ckanext.knowledgehub.logic.auth import get_user_permission_labels
 from ckan.lib import helpers as h
-from ckan.lib.redis import connect_to_redis
+from ckan.lib import redis as ckan_redis
 from ckan.controllers.admin import get_sysadmins
 
 from ckanext.knowledgehub.backend.factory import get_backend
@@ -2588,7 +2588,7 @@ def comments_thread_show(context, data_dict):
 
 def _get_cached_users_and_groups():
     try:
-        conn = connect_to_redis()
+        conn = ckan_redis.connect_to_redis()
         value = conn.get('knowledgehub.cache.users_groups')
         if value:
             return json.loads(value)
@@ -2601,7 +2601,7 @@ def _get_cached_users_and_groups():
 def _store_cached(value):
     value = json.dumps(value, default=str)
     try:
-        conn = connect_to_redis()
+        conn = ckan_redis.connect_to_redis()
         conn.setex('knowledgehub.cache.users_groups',
                    value,
                    config.get('ckanext.knowledgehub.cache_timeout', 5*60))
@@ -2622,6 +2622,24 @@ def _get_all_users_and_groups():
 
 @toolkit.side_effect_free
 def query_mentions(context, data_dict):
+    '''Returns a list of suggestions for a mention in a post or comment.
+
+    The suggestions are retrieved from the current active users, organizations
+    or groups. These are filtered by a query text.
+
+    :param q: `str`, a query string to look up users, groups or organization.
+
+    :returns: a `list` of `dict` mentions. Each mention dict contains:
+        * `id`, the ID of the user/group/organization.
+        * `label`, the display label for the siggestion.
+        * `value`, value to be used for the suggestion. This is the unique name
+            of the user, group or organization.
+        * `link`, URL to the user/group/organization.
+        * `image`, URL to the image for the suggestion. For users this is the
+            gravatar URL; for organization/groups this is the set image for
+            that organization or group.
+        * `type`, what type of suggestion: `user`, `organization` or `group`.
+    '''
     q = data_dict.get('q')
     results = _get_all_users_and_groups()
     if not q:
@@ -2675,6 +2693,28 @@ def _find_organizations_or_groups(names=None):
 
 
 def resolve_mentions(context, data_dict):
+    '''Resolves a list of potential mentions to actual mentions that exist in
+    the system.
+
+    Given a list of mentions (list of `str` names) it tries to resolve them to
+    users, groups or organizations. Checks which of the names supplied in the
+    list are valid names of a user, group or organization.
+
+    :param mentions: `list` of `str`, list of names to check. If a valid user,
+        group or organization is found, then data for it will be returned.
+
+    :returns: `dict` (value => mention `dict`) of mentions for the valid names.
+    Each mention dict contains:
+        * `id`, the ID of the user/group/organization.
+        * `label`, the display label for the siggestion.
+        * `value`, value to be used for the suggestion. This is the unique name
+            of the user, group or organization.
+        * `link`, URL to the user/group/organization.
+        * `image`, URL to the image for the suggestion. For users this is the
+            gravatar URL; for organization/groups this is the set image for
+            that organization or group.
+        * `type`, what type of suggestion: `user`, `organization` or `group`.
+    '''
     check_access('resolve_mentions', context, data_dict)
 
     mentions = data_dict.get('mentions', [])
