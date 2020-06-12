@@ -43,8 +43,8 @@
 {% block notes %}
 
 {{ form.input('admin_notes', label=_('Admin Notes'), id='field-admin-notes', placeholder=_('Admin Notes - General'), value=data.admin_notes, error=errors.admin_notes) }}
-{{ form.input('sampling_procedure_notes', label=_('Sampling Procedure Notes'), id='field-sampling-notes', placeholder=_('Admin Notes - Sampling Procedure'), value=data.sampling_notes, error=errors.sampling_notes) }}
-{{ form.input('response_rate_notes', label=_('Response Rate Notes'), id='field-response-rate-notes', placeholder=_('Admin Notes - Response Rate'), value=data.response_notes, error=errors.response_notes) }}
+{{ form.input('sampling_procedure_notes', label=_('Sampling Procedure Notes'), id='field-sampling-procedure-notes', placeholder=_('Admin Notes - Sampling Procedure'), value=data.sampling_procedure_notes, error=errors.sampling_procedure_notes) }}
+{{ form.input('response_rate_notes', label=_('Response Rate Notes'), id='field-response-rate-notes', placeholder=_('Admin Notes - Response Rate'), value=data.response_rate_notes, error=errors.response_rate_notes) }}
 {{ form.input('data_collection_notes', label=_('Data Collection Notes'), id='field-data-collection-notes', placeholder=_('Admin Notes - Data Collection'), value=data.data_collection_notes, error=errors.data_collection_notes) }}
 {{ form.input('weight_notes', label=_('Weight Notes'), id='field-weight-notes', placeholder=_('Admin Notes - Weigthing'), value=data.weight_notes, error=errors.weight_notes) }}
 {{ form.input('clean_ops_notes', label=_('Clean Ops Notes'), id='field-clean-ops-notes', placeholder=_('Admin Notes - Cleaning'), value=data.clean_ops_notes, error=errors.clean_ops_notes) }}

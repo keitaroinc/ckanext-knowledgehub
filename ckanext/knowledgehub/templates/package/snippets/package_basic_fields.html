@@ -42,13 +42,13 @@
   {{ form.input('original_id', id='field-data-original-id', label=_('Original ID'), placeholder=_('If the dataset already has an ID '), value=data.original_id, error=errors.original_id) }}
   {% endblock %}
 
-  {% block package_basic_fields_data_range %}
+  {% block package_basic_fields_date_range %}
   {{ form.input('date_range_start', id='field-date-range-start', label=_('Date Range Start'), placeholder=_('Date collection first date '), value=data.date_range_start, error=errors.date_range_start) }}
   {{ form.input('date_range_end', id='field-date-range-end', label=_('Date Range End'), placeholder=_('Date collection last date '), value=data.date_range_end, error=errors.date_range_end) }}
   {% endblock %}
 
   {% block package_basic_fields_unit_measurement %}
-  {{ form.input('unit_of_measurement', id='field-unit-of-measurement', label=_('Unit of Measurement'), placeholder=_('Unit of measurement / observation for the dataset'), value=data.unit_measurement, error=errors.unit_measurement) }}
+  {{ form.input('unit_of_measurement', id='field-unit-of-measurement', label=_('Unit of Measurement'), placeholder=_('Unit of measurement / observation for the dataset'), value=data.unit_of_measurement, error=errors.unit_of_measurement) }}
   {% endblock %}
 
   {% block basic_fields_sampling_procedure %}
