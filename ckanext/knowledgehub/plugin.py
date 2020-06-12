@@ -257,6 +257,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'geog_coverage': package_defaults,
             'data_collection_technique': package_defaults,
             'linked_datasets': package_defaults,
+            'data_collector': package_defaults,
 
         })
 
@@ -330,6 +331,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'geog_coverage': package_defaults,
             'data_collection_technique': package_defaults,
             'linked_datasets': package_defaults, 
+            'data_collector': package_defaults,
 
         })
 
@@ -346,6 +348,12 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'dq_accuracy_column': defaults,
             'data_quality_completeness_column': defaults,
             'hdx_name_resource': defaults,
+            'date_range_start': defaults,
+            'date_range_end': defaults,
+            'process_status': defaults,
+            'identifiability': defaults,
+            'hxl_ated': defaults,
+            'file_type': defaults,
         })
         return schema
 

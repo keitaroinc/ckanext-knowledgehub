@@ -48,7 +48,8 @@
   {% endblock %}
 
   {% block package_basic_fields_unit_measurement %}
-  {{ form.input('unit_of_measurement', id='field-unit-of-measurement', label=_('Unit of Measurement'), placeholder=_('Unit of measurement / observation for the dataset'), value=data.unit_of_measurement, error=errors.unit_of_measurement) }}
+  {{ form.input('unit_of_measurement', id='field-unit-of-measurement', label=_('Unit of Measurement'), placeholder=_('Unit of measurement / observation for the dataset'), 
+  value=data.unit_of_measurement, error=errors.unit_of_measurement, is_required=true) }}
   {% endblock %}
 
   {% block package_basic_hxl_ated %}
@@ -62,6 +63,9 @@
   {% block package_basic_linked_datasets %}
   {{ form.input('linked_datasets', id='field-linked-datasets', label=_("Linked Datasets"), placeholder=_('Links to other RIDL datasets.'), value=data.linked_datasets, error=errors.linked_datasets) }}
   {% endblock %}
+
+  {{ form.input('data_collector', id='field-data-collector', label=_('Data Collector'), placeholder=_('Which organization owns/collected the data'), value=data.data_collector, error=errors.data_collector, classes=['control-full'], is_required=true) }}
+
 
   {% block basic_fields_process_status %}
   {% set options = ['Raw-Uncleaned', 'Cleaned Only', 'Cleaned & Anonymized'] %}
@@ -100,7 +104,7 @@
   'Self-administered questionnaire: Computer-assisted', 'Self-administered questionnaire: Web-based', 'Face-to-face focus group',
   'Telephone focus group', 'Observation', 'Other'] %}
   <div class="control-group">
-    <label class="control-label" for="field-data-collection-technique">{{ _("Dataset Process Status") }}</label>
+    <label class="control-label" for="field-data-collection-technique" is_required="true">{{ _("Data Collection Technique") }}</label>
     <div class="controls">
       <select id="field-data-collection-technique" name="data_collection_technique" data-module="autocomplete">
         {% for opt in options  %}
@@ -148,7 +152,7 @@
   <div class="control-group">
     <label class="control-label" for="field-archived">{{ _("Archived") }}</label>
     <div class="controls">
-      <select id="field-archived" name="archived" data-module="autocomplete">
+      <select id="field-archived" name="archived" data-module="autocomplete" is_required="true">
         {% for opt in options  %}
           <option value="{{ opt }}" {% if opt in data.get('archived', []) %}selected="selected"{% endif %}>{{ opt }}</option>
         {% endfor %}
