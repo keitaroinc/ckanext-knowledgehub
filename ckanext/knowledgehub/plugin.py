@@ -251,6 +251,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'weight_notes': package_defaults,
             'clean_ops_notes': package_defaults,
             'data_access_notes': package_defaults,
+            'hxl_ated': package_defaults,
+            'process_status': package_defaults,
+            'identifiability': package_defaults,
+            'geog_coverage': package_defaults,
+            'data_collection_technique': package_defaults,
+            'linked_datasets': package_defaults,
+
         })
 
         schema['resources'].update({
@@ -317,6 +324,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'weight_notes': package_defaults,
             'clean_ops_notes': package_defaults,
             'data_access_notes': package_defaults,
+            'hxl_ated': package_defaults,
+            'process_status': package_defaults,
+            'identifiability': package_defaults,
+            'geog_coverage': package_defaults,
+            'data_collection_technique': package_defaults,
+            'linked_datasets': package_defaults, 
+
         })
 
         schema['resources'].update({

@@ -51,6 +51,67 @@
   {{ form.input('unit_of_measurement', id='field-unit-of-measurement', label=_('Unit of Measurement'), placeholder=_('Unit of measurement / observation for the dataset'), value=data.unit_of_measurement, error=errors.unit_of_measurement) }}
   {% endblock %}
 
+  {% block package_basic_hxl_ated %}
+  {{ form.input('hxl_ated', id='field-hxl-ated', label=_("HXL-ated"), placeholder=_('Indicates if the dataset has HXL hashtags'), value=data.hxl_ated, error=errors.hxl_ated) }}
+  {% endblock %}
+
+  {% block package_basic_geog_coverage %}
+  {{ form.input('geog_coverage', id='field-geog-coverage', label=_("Geographic Coverage"), placeholder=_('eg. National coverage, or name of the area, etc.'), value=data.geog_coverage, error=errors.geog_coverage) }}
+  {% endblock %}
+
+  {% block package_basic_linked_datasets %}
+  {{ form.input('linked_datasets', id='field-linked-datasets', label=_("Linked Datasets"), placeholder=_('Links to other RIDL datasets.'), value=data.linked_datasets, error=errors.linked_datasets) }}
+  {% endblock %}
+
+  {% block basic_fields_process_status %}
+  {% set options = ['Raw-Uncleaned', 'Cleaned Only', 'Cleaned & Anonymized'] %}
+  <div class="control-group">
+    <label class="control-label" for="field-process-status">{{ _("Dataset Process Status") }}</label>
+    <div class="controls">
+      <select id="field-process-status" name="process_status" data-module="autocomplete">
+        {% for opt in options  %}
+          <option value="{{ opt }}" {% if opt in data.get('process_status', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% endblock %}
+
+  {% block basic_fields_identifiability%}
+  {% set options = ['Personally identifiable', 'Anonymized 1st level: Data Enclave - only removed direct identifiers', 
+  'Anonymized 2st level: Scientific Use File (SUF)', 'Anonymized 3rd level: Public Use File (PUF)'] %}
+  <div class="control-group">
+    <label class="control-label" for="field-identifiability">{{ _("Identifiability") }}</label>
+    <div class="controls">
+      <select id="field-identifiability" name="identifiability" data-module="autocomplete">
+        {% for opt in options  %}
+          <option value="{{ opt }}" {% if opt in data.get('identifiability', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% endblock %}
+
+  {% block basic_fields_data_collection_technique %}
+  {% set options = ['Not specified', 'Face-to-face interview', 'Face-to-face interview: Computerised', 'Face-to-face interview: Mobile',
+  'Face-to-face interview: Paper-and-pencil', 'Telephone interview', 'E-mail interview', 'Self-administered questionnaire: E-mail',
+  'Self-administered questionnaire: Paper', 'Self-administered questionnaire: SMS/MMS', 
+  'Web-based interview: audio-visual technology enabling the interviewer(s) and interviewee(s) to communicate in real time',
+  'Self-administered questionnaire: Computer-assisted', 'Self-administered questionnaire: Web-based', 'Face-to-face focus group',
+  'Telephone focus group', 'Observation', 'Other'] %}
+  <div class="control-group">
+    <label class="control-label" for="field-data-collection-technique">{{ _("Dataset Process Status") }}</label>
+    <div class="controls">
+      <select id="field-data-collection-technique" name="data_collection_technique" data-module="autocomplete">
+        {% for opt in options  %}
+          <option value="{{ opt }}" {% if opt in data.get('data_collection_technique', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% endblock %}
+
+
   {% block basic_fields_sampling_procedure %}
   {% set options = ['Probability: Simple random', 'Probability: Systematic random', 'Probability: Stratified', 'Probability: Stratified: Proportional', 'Probability: Stratified: Disproportional', 'Probability: Cluster',
   'Probability: Cluster: Simple random', 'Probability: Cluster: Stratified random', 'Probability: Multistage', 'Non-probability', 'Non-probability: Availability',
