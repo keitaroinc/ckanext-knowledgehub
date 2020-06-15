@@ -84,6 +84,169 @@
         </td>
       </tr>
       {% endif %}
+
+      {% if pkg_dict.short_title %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Short Title") }}</th>
+        <td class="dataset-details">{{ pkg_dict.short_title }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.external_access %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("External Access") }}</th>
+        <td class="dataset-details">{{ pkg_dict.external_access }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.data_sensitivity %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Data Sensitivity") }}</th>
+        <td class="dataset-details">{{ pkg_dict.data_sensitivity }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.original_id %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Original ID") }}</th>
+        <td class="dataset-details">{{ pkg_dict.original_id }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.date_range_start %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Date Range Start") }}</th>
+        <td class="dataset-details">{{ pkg_dict.date_range_start }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.date_range_end %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Date Range End") }}</th>
+        <td class="dataset-details">{{ pkg_dict.date_range_end }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.unit_of_measurement %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Unit of Measurement") }}</th>
+        <td class="dataset-details">{{ pkg_dict.unit_of_measurement }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.hxl_ated %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("HXL-ated") }}</th>
+        <td class="dataset-details">{{ pkg_dict.hxl_ated }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.geog_coverage %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Geographic Coverage") }}</th>
+        <td class="dataset-details">{{ pkg_dict.geog_coverage }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.linked_datasets %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Linked Datasets") }}</th>
+        <td class="dataset-details">{{ pkg_dict.linked_datasets }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.data_collector %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Data Collector") }}</th>
+        <td class="dataset-details">{{ pkg_dict.data_collector }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.process_status %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Process Status") }}</th>
+        <td class="dataset-details">{{ pkg_dict.process_status }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.data_collection_technique %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Data Collection Technique") }}</th>
+        <td class="dataset-details">{{ pkg_dict.data_collection_technique }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.operational_purpose %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Operational Purpose of Data") }}</th>
+        <td class="dataset-details">{{ pkg_dict.operational_purpose }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.sampling_procedure %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Sampling Procedure") }}</th>
+        <td class="dataset-details">{{ pkg_dict.sampling_procedure }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.archived %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Archived") }}</th>
+        <td class="dataset-details">{{ pkg_dict.archived }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.sampling_procedure_notes %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Sampling Procedure Notes") }}</th>
+        <td class="dataset-details">{{ pkg_dict.sampling_procedure_notes }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.admin_notes %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Admin Notes") }}</th>
+        <td class="dataset-details">{{ pkg_dict.admin_notes }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.response_rate_notes %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Response Rate Notes") }}</th>
+        <td class="dataset-details">{{ pkg_dict.response_rate_notes }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.data_collection_notes %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Data Collection Notes") }}</th>
+        <td class="dataset-details">{{ pkg_dict.data_collection_notes }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.weight_notes %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Weight Notes") }}</th>
+        <td class="dataset-details">{{ pkg_dict.weight_notes }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.clean_ops_notes %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Clean Ops Notes") }}</th>
+        <td class="dataset-details">{{ pkg_dict.clean_ops_notes }}</td>
+      </tr>
+      {% endif %}
+
+      {% if pkg_dict.data_access_notes %}
+      <tr>
+        <th scope="row" class="dataset-label">{{ _("Data Access Notes") }}</th>
+        <td class="dataset-details">{{ pkg_dict.data_access_notes }}</td>
+      </tr>
+      {% endif %}
+      
+
       {% block extras scoped %}
       {% for extra in h.sorted_extras(pkg_dict.extras) %}
       {% set key, value = extra %}
@@ -97,7 +260,6 @@
       {% endblock %}
     </tbody>
   </table>
-
   <br>
 
   <h3>{{ _('Data Quality') }}</h3>
@@ -183,3 +345,5 @@
     </tbody>
   </table>
 </section>
+
+
