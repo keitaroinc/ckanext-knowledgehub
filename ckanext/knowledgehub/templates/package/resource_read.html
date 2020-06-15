@@ -371,6 +371,7 @@
   {% endif %}
 
   {% endif %}
+  
   {% endfor %}
   {% else %}
   {# Views not created #}
@@ -398,6 +399,13 @@
   </div>
   {% endif %}
 </div>
+
+{% if views_created and current_resource_view['id'] %}
+<section class="comments">
+      <h4 class="text-uppercase">{{ _('Comments') }} <i class="fa fa-comments-o"></i> {{ h.get_comments_count(current_resource_view['id']) }}</h4>
+      {% snippet 'snippets/comments.html', user=c.userobj, ref=current_resource_view['id'], enable_multilevel_replies=False, ref_type='visualization' %}
+</section>
+{% endif %}
 
 {% endblock %}
 
@@ -540,6 +548,4 @@
 </section>
 
 {{ super() }}
-
-{{ h.disqus_comments() }}
 {% endblock %}
