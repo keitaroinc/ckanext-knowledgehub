@@ -1,4 +1,10 @@
 {%  set data_quality = h.get_package_data_quality(pkg_dict.id)  %}
+{% if c.userobj %}
+<section class="dataset-comments">
+  <h3>{{ _('Comments') }} <i class="fa fa-comments-o"></i> {{h.get_comments_count(pkg_dict.id)}}</h3>
+  {% snippet 'snippets/comments.html', user=c.userobj, ref=pkg_dict.id, enable_multilevel_replies=False, ref_type='dataset' %}
+</section>
+{% endif %}
 <section class="additional-info">
   <h3>{{ _('Additional Info') }}</h3>
   <table class="table table-striped table-bordered table-condensed">

@@ -37,8 +37,6 @@ RUN pip install cython && \
     pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt" && \
     # datarequests
     pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests" && \
-    # disqus
-    pip install --no-cache-dir -e "git+https://github.com/okfn/ckanext-disqus#egg=ckanext-disqus" && \
     # hdx 
     pip uninstall psycopg2-binary -y && \
     pip uninstall psycopg2 -y && \
@@ -55,7 +53,6 @@ ENV CKAN__PLUGINS envvars \
                   recline_view \
                   validation \
                   knowledgehub \
-                  disqus \
                   stats \
                   datastore \
                   datapusher \
@@ -74,9 +71,7 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.views.defau
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.extra_resource_fields = theme sub_theme research_question"
 # Show data request badge
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.datarequests.show_datarequests_badge = true"
-# Set up Disqus
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.name = knowledgehub-ckan"
-RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "disqus.disqus_url = knowledgehub-staging.keitaro.app"
+
 # Set max resource size to 500MB
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.max_resource_size = 500"
 # Set facets for datasets

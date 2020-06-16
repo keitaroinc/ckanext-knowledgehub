@@ -34,7 +34,13 @@
 {% resource 'knowledgehub/comments' %}
 {% resource 'knowledgehub/mentions' %}
 {% set enable_multilevel_replies = enable_multilevel_replies if not none else False %}
-<div class="container-fluid comments-wrapper" user="{{user.id}}" show-comments-for="{{ref}}" {%if enable_multilevel_replies %} enable-multilevel-replies="true" {% endif %}>
+{% set ref_type = ref_type if not none else 'post' %}
+{% set user = user if not none else {'id': '', 'display_name': 'Not logged in', 'email_hash': ''}%}
+<div class="container-fluid comments-wrapper"
+     user="{{user.id}}"
+     show-comments-for="{{ref}}"
+     ref-type="{{ref_type}}"
+     {%if enable_multilevel_replies %} enable-multilevel-replies="true" {% endif %}>
     <div class="row">
         <div class="col-md-12 add-new-comment"></div>
     </div>
