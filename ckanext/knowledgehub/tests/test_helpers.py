@@ -179,7 +179,13 @@ class TestKWHHelpers(ActionsBase):
             schema='',
             validation_options='',
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         user = factories.Sysadmin()
@@ -400,7 +406,13 @@ class TestKWHHelpers(ActionsBase):
             schema='',
             validation_options='',
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -496,7 +508,13 @@ class TestKWHHelpers(ActionsBase):
             schema='',
             validation_options='',
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         rqs = kwh_helpers.get_rq_ids(resource['id'])
         assert_equals(len(rqs), 8)
@@ -510,7 +528,13 @@ class TestKWHHelpers(ActionsBase):
             schema='',
             validation_options='',
             package_id=dataset['id'],
-            format='geojson'
+            format='geojson',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         resources = kwh_helpers.get_geojson_resources()
         assert_equals(len(resources), 1)
@@ -557,7 +581,13 @@ class TestKWHHelpers(ActionsBase):
             schema='',
             validation_options='',
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
 
         )
 
@@ -587,6 +617,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -616,6 +652,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -645,6 +687,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -675,6 +723,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -735,6 +789,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -767,6 +827,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -789,6 +855,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -823,6 +895,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -857,6 +935,12 @@ class TestKWHHelpers(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -933,7 +1017,13 @@ class TestKWHHelpers(ActionsBase):
             schema='',
             validation_options='',
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data_dict = {
             'resource_id': resource.get('id'),
@@ -1016,7 +1106,13 @@ class TestKWHHelpers(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         user = factories.Sysadmin()
@@ -1088,7 +1184,13 @@ class TestKWHHelpers(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         user = factories.Sysadmin()
@@ -1200,7 +1302,13 @@ class TestKWHHelpers(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         user = factories.Sysadmin()
@@ -1320,6 +1428,10 @@ class TestKWHHelpers(ActionsBase):
                 self.name = name
                 self.fullname = fullname
 
+        
+        
+        model.Session.expunge_all()
+
         user_dict = {
             'name': 'knowledgehub-test',
             'email': 'test@company.com',
@@ -1338,7 +1450,13 @@ class TestKWHHelpers(ActionsBase):
             schema='',
             validation_options='',
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         resource['admin'] = user['name']
         kwh_helpers.resource_validation_notification(
