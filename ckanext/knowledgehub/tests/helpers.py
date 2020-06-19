@@ -33,7 +33,8 @@ def create_dataset(**kwargs):
         'owner_org': org['name'],
         'archived': 'No',
         'data_collection_technique': 'Tech',
-        'unit_of_measurement': 'Unit'
+        'unit_of_measurement': 'Unit',
+        'data_collector': 'None'
 
     }
     data_dict.update(kwargs)

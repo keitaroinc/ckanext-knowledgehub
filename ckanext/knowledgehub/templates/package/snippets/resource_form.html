@@ -61,7 +61,6 @@
     <input type="hidden" name="validation_timestamp" value="{{ data['validation_timestamp'] }}" />
 
     {{ form.select('admin', id='field-resource-validation-admin', label=_('Request Resource Validation'), options=h.get_resource_validation_options(pkg_name), selected=data.admin, error=errors.resource_validation, classes=["control-medium"]) }}
-    {{ form.required_message() }}
 
     {{ form.input('date_range_start', id='field-date-range-start', label=_('Date Range Start'), placeholder=_('Date collection first date '), value=data.date_range_start, error=errors.date_range_start, is_required=true) }}
     {{ form.input('date_range_end', id='field-date-range-end', label=_('Date Range End'), placeholder=_('Date collection last date '), value=data.date_range_end, error=errors.date_range_end, is_required=true) }}

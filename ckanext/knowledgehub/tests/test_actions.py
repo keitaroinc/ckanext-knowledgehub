@@ -740,6 +740,7 @@ class TestKWHCreateActions(ActionsBase):
             'archived': 'No',
             'unit_of_measurement': 'time',
             'data_collection_technique': 'None',
+            'data_collector': 'None'
 
         })
 
@@ -1544,6 +1545,8 @@ class TestKWHGetActions(ActionsBase):
             'archived': 'No',
             'unit_of_measurement': 'time',
             'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         dataset2 = toolkit.get_action('package_create')({
@@ -1556,6 +1559,8 @@ class TestKWHGetActions(ActionsBase):
             'archived': 'No',
             'unit_of_measurement': 'time',
             'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         for ctx, dst in product([usr1_ctx, usr2_ctx], [dataset1, dataset2]):
@@ -2610,7 +2615,9 @@ class TestKWHUpdateActions(ActionsBase):
             'title': 'Access Req Test Dataset 3',
             'archived': 'No',
             'unit_of_measurement': 'time',
-            'data_collection_technique': 'None'
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         req = AccessRequest(
@@ -2634,7 +2641,9 @@ class TestKWHUpdateActions(ActionsBase):
             'id': req.id,
             'archived': 'No',
             'unit_of_measurement': 'time',
-            'data_collection_technique': 'None'
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
 
         })
 
@@ -2653,7 +2662,9 @@ class TestKWHUpdateActions(ActionsBase):
             'title': 'Access Req Test Dataset 4',
             'archived': 'No',
             'unit_of_measurement': 'time',
-            'data_collection_technique': 'None'
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         req = AccessRequest(

@@ -258,7 +258,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'geog_coverage': package_defaults,
             'data_collection_technique': mandatory_defaults,
             'linked_datasets': package_defaults,
-            'data_collector': package_defaults,
+            'data_collector': mandatory_defaults,
 
         })
 

@@ -1761,7 +1761,8 @@ def _grant_access_dataset(context, id, user_id):
         'shared_with_users': shared_with_users,
         'archived' : dataset.get('archived'),
         'unit_of_measurement': dataset.get('unit_of_measurement'),
-        'data_collection_technique': dataset.get('data_collection_technique')
+        'data_collection_technique': dataset.get('data_collection_technique'),
+        'data_collector': dataset.get('data_collector')
     })
 
 
