@@ -1428,10 +1428,7 @@ class TestKWHHelpers(ActionsBase):
                 self.name = name
                 self.fullname = fullname
 
-        
-        
-        model.Session.expunge_all()
-
+    
         user_dict = {
             'name': 'knowledgehub-test',
             'email': 'test@company.com',

@@ -523,7 +523,13 @@ class TestKWHCreateActions(ActionsBase):
 
         system_rsc = create_actions.merge_all_data(
             get_context(),
-            {'id': dataset['id']}
+            {'id': dataset['id'],
+            'date_range_start': '1',
+            'date_range_end': '2',
+            'process_status': '3',
+            'identifiability':'4',
+            'hxl_ated': 'No',
+            'file_type': 'Microdata' }
         )
 
         assert_equals(
@@ -2624,9 +2630,12 @@ class TestKWHUpdateActions(ActionsBase):
         assigned.save()
 
         model.Session.flush()
-
         result = toolkit.get_action('access_request_grant')(adm_ctx, {
             'id': req.id,
+            'archived': 'No',
+            'unit_of_measurement': 'time',
+            'data_collection_technique': 'None'
+
         })
 
         assert_true(result is not None)
@@ -2674,6 +2683,7 @@ class TestKWHUpdateActions(ActionsBase):
         assert_equals(result.get('resolved_by'), adm_ctx['auth_user_obj'].id)
 
     def test_comment_update(self):
+
         context = get_regular_user_context()
         user_id = context.get('auth_user_obj').id
         model.Session.query(Comment).delete()
@@ -2687,7 +2697,6 @@ class TestKWHUpdateActions(ActionsBase):
         )
         comment.save()
 
-        model.Session.expunge_all()
         result = update_actions.comment_update(context, {
             'id': comment.id,
             'content': 'Updated comment',

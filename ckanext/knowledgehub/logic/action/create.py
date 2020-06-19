@@ -1052,6 +1052,7 @@ def merge_all_data(context, data_dict):
             'csv'
         )
 
+
         rsc_dict = {
             'package_id': package_id,
             'name': '{}_{}'.format(
@@ -1059,7 +1060,13 @@ def merge_all_data(context, data_dict):
                 plugin_helpers.SYSTEM_RESOURCE_TYPE
             ),
             'upload':  FlaskFileStorage(stream, filename),
-            'resource_type': plugin_helpers.SYSTEM_RESOURCE_TYPE
+            'resource_type': plugin_helpers.SYSTEM_RESOURCE_TYPE,
+            'file_type': 'Microdata',
+            'date_range_start':'0',
+            'date_range_end': '0',
+            'process_status': 'Raw-Uncleaned',
+            'hxl_ated': 'No',
+            'identifiability': 'Personally identifiable'
         }
 
         if data_dict.get('system_resource'):
