@@ -30,7 +30,12 @@ def create_dataset(**kwargs):
         'notes': 'notes',
         'maintainer': 'John',
         'research_question': ['rq', 'rq1'],
-        'owner_org': org['name']
+        'owner_org': org['name'],
+        'archived': 'No',
+        'data_collection_technique': 'Tech',
+        'unit_of_measurement': 'Unit',
+        'data_collector': 'None'
+
     }
     data_dict.update(kwargs)
     return toolkit.get_action('package_create')(context, data_dict)
