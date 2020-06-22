@@ -226,7 +226,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
         defaults = [toolkit.get_validator('ignore_missing')]
         package_defaults = [toolkit.get_validator('ignore_missing'),
                             toolkit.get_converter('convert_to_extras')]
-        mandatory_defaults = [toolkit.get_validator('not_empty')]
+        mandatory_defaults = [toolkit.get_validator('not_empty'), 
+                            toolkit.get_converter('convert_to_extras')]
 
         schema.update({
             'unit_supported': package_defaults,
@@ -256,10 +257,10 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'original_id': package_defaults,
             'date_range_start': package_defaults,
             'date_range_end': package_defaults,
-            'unit_of_measurement': package_defaults,
+            'unit_of_measurement': mandatory_defaults,
             'sampling_procedure': package_defaults,
             'operational_purpose': package_defaults,
-            'archived': package_defaults,
+            'archived': mandatory_defaults,
             'admin_notes': package_defaults,
             'sampling_procedure_notes': package_defaults,
             'response_rate_notes': package_defaults,
@@ -271,9 +272,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'process_status': package_defaults,
             'identifiability': package_defaults,
             'geog_coverage': package_defaults,
-            'data_collection_technique': package_defaults,
+            'data_collection_technique': mandatory_defaults,
             'linked_datasets': package_defaults,
-            'data_collector': package_defaults,
+            'data_collector': mandatory_defaults,
 
         })
 
@@ -284,7 +285,13 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'port': defaults,
             'username': defaults,
             'password': defaults,
-            'sql': defaults
+            'sql': defaults,
+            'date_range_start': mandatory_defaults,
+            'date_range_end': mandatory_defaults,
+            'process_status': mandatory_defaults,
+            'identifiability': mandatory_defaults,
+            'hxl_ated': mandatory_defaults,
+            'file_type': mandatory_defaults,
         })
 
         return schema
@@ -302,6 +309,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
         defaults = [toolkit.get_validator('ignore_missing')]
         package_defaults = [toolkit.get_converter('convert_from_extras'),
                             toolkit.get_validator('ignore_missing')]
+        mandatory_defaults = [toolkit.get_validator('not_empty'),
+                            toolkit.get_converter('convert_from_extras')]
 
         schema.update({
             'unit_supported': package_defaults,
@@ -364,12 +373,12 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'dq_accuracy_column': defaults,
             'data_quality_completeness_column': defaults,
             'hdx_name_resource': defaults,
-            'date_range_start': defaults,
-            'date_range_end': defaults,
-            'process_status': defaults,
-            'identifiability': defaults,
-            'hxl_ated': defaults,
-            'file_type': defaults,
+            'date_range_start': mandatory_defaults,
+            'date_range_end': mandatory_defaults,
+            'process_status': mandatory_defaults,
+            'identifiability': mandatory_defaults,
+            'hxl_ated': mandatory_defaults,
+            'file_type': mandatory_defaults,
         })
         return schema
 

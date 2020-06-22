@@ -197,7 +197,13 @@ class TestKWHCreateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         user = factories.Sysadmin()
@@ -273,7 +279,13 @@ class TestKWHCreateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -298,7 +310,13 @@ class TestKWHCreateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -440,6 +458,12 @@ class TestKWHCreateActions(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data = {
             "resource_id": resource['id'],
@@ -453,7 +477,13 @@ class TestKWHCreateActions(ActionsBase):
                 {"value": 6},
                 {"value": 7},
             ],
-            "force": True
+            "force": True,
+            'date_range_start': '1',
+            'date_range_end': '2',
+            'process_status': '3',
+            'identifiability':'4',
+            'hxl_ated': 'No',
+            'file_type': 'Microdata'
         }
         helpers.call_action('datastore_create', **data)
 
@@ -462,6 +492,12 @@ class TestKWHCreateActions(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data = {
             "resource_id": resource['id'],
@@ -475,13 +511,26 @@ class TestKWHCreateActions(ActionsBase):
                 {"value": 13},
                 {"value": 14},
             ],
-            "force": True
+            "force": True,
+            'date_range_start': '1',
+            'date_range_end': '2',
+            'process_status': '3',
+            'identifiability':'4',
+            'hxl_ated': 'No',
+            'file_type': 'Microdata'
+            
         }
         helpers.call_action('datastore_create', **data)
 
         system_rsc = create_actions.merge_all_data(
             get_context(),
-            {'id': dataset['id']}
+            {'id': dataset['id'],
+            'date_range_start': '1',
+            'date_range_end': '2',
+            'process_status': '3',
+            'identifiability':'4',
+            'hxl_ated': 'No',
+            'file_type': 'Microdata' }
         )
 
         assert_equals(
@@ -530,7 +579,13 @@ class TestKWHCreateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -588,7 +643,13 @@ class TestKWHCreateActions(ActionsBase):
             created='2020-03-10 00:13:47.641641',
             name='resource name',
             format='CSV',
-            id='a7ae9f30-ff91-405c-bf7b-926017bcb9ac'
+            id='a7ae9f30-ff91-405c-bf7b-926017bcb9ac',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         Dataset.read_from_hdx.return_value = {
             'name': dataset['name'],
@@ -677,6 +738,11 @@ class TestKWHCreateActions(ActionsBase):
         dataset = toolkit.get_action('package_create')(ctx, {
             'name': 'test-dataset',
             'title': 'Test Dataset',
+            'archived': 'No',
+            'unit_of_measurement': 'time',
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         req = toolkit.get_action('request_access')(usr_ctx, {
@@ -913,7 +979,13 @@ class TestKWHGetActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         user = factories.Sysadmin()
@@ -1007,7 +1079,13 @@ class TestKWHGetActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -1277,7 +1355,13 @@ class TestKWHGetActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data_dict = {
             'what': 'The resource is invalid!',
@@ -1459,6 +1543,11 @@ class TestKWHGetActions(ActionsBase):
         }, {
             'name': 'acc-req-test-dataset-1',
             'title': 'Test Dataset 1',
+            'archived': 'No',
+            'unit_of_measurement': 'time',
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         dataset2 = toolkit.get_action('package_create')({
@@ -1468,6 +1557,11 @@ class TestKWHGetActions(ActionsBase):
         }, {
             'name': 'acc-req-test-dataset-2',
             'title': 'Test Dataset 2',
+            'archived': 'No',
+            'unit_of_measurement': 'time',
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         for ctx, dst in product([usr1_ctx, usr2_ctx], [dataset1, dataset2]):
@@ -1996,7 +2090,13 @@ class TestKWHDeleteActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data_dict = {
             'what': 'The resource is invalid!',
@@ -2235,7 +2335,13 @@ class TestKWHUpdateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -2243,7 +2349,13 @@ class TestKWHUpdateActions(ActionsBase):
             'name': 'Name updated',
             'schema': '',
             'validation_options': '',
-            'db_type': None
+            'db_type': None,
+            'date_range_start': '1',
+            'date_range_end': '2',
+            'process_status': '3',
+            'identifiability':'4',
+            'hxl_ated': 'No',
+            'file_type': 'Microdata'
         }
 
         rsc_updated = update_actions.resource_update(context, data_dict)
@@ -2265,7 +2377,13 @@ class TestKWHUpdateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -2312,7 +2430,13 @@ class TestKWHUpdateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -2347,7 +2471,13 @@ class TestKWHUpdateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -2377,7 +2507,13 @@ class TestKWHUpdateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         user = factories.Sysadmin()
@@ -2509,7 +2645,13 @@ class TestKWHUpdateActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
 
         data_dict = {
@@ -2608,6 +2750,12 @@ class TestKWHUpdateActions(ActionsBase):
             validation_options='',
             package_id=dataset['id'],
             datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data['resource_id'] = resource['id']
         helpers.call_action('datastore_create', **data)
@@ -2632,6 +2780,11 @@ class TestKWHUpdateActions(ActionsBase):
         dataset = toolkit.get_action('package_create')(adm_ctx, {
             'name': 'acc-req-test-dataset-3',
             'title': 'Access Req Test Dataset 3',
+            'archived': 'No',
+            'unit_of_measurement': 'time',
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         req = AccessRequest(
@@ -2651,9 +2804,14 @@ class TestKWHUpdateActions(ActionsBase):
         assigned.save()
 
         model.Session.flush()
-
         result = toolkit.get_action('access_request_grant')(adm_ctx, {
             'id': req.id,
+            'archived': 'No',
+            'unit_of_measurement': 'time',
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
+
         })
 
         assert_true(result is not None)
@@ -2669,6 +2827,11 @@ class TestKWHUpdateActions(ActionsBase):
         dataset = toolkit.get_action('package_create')(adm_ctx, {
             'name': 'acc-req-test-dataset-4',
             'title': 'Access Req Test Dataset 4',
+            'archived': 'No',
+            'unit_of_measurement': 'time',
+            'data_collection_technique': 'None',
+            'data_collector': 'None'
+
         })
 
         req = AccessRequest(
@@ -2698,6 +2861,7 @@ class TestKWHUpdateActions(ActionsBase):
         assert_equals(result.get('resolved_by'), adm_ctx['auth_user_obj'].id)
 
     def test_comment_update(self):
+
         context = get_regular_user_context()
         user_id = context.get('auth_user_obj').id
         model.Session.query(Comment).delete()
@@ -3186,7 +3350,13 @@ class TestTagsActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data_dict = {
             'resource_id': resource.get('id'),
@@ -3266,7 +3436,13 @@ class TestTagsActions(ActionsBase):
         dataset = create_dataset()
         resource = factories.Resource(
             package_id=dataset['id'],
-            url='https://jsonplaceholder.typicode.com/posts'
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
         )
         data_dict = {
             'resource_id': resource.get('id'),
@@ -3302,6 +3478,8 @@ class TestTagsActions(ActionsBase):
 class TestUserProfileActions(ActionsBase):
 
     def test_user_profile_create(self):
+        model.Session.expunge_all()
+
         context = get_regular_user_context()
         user_profile = create_actions.user_profile_create(context, {})
         assert_true(user_profile is not None)

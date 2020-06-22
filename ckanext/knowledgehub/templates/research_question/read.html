@@ -40,6 +40,13 @@
 {% snippet "research_question/snippets/additional_info.html", rq=rq %}
 {% endblock %}
 
+{% block comments %}
+<section class="comments">
+  <h4 class="text-uppercase">{{ _('Comments') }} <i class="fa fa-comments-o"></i> {{h.get_comments_count(rq.id)}}</h4>
+  {% snippet 'snippets/comments.html', user=c.userobj, ref=rq.id, enable_multilevel_replies=False, ref_type='research-question' %}
+</section>
+{% endblock %}
+
 {% block related_dashboards %}
 <h4>RELATED DASHBOARDS</h4>
 {% set rel_dash = h.get_rqs_dashboards(rq['id']) %}
