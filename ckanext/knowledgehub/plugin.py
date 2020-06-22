@@ -9,7 +9,7 @@ import ckan.plugins.toolkit as toolkit
 from ckan import logic
 from ckan.lib.plugins import DefaultDatasetForm, DefaultPermissionLabels
 from ckan.common import config
-
+from ckan.lib.base import BaseController as CKANBaseController
 
 # imports for DatastoreBackend
 from ckanext.datastore.backend.postgres import DatastorePostgresqlBackend
@@ -38,6 +38,7 @@ from ckanext.knowledgehub.model.visualization import extend_resource_view_table
 from ckanext.knowledgehub.model.dashboard import dashboard_table_upgrade
 from ckanext.knowledgehub.lib.util import get_as_list
 
+
 from ckanext.datastore.backend import (
     DatastoreException,
     _parse_sort_clause,
@@ -62,6 +63,20 @@ def _init_knowledgehub_database():
     from ckanext.knowledgehub.cli.db import init_db
 
     init_db()
+
+
+def _patch_ckan_base_controller():
+    original_before = CKANBaseController.__before__
+
+    def wrapped_before(*args, **kwagrs):
+        result = original_before(*args, **kwagrs)
+        try:
+            h.log_request()
+        except Exception as e:
+            log.exception(e)
+        return result
+
+    CKANBaseController.__before__ = wrapped_before
 
 
 class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
@@ -108,6 +123,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
 
         # Eliminates the need to re-initialize the database when model changes.
         _init_knowledgehub_database()
+        _patch_ckan_base_controller()
 
     # IBlueprint
     def get_blueprint(self):
@@ -339,7 +355,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             'identifiability': package_defaults,
             'geog_coverage': package_defaults,
             'data_collection_technique': package_defaults,
-            'linked_datasets': package_defaults, 
+            'linked_datasets': package_defaults,
             'data_collector': package_defaults,
 
         })
@@ -488,8 +504,8 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             map,
             controller='ckanext.oauth2.controller:OAuth2Controller'
         ) as m:
-            m.connect('user_login_azure', '/user/login/azure', action='login')    
-        
+            m.connect('user_login_azure', '/user/login/azure', action='login')
+
         return map
 
     # IPackageController
