@@ -46,12 +46,11 @@
 
     .notification-item {
         color: @gray-dark;
-        cursor: pointer;
+        //cursor: pointer;
         padding-top: 15px;
         padding-bottom: 15px;
         margin-top: 0;
         background-color: lighten(@gray-lightest, 20%);
-
 
         &:hover {
             transition: 0.2s;
@@ -59,7 +58,6 @@
             background: lighten(@brand-primary, 40%);
 
         }
-
 
         .notification-title {
             color: @gray-darker;
@@ -80,12 +78,11 @@
         .notification-icon {
             padding: 5px;
             display: block;
-            font-size: 1.4em;
-            border-radius: 32px;
+            font-size: 2rem;
 
             .icon {
-                color: #fff !important;
-
+                color: @brand-info !important;
+                background-color: none;
             }
         }
 

@@ -14,6 +14,17 @@ ckan.module('notifications', function($){
         })
     }
 
+    var decreaseNotificationCount = function() {
+        var count = $('.notifications-count').html();
+        try {
+            count = parseInt(count.trim());
+            count--;
+            if (count >= 0) {
+                $('.notifications-count').html(count)
+            }
+        }catch (e) {}
+    }
+
     $(function(){
         var itemTemplate = $('.notification-list-item').first().clone();
         var lastId = $('.notification-item').last().attr('id')
@@ -38,7 +49,8 @@ ckan.module('notifications', function($){
                     if (notification.image){
                         $('.notification-image', el).attr('src', notification.image);
                     }else{
-                        $('.notification-image', el).css('display', 'none');
+                        $('.notification-image', el).hide();
+                        $('.notification-image-default', el).show();
                     }
                     
                     $('.notifications-list').append(el);
@@ -49,7 +61,8 @@ ckan.module('notifications', function($){
                         ev.preventDefault();
                         var notificationId = notification.id;
                         markAsRead(notificationId).done(function(){
-                            $('#'+notificationId+'.notification-item').remove()
+                            $('#'+notificationId+'.notification-list-item').remove()
+                            decreaseNotificationCount()
                             if($('.notification-item').length == 0){
                                 showMore()
                             }
@@ -88,6 +101,7 @@ ckan.module('notifications', function($){
                     showMore()
                 }
                 $('#'+notificationId+'.notification-item').remove()
+                decreaseNotificationCount()
             }.bind(this));
         })
 
