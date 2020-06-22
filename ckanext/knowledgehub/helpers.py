@@ -36,6 +36,7 @@ from ckan.model import ResourceView, Resource
 from ckan import lib
 from ckan.lib import helpers as h
 from ckan.controllers.admin import get_sysadmins
+from ckan.logic import ValidationError
 
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceValidation
@@ -1855,9 +1856,30 @@ def generate_ref_type_url(ref_type, ref):
         return h.url_for('dataset_read', controller='package',
                          action='read', id=ref)
 
+    def _dashboard_url():
+        return h.url_for('dashboards.view', name=ref)
+
+    def _visualization_url():
+        try:
+            visualization = toolkit.get_action('resource_view_show')({
+                'ignore_auth': True,
+            }, {
+                'id': ref,
+            })
+            return h.url_for(controller='package',
+                             action='resource_read',
+                             id=visualization['package_id'],
+                             resource_id=visualization['resource_id'],
+                             view_id=visualization['id'])
+        except Exception as e:
+            log.exception(e)
+            return h.url_for('/')
+
     generators = {
         'post': _post_url,
         'dataset': _dataset_url,
+        'dashboard': _dashboard_url,
+        'visualization': _visualization_url,
     }
     if ref_type not in generators:
         raise ValidationError({'ref_type': [_('Invalid value')]})
