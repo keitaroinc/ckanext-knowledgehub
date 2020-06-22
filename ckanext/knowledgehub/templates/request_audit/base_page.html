@@ -1,0 +1,117 @@
+{% resource 'knowledgehub/datepicker' %}
+{% resource 'knowledgehub/requests_audit' %}
+{% extends "user/dashboard.html" %}
+
+{% block dashboard_activity_stream_context %}{% endblock %}
+
+{% block page_primary_action %}
+  
+{% endblock %}
+
+{% block primary_content_inner %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 col-sm-12">
+            <ul class="nav nav-tabs nav-stacked">
+                <li role="presentation" class="{% if tab=='all'%}active{% endif %}"><a href="{{ h.url_for('user_dashboard.audit_requests', tab='all') }}">{{ _('All Requests') }}</a></li>
+                <li role="presentation" class="{% if tab=='page_count'%}active{% endif %}"><a href="{{ h.url_for('user_dashboard.audit_requests', tab='page_count') }}">{{ _('Page count') }}</a></li>
+                <li role="presentation" class="{% if tab=='user_count'%}active{% endif %}"><a href="{{ h.url_for('user_dashboard.audit_requests', tab='user_count') }}">{{ _('User count') }}</a></li>
+                <li role="presentation" class="{% if tab=='ip_count'%}active{% endif %}"><a href="{{ h.url_for('user_dashboard.audit_requests', tab='ip_count') }}">{{ _('User IP count') }}</a></li>
+              </ul>
+        </div>
+        <div class="col-md-10 col-sm-12">
+            {% set timespan = timespan if timespan is not none else 'last-month' %}
+            <section>
+                <form class="form audit-form">
+                    <input type="hidden" name="tab" value="{{tab}}">
+                    <input type="hidden" name="page" value="{{page}}">
+                    <input type="hidden" name="limit" value="{{limit}}">
+                    <input type="hidden" name="timespan" value="{{timespan}}">
+                    <div class="form-group">
+                        <div id="timespan" class="btn-group" role="group" aria-label="choose time span">
+                            <button class="btn btn-default {% if timespan == 'last-hour' %}active{% endif %}" timespan="last-hour">{{ _('Last hour') }}</button>
+                            <button class="btn btn-default {% if timespan == 'last-day' %}active{% endif %}" timespan="last-day">{{ _('Last day') }}</button>
+                            <button class="btn btn-default {% if timespan == 'last-week' %}active{% endif %}" timespan="last-week">{{ _('Last week') }}</button>
+                            <button class="btn btn-default {% if timespan == 'last-month' %}active{% endif %}" timespan="last-month">{{ _('Last month') }}</button>
+                            <button class="btn btn-default {% if timespan == 'custom' %}active{% endif %}" timespan="custom">{{ _('Custom range') }}</button>
+                        </div>
+                    </div>
+                    <div class="form-group custom-timespan" style="{% if timespan != 'custom' %}display: none;{% endif %}">
+                        <label for="custom-range">{{ _('Enter custom range') }}</label>
+                        <div id="custom-range" class="input-group">
+                            <span class="input-group-addon {%if errors.date_start%}has-error danger{% endif %}">
+                                <i class="fa fa-calendar"></i> {{ _('From') }}
+                            </span>
+                            <input id="start-date"
+                                class="form-control {%if errors.date_start%}has-error danger{% endif %}"
+                                name="date_start"
+                                value="{{date_start}}"
+                                datepicker="on">
+                            <span class="input-group-addon {%if errors.date_end%}has-error danger{% endif %}">
+                                <i class="fa fa-calendar"> </i> {{ _('To') }}
+                            </span>
+                            <input id="end-date"
+                                class="form-control {%if errors.date_end %}has-error danger{% endif %}"
+                                name="date_end"
+                                value="{{date_end}}"
+                                datepicker="on">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="query-term">{{ _('Search for') }}</label>
+                        <div id="query-term" class="input-group">
+                            <input class="form-control" name="q" value="{{q}}" placeholder="{{_('Type a search term')}}">
+                            <span class="input-group-addon">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                    {% if errors%}
+                    <div class="audit-error-messages">
+                        <ul>
+                        {% for key, messages in errors.items() %}
+                        <li>{% if key != 'general' %}{{key}} - {% endif %}
+                            {% for message in messages %}
+                            {{message}}
+                            {% endfor%}
+                        </li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-default pull-right">{{ _('Show') }}</button>
+                </form>
+            </section>
+            {% block content_data %}
+            {% endblock %}
+            {% if pagination and pagination.pages|length > 1 %}
+            <nav aria-label="{{ _('Page navigation') }}">
+                <ul class="pagination">
+                  {% if pagination.previous_url %}
+                  <li>
+                    <a href="{{pagination.previous_url}}" aria-label="{{ _('Previous') }}">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                  {% endif %}
+                  {% for pg in pagination.pages %}
+                    {% if pagination.current_page == pg.page %}
+                        <li class="active"><span>{{pg.page}}</span></li>
+                    {% else %}
+                        <li><a href="{{pg.url}}">{{pg.page}}</a></li>
+                    {% endif %}
+                  {% endfor %}
+                  {% if pagination.next_url %}
+                  <li>
+                    <a href="{{pagination.next_url}}" aria-label="{{_('Next')}}">
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

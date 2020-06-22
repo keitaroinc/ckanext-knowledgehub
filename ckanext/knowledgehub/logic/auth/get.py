@@ -188,3 +188,11 @@ def resolve_mentions(context, data_dict=None):
 
 def get_liked_by_user(context, data_dict=None):
     return {'success': True}
+
+
+def get_request_log(context, data_dict=None):
+    return {'success': False}
+
+
+def get_request_log_report(context, data_dict=None):
+    return {'success': False}

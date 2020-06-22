@@ -1,0 +1,29 @@
+{% extends "request_audit/base_page.html" %}
+
+
+{% block content_data %}
+<table class="table audit-table">
+    <thead>
+        <tr>
+            <th class="tb-medium">{{ _('Requests Count') }}</th>
+            <th>
+            {% if tab == 'page_count' %}
+                {{ _('Endpoint') }}
+            {% elif tab == 'user_count' %}
+                {{ _('Remote user') }}
+            {% elif tab == 'ip_count' %}
+                {{ _('Remote IP') }}
+            {% endif %}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+    {%for result in results%}
+        <tr>
+            <td>{{result.count}}</td>
+            <td>{{result.value}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

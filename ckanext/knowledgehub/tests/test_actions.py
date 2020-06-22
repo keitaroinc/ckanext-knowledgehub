@@ -12,7 +12,7 @@ from ckan.tests import helpers
 from ckan.plugins import toolkit
 from ckan import logic
 from ckan import model
-from datetime import datetime
+from datetime import datetime, timedelta
 from ckan.common import config
 from collections import namedtuple
 
@@ -53,6 +53,7 @@ from ckanext.knowledgehub.model import (
     CommentsRefStats,
     LikesCount,
     LikesRef,
+    RequestAudit,
 )
 from ckanext.knowledgehub.model.keyword import extend_tag_table
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchWorker
@@ -1722,6 +1723,172 @@ class TestKWHGetActions(ActionsBase):
             assert_equals(len(results), 2)
         finally:
             model.Session.rollback()
+
+    def test_get_request_log(self):
+        context = get_context()
+        model.Session.query(RequestAudit).delete()
+
+        ra = RequestAudit(
+            remote_ip='192.168.1.10',
+            remote_user='test_user',
+            session='abcdef',
+            current_language='en',
+            access_time=datetime.now() - timedelta(days=2),
+            request_url='/test/url?a=b',
+            http_method='GET',
+            http_path='/test/url',
+            http_query_params='a=b',
+            http_user_agent='Test user agent',
+            client_os='linux',
+            client_device='firefox',
+        )
+        ra.save()
+        ra = RequestAudit(
+            remote_ip='192.168.1.11',
+            remote_user='test_user1',
+            session='abcdef',
+            current_language='en',
+            access_time=datetime.now() - timedelta(days=1),
+            request_url='/test/url1?a=b',
+            http_method='GET',
+            http_path='/test/url1',
+            http_query_params='a=b',
+            http_user_agent='Test user agent',
+            client_os='linux',
+            client_device='firefox',
+        )
+        ra.save()
+
+        ra = RequestAudit(
+            remote_ip='192.168.1.123',
+            remote_user='test_user2',
+            session='abcdef',
+            current_language='en',
+            access_time=datetime.now(),
+            request_url='/test/url2?a=b',
+            http_method='GET',
+            http_path='/test/url2',
+            http_query_params='a=b',
+            http_user_agent='Test user agent',
+            client_os='linux',
+            client_device='firefox',
+        )
+        ra.save()
+
+        result = get_actions.get_request_log(context, {})
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 3)
+
+        # assert search
+        result = get_actions.get_request_log(context, {
+            'q': '192.168.1.123',  # search in remote IP,
+                                   # should have only 1 result
+        })
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 1)
+
+        result = get_actions.get_request_log(context, {
+            'q': 'test_user1',  # search in remote user,
+                                # should have only 1 result
+        })
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 1)
+
+        result = get_actions.get_request_log(context, {
+            'q': '/test/url1',  # search in CKAN endpoints,
+                                # should have only 1 result
+        })
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 1)
+
+        # search in time range, should return only 1 result for
+        # the previous day
+        result = get_actions.get_request_log(context, {
+            'date_start': datetime.now() - timedelta(hours=30),
+            'date_end': datetime.now() - timedelta(hours=5),
+        })
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 1)
+
+    def test_get_request_log_report(self):
+        context = get_context()
+        model.Session.query(RequestAudit).delete()
+
+        ra = RequestAudit(
+            remote_ip='192.168.1.10',
+            remote_user='test_user',
+            session='abcdef',
+            current_language='en',
+            access_time=datetime.now() - timedelta(days=2),
+            request_url='/test/url?a=b',
+            http_method='GET',
+            http_path='/test/url',
+            http_query_params='a=b',
+            http_user_agent='Test user agent',
+            client_os='linux',
+            client_device='firefox',
+        )
+        ra.save()
+        ra = RequestAudit(
+            remote_ip='192.168.1.10',
+            remote_user='test_user',
+            session='abcdef',
+            current_language='en',
+            access_time=datetime.now() - timedelta(days=1),
+            request_url='/test/url?b=c',
+            http_method='GET',
+            http_path='/test/url',
+            http_query_params='b=c',
+            http_user_agent='Test user agent',
+            client_os='linux',
+            client_device='firefox',
+        )
+        ra.save()
+
+        ra = RequestAudit(
+            remote_ip='192.168.1.123',
+            remote_user='test_user1',
+            session='abcdef',
+            current_language='en',
+            access_time=datetime.now(),
+            request_url='/test/url2?a=b',
+            http_method='GET',
+            http_path='/test/url2',
+            http_query_params='a=b',
+            http_user_agent='Test user agent',
+            client_os='linux',
+            client_device='firefox',
+        )
+        ra.save()
+
+        result = get_actions.get_request_log_report(context, {
+            'report': 'endpoint',
+        })
+
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 2)
+        assert_true(result.get('results', [])[0].get('count'), 2)
+        assert_true(result.get('results', [])[0].get('value'), '/test/url')
+
+        result = get_actions.get_request_log_report(context, {
+            'report': 'remote_user',
+        })
+
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 2)
+        assert_true(result.get('results', [])[0].get('count'), 2)
+        assert_true(result.get('results', [])[0].get('value'), 'test_user')
+
+        result = get_actions.get_request_log_report(context, {
+            'report': 'remote_ip',
+            'date_start': datetime.now() - timedelta(hours=30),
+            'date_end': datetime.now() - timedelta(hours=5),
+        })
+
+        assert_true(result is not None)
+        assert_equals(result.get('count'), 1)
+        assert_true(result.get('results', [])[0].get('count'), 1)
+        assert_true(result.get('results', [])[0].get('value'), '192.168.1.10')
 
 
 class TestKWHDeleteActions(ActionsBase):
