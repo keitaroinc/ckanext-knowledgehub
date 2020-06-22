@@ -126,6 +126,7 @@ def view(name):
                     log.warning('Cannot access resource view %s. Error: %s',
                                 res_view_id, str(e))
                     log.exception(e)
+                    ind['resource_view_error'] = _('Failed to load visualization.')
 
     extra_vars['dashboard'] = dashboard_dict
 
