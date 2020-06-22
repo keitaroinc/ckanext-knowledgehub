@@ -1936,17 +1936,43 @@ def log_request():
             log.debug(e)
 
     try:
-        log.info('Request Headers: %s', request.headers)
+        print 'Request Headers: ', request.headers
     except Exception as e:
         log.exception(e)
 
     try:
-        log.info('Request Environ: %s', json.dumps(request.environ, indent=2, default=str))
+        print 'Request Environ: ', json.dumps(request.environ, indent=2, default=str)
     except Exception as e:
         log.exception(e)
+    
+    remote_ip = ''
+    # Try in X-Forwarded-For and related HTTP headers
+    for header in ['X-Forwarded-For', 'X-ProxyUser-Ip']:
+        try:
+            x_fwd = request.headers.get(header)
+            if x_fwd:
+                x_fwd = x_fwd.split(',')
+                if x_fwd and x_fwd[0]:
+                    x_fwd = x_fwd[0].strip()
+                    if re.match(r'^\d+(\.\d+){3}(\:\d)?$', x_fwd):
+                        # IPv4
+                        if ':' in x_fwd:
+                            remote_ip = x_fwd.split(':')[0]
+                        else:
+                            remote_ip = x_fwd
+                    else:
+                        # IPv6
+                        remote_ip = x_fwd
+        except Exception as e:
+            log.error('Failed to get REMOTE IP while examining header: %s',
+                      header)
+            log.exception(e)
+
+    if not remote_ip:
+        remote_ip = request.environ.get('REMOTE_ADDR')
 
     data = {
-        'remote_ip': request.environ.get('REMOTE_ADDR'),
+        'remote_ip': remote_ip,
         'remote_user': request.environ.get('REMOTE_USER'),
         'session': session_id,
         'current_language': request.environ.get('CKAN_LANG'),
