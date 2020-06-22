@@ -59,6 +59,11 @@
                     {% endif %}
                     <div class="viz-view-item col-lg-6 col-sm-12"
                         style="max-width: {{ width or 'initial' }}; height: {{ height or 'initial' }};">
+                        {% if indicator.get('resource_view_error')%}
+                        <div class="alert alert-danger" role="alert">
+                            {{indicator.get('resource_view_error')}}
+                        </div>
+                        {% else %}
                         {% set resource_view = indicator.resource_view %}
                         {% if resource_view.view_type == 'chart' %}
                         {% if resource_view and resource_view.__extras %}
@@ -179,6 +184,7 @@
                                         data_key_field=data_key_field,
                                         data_value_field=data_value_field,
                                         sql_string=sql_string %}
+                        {% endif %}
                         {% endif %}
                     </div>
                     {% endfor %}

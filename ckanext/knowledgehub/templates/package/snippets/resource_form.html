@@ -72,7 +72,7 @@
       <div class="controls">
         <select id="field-process-status" name="process_status" data-module="autocomplete">
           {% for opt in options  %}
-            <option value="{{ opt }}" {% if opt in data.get('process_status', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+            <option value="{{ opt }}" {% if opt in (data.get('process_status', []) or []) %}selected="selected"{% endif %}>{{ opt }}</option>
           {% endfor %}
         </select>
       </div>
@@ -87,7 +87,7 @@
       <div class="controls">
         <select id="field-identifiability" name="identifiability" data-module="autocomplete">
           {% for opt in options  %}
-            <option value="{{ opt }}" {% if opt in data.get('identifiability', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+            <option value="{{ opt }}" {% if opt in (data.get('identifiability', []) or []) %}selected="selected"{% endif %}>{{ opt }}</option>
           {% endfor %}
         </select>
       </div>
@@ -101,7 +101,7 @@
       <div class="controls">
         <select id="field-hxl-ated" name="hxl_ated" data-module="autocomplete" is_required="true">
           {% for opt in options  %}
-            <option value="{{ opt }}" {% if opt in data.get('hxl_ated', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+            <option value="{{ opt }}" {% if opt in (data.get('hxl_ated', []) or []) %}selected="selected"{% endif %}>{{ opt }}</option>
           {% endfor %}
         </select>
       </div>
@@ -117,7 +117,7 @@
       <div class="controls">
         <select id="field-file-type" name="file_type" data-module="autocomplete">
           {% for opt in options  %}
-            <option value="{{ opt }}" {% if opt in data.get('file_type', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+            <option value="{{ opt }}" {% if opt in (data.get('file_type', []) or []) %}selected="selected"{% endif %}>{{ opt }}</option>
           {% endfor %}
         </select>
       </div>
