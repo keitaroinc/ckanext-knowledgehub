@@ -19,6 +19,7 @@ from urllib import urlencode
 from six import string_types, iteritems
 from enum import Enum
 from hdx.data.dataset import Dataset
+from werkzeug import UserAgent
 
 
 try:
@@ -40,6 +41,7 @@ from ckan.controllers.admin import get_sysadmins
 from ckanext.knowledgehub.model import Dashboard
 from ckanext.knowledgehub.model import ResourceValidation
 from ckanext.knowledgehub.model import Comment
+from ckanext.knowledgehub.lib.request_audit import get_request_audit
 
 
 log = logging.getLogger(__name__)
@@ -1870,3 +1872,60 @@ def get_countries():
     '''
 
     return pycountry.countries
+
+
+def _ignore_path(path):
+    if not path:
+        return True
+    ignore_paths = [
+        '.css', '.js',
+        '.png', '.jpg', '.jpeg', '.gif', '.webp',
+        '.mp4', '.mp3', '.mov', '.mtr', '.ogg', '.oga', '.ogv', '.webm',
+        '/api/i18n/en',
+    ]
+
+    path = path.lower()
+    for ext in ignore_paths:
+        if path.endswith(ext):
+            return True
+    return False
+
+
+def log_request():
+    session_id = None
+    try:
+        session_id = request.environ.get('beaker.session').id
+    except Exception as e:
+        log.debug(e)
+        log.exception(e)
+
+    if _ignore_path(request.path):
+        return
+
+    user_agent_string = request.environ.get('HTTP_USER_AGENT')
+    client_os = None
+    client_device = None
+    if user_agent_string:
+        try:
+            user_agent = UserAgent(user_agent_string)
+            client_os = user_agent.platform
+            client_device = user_agent.browser
+        except Exception as e:
+            log.debug(e)
+
+    data = {
+        'remote_ip': request.environ.get('REMOTE_ADDR'),
+        'remote_user': request.environ.get('REMOTE_USER'),
+        'session': session_id,
+        'current_language': request.environ.get('CKAN_LANG'),
+        'access_time': datetime.now(),
+        'request_url': request.environ.get('CKAN_CURRENT_URL'),
+        'http_method': request.environ.get('REQUEST_METHOD'),
+        'http_path': request.path,
+        'http_query_params': request.environ.get('QUERY_STRING'),
+        'http_user_agent': user_agent_string,
+        'client_os': client_os,
+        'client_device': client_device
+    }
+
+    get_request_audit().log(data)

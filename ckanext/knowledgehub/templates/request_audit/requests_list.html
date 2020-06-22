@@ -1,0 +1,35 @@
+{% extends "request_audit/base_page.html" %}
+
+
+{% block content_data %}
+<table class="table audit-table">
+    <thead>
+        <tr>
+            <th class="tb-large">{{ _('Time') }}</th>
+            <th class="tb-extra-large">{{ _('Request URL') }}</th>
+            <th class="tb-medium">{{ _('User') }}</th>
+            <th class="tb-medium">{{ _('Remote IP') }}</th>
+            <th class="tb-large">{{ _('Session ID') }}</th>
+            <th class="tb-small">{{ _('User OS') }}</th>
+            <th class="tb-small">{{ _('User Browser') }}</th>
+            <th class="tb-small">{{ _('Language') }}</th>
+            <th class="tb-small">{{ _('Request type') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+    {%for result in results%}
+        <tr>
+            <td>{{result.access_time}}</td>
+            <td>{{result.request_url}}</td>
+            <td>{{result.remote_user}}</td>
+            <td>{{result.remote_ip}}</td>
+            <td>{{result.session}}</td>
+            <td>{{result.client_os}}</td>
+            <td>{{result.client_device}}</td>
+            <td>{{result.current_language}}</td>
+            <td>{{result.http_method}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

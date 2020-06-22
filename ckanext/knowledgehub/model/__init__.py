@@ -27,6 +27,7 @@ from ckanext.knowledgehub.model.likes import (
     LikesCount,
     LikesRef,
 )
+from ckanext.knowledgehub.model.request_audit import RequestAudit
 
 __all__ = [
     'AccessRequest',
@@ -46,6 +47,7 @@ __all__ = [
     'ResourceFeedbacks',
     'ResourceValidate',
     'ResourceValidation',
+    'RequestAudit',
     'RNNCorpus',
     'UserIntents',
     'UserQuery',

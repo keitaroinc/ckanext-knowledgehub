@@ -11,6 +11,7 @@ from ckan.tests import helpers
 from ckan.plugins import toolkit as toolkit
 from ckan import model
 from ckan.common import g
+import ckan.common
 from collections import namedtuple
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
@@ -31,6 +32,8 @@ from ckanext.knowledgehub.model.resource_feedback import (
 from ckanext.knowledgehub.model.kwh_data import (
     setup as kwh_data_setup
 )
+from ckanext.knowledgehub.model.request_audit import RequestAudit
+from ckanext.knowledgehub.lib import request_audit
 from ckanext.knowledgehub.model.comments import CommentsRefStats
 from ckanext.knowledgehub import helpers as kwh_helpers
 from ckanext.knowledgehub.logic.action import create as create_actions
@@ -1486,3 +1489,30 @@ class TestKWHHelpers(ActionsBase):
         assert_true(url_post is not None)
         dataset_url = kwh_helpers.generate_ref_type_url('dataset', 'dataset-1')
         assert_equals(dataset_url, '/dataset/dataset-1')
+
+    @monkey_patch(kwh_helpers, 'request', mock.MagicMock())
+    def test_log_request(self):
+
+        req_audit_service_mock = mock.MagicMock()
+        request_audit.get_request_audit.return_value = req_audit_service_mock
+
+        request = kwh_helpers.request
+        request.path = '/test/path'
+        request.environ = {}
+
+        kwh_helpers.log_request()
+
+        from time import sleep
+        sleep(1)
+
+        request_audit.get_request_audit().shutdown()
+
+        count, items = RequestAudit.get_all(
+            query=None,
+            start_time=None,
+            end_time=None,
+            offset=0,
+            limit=10,
+        )
+
+        assert_equals(count, 1)

@@ -8,9 +8,12 @@ import ckan.lib.helpers as h
 from ckan.common import _, g, request, config
 from flask.views import MethodView
 import ckan.lib.navl.dictization_functions as dict_fns
-from ckanext.knowledgehub.helpers import check_user_profile_preferences
+from ckanext.knowledgehub.helpers import (
+    check_user_profile_preferences,
+    log_request
+)
 import ckanext.knowledgehub.views.access as access_requests
-
+import ckanext.knowledgehub.views.request_audit as request_audit
 
 kwh_user = Blueprint(
     u'kwh_user',
@@ -484,8 +487,10 @@ user_dashboard.add_url_rule(u'/posts', view_func=user_posts,
 
 # Register the rules for Access requests
 access_requests.register_url_rules(user_dashboard)
+request_audit.register_url_rules(user_dashboard)
 
 
 @kwh_user.before_app_request
 def check_user_prefrences():
+    log_request()
     return check_user_profile_preferences()

@@ -3,6 +3,7 @@ import re
 import os
 import json
 from six import string_types, iteritems
+import datetime
 
 from paste.deploy.converters import asbool
 
@@ -36,6 +37,7 @@ from ckanext.knowledgehub.model import (
     Comment,
     LikesCount,
     LikesRef,
+    RequestAudit,
 )
 from ckanext.knowledgehub import helpers as kh_helpers
 from ckanext.knowledgehub.lib.rnn import PredictiveSearchModel
@@ -2745,3 +2747,191 @@ def get_likes_count(context, data_dict):
 
     count = LikesCount.get_likes_count(ref)
     return count
+
+
+def get_request_log(context, data_dict):
+    '''Returns the request log for a specified time period.
+
+    The result is a paginated list of request data logged by the system. The
+    data is ordered by the time of access in descending order (newest requests
+    are returned first in the list).
+
+    :param date_start: `str` or `datetime.datetime`, the start of the time
+        range. If not specified, returns starting from the oldest entry.
+    :param date_end: `str` or `datetime.datetime`, the end of the time range.
+        If not specified, returns up to the newest entry.
+    :param q: `str`, a search term. Filters data from the requests url, remote
+        user and remote IP. If not specified, no filter is applied.
+    :param page: `int`, the number of the page to be returned. The pages are
+        enumerated starting from 1. If not specified, default is `1`.
+    :param limit: `int`, the maximal number of rows per page. Default is `20`.
+
+    :returns: `dict`, containing:
+        * `count` - total number of items matching the search criteria.
+        * `rezults` - `list` of `dict`, containing the log data.
+        * `page` - current page.
+        * `limit` - current limit.
+    '''
+    check_access('get_request_log', context, data_dict)
+
+    errors = {}
+
+    page = 1
+    limit = 20
+    try:
+        page = int(data_dict.get('page', 0))
+    except Exception as e:
+        errors['page'] = [_('Invalid value. Must be integer.')]
+
+    try:
+        limit = int(data_dict.get('limit', 20))
+    except Exception as e:
+        errors['limit'] = [_('Invalid value. Must be integer.')]
+
+    for key in ['date_start', 'date_end']:
+        if key in data_dict:
+            value = data_dict.get(key)
+            if value:
+                try:
+                    if isinstance(value, datetime.datetime):
+                        data_dict[key] = value
+                    else:
+                        value = int(value)/1000
+                        data_dict[key] = datetime.datetime.fromtimestamp(value)
+                except Exception as e:
+                    errors[key] = [_('Invalid value. Must be a valid '
+                                     'timestamp in milliseconds or a '
+                                     'datetime.datetime object.')]
+
+    date_start = data_dict.get('date_start')
+    date_end = data_dict.get('date_end')
+    query = data_dict.get('q', '').strip()
+
+    if errors:
+        raise ValidationError(errors)
+
+    if page <= 0:
+        page = 1
+    if limit >= 500:
+        limit = 500
+
+    results = []
+    count, items = RequestAudit.get_all(
+        offset=(page-1)*limit,
+        limit=limit,
+        query=query,
+        start_time=date_start,
+        end_time=date_end)
+    for result in items:
+        results.append(_table_dictize(result, context))
+
+    return {
+        'results': results,
+        'page': page,
+        'limit': limit,
+        'count': int(count),
+    }
+
+
+def get_request_log_report(context, data_dict):
+    '''Returns a report generated from the collected log data.
+
+    The reports are basically a count of types of requests aggregated by:
+        * Page count - how many requests for each page (endpoint) on the portal
+        * User count - how many requests for each user
+        * IP count - number of requests comming from a specific IP
+
+    :param report: `str`, type of report to generate. Valid options are:
+        * `endpoint` - generate a report for number of requests per endpoint
+            (URL).
+        * `remote_user` - generate a report for number of requests per user.
+        * `remote_ip` - generate a report for number of requests per remote IP.
+    :param date_start: `str` or `datetime.datetime`, the start of the time
+        range. If not specified, returns starting from the oldest entry.
+    :param date_end: `str` or `datetime.datetime`, the end of the time range.
+        If not specified, returns up to the newest entry.
+    :param q: `str`, a search term. Filters data from the requests url, remote
+        user and remote IP. If not specified, no filter is applied.
+    :param page: `int`, the number of the page to be returned. The pages are
+        enumerated starting from 1. If not specified, default is `1`.
+    :param limit: `int`, the maximal number of rows per page. Default is `20`.
+
+    :returns: `dict`, containing:
+        * `count` - total number of items matching the search criteria.
+        * `rezults` - `list` of `dict`, containing the report data. Each row
+            has `value` and `count`, representing the value (for example the
+            URL being hit, the remote user or IP) and the number of requests.
+        * `page` - current page.
+        * `limit` - current limit.
+    '''
+    check_access('get_request_log_report', context, data_dict)
+
+    errors = {}
+
+    page = 1
+    limit = 20
+    try:
+        page = int(data_dict.get('page', 0))
+    except Exception as e:
+        errors['page'] = [_('Invalid value. Must be integer.')]
+
+    try:
+        limit = int(data_dict.get('limit', 20))
+    except Exception as e:
+        errors['limit'] = [_('Invalid value. Must be integer.')]
+
+    report = data_dict.get('report', '').strip()
+    if not report:
+        errors['report'] = [_('Missing value.')]
+    elif report not in ['endpoint', 'remote_user', 'remote_ip']:
+        errors['report'] = [_('Invalid value.')]
+
+    for key in ['date_start', 'date_end']:
+        if key in data_dict:
+            value = data_dict.get(key)
+            if value:
+                try:
+                    if isinstance(value, datetime.datetime):
+                        data_dict[key] = value
+                    else:
+                        value = int(value)/1000
+                        data_dict[key] = datetime.datetime.fromtimestamp(value)
+                except Exception as e:
+                    errors[key] = [_('Invalid value. Must be a valid '
+                                     'timestamp in milliseconds or a '
+                                     'datetime.datetime object.')]
+
+    date_start = data_dict.get('date_start')
+    date_end = data_dict.get('date_end')
+    query = data_dict.get('q')
+
+    if errors:
+        raise ValidationError(errors)
+
+    if page <= 0:
+        page = 1
+    if limit >= 500:
+        limit = 500
+
+    results = []
+    items_count, items = RequestAudit.get_report_by(
+        report=report,
+        query=query,
+        start_time=date_start,
+        end_time=date_end,
+        offset=(page-1)*limit,
+        limit=limit)
+
+    for result in items:
+        value, count = result
+        results.append({
+            'value': value,
+            'count': count,
+        })
+
+    return {
+        'page': page,
+        'limit': limit,
+        'results': results,
+        'count': int(items_count),
+    }
