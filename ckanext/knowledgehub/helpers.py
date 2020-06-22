@@ -1935,6 +1935,16 @@ def log_request():
         except Exception as e:
             log.debug(e)
 
+    try:
+        log.info('Request Headers: %s', request.headers)
+    except Exception as e:
+        log.exception(e)
+
+    try:
+        log.info('Request Environ: %s', json.dumps(request.environ, indent=2, default=str))
+    except Exception as e:
+        log.exception(e)
+
     data = {
         'remote_ip': request.environ.get('REMOTE_ADDR'),
         'remote_user': request.environ.get('REMOTE_USER'),
