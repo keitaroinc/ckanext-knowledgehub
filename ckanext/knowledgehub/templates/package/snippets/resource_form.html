@@ -60,11 +60,24 @@
     <input type="hidden" name="validation_status" value="{{ data['validation_status'] }}" />
     <input type="hidden" name="validation_timestamp" value="{{ data['validation_timestamp'] }}" />
 
-    {{ form.select('admin', id='field-resource-validation-admin', label=_('Request Resource Validation'), options=h.get_resource_validation_options(pkg_name), selected=data.admin, error=errors.resource_validation, classes=["control-medium"]) }}
-
     {{ form.input('date_range_start', id='field-date-range-start', label=_('Date Range Start'), placeholder=_('Date collection first date '), value=data.date_range_start, error=errors.date_range_start, is_required=true) }}
     {{ form.input('date_range_end', id='field-date-range-end', label=_('Date Range End'), placeholder=_('Date collection last date '), value=data.date_range_end, error=errors.date_range_end, is_required=true) }}
     
+    {% block basic_fields_file_type %}
+    {% set options = ['Microdata', 'Questionnaire', 'Report', 'Sampling strategy & methodology Description', 'Infographics & Dashboard',
+    'Other'] %}
+    <div class="control-group">
+      <label class="control-label" for="field-file-type" is_required="true">{{ _("File Type") }}</label>
+      <div class="controls">
+        <select id="field-file-type" name="file_type" data-module="autocomplete">
+          {% for opt in options  %}
+            <option value="{{ opt }}" {% if opt in (data.get('file_type', []) or []) %}selected="selected"{% endif %}>{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    {% endblock %}
+
     {% block resource_fields_process_status %}
     {% set options = ['Raw-Uncleaned', 'Cleaned Only', 'Cleaned & Anonymized'] %}
     <div class="control-group">
@@ -93,7 +106,7 @@
       </div>
     </div>
     {% endblock %}
-
+ 
     {% block package_basic_hxl_ated %}
     {% set options = ['No', 'Yes'] %}
     <div class="control-group">
@@ -108,21 +121,8 @@
     </div>
     {% endblock %}
 
+    {{ form.select('admin', id='field-resource-validation-admin', label=_('Request Resource Validation'), options=h.get_resource_validation_options(pkg_name), selected=data.admin, error=errors.resource_validation, classes=["control-medium"]) }}
 
-    {% block basic_fields_file_type %}
-    {% set options = ['Microdata', 'Questionnaire', 'Report', 'Sampling strategy & methodology Description', 'Infographics & Dashboard',
-    'Other'] %}
-    <div class="control-group">
-      <label class="control-label" for="field-file-type" is_required="true">{{ _("File Type") }}</label>
-      <div class="controls">
-        <select id="field-file-type" name="file_type" data-module="autocomplete">
-          {% for opt in options  %}
-            <option value="{{ opt }}" {% if opt in (data.get('file_type', []) or []) %}selected="selected"{% endif %}>{{ opt }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    {% endblock %}
 
   {% endblock basic_fields %}
 
