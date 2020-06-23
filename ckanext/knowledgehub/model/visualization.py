@@ -122,10 +122,16 @@ class Visualization(ResourceView, Indexed):
                         rq_ids.add(data_rq)
 
         if rq_ids:
+            rq_ids_list = list(rq_ids)
+            string_ids = ','.join(rq_ids_list)
+            clean = string_ids.replace('"', "").replace(']',"").replace("[","")
+            clean_list = clean.split(',')
+        
             data['idx_research_questions'] = []
-            for rq_title in rq_ids:
+
+            for rq_title in clean_list:
                 try:
-                    rq_title = rq_title.strip('"')
+                    rq_title = rq_title.strip(" ")
                     rq = ResearchQuestion.get_by_id_name_or_title(rq_title)
                     if rq:
                         data['idx_research_questions'].append(rq.id)
