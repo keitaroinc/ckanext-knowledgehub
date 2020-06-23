@@ -12,6 +12,7 @@ from ckan.common import _
 from ckan import model
 from ckan.model import Session
 from ckan.logic.action.delete import package_delete as ckan_package_delete
+from ckan.logic.action.delete import resource_delete as ckan_resource_delete
 
 from hdx.data.dataset import Dataset
 
@@ -497,13 +498,50 @@ def package_delete(context, data_dict):
     :type id: string
 
     '''
-
+    id = data_dict.get('id')
+    try:
+        result = toolkit.get_action('search_visualizations')(context, {
+        'text': '*',
+        'fq': [
+            '+khe_package_id:{0}'.format(data_dict['id']),
+        ]})
+        if result['count'] > 0:
+                for res in result['results']:
+                    resource_view_delete(context, { 'id': res['id'] })
+    except Exception as e:
+        log.error('Failed to delete visualization. Error: %s', str(e))
+        log.exception(e)
     ckan_package_delete(context, data_dict)
     try:
         KWHData.delete({'dataset': data_dict['id']})
     except Exception as e:
         log.debug('Cannot remove dataset from kwh data %s' % str(e))
 
+def resource_delete(context, data_dict):
+    '''Delete a resource from a dataset.
+
+    You must be a sysadmin or the owner of the resource to delete it.
+
+    :param id: the id of the resource
+    :type id: string
+
+    '''
+
+    id = data_dict.get('id')
+    try:
+        result = toolkit.get_action('search_visualizations')(context, {
+        'text': '*',
+        'fq': [
+            '+khe_resource_id:{0}'.format(data_dict['id']),
+        ]})
+        if result['count'] > 0:
+            for res in result['results']:
+                resource_view_delete(context, { 'id': res['id'] })
+    except Exception as e:
+        log.error('Failed to delete visualization. Error: %s', str(e))
+        log.exception(e)
+
+    ckan_resource_delete(context, data_dict)
 
 def delete_resource_from_hdx(context, data_dict):
 
