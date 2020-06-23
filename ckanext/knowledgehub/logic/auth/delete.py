@@ -1,4 +1,5 @@
 from ckan.logic.auth.delete import package_delete as ckan_package_delete
+from ckan.logic.auth.delete import resource_delete as ckan_resource_delete
 
 
 def theme_delete(context, data_dict):
@@ -84,3 +85,7 @@ def comment_delete(context, data_dict=None):
 
 def like_delete(context, data_dict=None):
     return {'success': True}
+
+def resource_delete(context, data_dict):
+    return {'success': True }
+
