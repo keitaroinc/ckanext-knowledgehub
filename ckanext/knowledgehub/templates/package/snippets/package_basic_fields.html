@@ -15,19 +15,18 @@
   {% set show_organizations_selector = organizations_available %}
   {% set show_visibility_selector = dataset_has_organization or (organizations_available and (user_is_sysadmin or dataset_is_draft)) %}
 
-
-  {{ form.input('short_title', id='field-short-title', label=_('Short Title'), placeholder=_('eg. A short title'), value=data.short_title, error=errors.short_title) }}
-  {% block package_basic_fields_sensitivity %}
-  {{ form.input('data_sensitivity', id='field-data-sensitivity', label=_('Data Sensitivity'), placeholder=_('eg. Yes'), value=data.data_sensitivity, error=errors.data_sensitivity) }}
+  {% block package_basic_fields_unit_measurement %}
+  {{ form.input('unit_of_measurement', id='field-unit-of-measurement', label=_('Unit of Measurement'), placeholder=_('Unit of measurement / observation for the dataset'), 
+  value=data.unit_of_measurement, error=errors.unit_of_measurement, is_required=true) }}
   {% endblock %}
 
-
+  {{ form.input('data_collector', id='field-data-collector', label=_('Data Collector'), placeholder=_('Which organization owns/collected the data'), value=data.data_collector, error=errors.data_collector, classes=['control-full'], is_required=true) }}
 
 
   {% block basic_fields_external_access %}
   {% set options = ['Not Available', 'Direct Access', 'Public Use', 'Licensed Use', 'Data Enclave', 'Open Access'] %}
   <div class="control-group">
-    <label class="control-label" for="field-external-access">{{ _("External Access") }}</label>
+    <label class="control-full" for="field-external-access">{{ _("External Access Level") }}</label>
     <div class="controls">
       <select id="field-external_access" name="external_access" data-module="autocomplete">
         {% for acc in options  %}
@@ -38,6 +37,46 @@
   </div>
   {% endblock %}  
 
+  {% block basic_fields_data_collection_technique %}
+  {% set options = ['Not specified', 'Face-to-face interview', 'Face-to-face interview: Computerised', 'Face-to-face interview: Mobile',
+  'Face-to-face interview: Paper-and-pencil', 'Telephone interview', 'E-mail interview', 'Self-administered questionnaire: E-mail',
+  'Self-administered questionnaire: Paper', 'Self-administered questionnaire: SMS/MMS', 
+  'Web-based interview: audio-visual technology enabling the interviewer(s) and interviewee(s) to communicate in real time',
+  'Self-administered questionnaire: Computer-assisted', 'Self-administered questionnaire: Web-based', 'Face-to-face focus group',
+  'Telephone focus group', 'Observation', 'Other'] %}
+  <div class="control-group">
+    <label class="control-label" for="field-data-collection-technique" is_required="true">{{ _("Data Collection Technique") }}</label>
+    <div class="controls">
+      <select id="field-data-collection-technique" name="data_collection_technique" data-module="autocomplete">
+        {% for opt in options  %}
+          <option value="{{ opt }}" {% if opt in data.get('data_collection_technique', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% endblock %}
+
+  {% block basic_fields_archived %}
+  {% set options = ['No', 'Yes'] %}
+  <div class="control-group">
+    <label class="control-label" for="field-archived">{{ _("Archived") }}</label>
+    <div class="controls">
+      <select id="field-archived" name="archived" data-module="autocomplete" is_required="true">
+        {% for opt in options  %}
+          <option value="{{ opt }}" {% if opt in data.get('archived', []) %}selected="selected"{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% endblock %}
+
+
+  {{ form.input('short_title', id='field-short-title', label=_('Short Title'), placeholder=_('eg. A short title'), value=data.short_title, error=errors.short_title) }}
+  
+  {% block package_basic_fields_sensitivity %}
+  {{ form.input('data_sensitivity', id='field-data-sensitivity', label=_('Data Sensitivity'), placeholder=_('eg. Yes'), value=data.data_sensitivity, error=errors.data_sensitivity) }}
+  {% endblock %}
+
   {% block package_basic_fields_original_id %}
   {{ form.input('original_id', id='field-data-original-id', label=_('Original ID'), placeholder=_('If the dataset already has an ID '), value=data.original_id, error=errors.original_id) }}
   {% endblock %}
@@ -45,11 +84,6 @@
   {% block package_basic_fields_date_range %}
   {{ form.input('date_range_start', id='field-date-range-start', label=_('Date Range Start'), placeholder=_('Date collection first date '), value=data.date_range_start, error=errors.date_range_start) }}
   {{ form.input('date_range_end', id='field-date-range-end', label=_('Date Range End'), placeholder=_('Date collection last date '), value=data.date_range_end, error=errors.date_range_end) }}
-  {% endblock %}
-
-  {% block package_basic_fields_unit_measurement %}
-  {{ form.input('unit_of_measurement', id='field-unit-of-measurement', label=_('Unit of Measurement'), placeholder=_('Unit of measurement / observation for the dataset'), 
-  value=data.unit_of_measurement, error=errors.unit_of_measurement, is_required=true) }}
   {% endblock %}
 
   {% block package_basic_hxl_ated %}
@@ -64,7 +98,6 @@
   {{ form.input('linked_datasets', id='field-linked-datasets', label=_("Linked Datasets"), placeholder=_('Links to other RIDL datasets.'), value=data.linked_datasets, error=errors.linked_datasets) }}
   {% endblock %}
 
-  {{ form.input('data_collector', id='field-data-collector', label=_('Data Collector'), placeholder=_('Which organization owns/collected the data'), value=data.data_collector, error=errors.data_collector, classes=['control-full'], is_required=true) }}
 
 
   {% block basic_fields_process_status %}
@@ -95,26 +128,6 @@
     </div>
   </div>
   {% endblock %}
-
-  {% block basic_fields_data_collection_technique %}
-  {% set options = ['Not specified', 'Face-to-face interview', 'Face-to-face interview: Computerised', 'Face-to-face interview: Mobile',
-  'Face-to-face interview: Paper-and-pencil', 'Telephone interview', 'E-mail interview', 'Self-administered questionnaire: E-mail',
-  'Self-administered questionnaire: Paper', 'Self-administered questionnaire: SMS/MMS', 
-  'Web-based interview: audio-visual technology enabling the interviewer(s) and interviewee(s) to communicate in real time',
-  'Self-administered questionnaire: Computer-assisted', 'Self-administered questionnaire: Web-based', 'Face-to-face focus group',
-  'Telephone focus group', 'Observation', 'Other'] %}
-  <div class="control-group">
-    <label class="control-label" for="field-data-collection-technique" is_required="true">{{ _("Data Collection Technique") }}</label>
-    <div class="controls">
-      <select id="field-data-collection-technique" name="data_collection_technique" data-module="autocomplete">
-        {% for opt in options  %}
-          <option value="{{ opt }}" {% if opt in data.get('data_collection_technique', []) %}selected="selected"{% endif %}>{{ opt }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-  {% endblock %}
-
 
   {% block basic_fields_sampling_procedure %}
   {% set options = ['Probability: Simple random', 'Probability: Systematic random', 'Probability: Stratified', 'Probability: Stratified: Proportional', 'Probability: Stratified: Disproportional', 'Probability: Cluster',
@@ -147,19 +160,6 @@
   </div>
   {% endblock %}
 
-  {% block basic_fields_archived %}
-  {% set options = ['No', 'Yes'] %}
-  <div class="control-group">
-    <label class="control-label" for="field-archived">{{ _("Archived") }}</label>
-    <div class="controls">
-      <select id="field-archived" name="archived" data-module="autocomplete" is_required="true">
-        {% for opt in options  %}
-          <option value="{{ opt }}" {% if opt in data.get('archived', []) %}selected="selected"{% endif %}>{{ opt }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-  {% endblock %}
 
   {% if show_organizations_selector and show_visibility_selector %}
   <div data-module="dataset-visibility">
