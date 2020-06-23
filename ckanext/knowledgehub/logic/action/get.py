@@ -2823,7 +2823,11 @@ def get_request_log(context, data_dict):
         start_time=date_start,
         end_time=date_end)
     for result in items:
-        results.append(_table_dictize(result, context))
+        result_dict = _table_dictize(result, context)
+        results.append(result_dict)
+        if result.access_time:
+            result_dict['access_time'] = \
+                result.access_time.strftime('%Y-%m-%d %H:%M:%S')
 
     return {
         'results': results,
