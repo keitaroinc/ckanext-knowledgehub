@@ -509,7 +509,8 @@ def package_delete(context, data_dict):
                 for res in result['results']:
                     resource_view_delete(context, { 'id': res['id'] })
     except Exception as e:
-        print str(e)
+        log.error('Failed to delete visualization. Error: %s', str(e))
+        log.exception(e)
     ckan_package_delete(context, data_dict)
     try:
         KWHData.delete({'dataset': data_dict['id']})
@@ -537,7 +538,8 @@ def resource_delete(context, data_dict):
             for res in result['results']:
                 resource_view_delete(context, { 'id': res['id'] })
     except Exception as e:
-        print str(e)
+        log.error('Failed to delete visualization. Error: %s', str(e))
+        log.exception(e)
 
     ckan_resource_delete(context, data_dict)
 
