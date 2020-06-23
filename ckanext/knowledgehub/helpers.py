@@ -1934,20 +1934,10 @@ def log_request():
             client_device = user_agent.browser
         except Exception as e:
             log.debug(e)
-
-    try:
-        print 'Request Headers: ', request.headers
-    except Exception as e:
-        log.exception(e)
-
-    try:
-        print 'Request Environ: ', json.dumps(request.environ, indent=2, default=str)
-    except Exception as e:
-        log.exception(e)
     
     remote_ip = ''
     # Try in X-Forwarded-For and related HTTP headers
-    for header in ['X-Forwarded-For', 'X-ProxyUser-Ip']:
+    for header in ['X-Forwarded-For', 'X-ProxyUser-Ip', 'X-Real-Ip']:
         try:
             x_fwd = request.headers.get(header)
             if x_fwd:
