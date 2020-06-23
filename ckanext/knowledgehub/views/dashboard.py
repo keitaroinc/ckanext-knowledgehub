@@ -339,6 +339,8 @@ class EditView(MethodView):
                     except Exception as e:
                         log.warning('Cannot access resource view %s. '
                                     'Error: %s', res_view_id, str(e))
+                        ind['resource_view_error'] = \
+                            _('Cannot access resource view %s.' % res_view_id)
                 try:
                     rq = get_action('research_question_show')(
                         _get_context(),

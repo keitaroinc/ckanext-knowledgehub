@@ -90,7 +90,13 @@
         <div class="internal-dashboard-viz-container-items">
           {% if data.indicators and data.type == 'internal' %}
               {% for indicator in data.indicators %}
-                  {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=indicator.order, selected_rq=indicator.research_question, selected_viz=indicator.resource_view_id, selected_size=indicator.size, viz_options=indicator.viz_options, resource_view=indicator.resource_view %}
+                  {% if indicator.resource_view_error %}
+                    <div class="alert alert-danger" role="alert">
+                      {{indicator.get('resource_view_error')}}
+                    </div>
+                  {% else %}
+                    {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=indicator.order, selected_rq=indicator.research_question, selected_viz=indicator.resource_view_id, selected_size=indicator.size, viz_options=indicator.viz_options, resource_view=indicator.resource_view %}
+                  {% endif %}
               {% endfor %}
           {% else %}
               {% snippet 'ajax_snippets/internal_dashboard_visualization.html', research_questions=research_questions, position=1 %}
