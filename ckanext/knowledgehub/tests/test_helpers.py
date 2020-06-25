@@ -215,7 +215,7 @@ class TestKWHHelpers(ActionsBase):
 
         last_visuals = kwh_helpers.get_last_visuals()
 
-        assert_equals(len(last_visuals), 1)
+        assert_equals(len(last_visuals), 0)
 
     @monkey_patch(Dashboard, 'add_to_index', mock.Mock())
     def test_get_rqs_dashboards(self):
