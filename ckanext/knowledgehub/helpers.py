@@ -485,6 +485,11 @@ def get_last_visuals():
         .limit(3).all()
     data_dict_format = model_dictize\
         .resource_view_list_dictize(res_views, _get_context())
+    try:
+        toolkit.check_access('user_profile_show', _get_context())
+    except toolkit.NotAuthorized:
+        log.error('Not Authorized')
+        data_dict_format = {}
     return data_dict_format
 
 
@@ -1934,6 +1939,16 @@ def log_request():
             client_device = user_agent.browser
         except Exception as e:
             log.debug(e)
+
+    # try:
+    #     print 'Request Headers: ', request.headers
+    # except Exception as e:
+    #     log.exception(e)
+
+    # try:
+    #     print 'Request Environ: ', json.dumps(request.environ, indent=2, default=str)
+    # except Exception as e:
+    #     log.exception(e)
     
     remote_ip = ''
     # Try in X-Forwarded-For and related HTTP headers
