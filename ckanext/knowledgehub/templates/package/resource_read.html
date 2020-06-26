@@ -244,7 +244,6 @@
   {% set chart_title = resource_view.title %}
   {% endif %}
 
-  {% if resource_view.view_type == 'chart'%}
   <div>
     <a href="{{ h.url_for('news.new', entity_type='visualization', entity_ref=resource_view.id) }}"
        class="btn btn-warning pull-right">
@@ -252,7 +251,6 @@
        {{ _('Post to news feed') }}
       </a>
   </div>
-  {% endif %}
 
   {% snippet 'ajax_snippets/chart_module.html',
                 type='chart',
@@ -296,6 +294,14 @@
 
   {% elif current_resource_view.view_type == 'table'  %}
 
+  <div>
+    <a href="{{ h.url_for('news.new', entity_type='visualization', entity_ref=resource_view.id) }}"
+       class="btn btn-warning pull-right">
+       <i class="fa fa-share-square"></i>
+       {{ _('Post to news feed') }}
+      </a>
+  </div>
+
   {% if resource_view and resource_view.__extras %}
   {% if resource_view.__extras.research_questions %}
   {% set research_questions = resource_view.__extras.research_questions %}
@@ -332,6 +338,14 @@
                   resource_id = resource_id %}
 
   {% elif current_resource_view.view_type == 'map'  %}
+
+  <div>
+    <a href="{{ h.url_for('news.new', entity_type='visualization', entity_ref=resource_view.id) }}"
+       class="btn btn-warning pull-right">
+       <i class="fa fa-share-square"></i>
+       {{ _('Post to news feed') }}
+      </a>
+  </div>
 
   {% if resource_view and resource_view.__extras %}
   {% set map_subtitle=resource_view.__extras.map_subtitle %}
