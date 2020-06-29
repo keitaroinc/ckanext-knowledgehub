@@ -36,7 +36,7 @@ RUN pip install cython && \
     pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation" && \
     pip install --no-cache-dir -r "${APP_DIR}/src/ckanext-validation/requirements.txt" && \
     # datarequests
-    pip install --no-cache-dir -e "git+https://github.com/conwetlab/ckanext-datarequests.git#egg=ckanext-datarequests" && \
+    pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-datarequests.git@kh_stable#egg=ckanext-datarequests" && \
     # hdx 
     pip uninstall psycopg2-binary -y && \
     pip uninstall psycopg2 -y && \
