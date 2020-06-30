@@ -25,10 +25,16 @@ Example:
     {% endif %}
     {% endfor %}
     {% endblock %}
+    {% if resources | length == 1 %}
+    {% set only_one_res = true %}
+    {% else %}
+    {% set only_one_res = false %}
+    {% endif %}
+
     {% if not hide_merge_btn %}
     <li class="resource-item" style="text-align: end">
       <a class="btn btn-success" href="{% url_for 'kwh_dataset.merge_all_data', id=pkg.id %}"
-        {{ 'disabled' if active_upload }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
+        {{ 'disabled' if active_upload or only_one_res }}><i class="fa fa-code-fork fa-lg"></i>{{ _(' Merge All') }}</a>
     </li>
     {% endif %}
     <input id="package-name" value="{{ pkg.name }}" type="hidden" />
