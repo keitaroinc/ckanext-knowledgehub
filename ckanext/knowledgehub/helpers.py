@@ -1817,7 +1817,7 @@ def tag_mentions(text):
     '''
     mentions = []
 
-    for m in re.finditer(r'@([a-zA-Z0-9_-]+)', text):
+    for m in re.finditer(r'@([a-zA-Z0-9_.@-]+)', text):
         if m:
             mentions.append((m.group(1), m.start(), m.end()))
 
