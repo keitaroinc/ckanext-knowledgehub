@@ -1990,6 +1990,7 @@ def package_search(context, data_dict=None):
     if user:
         data_dict = data_dict or {}
         data_dict['boost_for'] = user.id
+    data_dict['include_private'] = True
     return ckan_package_search(context, data_dict)
 
 
