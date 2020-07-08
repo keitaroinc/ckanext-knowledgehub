@@ -15,7 +15,7 @@
  * 
  * To set up comments see the documentation of the comments snippet: 'snippets/comments.html'.
  */
-(function(){
+ckan.module('comments', function($){
     $(function(){
         var commentTemplate = $('.comment-template').clone();
         var addCommentTemplate = $('.add-comment-template').clone();
@@ -435,4 +435,4 @@
         });
 
     })
-})()
+});
