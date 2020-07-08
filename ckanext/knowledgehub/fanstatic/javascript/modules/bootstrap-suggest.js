@@ -17,7 +17,7 @@
 * limitations under the License.
 * ========================================================== */
 
-(function ($) {
+ckan.module('bootstrap-suggest', function ($) {
 
     "use strict"; // jshint ;_;
 
@@ -598,4 +598,4 @@
         return this;
     }
 
-}( jQuery ));
+});
