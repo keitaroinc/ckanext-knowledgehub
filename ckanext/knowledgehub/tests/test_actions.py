@@ -2208,6 +2208,7 @@ class TestKWHDeleteActions(ActionsBase):
         assert_true(stats is not None)
         assert_true(stats.comment_count, 1)  # total comment count decreased
 
+    @monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
     def test_delete_tag_in_dash(self):
         user = factories.Sysadmin()
         context = {
@@ -2235,7 +2236,9 @@ class TestKWHDeleteActions(ActionsBase):
         }
         result = delete_actions.delete_tag_in_dash(context, dict_del)
 
-        assert_equals(len(result['tags']), 0)
+        assert_equals((result['tags']), None)
+        Dashboard.update_index_doc.assert_called_once()
+
 
 
     def test_like_delete(self):
