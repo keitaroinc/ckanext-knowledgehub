@@ -13,6 +13,7 @@ from ckan import model
 from ckan.common import g
 import ckan.common
 from collections import namedtuple
+from datetime import datetime, timedelta
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import (
@@ -32,6 +33,14 @@ from ckanext.knowledgehub.model.resource_feedback import (
 from ckanext.knowledgehub.model.kwh_data import (
     setup as kwh_data_setup
 )
+from ckanext.knowledgehub.model import (
+    Dashboard,
+    ResearchQuestion,
+    Visualization,
+    DataQualityMetrics as DataQualityMetricsModel,
+    ResourceValidate
+
+)
 from ckanext.knowledgehub.model.request_audit import RequestAudit
 from ckanext.knowledgehub.lib import request_audit
 from ckanext.knowledgehub.model.comments import CommentsRefStats
@@ -42,7 +51,8 @@ from ckanext.knowledgehub.logic.action import delete as delete_actions
 from ckanext.knowledgehub.logic.action import update as update_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
-                                                mock_pylons)
+                                                mock_pylons, 
+                                                get_regular_user_context)
 from ckanext.datastore.logic.action import datastore_create
 from ckanext.datastore.logic.action import datastore_search
 from ckanext.knowledgehub.lib.util import monkey_patch
@@ -955,32 +965,28 @@ class TestKWHHelpers(ActionsBase):
         b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
 
-    @raises
+    @raises(AttributeError)
     def test_get_resource_validation_options(self):
         mock_pylons()
         dataset = create_dataset()
         pkg_name = dataset['name']
         opts = kwh_helpers.get_resource_validation_options(pkg_name)
+        assert_equals(opts, 0)
 
-        raise AttributeError()
-
-    @raises
     def test_check_resource_status(self):
         mock_pylons()
         dataset = create_dataset()
         resource_id = dataset['id']
         status = kwh_helpers.check_resource_status(resource_id)
+        assert_equals(status, 'not_validated')
 
-        raise AttributeError()
-
-    @raises
+    @raises(AttributeError)
     def test_check_validation_admin(self):
         mock_pylons()
         dataset = create_dataset()
         resource_id = dataset['id']
         validator = kwh_helpers.check_validation_admin(resource_id)
-
-        raise AttributeError()
+        assert_equals(validator, 0)
 
     def test_keyword_list(self):
         user = factories.Sysadmin()
@@ -1631,3 +1637,67 @@ class TestKWHHelpers(ActionsBase):
         )
 
         assert_equals(count, 1)
+
+
+    def test_ignore_path(self):
+
+        result = kwh_helpers._ignore_path('lala.jpeg')
+        assert_equals(result, True)
+
+
+    def test_get_datasets(self):
+        res = kwh_helpers.get_datasets()
+        assert_equals(len(res), 5)
+
+    # @monkey_patch(toolkit, 'get_action', mock.Mock())
+    # def test_get_notifications(self):
+    #     ctx = get_context()
+    #     # us_id = ctx['auth_user_obj']
+    #     # rec = ctx['user']
+    #     user = factories.Sysadmin()
+    #     # user_dict = {
+    #     #     'name': 'knowledgehub-test',
+    #     #     'email': 'test@company.com',
+    #     #     'password': 'knowledgehub',
+    #     #     'fullname': 'Knowledgehub Test'
+    #     # }
+    #     # user = toolkit.get_action('user_create')(
+    #     #     get_context(),
+    #     #     user_dict
+    #     # )
+    #     # context = {
+    #     #     'user': user.get('name'),
+    #     #     'ignore_auth': True
+    #     # }
+    #     for i in range(0, 3):
+    #         create_actions.notification_create(ctx, {
+    #             'title': 'title-%d' % i,
+    #             'description': 'test desc %d' % i,
+    #             'link': '/link',
+    #             'image': '/image.url.png',
+    #             'recepient': user,
+    #         })
+
+    #     # _actions = {
+            
+    #     #     'notification_list': context, dd: {},
+    #     #     'user_show': context, dd: {'id': user['id'] },
+    #     # }
+    #     # def _get_action(action):
+    #     #     return _actions[action]
+
+    #     # toolkit.get_action.side_effect = _get_action
+    #     res = kwh_helpers.get_notifications(limit=5)
+
+    #     assert_equals(res, 3)
+
+    def test_get_searched_rqs(self):
+
+        res = kwh_helpers.get_searched_rqs("rq")
+        assert_equals(len(res), 8)
+
+    def test_get_searched_visuals(self):
+
+        res = kwh_helpers.get_searched_visuals("vis")
+        assert_equals(len(res), 8)
+
