@@ -71,6 +71,8 @@ assert_equals = nose.tools.assert_equals
 assert_raises = nose.tools.assert_raises
 assert_not_equals = nose.tools.assert_not_equals
 assert_true = nose.tools.assert_true
+raises = nose.tools.raises
+
 
 
 class _test_user:
@@ -115,6 +117,8 @@ class ActionsBase(helpers.FunctionalTestBase):
 
 class TestKWHCreateActions(ActionsBase):
 
+
+    @raises(toolkit.ValidationError)
     def test_theme_create(self):
         user = factories.Sysadmin()
         context = {
@@ -126,8 +130,11 @@ class TestKWHCreateActions(ActionsBase):
             'title': 'Test title',
             'description': 'Test description'
         }
+        random_dict = {
+            'something': 'yes'
+        }
         theme = create_actions.theme_create(context, data_dict)
-
+        theme_err = create_actions.theme_create(context, random_dict)
         assert_equals(theme.get('name'), data_dict.get('name'))
 
     def test_sub_theme_create(self):
@@ -2201,6 +2208,39 @@ class TestKWHDeleteActions(ActionsBase):
         assert_true(stats is not None)
         assert_true(stats.comment_count, 1)  # total comment count decreased
 
+    @monkey_patch(Dashboard, 'update_index_doc', mock.Mock())
+    def test_delete_tag_in_dash(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+
+        data_dict = {
+            'name': 'internal-dashboard',
+            'title': 'Internal Dashboard (1)',
+            'description': 'Dashboard description',
+            'type': 'internal',
+            'tags':'lala',
+            'source': 'yes',
+            'indicators': '',
+            'created_by':'Me'
+        }
+        dashboard = create_actions.dashboard_create(context, data_dict)
+        dict_del = {
+            'id': dashboard.get('id'),
+            'tag': 'lala'
+        }
+        result = delete_actions.delete_tag_in_dash(context, dict_del)
+
+        assert_equals((result['tags']), None)
+        Dashboard.update_index_doc.assert_called_once()
+
+
+
     def test_like_delete(self):
         model.Session.query(LikesCount).delete()
         model.Session.query(LikesRef).delete()
@@ -2224,6 +2264,56 @@ class TestKWHDeleteActions(ActionsBase):
 
         result = LikesRef.get(user.id, 'ref-001')
         assert_true(result is None)
+
+    def test_resource_delete(self):
+        user = factories.Sysadmin()
+        context = {
+            'user': user.get('name'),
+            'auth_user_obj': User(user.get('id')),
+            'ignore_auth': True,
+            'model': model,
+            'session': model.Session
+        }
+        dataset = create_dataset()
+        resource = factories.Resource(
+            package_id=dataset['id'],
+            url='https://jsonplaceholder.typicode.com/posts',
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
+        )
+        del_dict = {
+            'id': resource.get('id')
+        }
+        result = delete_actions.resource_delete(context,del_dict)
+        assert_equals(result, None)
+
+    # @monkey_patch(Dataset, 'read_from_hdx', mock.Mock(get_resources = []))
+    # @monkey_patch(Resource, 'delete_from_hdx', mock.Mock())
+    # def test_delete_resource_from_hdx(self):
+        
+    #     ctx = get_context()
+    #     dataset = create_dataset()
+    #     resource = factories.Resource(
+    #         package_id=dataset['id'],
+    #         url='https://jsonplaceholder.typicode.com/posts',
+    #         date_range_start='1',
+    #         date_range_end='2',
+    #         process_status='3',
+    #         identifiability='4',
+    #         hxl_ated='No',
+    #         file_type='Microdata'
+    #     )
+    #     del_dict = {
+    #         'id': dataset.get('id'),
+    #         'resource_id': resource.get('id')
+    #     }
+    #     delete_res = delete_actions.delete_resource_from_hdx(ctx, del_dict)
+    #     assert_equals(delete_res, 0)
+
 
 
 class TestKWHUpdateActions(ActionsBase):

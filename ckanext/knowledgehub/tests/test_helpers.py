@@ -13,6 +13,7 @@ from ckan import model
 from ckan.common import g
 import ckan.common
 from collections import namedtuple
+from datetime import datetime, timedelta
 
 from ckanext.knowledgehub.model.theme import theme_db_setup
 from ckanext.knowledgehub.model.research_question import (
@@ -32,6 +33,14 @@ from ckanext.knowledgehub.model.resource_feedback import (
 from ckanext.knowledgehub.model.kwh_data import (
     setup as kwh_data_setup
 )
+from ckanext.knowledgehub.model import (
+    Dashboard,
+    ResearchQuestion,
+    Visualization,
+    DataQualityMetrics as DataQualityMetricsModel,
+    ResourceValidate
+
+)
 from ckanext.knowledgehub.model.request_audit import RequestAudit
 from ckanext.knowledgehub.lib import request_audit
 from ckanext.knowledgehub.model.comments import CommentsRefStats
@@ -42,7 +51,8 @@ from ckanext.knowledgehub.logic.action import delete as delete_actions
 from ckanext.knowledgehub.logic.action import update as update_actions
 from ckanext.knowledgehub.tests.helpers import (User,
                                                 create_dataset,
-                                                mock_pylons)
+                                                mock_pylons, 
+                                                get_regular_user_context)
 from ckanext.datastore.logic.action import datastore_create
 from ckanext.datastore.logic.action import datastore_search
 from ckanext.knowledgehub.lib.util import monkey_patch
@@ -164,9 +174,9 @@ class TestKWHHelpers(ActionsBase):
         assert_equals(len(rotations), 4)
 
     def test_get_data_formats(self):
-        data_formats = kwh_helpers.get_data_formats()
+        data_formats = kwh_helpers.get_data_formats(3)
 
-        assert_equals(len(data_formats), 14)
+        assert_equals(len(data_formats), 3)
 
     def test_dump_json(self):
         arr = ['foo', {'bar': ('baz', None, 1.0, 2)}]
@@ -554,23 +564,23 @@ class TestKWHHelpers(ActionsBase):
         }
 
         data_dict = {
-            'name': 'theme-name',
-            'title': 'Test theme',
-            'description': 'Test description'
+            'name': 'theme-name1',
+            'title': 'Test theme1',
+            'description': 'Test description1'
         }
         theme = create_actions.theme_create(context, data_dict)
 
         data_dict = {
-            'name': 'sub-theme-name',
-            'title': 'Test sub-theme',
-            'description': 'Test description',
+            'name': 'sub-theme-name1',
+            'title': 'Test sub-theme1',
+            'description': 'Test description1',
             'theme': theme.get('id')
         }
         sub_theme = create_actions.sub_theme_create(context, data_dict)
 
         data_dict = {
             'name': 'rq-name',
-            'title': 'Test title',
+            'title': 'Test title1',
             'content': 'Research question?',
             'theme': theme.get('id'),
             'sub_theme': sub_theme.get('id')
@@ -703,6 +713,46 @@ class TestKWHHelpers(ActionsBase):
         columns = kwh_helpers.get_resource_columns(resource.get('id'))
         assert_equals(len(columns), 1)
 
+
+
+    @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
+    def test_get_resource_numeric_columns(self):
+        Dataset.read_from_hdx.return_value = ""
+        dataset = create_dataset()
+        data = {
+           "fields": [{"id": "value", "type": "numeric"}],
+           "records": [
+                {"value": 0},
+                {"value": 1},
+                {"value": 2},
+                {"value": 3},
+                {"value": 5},
+                {"value": 6},
+                {"value": 7},
+            ],
+           "force": True
+        }
+
+        resource = factories.Resource(
+            schema='',
+            validation_options='',
+            package_id=dataset['id'],
+            datastore_active=True,
+            date_range_start='1',
+            date_range_end='2',
+            process_status='3',
+            identifiability='4',
+            hxl_ated='No',
+            file_type='Microdata'
+        )
+        data['resource_id'] = resource['id']
+        helpers.call_action('datastore_create', **data)
+
+        columns = kwh_helpers.get_resource_numeric_columns(resource.get('id'))
+        assert_equals(len(columns), 1)
+
+
+
     @monkey_patch(Dataset, 'read_from_hdx', mock.Mock())
     def test_get_resource_data(self):
         Dataset.read_from_hdx.return_value = ""
@@ -763,6 +813,7 @@ class TestKWHHelpers(ActionsBase):
         url = "https://www.grandconcourse.ca/map/data/GCPoints.geojson"
         res = kwh_helpers.get_geojson_properties(url, context.get('user'))
         assert_equals(len(res), 26)
+
 
     def test_format_date(self):
         date = "2019-11-21T10:09:05.900808"
@@ -955,32 +1006,20 @@ class TestKWHHelpers(ActionsBase):
         b = kwh_helpers.is_rsc_upload_datastore({})
         assert_equals(b, False)
 
-    @raises
-    def test_get_resource_validation_options(self):
-        mock_pylons()
-        dataset = create_dataset()
-        pkg_name = dataset['name']
-        opts = kwh_helpers.get_resource_validation_options(pkg_name)
-
-        raise AttributeError()
-
-    @raises
     def test_check_resource_status(self):
         mock_pylons()
         dataset = create_dataset()
         resource_id = dataset['id']
         status = kwh_helpers.check_resource_status(resource_id)
+        assert_equals(status, 'not_validated')
 
-        raise AttributeError()
-
-    @raises
+    @raises(AttributeError)
     def test_check_validation_admin(self):
         mock_pylons()
         dataset = create_dataset()
         resource_id = dataset['id']
         validator = kwh_helpers.check_validation_admin(resource_id)
-
-        raise AttributeError()
+        assert_equals(validator, 0)
 
     def test_keyword_list(self):
         user = factories.Sysadmin()
@@ -1631,3 +1670,49 @@ class TestKWHHelpers(ActionsBase):
         )
 
         assert_equals(count, 1)
+
+
+    def test_ignore_path(self):
+
+        result = kwh_helpers._ignore_path('lala.jpeg')
+        assert_equals(result, True)
+
+
+    def test_get_datasets(self):
+        res = kwh_helpers.get_datasets()
+        assert_equals(len(res), 5)
+
+    
+
+    def test_get_searched_rqs(self):
+
+        res = kwh_helpers.get_searched_rqs("rq")
+        assert_equals(len(res), 8)
+
+    def test_get_searched_visuals(self):
+
+        res = kwh_helpers.get_searched_visuals("vis")
+        assert_equals(len(res), 8)
+
+    def test_calculate_time_passed(self):
+        time = kwh_helpers.calculate_time_passed("2019-07-02T07:59:27.609774")
+        assert_equals(time, '1 year, 22 days ago')
+    
+    def test_get_active_tab(self):
+        res = kwh_helpers.get_active_tab()
+        assert_equals(res, 'package')
+
+    def test_get_sort(self):
+        res = kwh_helpers._get_sort()
+        assert_equals(res, '')
+
+
+    # def test_get_tab_url(self):
+
+    #     res = kwh_helpers.get_tab_url('research_question')
+    #     assert_equals(res, 0)
+
+    def test_get_facets(self):
+
+        res = kwh_helpers._get_facets()
+        assert_equals(res, [])
