@@ -19,7 +19,7 @@ sudo apt install postgresql libpq-dev python-pip python-virtualenv git redis-ser
 
 ### CentoOS 7
 ```bash
-sudo yum install -y python-devel postgresql-server postgresql-contrib python-pip python-virtualenv postgresql-devel git redis postgis wget lsof
+sudo yum install -y python-devel postgresql-server postgresql-contrib python-pip python-virtualenv postgresql-devel git redis postgis wget lsof policycoreutils-python
 ```
 
 Then initialize and start PostgreSQL database
@@ -76,6 +76,35 @@ virtualenv --no-site-packages /usr/lib/ckan/default
 
 Then activate the virtualenv. From this point on, make sure you have the virtualenv activated when executing the commands.
 **Important Note**: Make sure you have activated the virutalenv with user **ckan**.
+
+```bash
+. /usr/lib/ckan/default/bin/activate
+```
+
+**CentOS 7**
+
+Things are a bit different in CentOS. Here we will create a different user for ckan with home set to `/var/lib/ckan`. 
+
+
+```bash
+useradd -m -s /sbin/nologin -d /usr/lib/ckan -c "CKAN User" ckan
+```
+
+Then give `755` permission to the whole directory, so Apache can access it later on:
+
+```bash
+chmod 755 /usr/lib/ckan
+```
+
+Switch to ckan user and create virtualenv:
+
+```bash
+su -s /bin/bash - ckan
+cd /usr/lib/ckan/
+virtualenv --no-site-packages default
+```
+
+Then you can activate the virtualenv:
 
 ```bash
 . /usr/lib/ckan/default/bin/activate
@@ -346,6 +375,8 @@ Create the directory that will contain the configuration files (in `/etc`):
 ```bash
 sudo mkdir -p /etc/ckan/default
 sudo chown -R ckan /etc/ckan/
+
+# This is for Ubuntu Only
 sudo chown -R ckan /home/ckan/ckan/etc
 ```
 
@@ -360,6 +391,11 @@ Create the storage directory for uploaded files (make sure CKAN has write privil
 
 ```bash
 mkdir /home/ckan/data
+```
+
+**On CentOS:**
+```
+mkdir /usr/lib/ckan/data
 ```
 
 Create the CKAN config file:
@@ -476,13 +512,230 @@ You should see the CKAN welcome page.
 > 
 > You may need to add the port to the firewall.
 > ```bash
-> sudo firewall-cmd --zone=public --add-port=5000 --permanent
+> sudo firewall-cmd --zone=public --add-port=5000/tcp --permanent
 > sudo firewall-cmd --reload
 > ```
 
 ### 3.8 Install Datapusher
 
-<TODO>
+1. Install required libraries
+
+```bash
+sudo apt install build-essential libxslt1-dev libxml2-dev git libffi-dev
+```
+
+**CentOS**
+
+```
+sudo yum install -y libxslt-devel libxml2-devel libffi-devel
+```
+
+2. switch to user ckan
+
+```bash
+sudo -i -u ckan  # Ubuntu
+
+sudo su -s /bin/bash - ckan  # Centos
+```
+
+3. create a virtualenv for datapusher
+```
+virtualenv /usr/lib/ckan/datapusher
+```
+
+4. create a source directory and switch to it
+```
+mkdir /usr/lib/ckan/datapusher/src
+cd /usr/lib/ckan/datapusher/src
+```
+
+5. clone the stable version of datapusher
+
+```bash
+git clone -b 0.0.16 https://github.com/ckan/datapusher.git
+```
+
+6. install the requirements and datapusher itself
+
+```bash
+. /usr/lib/ckan/datapusher/bin/activate
+cd datapusher
+pip install -r requirements.txt
+python setup.py develop
+```
+7. Deploy datapusher to run with apache mod_wsgi
+
+> This assumes that Apache has been set up. If not please read the section [Deployment - Installing Apache and nginx]() at the bottom of this document.
+
+
+**Ubuntu Server**
+First copy the site configuration for the datapusher:
+
+```bash
+sudo cp /usr/lib/ckan/datapusher/src/datapusher/deployment/datapusher.conf /etc/apache2/sites-available/datapusher.conf
+```
+
+Edit the `datapusher.conf` file and add permissions for `/etc/ckan` directory. The full file should look like this:
+
+```xml
+<VirtualHost 0.0.0.0:8800>
+
+    ServerName ckan
+
+    # this is our app
+    WSGIScriptAlias / /etc/ckan/datapusher.wsgi
+
+    # pass authorization info on (needed for rest api)
+    WSGIPassAuthorization On
+
+    # Deploy as a daemon (avoids conflicts between CKAN instances)
+    WSGIDaemonProcess datapusher display-name=demo processes=1 threads=15
+
+    WSGIProcessGroup datapusher
+
+    ErrorLog /var/log/apache2/datapusher.error.log
+    CustomLog /var/log/apache2/datapusher.custom.log combined
+
+    <Directory /etc/ckan>
+    Options All
+    AllowOverride All
+    Require all granted
+    </Directory>
+</VirtualHost>
+
+```
+
+
+Copy the provided WSGI script:
+
+```bash
+sudo cp /usr/lib/ckan/datapusher/src/datapusher/deployment/datapusher.wsgi /etc/ckan/
+```
+
+Copy the default setting script:
+
+```bash
+sudo cp /usr/lib/ckan/datapusher/src/datapusher/deployment/datapusher_settings.py /etc/ckan/
+```
+
+Then add the port `8800` to the Apache ports file:
+
+```bash
+sudo vim /etc/apache2/ports.conf
+```
+
+and add:
+
+```
+Listen 8800
+```
+
+Enable the datapusher site, then reload:
+
+```bash
+sudo a2ensite datapusher
+sudo systemctl restart apache2
+```
+
+Test the setup by calling:
+
+```
+curl http://localhost:8800
+```
+
+You should get:
+
+```json
+{"help":"\n        Get help at:\n        http://ckan-service-provider.readthedocs.org/."}
+```
+
+**CentOS**
+
+First copy the site configuration for the datapusher:
+
+```bash
+sudo cp /usr/lib/ckan/datapusher/src/datapusher/deployment/datapusher.conf /etc/httpd/conf.d/datapusher.conf
+```
+
+Edit the `datapusher.conf` file and add permissions for `/etc/ckan` directory. The full file should look like this:
+
+```xml
+<VirtualHost 0.0.0.0:8800>
+
+    ServerName ckan
+
+    # this is our app
+    WSGIScriptAlias / /etc/ckan/datapusher.wsgi
+
+    # pass authorization info on (needed for rest api)
+    WSGIPassAuthorization On
+
+    # Deploy as a daemon (avoids conflicts between CKAN instances)
+    WSGIDaemonProcess datapusher display-name=demo processes=1 threads=15
+
+    WSGIProcessGroup datapusher
+
+    ErrorLog /var/log/httpd/datapusher.error.log
+    CustomLog /var/log/httpd/datapusher.custom.log combined
+
+    <Directory /etc/ckan>
+    Options All
+    AllowOverride All
+    Require all granted
+    </Directory>
+</VirtualHost>
+
+```
+
+
+Copy the provided WSGI script:
+
+```bash
+sudo cp /usr/lib/ckan/datapusher/src/datapusher/deployment/datapusher.wsgi /etc/ckan/
+```
+
+Copy the default setting script:
+
+```bash
+sudo cp /usr/lib/ckan/datapusher/src/datapusher/deployment/datapusher_settings.py /etc/ckan/
+```
+
+Then add the port `8800` to the Apache config file (`/etc/httpd/conf/httpd.conf`):
+
+```bash
+sudo vim /etc/httpd/conf/httpd.conf
+```
+
+find the `Listen` directive and add another one (bellow the one for `8080`): 
+
+```
+Listen 8800
+```
+
+Change SELinux policy to allow the Apache to bind to port `8800`:
+
+```bash
+sudo semanage port -a -t http_port_t -p tcp 8800
+```
+
+Reload apache:
+
+```bash
+sudo systemctl restart httpd
+```
+
+Test the setup by calling:
+
+```
+curl http://localhost:8800
+```
+
+You should get:
+
+```json
+{"help":"\n        Get help at:\n        http://ckan-service-provider.readthedocs.org/."}
+```
+
 
 # Install Required CKAN Extensions
 
@@ -500,7 +753,7 @@ sudo -i -u ckan
 . /usr/lib/ckan/default/bin/activate
 pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation"
 
-cd ckan/lib/default/
+cd /usr/lib/ckan/default/
 pip install -r src/ckanext-validation/requirements.txt
 
 ```
@@ -516,7 +769,7 @@ paster validation init-db -c /etc/ckan/default/production.ini
 
 Edit the production configuration file (`/etc/ckan/default/production.ini`) and add the validation plugin:
 
-```config
+```conf
 ckan.plugins = recline_view validation stats
 ```
 
@@ -543,7 +796,7 @@ pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-datareq
 
 Edit the production configuration file (`/etc/ckan/default/production.ini`) and add the validation plugin:
 
-```config
+```conf
 ckan.plugins = recline_view validation stats datarequests
 ```
 
@@ -580,7 +833,7 @@ OAuth2 requires additional configuration to run properly. You need to have set u
 
 Open `/etc/ckan/default/production.ini` and add these values (replace your real production keys and URLs):
 
-```config
+```conf
 
 # OAuth2 settings
 ckan.oauth2.register_url = https://YOUR_OAUTH_SERVICE/users/sign_up
@@ -605,7 +858,7 @@ Refer to the OAuth2 setup document for exact values for these fields.
 
 Add the `oauth2` plugin to the list of plugins:
 
-```config
+```conf
 ckan.plugins = recline_view validation stats datarequests oauth2
 ```
 
@@ -619,13 +872,13 @@ paster serve /etc/ckan/default/production.ini
 
 Edit the production config file (`/etc/ckan/default/production.ini`), and add `datastore` to the list of plugins (the order is important):
 
-```config
+```conf
 ckan.plugins = recline_view validation stats datastore datarequests oauth2
 ```
 
 Remember to also check if the database URLs are set up properly as well:
 
-```config
+```conf
 ckan.datastore.write_url = postgresql://ckan_default:pass@localhost/datastore_default
 ckan.datastore.read_url = postgresql://datastore_default:pass@localhost/datastore_default
 
@@ -640,9 +893,350 @@ paster serve /etc/ckan/default/production.ini
 
 ## Activate the datapusher extension
 
-<todo>
+
+Add `datapusher` to the list of active plugins in `/etc/ckan/default/production.ini`:
+
+```conf
+ckan.plugins = recline_view validation stats datastore datapusher datarequests oauth2
+```
+
+> Note the order of plugins must be as specified above.
+
+
+In the same file, set the datapusher URL:
+
+```conf
+ckan.datapusher.url = http://127.0.0.1:8800/
+```
+
+Save the file, then restart Apache:
+
+```bash
+# Ubuntu
+sudo systemctl restart apache2
+
+# Centos
+sudo systemctl restart httpd
+```
+
+
 
 # Install Knowledhub Extension
 
+Switch to user `ckan` then activate the virtualenv:
+
+```bash
+# Ubuntu
+sudo -i -u ckan
+. /usr/lib/ckan/default/bin/activate
+
+# Centos
+sudo su -s /bin/bash - ckan
+. /usr/lib/ckan/default/bin/activate
+```
+
+Install the extension and required Python packages with `pip`:
+
+```bash
+pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-knowledgehub.git#egg=ckanext-knowledgehub"
+
+# Due to some of the packages requiring newer version of setuptools, we need to uninstall, then reinstall setuptools
+pip uninstall setuptools
+pip install setuptools
+
+pip install --no-cache-dir -r "/usr/lib/ckan/default/src/ckanext-knowledgehub/requirements.txt" 
+```
+
+>Due to mismatch of PostgreSQL driver (psycopg2) version used in CKAN and HDX API library, we must reinstall the correct version:
+>```bash
+>pip uninstall psycopg2-binary -y
+>pip uninstall psycopg2 -y
+>pip install --no-cache-dir psycopg2==2.7.3.2
+>``` 
+
+Download language model for Spacy:
+
+```bash
+python -m spacy download en_core_web_sm
+```
+
+
+
 # Configure Production Deployment
+
+## Install Apache and nginx
+
+1. Install Apache, nginx and related libraries
+
+**Ubuntu Server**:
+
+```bash
+sudo apt-get install -y nginx apache2 libapache2-mod-wsgi libapache2-mod-rpaf libpq5
+```
+
+**CentOS 7**:
+
+```bash
+sudo yum install -y nginx httpd mod_wsgi 
+```
+
+> Note that `mod_rpaf` is not available in the stadard CentOS repositories. We'll skip for this installation.
+
+
+
+2. Create wsgi file `/etc/ckan/default/apache.wsgi`:
+
+```
+import os
+activate_this = os.path.join('/usr/lib/ckan/default/bin/activate_this.py')
+execfile(activate_this, dict(__file__=activate_this))
+
+from paste.deploy import loadapp
+config_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'production.ini')
+from paste.script.util.logging_config import fileConfig
+fileConfig(config_filepath)
+application = loadapp('config:%s' % config_filepath)
+```
+
+Make the user `ckan` owner of the file:
+
+```bash
+sudo chown ckan /etc/ckan/default/apache.wsgi
+```
+
+3. Create the Apache config file at `/etc/apache2/sites-available/ckan_default.conf`:
+
+```apache
+<VirtualHost 127.0.0.1:8080>
+    ServerName knowledhehub.ubuntu.unhcr.org
+    ServerAlias www.knowledhehub.ubuntu.unhcr.org
+    WSGIScriptAlias / /etc/ckan/default/apache.wsgi
+
+    # Pass authorization info on (needed for rest api).
+    WSGIPassAuthorization On
+
+    # Deploy as a daemon (avoids conflicts between CKAN instances).
+    WSGIDaemonProcess ckan_default display-name=ckan_default processes=2 threads=15
+
+    WSGIProcessGroup ckan_default
+
+    ErrorLog /var/log/apache2/ckan_default.error.log
+    CustomLog /var/log/apache2/ckan_default.custom.log combined
+
+    <IfModule mod_rpaf.c>
+        RPAFenable On
+        RPAFsethostname On
+        RPAFproxy_ips 127.0.0.1
+    </IfModule>
+
+    <Directory />
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+```
+
+Replace `knowledhehub.ubuntu.unhcr.com` with the actual doman name of the site.
+
+**CentOS 7**:
+
+Centos locations are different from Ubuntu. We're going to create new VirtualHost definition in `/etc/httpd/conf.d/knowledhehub.centos.unhcr.org.conf`.
+
+
+First, remove the welcome page from the apache server:
+
+```
+sudo mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf_backup
+```
+
+Then create the file: `/etc/httpd/conf.d/knowledhehub.centos.unhcr.org.conf` with the following content:
+
+
+```
+<VirtualHost 127.0.0.1:8080>
+    ServerName knowledhehub.centos.unhcr.org
+    ServerAlias www.knowledhehub.centos.unhcr.org
+    WSGIScriptAlias / /etc/ckan/default/apache.wsgi
+
+    # Pass authorization info on (needed for rest api).
+    WSGIPassAuthorization On
+
+    # Deploy as a daemon (avoids conflicts between CKAN instances).
+    WSGIDaemonProcess ckan_default display-name=ckan_default processes=2 threads=15
+
+    WSGIProcessGroup ckan_default
+
+    ErrorLog /var/log/httpd/ckan_default.error.log
+    CustomLog /var/log/httpd/ckan_default.custom.log combined
+
+    <IfModule mod_rpaf.c>
+        RPAFenable On
+        RPAFsethostname On
+        RPAFproxy_ips 127.0.0.1
+    </IfModule>
+
+    <Directory />
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+```
+
+> Remember to replace `knowledhehub.centos.unhcr.org` with the correct domain name both in the config file and as the file name.
+
+
+Site is enabled by default.
+
+Reload the service:
+
+```
+sudo systemctl restart httpd
+```
+
+**Open http port through firewall**
+
+Run the following command:
+```
+sudo firewall-cmd --permanent --add-service=http
+```
+
+
+
+4. Modify the Apache ports file `/etc/apache2/ports.conf`. We want the apache to listen to port 8080 instead of port 80.
+
+> On **CentOS** edit file `/etc/httpd/conf/httpd.conf`
+
+Change
+```
+Listen 80
+```
+
+To
+
+```
+Listen 8080
+```
+
+5. Create `nginx` configuration file at `/etc/nginx/sites-available/ckan`:
+
+```
+proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache:30m max_size=250m;
+proxy_temp_path /tmp/nginx_proxy 1 2;
+
+server {
+    client_max_body_size 100M;
+    location / {
+        proxy_pass http://127.0.0.1:8080/;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+        proxy_cache cache;
+        proxy_cache_bypass $cookie_auth_tkt;
+        proxy_no_cache $cookie_auth_tkt;
+        proxy_cache_valid 30m;
+        proxy_cache_key $host$scheme$proxy_host$request_uri;
+        # In emergency comment out line to force caching
+        # proxy_ignore_headers X-Accel-Expires Expires Cache-Control;
+    }
+
+}
+```
+
+**CentOS**
+
+We must create the config directories `sites-available` and `sites-enabled`:
+
+```bash
+sudo mkdir /etc/nginx/sites-available /etc/nginx/sites-enabled
+```
+
+Edit `/etc/nginx/nginx.conf`, and add the following inside the `http` block:
+
+```
+include /etc/nginx/sites-enabled/*.conf
+server_names_hash_bucket_size 64;
+```
+
+or use the following configuration if only using it for CKAN deployment:
+
+```
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;
+
+    # Load enabled sites.
+    include /etc/nginx/sites-enabled/*;
+    server_names_hash_bucket_size 64;
+
+}
+
+```
+
+
+Add the above configuration at `/etc/nginx/sites-available/ckan.conf`.
+
+Enable the site:
+
+```
+sudo ln -s /etc/nginx/sites-available/ckan.conf /etc/nginx/sites-enabled/ckan.conf
+```
+
+Restart nginx:
+
+```
+sudo systemctl restart nginx
+```
+
+> If SE Linux, you must allow nginx to connect to upstream server. Execute:
+>```
+>sudo setsebool httpd_can_network_connect on -P
+>```
+
+6. Enable CKAN site with Apache and nginx
+
+
+**Ubuntu Server**
+```bash
+sudo a2ensite ckan_default
+sudo a2dissite 000-default
+sudo rm -vi /etc/nginx/sites-enabled/default
+sudo ln -s /etc/nginx/sites-available/ckan /etc/nginx/sites-enabled/ckan_default
+sudo service apache2 reload
+sudo service nginx reload
+```
+
+**CentOS**
+
+```bash
+sudo systemctl restart httpd
+sudo systemctl restart nginx
+```
 
