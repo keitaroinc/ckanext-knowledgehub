@@ -20,6 +20,7 @@ sudo apt install postgresql libpq-dev python-pip python-virtualenv git redis-ser
 ### CentoOS 7
 ```bash
 sudo yum install -y python-devel postgresql-server postgresql-contrib python-pip python-virtualenv postgresql-devel git redis postgis wget lsof policycoreutils-python
+sudo yum groupinstall 'Development Tools'
 ```
 
 Then initialize and start PostgreSQL database
@@ -923,6 +924,7 @@ sudo systemctl restart httpd
 
 # Install Knowledhub Extension
 
+## Install extension and required packages
 Switch to user `ckan` then activate the virtualenv:
 
 ```bash
@@ -941,7 +943,7 @@ Install the extension and required Python packages with `pip`:
 pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-knowledgehub.git#egg=ckanext-knowledgehub"
 
 # Due to some of the packages requiring newer version of setuptools, we need to uninstall, then reinstall setuptools
-pip uninstall setuptools
+pip uninstall setuptools -y
 pip install setuptools
 
 pip install --no-cache-dir -r "/usr/lib/ckan/default/src/ckanext-knowledgehub/requirements.txt" 
@@ -961,6 +963,66 @@ python -m spacy download en_core_web_sm
 ```
 
 
+## Configure and initialize
+
+Make sure you're swtched to user `ckan` and the virtualenv is activated.
+
+The initialize knowledgehub database tables:
+
+```bash
+knowledgehub -c /etc/ckan/default/production.ini db init
+```
+
+Then we need to add the extension to the list of CKAN plugins.
+
+Open `/etc/ckan/default/production.ini` and add `knowledgehub` to the list of plugins:
+
+```conf
+ckan.plugins = recline_view validation knowledgehub stats datastore datapusher datarequests oauth2
+```
+
+Then we need to configure some basic properties. In the same file:
+
+```conf
+# HDX API keys
+ckanext.knowledgehub.hdx.api_key = <HDX_API_KEY>
+ckanext.knowledgehub.hdx.site = test
+ckanext.knowledgehub.hdx.owner_org = <HDX_OWNER_ORG_ID>
+ckanext.knowledgehub.hdx.dataset_source = knowledgehub
+ckanext.knowledgehub.hdx.maintainer = <HDX_USER_NAME>
+
+# SMTP Server config
+smtp.server = <SMTP_SERVER_URL>
+smtp.starttls = True
+smtp.user = <SMTP_SERVER_USERNAME>
+smtp.password = <SMTP_SERVER_PASSWORD>
+smtp.mail_from = <KNOWLEDGEHUB_PORTAL_EMAIL>
+```
+
+Where:
+  * HDX_API_KEY - is the HDX Portal API Key
+  * HDX_OWNER_ORG_ID - is the registered organization on HDX Portal (the id)
+  * HDX_USER_NAME - the username of the maintainer on HDX Portal (for Knowledgehub)
+  * SMTP_SERVER_URL - the URL of your SMTP relay server
+  * SMTP_SERVER_USERNAME - SMTP username
+  * SMTP_SERVER_PASSWORD - SMTP password
+  * KNOWLEDGEHUB_PORTAL_EMAIL - the official email address of Knowledgehub portal.
+
+There are other configuration options that can be used to fine-tune different parts of the portal. To configure
+these please check the [README]() file on Github.
+
+
+Restart apache, then check the site.
+
+```bash
+# Ubuntu
+sudo systemctl restart apache2
+sudo systemctl restart nginx
+
+# Centos
+sudo systemctl restart httpd
+sudo systemctl restart nginx
+```
 
 # Configure Production Deployment
 
@@ -1240,3 +1302,24 @@ sudo systemctl restart httpd
 sudo systemctl restart nginx
 ```
 
+## Add CKAN Admin user
+
+Make sure you're using `ckan` user and have the virtualenv activated.
+
+Then to add new admin user:
+
+```bash
+cd /usr/lib/ckan/default/src/ckan
+
+# Add the user
+paster --plugin=ckan user add ckan_admin email=ckan_admin@knowledgehb.org -c /etc/ckan/default/production.ini
+
+# Set the user `ckan_admin` as sysadmin
+paster --plugin=ckan sysadmin add ckan_admin -c /etc/ckan/default/production.ini
+```
+
+Then try to login with the set username and password.
+
+## Setup periodical jobs with cron
+
+## Configure CKAN workers
