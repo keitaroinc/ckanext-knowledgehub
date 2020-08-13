@@ -176,6 +176,14 @@ Then give `755` permission to the whole directory, so Apache can access it later
 chmod 755 /usr/lib/ckan
 ```
 
+Create the configuration directories and change ownership:
+
+```bash
+sudo mkdir -p /etc/ckan/default
+sudo chown -R ckan /etc/ckan
+```
+
+
 Switch to ckan user and create virtualenv:
 
 ```bash
