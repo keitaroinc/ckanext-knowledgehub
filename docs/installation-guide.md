@@ -79,7 +79,7 @@ sudo apt install postgresql libpq-dev python-pip python-virtualenv git redis-ser
 
 **CentoOS 7**
 ```bash
-sudo yum install -y python-devel postgresql-server postgresql-contrib python-pip python-virtualenv postgresql-devel git redis postgis wget lsof policycoreutils-python
+sudo yum install -y python-devel postgresql-server postgresql-contrib python-pip python-virtualenv postgresql-devel git redis postgis wget lsof policycoreutils-python java-1.8.0-openjdk
 sudo yum groupinstall 'Development Tools'
 ```
 
@@ -245,6 +245,12 @@ Finally, enable the PostGIS extension on the ckan_default database:
 sudo -i -u postgres
 
 ```
+Create the database:
+
+```bash
+sudo -u postgres createdb -O ckan_default ckan_default -E utf-8
+```
+
 
 Install the extension via psql:
 ```bash
