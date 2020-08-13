@@ -1166,6 +1166,15 @@ Then create the file: `/etc/httpd/conf.d/knowledhehub.centos.unhcr.org.conf` wit
     <Directory />
         Require all granted
     </Directory>
+    
+    # Add this to avoid Apache show error: 
+    # "AH01630: client denied by server configuration: /etc/ckan/default/apache.wsgi" 
+    <Directory /etc/ckan/default>
+      Options All
+      AllowOverride All
+      Require all granted
+    </Directory>
+
 
 </VirtualHost>
 ```
