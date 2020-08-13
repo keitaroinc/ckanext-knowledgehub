@@ -13,25 +13,23 @@ on Ubuntu Server 18.04 or CentOS 7 (2003).
     + [3.2 Setup PostgreSQL Database](#32-setup-postgresql-database)
     + [3.3 Create CKAN DataStore database](#33-create-ckan-datastore-database)
     + [3.4 Install Solr](#34-install-solr)
-      - [3.4.1 Download and install Solr](#341-download-and-install-solr)
-      - [3.4.2 Configure to run automatically](#342-configure-to-run-automatically)
     + [3.4.3 Create CKAN core and configuration](#343-create-ckan-core-and-configuration)
     + [3.4 Create CKAN configuration files](#34-create-ckan-configuration-files)
     + [3.5 Create CKAN Database tables](#35-create-ckan-database-tables)
     + [3.6 Create DataStore tables and permissions](#36-create-datastore-tables-and-permissions)
     + [3.7 Test the setup](#37-test-the-setup)
-  * [4. Install Datapusher](#4-install-datapusher)
 - [Install Required CKAN Extensions](#install-required-ckan-extensions)
   * [Install ckanext-validation](#install-ckanext-validation)
   * [Install ckanext-datarequests](#install-ckanext-datarequests)
   * [Install ckanext-oauth2](#install-ckanext-oauth2)
   * [Activate the datastore extension](#activate-the-datastore-extension)
-  * [Activate the datapusher extension](#activate-the-datapusher-extension)
 - [Install Knowledhub Extension](#install-knowledhub-extension)
   * [Install extension and required packages](#install-extension-and-required-packages)
   * [Configure and initialize](#configure-and-initialize)
 - [Configure Production Deployment](#configure-production-deployment)
   * [Install Apache and nginx](#install-apache-and-nginx)
+  * [Install Datapusher](#install-datapusher)
+    + [Activate the datapusher extension](#activate-the-datapusher-extension)
   * [Add CKAN Admin user](#add-ckan-admin-user)
   * [Setup periodical jobs with cron](#setup-periodical-jobs-with-cron)
     + [Predictive Search job](#predictive-search-job)
@@ -194,6 +192,22 @@ Create the configuration directories and change ownership:
 sudo mkdir -p /etc/ckan/default
 sudo chown -R ckan /etc/ckan
 ```
+
+Now, create the storage directory for CKAN uploads:
+
+```bash
+sudo mkdir /usr/lib/ckan/data
+sudo chown apache:apache /usr/lib/ckan/data
+sudo chmod 755 /usr/lib/ckan/data
+```
+
+Then, we must add the correct permission labels for `selinux`:
+
+```bash
+sudo semanage fcontext -a -t httpd_sys_rw_content_t "/usr/lib/ckan/data(/.*)?"
+sudo restorecon -R /usr/lib/ckan/data
+```
+
 
 
 Switch to ckan user and create virtualenv:
@@ -606,7 +620,540 @@ You should see the CKAN welcome page.
 > sudo firewall-cmd --reload
 > ```
 
-## 4. Install Datapusher
+
+
+
+# Install Required CKAN Extensions
+
+Knowledgehub depends on a couple of CKAN Extensions:
+* [ckanext-validation](https://github.com/frictionlessdata/ckanext-validation)
+* [ckanext-datarequests](https://github.com/keitaroinc/ckanext-datarequests)
+* [ckanext-oauth2](https://github.com/keitaroinc/ckanext-oauth2)
+
+## Install ckanext-validation
+
+Switch to user `ckan`, activate the virtualenv then install the extension using `pip`:
+```bash
+sudo -i -u ckan
+sudo su -s /bin/bash - ckan  # Centos
+. /usr/lib/ckan/default/bin/activate
+pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation"
+
+cd /usr/lib/ckan/default/
+pip install -r src/ckanext-validation/requirements.txt
+
+```
+
+Validation extenstion requires database initialization. So after the installation run:
+```bash
+cd src/ckanext-validation/
+paster validation init-db -c /etc/ckan/default/production.ini
+```
+
+### Add to CKAN plugins and test the installation
+
+Edit the production configuration file (`/etc/ckan/default/production.ini`) and add the validation plugin:
+```conf
+ckan.plugins = recline_view validation stats
+```
+
+Save, then start CKAN with paster:
+```bash
+paster serve /etc/ckan/default/production.ini
+```
+
+## Install ckanext-datarequests
+
+If not already switched, then switch to user `ckan` and activate the virtualenv:
+```bash
+sudo -i -u ckan
+sudo su -s /bin/bash - ckan  # Centos
+. /usr/lib/ckan/default/bin/activate
+```
+
+Install the extension using `pip`:
+```bash
+pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-datarequests.git@kh_stable#egg=ckanext-datarequests"
+```
+
+Edit the production configuration file (`/etc/ckan/default/production.ini`) and add the validation plugin:
+```conf
+ckan.plugins = recline_view validation stats datarequests
+```
+
+Test the installation:
+```bash
+paster serve /etc/ckan/default/production.ini
+```
+
+> **Note**
+>
+> Due to a bug in `ckanext-datarequests`, you need to install `humanize` package manually at this step:
+> ```bash
+> pip install humanize==1.0.0
+> ```
+
+## Install ckanext-oauth2
+
+If not already switched, then switch to user `ckan` and activate the virtualenv:
+```bash
+sudo -i -u ckan
+sudo su -s /bin/bash - ckan  # Centos
+. /usr/lib/ckan/default/bin/activate
+```
+
+
+Install the extension using `pip`:
+```bash
+pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-oauth2.git@kh_stable#egg=ckanext-oauth2"
+```
+
+OAuth2 requires additional configuration to run properly. You need to have set up application and have generated keys and tokens for the OAuth2 protocol. Then those values have to be set up in the `production.ini` file.
+
+Open `/etc/ckan/default/production.ini` and add these values (replace your real production keys and URLs):
+```conf
+
+# OAuth2 settings
+ckan.oauth2.register_url = https://YOUR_OAUTH_SERVICE/users/sign_up
+ckan.oauth2.reset_url = https://YOUR_OAUTH_SERVICE/users/password/new
+ckan.oauth2.edit_url = https://YOUR_OAUTH_SERVICE/settings
+ckan.oauth2.authorization_endpoint = https://YOUR_OAUTH_SERVICE/authorize
+ckan.oauth2.token_endpoint = https://YOUR_OAUTH_SERVICE/token
+ckan.oauth2.profile_api_url = https://YOUR_OAUTH_SERVICE/user
+ckan.oauth2.client_id = YOUR_CLIENT_ID
+ckan.oauth2.client_secret = YOUR_CLIENT_SECRET
+ckan.oauth2.scope = profile other.scope
+ckan.oauth2.rememberer_name = auth_tkt
+ckan.oauth2.profile_api_user_field = JSON_FIELD_TO_FIND_THE_USER_IDENTIFIER
+ckan.oauth2.profile_api_fullname_field = JSON_FIELD_TO_FIND_THE_USER_FULLNAME
+ckan.oauth2.profile_api_mail_field = JSON_FIELD_TO_FIND_THE_USER_MAIL
+ckan.oauth2.authorization_header = OAUTH2_HEADER
+
+```
+
+Refer to the OAuth2 setup document for exact values for these fields.
+
+
+Add the `oauth2` plugin to the list of plugins:
+```conf
+ckan.plugins = recline_view validation stats datarequests oauth2
+```
+
+Test the istallation by running paster:
+```bash
+paster serve /etc/ckan/default/production.ini
+```
+
+## Activate the datastore extension
+
+Edit the production config file (`/etc/ckan/default/production.ini`), and add `datastore` to the list of plugins (the order is important):
+```conf
+ckan.plugins = recline_view validation stats datastore datarequests oauth2
+```
+
+Remember to also check if the database URLs are set up properly as well:
+```conf
+ckan.datastore.write_url = postgresql://ckan_default:pass@localhost/datastore_default
+ckan.datastore.read_url = postgresql://datastore_default:pass@localhost/datastore_default
+
+```
+
+Save, then test the installation running `paster`:
+```bash
+paster serve /etc/ckan/default/production.ini
+```
+
+
+# Install Knowledhub Extension
+
+## Install extension and required packages
+
+Switch to user `ckan` then activate the virtualenv:
+```bash
+# Ubuntu
+sudo -i -u ckan
+. /usr/lib/ckan/default/bin/activate
+
+# Centos
+sudo su -s /bin/bash - ckan
+. /usr/lib/ckan/default/bin/activate
+```
+
+Install the extension and required Python packages with `pip`:
+```bash
+pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-knowledgehub.git#egg=ckanext-knowledgehub"
+
+# Due to some of the packages requiring newer version of setuptools, we need to uninstall, then reinstall setuptools
+pip uninstall setuptools -y
+pip install setuptools
+
+pip install --no-cache-dir -r "/usr/lib/ckan/default/src/ckanext-knowledgehub/requirements.txt" 
+```
+
+>Due to mismatch of PostgreSQL driver (psycopg2) version used in CKAN and HDX API library, we must reinstall the correct version:
+>```bash
+>pip uninstall psycopg2-binary -y
+>pip uninstall psycopg2 -y
+>pip install --no-cache-dir psycopg2==2.7.3.2
+>``` 
+
+Download language model for Spacy:
+```bash
+python -m spacy download en_core_web_sm
+```
+
+
+## Configure and initialize
+
+Make sure you're swtched to user `ckan` and the virtualenv is activated.
+
+To initialize knowledgehub database tables:
+```bash
+knowledgehub -c /etc/ckan/default/production.ini db init
+```
+
+Then we need to add the extension to the list of CKAN plugins.
+
+Open `/etc/ckan/default/production.ini` and add `knowledgehub` to the list of plugins:
+```conf
+ckan.plugins = recline_view validation knowledgehub stats datastore datapusher datarequests oauth2
+```
+
+Then we need to configure some basic properties. In the same file:
+```conf
+# HDX API keys
+ckanext.knowledgehub.hdx.api_key = <HDX_API_KEY>
+ckanext.knowledgehub.hdx.site = test
+ckanext.knowledgehub.hdx.owner_org = <HDX_OWNER_ORG_ID>
+ckanext.knowledgehub.hdx.dataset_source = knowledgehub
+ckanext.knowledgehub.hdx.maintainer = <HDX_USER_NAME>
+
+# SMTP Server config
+smtp.server = <SMTP_SERVER_URL>
+smtp.starttls = True
+smtp.user = <SMTP_SERVER_USERNAME>
+smtp.password = <SMTP_SERVER_PASSWORD>
+smtp.mail_from = <KNOWLEDGEHUB_PORTAL_EMAIL>
+```
+
+Where:
+  * HDX_API_KEY - is the HDX Portal API Key
+  * HDX_OWNER_ORG_ID - is the registered organization on HDX Portal (the id)
+  * HDX_USER_NAME - the username of the maintainer on HDX Portal (for Knowledgehub)
+  * SMTP_SERVER_URL - the URL of your SMTP relay server
+  * SMTP_SERVER_USERNAME - SMTP username
+  * SMTP_SERVER_PASSWORD - SMTP password
+  * KNOWLEDGEHUB_PORTAL_EMAIL - the official email address of Knowledgehub portal.
+
+There are other configuration options that can be used to fine-tune different parts of the portal. To configure
+these please check the [README]() file on Github.
+
+
+Restart apache and nginx, then check the site (if apache2 and ngix aleady set up, otherwise test with `paster serve`).
+```bash
+# Ubuntu
+sudo systemctl restart apache2
+sudo systemctl restart nginx
+
+# Centos
+sudo systemctl restart httpd
+sudo systemctl restart nginx
+```
+
+# Configure Production Deployment
+
+## Install Apache and nginx
+
+1. Install Apache, nginx and related libraries
+
+**Ubuntu Server**:
+```bash
+sudo apt-get install -y nginx apache2 libapache2-mod-wsgi libapache2-mod-rpaf libpq5
+```
+
+**CentOS 7**:
+```bash
+sudo yum install -y nginx httpd mod_wsgi 
+```
+
+> Note that `mod_rpaf` is not available in the stadard CentOS repositories. We'll skip for this installation.
+
+2. Create wsgi file `/etc/ckan/default/apache.wsgi`:
+```
+import os
+activate_this = os.path.join('/usr/lib/ckan/default/bin/activate_this.py')
+execfile(activate_this, dict(__file__=activate_this))
+
+from paste.deploy import loadapp
+config_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'production.ini')
+from paste.script.util.logging_config import fileConfig
+fileConfig(config_filepath)
+application = loadapp('config:%s' % config_filepath)
+```
+
+Make the user `ckan` owner of the file:
+```bash
+sudo chown ckan /etc/ckan/default/apache.wsgi
+```
+
+3. Create the Apache config file at `/etc/apache2/sites-available/ckan_default.conf`:
+
+**Ubuntu Only**
+```apache
+<VirtualHost 127.0.0.1:8080>
+    ServerName knowledhehub.ubuntu.unhcr.org
+    ServerAlias www.knowledhehub.ubuntu.unhcr.org
+    WSGIScriptAlias / /etc/ckan/default/apache.wsgi
+
+    # Pass authorization info on (needed for rest api).
+    WSGIPassAuthorization On
+
+    # Deploy as a daemon (avoids conflicts between CKAN instances).
+    WSGIDaemonProcess ckan_default display-name=ckan_default processes=2 threads=15
+
+    WSGIProcessGroup ckan_default
+
+    ErrorLog /var/log/apache2/ckan_default.error.log
+    CustomLog /var/log/apache2/ckan_default.custom.log combined
+
+    <IfModule mod_rpaf.c>
+        RPAFenable On
+        RPAFsethostname On
+        RPAFproxy_ips 127.0.0.1
+    </IfModule>
+
+    <Directory />
+        Require all granted
+    </Directory>
+
+</VirtualHost>
+```
+
+Replace `knowledhehub.ubuntu.unhcr.com` with the actual doman name of the site.
+
+**CentOS 7**:
+
+Centos locations are different from Ubuntu. We're going to create new VirtualHost definition in `/etc/httpd/conf.d/knowledhehub.centos.unhcr.org.conf`.
+
+
+First, remove the welcome page from the apache server:
+```
+sudo mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf_backup
+```
+
+Then create the file: `/etc/httpd/conf.d/knowledhehub.centos.unhcr.org.conf` with the following content:
+```
+<VirtualHost 127.0.0.1:8080>
+    ServerName knowledhehub.centos.unhcr.org
+    ServerAlias www.knowledhehub.centos.unhcr.org
+    WSGIScriptAlias / /etc/ckan/default/apache.wsgi
+
+    # Pass authorization info on (needed for rest api).
+    WSGIPassAuthorization On
+
+    # Deploy as a daemon (avoids conflicts between CKAN instances).
+    WSGIDaemonProcess ckan_default display-name=ckan_default processes=2 threads=15
+
+    WSGIProcessGroup ckan_default
+
+    ErrorLog /var/log/httpd/ckan_default.error.log
+    CustomLog /var/log/httpd/ckan_default.custom.log combined
+
+    <IfModule mod_rpaf.c>
+        RPAFenable On
+        RPAFsethostname On
+        RPAFproxy_ips 127.0.0.1
+    </IfModule>
+
+    <Directory />
+        Require all granted
+    </Directory>
+    
+    # Add this to avoid Apache show error: 
+    # "AH01630: client denied by server configuration: /etc/ckan/default/apache.wsgi" 
+    <Directory /etc/ckan/default>
+      Options All
+      AllowOverride All
+      Require all granted
+    </Directory>
+
+
+</VirtualHost>
+```
+
+> Remember to replace `knowledhehub.centos.unhcr.org` with the correct domain name both in the config file and as the file name.
+
+
+Site is enabled by default.
+
+Reload the service:
+```
+sudo systemctl restart httpd
+```
+
+**Open http port through firewall**
+
+Run the following command:
+```
+sudo firewall-cmd --permanent --add-service=http
+```
+
+
+
+4. Modify the Apache ports file `/etc/apache2/ports.conf`. We want the apache to listen to port 8080 instead of port 80.
+
+> On **CentOS** edit file `/etc/httpd/conf/httpd.conf`
+
+Change
+```
+Listen 80
+```
+
+To
+```
+Listen 8080
+```
+
+5. Create `nginx` configuration file at `/etc/nginx/sites-available/ckan`:
+
+```
+proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache:30m max_size=250m;
+proxy_temp_path /tmp/nginx_proxy 1 2;
+
+server {
+    client_max_body_size 100M;
+    location / {
+        proxy_pass http://127.0.0.1:8080/;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+        proxy_cache cache;
+        proxy_cache_bypass $cookie_auth_tkt;
+        proxy_no_cache $cookie_auth_tkt;
+        proxy_cache_valid 30m;
+        proxy_cache_key $host$scheme$proxy_host$request_uri;
+        # In emergency comment out line to force caching
+        # proxy_ignore_headers X-Accel-Expires Expires Cache-Control;
+    }
+
+}
+```
+
+**CentOS**
+
+We must create the config directories `sites-available` and `sites-enabled`:
+```bash
+sudo mkdir /etc/nginx/sites-available /etc/nginx/sites-enabled
+```
+
+Edit `/etc/nginx/nginx.conf`, and add the following inside the `http` block:
+```
+include /etc/nginx/sites-enabled/*.conf
+server_names_hash_bucket_size 64;
+```
+
+or use the following configuration if only using it for CKAN deployment:
+```
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;
+
+    # Load enabled sites.
+    include /etc/nginx/sites-enabled/*;
+    server_names_hash_bucket_size 64;
+
+}
+
+```
+
+
+Add the following configuration at `/etc/nginx/sites-available/ckan.conf`:
+```
+proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache:30m max_size=250m;
+proxy_temp_path /tmp/nginx_proxy 1 2;
+
+server {
+    client_max_body_size 100M;
+    location / {
+        proxy_pass http://127.0.0.1:8080/;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+        proxy_cache cache;
+        proxy_cache_bypass $cookie_auth_tkt;
+        proxy_no_cache $cookie_auth_tkt;
+        proxy_cache_valid 30m;
+        proxy_cache_key $host$scheme$proxy_host$request_uri;
+        # In emergency comment out line to force caching
+        # proxy_ignore_headers X-Accel-Expires Expires Cache-Control;
+    }
+
+}
+```
+
+Enable the site:
+```
+sudo ln -s /etc/nginx/sites-available/ckan.conf /etc/nginx/sites-enabled/ckan.conf
+```
+
+Restart nginx:
+```
+sudo systemctl restart nginx
+```
+
+> If SE Linux, you must allow nginx to connect to upstream server. Execute:
+>```
+>sudo setsebool httpd_can_network_connect on -P
+>```
+
+6. Enable CKAN site with Apache and nginx
+
+
+**Ubuntu Server**
+```bash
+sudo a2ensite ckan_default
+sudo a2dissite 000-default
+sudo rm -vi /etc/nginx/sites-enabled/default
+sudo ln -s /etc/nginx/sites-available/ckan /etc/nginx/sites-enabled/ckan_default
+sudo service apache2 reload
+sudo service nginx reload
+```
+
+**CentOS**
+
+```bash
+sudo systemctl restart httpd
+sudo systemctl restart nginx
+```
+
+## Install Datapusher
 
 1. Install required libraries
 
@@ -806,149 +1353,7 @@ You should get:
 {"help":"\n        Get help at:\n        http://ckan-service-provider.readthedocs.org/."}
 ```
 
-
-# Install Required CKAN Extensions
-
-Knowledgehub depends on a couple of CKAN Extensions:
-* [ckanext-validation](https://github.com/frictionlessdata/ckanext-validation)
-* [ckanext-datarequests](https://github.com/keitaroinc/ckanext-datarequests)
-* [ckanext-oauth2](https://github.com/keitaroinc/ckanext-oauth2)
-
-## Install ckanext-validation
-
-Switch to user `ckan`, activate the virtualenv then install the extension using `pip`:
-```bash
-sudo -i -u ckan
-sudo su -s /bin/bash - ckan  # Centos
-. /usr/lib/ckan/default/bin/activate
-pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation"
-
-cd /usr/lib/ckan/default/
-pip install -r src/ckanext-validation/requirements.txt
-
-```
-
-Validation extenstion requires database initialization. So after the installation run:
-```bash
-cd src/ckanext-validation/
-paster validation init-db -c /etc/ckan/default/production.ini
-```
-
-### Add to CKAN plugins and test the installation
-
-Edit the production configuration file (`/etc/ckan/default/production.ini`) and add the validation plugin:
-```conf
-ckan.plugins = recline_view validation stats
-```
-
-Save, then start CKAN with paster:
-```bash
-paster serve /etc/ckan/default/production.ini
-```
-
-## Install ckanext-datarequests
-
-If not already switched, then switch to user `ckan` and activate the virtualenv:
-```bash
-sudo -i -u ckan
-sudo su -s /bin/bash - ckan  # Centos
-. /usr/lib/ckan/default/bin/activate
-```
-
-Install the extension using `pip`:
-```bash
-pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-datarequests.git@kh_stable#egg=ckanext-datarequests"
-```
-
-Edit the production configuration file (`/etc/ckan/default/production.ini`) and add the validation plugin:
-```conf
-ckan.plugins = recline_view validation stats datarequests
-```
-
-Test the installation:
-```bash
-paster serve /etc/ckan/default/production.ini
-```
-
-> **Note**
->
-> Due to a bug in `ckanext-datarequests`, you need to install `humanize` package manually at this step:
-> ```bash
-> pip install humanize==1.0.0
-> ```
-
-## Install ckanext-oauth2
-
-If not already switched, then switch to user `ckan` and activate the virtualenv:
-```bash
-sudo -i -u ckan
-sudo su -s /bin/bash - ckan  # Centos
-. /usr/lib/ckan/default/bin/activate
-```
-
-
-Install the extension using `pip`:
-```bash
-pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-oauth2.git@kh_stable#egg=ckanext-oauth2"
-```
-
-OAuth2 requires additional configuration to run properly. You need to have set up application and have generated keys and tokens for the OAuth2 protocol. Then those values have to be set up in the `production.ini` file.
-
-Open `/etc/ckan/default/production.ini` and add these values (replace your real production keys and URLs):
-```conf
-
-# OAuth2 settings
-ckan.oauth2.register_url = https://YOUR_OAUTH_SERVICE/users/sign_up
-ckan.oauth2.reset_url = https://YOUR_OAUTH_SERVICE/users/password/new
-ckan.oauth2.edit_url = https://YOUR_OAUTH_SERVICE/settings
-ckan.oauth2.authorization_endpoint = https://YOUR_OAUTH_SERVICE/authorize
-ckan.oauth2.token_endpoint = https://YOUR_OAUTH_SERVICE/token
-ckan.oauth2.profile_api_url = https://YOUR_OAUTH_SERVICE/user
-ckan.oauth2.client_id = YOUR_CLIENT_ID
-ckan.oauth2.client_secret = YOUR_CLIENT_SECRET
-ckan.oauth2.scope = profile other.scope
-ckan.oauth2.rememberer_name = auth_tkt
-ckan.oauth2.profile_api_user_field = JSON_FIELD_TO_FIND_THE_USER_IDENTIFIER
-ckan.oauth2.profile_api_fullname_field = JSON_FIELD_TO_FIND_THE_USER_FULLNAME
-ckan.oauth2.profile_api_mail_field = JSON_FIELD_TO_FIND_THE_USER_MAIL
-ckan.oauth2.authorization_header = OAUTH2_HEADER
-
-```
-
-Refer to the OAuth2 setup document for exact values for these fields.
-
-
-Add the `oauth2` plugin to the list of plugins:
-```conf
-ckan.plugins = recline_view validation stats datarequests oauth2
-```
-
-Test the istallation by running paster:
-```bash
-paster serve /etc/ckan/default/production.ini
-```
-
-## Activate the datastore extension
-
-Edit the production config file (`/etc/ckan/default/production.ini`), and add `datastore` to the list of plugins (the order is important):
-```conf
-ckan.plugins = recline_view validation stats datastore datarequests oauth2
-```
-
-Remember to also check if the database URLs are set up properly as well:
-```conf
-ckan.datastore.write_url = postgresql://ckan_default:pass@localhost/datastore_default
-ckan.datastore.read_url = postgresql://datastore_default:pass@localhost/datastore_default
-
-```
-
-Save, then test the installation running `paster`:
-```bash
-paster serve /etc/ckan/default/production.ini
-```
-
-
-## Activate the datapusher extension
+### Activate the datapusher extension
 
 
 Add `datapusher` to the list of active plugins in `/etc/ckan/default/production.ini`:
@@ -974,372 +1379,6 @@ sudo systemctl restart apache2
 sudo systemctl restart httpd
 ```
 
-
-
-# Install Knowledhub Extension
-
-## Install extension and required packages
-
-Switch to user `ckan` then activate the virtualenv:
-```bash
-# Ubuntu
-sudo -i -u ckan
-. /usr/lib/ckan/default/bin/activate
-
-# Centos
-sudo su -s /bin/bash - ckan
-. /usr/lib/ckan/default/bin/activate
-```
-
-Install the extension and required Python packages with `pip`:
-```bash
-pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-knowledgehub.git#egg=ckanext-knowledgehub"
-
-# Due to some of the packages requiring newer version of setuptools, we need to uninstall, then reinstall setuptools
-pip uninstall setuptools -y
-pip install setuptools
-
-pip install --no-cache-dir -r "/usr/lib/ckan/default/src/ckanext-knowledgehub/requirements.txt" 
-```
-
->Due to mismatch of PostgreSQL driver (psycopg2) version used in CKAN and HDX API library, we must reinstall the correct version:
->```bash
->pip uninstall psycopg2-binary -y
->pip uninstall psycopg2 -y
->pip install --no-cache-dir psycopg2==2.7.3.2
->``` 
-
-Download language model for Spacy:
-```bash
-python -m spacy download en_core_web_sm
-```
-
-
-## Configure and initialize
-
-Make sure you're swtched to user `ckan` and the virtualenv is activated.
-
-To initialize knowledgehub database tables:
-```bash
-knowledgehub -c /etc/ckan/default/production.ini db init
-```
-
-Then we need to add the extension to the list of CKAN plugins.
-
-Open `/etc/ckan/default/production.ini` and add `knowledgehub` to the list of plugins:
-```conf
-ckan.plugins = recline_view validation knowledgehub stats datastore datapusher datarequests oauth2
-```
-
-Then we need to configure some basic properties. In the same file:
-```conf
-# HDX API keys
-ckanext.knowledgehub.hdx.api_key = <HDX_API_KEY>
-ckanext.knowledgehub.hdx.site = test
-ckanext.knowledgehub.hdx.owner_org = <HDX_OWNER_ORG_ID>
-ckanext.knowledgehub.hdx.dataset_source = knowledgehub
-ckanext.knowledgehub.hdx.maintainer = <HDX_USER_NAME>
-
-# SMTP Server config
-smtp.server = <SMTP_SERVER_URL>
-smtp.starttls = True
-smtp.user = <SMTP_SERVER_USERNAME>
-smtp.password = <SMTP_SERVER_PASSWORD>
-smtp.mail_from = <KNOWLEDGEHUB_PORTAL_EMAIL>
-```
-
-Where:
-  * HDX_API_KEY - is the HDX Portal API Key
-  * HDX_OWNER_ORG_ID - is the registered organization on HDX Portal (the id)
-  * HDX_USER_NAME - the username of the maintainer on HDX Portal (for Knowledgehub)
-  * SMTP_SERVER_URL - the URL of your SMTP relay server
-  * SMTP_SERVER_USERNAME - SMTP username
-  * SMTP_SERVER_PASSWORD - SMTP password
-  * KNOWLEDGEHUB_PORTAL_EMAIL - the official email address of Knowledgehub portal.
-
-There are other configuration options that can be used to fine-tune different parts of the portal. To configure
-these please check the [README]() file on Github.
-
-
-Restart apache and nginx, then check the site (if apache2 and ngix aleady set up, otherwise test with `paster serve`).
-```bash
-# Ubuntu
-sudo systemctl restart apache2
-sudo systemctl restart nginx
-
-# Centos
-sudo systemctl restart httpd
-sudo systemctl restart nginx
-```
-
-# Configure Production Deployment
-
-## Install Apache and nginx
-
-1. Install Apache, nginx and related libraries
-
-**Ubuntu Server**:
-```bash
-sudo apt-get install -y nginx apache2 libapache2-mod-wsgi libapache2-mod-rpaf libpq5
-```
-
-**CentOS 7**:
-```bash
-sudo yum install -y nginx httpd mod_wsgi 
-```
-
-> Note that `mod_rpaf` is not available in the stadard CentOS repositories. We'll skip for this installation.
-
-2. Create wsgi file `/etc/ckan/default/apache.wsgi`:
-```
-import os
-activate_this = os.path.join('/usr/lib/ckan/default/bin/activate_this.py')
-execfile(activate_this, dict(__file__=activate_this))
-
-from paste.deploy import loadapp
-config_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'production.ini')
-from paste.script.util.logging_config import fileConfig
-fileConfig(config_filepath)
-application = loadapp('config:%s' % config_filepath)
-```
-
-Make the user `ckan` owner of the file:
-```bash
-sudo chown ckan /etc/ckan/default/apache.wsgi
-```
-
-3. Create the Apache config file at `/etc/apache2/sites-available/ckan_default.conf`:
-```apache
-<VirtualHost 127.0.0.1:8080>
-    ServerName knowledhehub.ubuntu.unhcr.org
-    ServerAlias www.knowledhehub.ubuntu.unhcr.org
-    WSGIScriptAlias / /etc/ckan/default/apache.wsgi
-
-    # Pass authorization info on (needed for rest api).
-    WSGIPassAuthorization On
-
-    # Deploy as a daemon (avoids conflicts between CKAN instances).
-    WSGIDaemonProcess ckan_default display-name=ckan_default processes=2 threads=15
-
-    WSGIProcessGroup ckan_default
-
-    ErrorLog /var/log/apache2/ckan_default.error.log
-    CustomLog /var/log/apache2/ckan_default.custom.log combined
-
-    <IfModule mod_rpaf.c>
-        RPAFenable On
-        RPAFsethostname On
-        RPAFproxy_ips 127.0.0.1
-    </IfModule>
-
-    <Directory />
-        Require all granted
-    </Directory>
-
-</VirtualHost>
-```
-
-Replace `knowledhehub.ubuntu.unhcr.com` with the actual doman name of the site.
-
-**CentOS 7**:
-
-Centos locations are different from Ubuntu. We're going to create new VirtualHost definition in `/etc/httpd/conf.d/knowledhehub.centos.unhcr.org.conf`.
-
-
-First, remove the welcome page from the apache server:
-```
-sudo mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf_backup
-```
-
-Then create the file: `/etc/httpd/conf.d/knowledhehub.centos.unhcr.org.conf` with the following content:
-```
-<VirtualHost 127.0.0.1:8080>
-    ServerName knowledhehub.centos.unhcr.org
-    ServerAlias www.knowledhehub.centos.unhcr.org
-    WSGIScriptAlias / /etc/ckan/default/apache.wsgi
-
-    # Pass authorization info on (needed for rest api).
-    WSGIPassAuthorization On
-
-    # Deploy as a daemon (avoids conflicts between CKAN instances).
-    WSGIDaemonProcess ckan_default display-name=ckan_default processes=2 threads=15
-
-    WSGIProcessGroup ckan_default
-
-    ErrorLog /var/log/httpd/ckan_default.error.log
-    CustomLog /var/log/httpd/ckan_default.custom.log combined
-
-    <IfModule mod_rpaf.c>
-        RPAFenable On
-        RPAFsethostname On
-        RPAFproxy_ips 127.0.0.1
-    </IfModule>
-
-    <Directory />
-        Require all granted
-    </Directory>
-    
-    # Add this to avoid Apache show error: 
-    # "AH01630: client denied by server configuration: /etc/ckan/default/apache.wsgi" 
-    <Directory /etc/ckan/default>
-      Options All
-      AllowOverride All
-      Require all granted
-    </Directory>
-
-
-</VirtualHost>
-```
-
-> Remember to replace `knowledhehub.centos.unhcr.org` with the correct domain name both in the config file and as the file name.
-
-
-Site is enabled by default.
-
-Reload the service:
-```
-sudo systemctl restart httpd
-```
-
-**Open http port through firewall**
-
-Run the following command:
-```
-sudo firewall-cmd --permanent --add-service=http
-```
-
-
-
-4. Modify the Apache ports file `/etc/apache2/ports.conf`. We want the apache to listen to port 8080 instead of port 80.
-
-> On **CentOS** edit file `/etc/httpd/conf/httpd.conf`
-
-Change
-```
-Listen 80
-```
-
-To
-```
-Listen 8080
-```
-
-5. Create `nginx` configuration file at `/etc/nginx/sites-available/ckan`:
-```
-proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache:30m max_size=250m;
-proxy_temp_path /tmp/nginx_proxy 1 2;
-
-server {
-    client_max_body_size 100M;
-    location / {
-        proxy_pass http://127.0.0.1:8080/;
-        proxy_set_header X-Forwarded-For $remote_addr;
-        proxy_set_header Host $host;
-        proxy_cache cache;
-        proxy_cache_bypass $cookie_auth_tkt;
-        proxy_no_cache $cookie_auth_tkt;
-        proxy_cache_valid 30m;
-        proxy_cache_key $host$scheme$proxy_host$request_uri;
-        # In emergency comment out line to force caching
-        # proxy_ignore_headers X-Accel-Expires Expires Cache-Control;
-    }
-
-}
-```
-
-**CentOS**
-
-We must create the config directories `sites-available` and `sites-enabled`:
-```bash
-sudo mkdir /etc/nginx/sites-available /etc/nginx/sites-enabled
-```
-
-Edit `/etc/nginx/nginx.conf`, and add the following inside the `http` block:
-```
-include /etc/nginx/sites-enabled/*.conf
-server_names_hash_bucket_size 64;
-```
-
-or use the following configuration if only using it for CKAN deployment:
-```
-user nginx;
-worker_processes auto;
-error_log /var/log/nginx/error.log;
-pid /run/nginx.pid;
-
-# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
-include /usr/share/nginx/modules/*.conf;
-
-events {
-    worker_connections 1024;
-}
-
-http {
-    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';
-
-    access_log  /var/log/nginx/access.log  main;
-
-    sendfile            on;
-    tcp_nopush          on;
-    tcp_nodelay         on;
-    keepalive_timeout   65;
-    types_hash_max_size 2048;
-
-    include             /etc/nginx/mime.types;
-    default_type        application/octet-stream;
-
-    # Load modular configuration files from the /etc/nginx/conf.d directory.
-    # See http://nginx.org/en/docs/ngx_core_module.html#include
-    # for more information.
-    include /etc/nginx/conf.d/*.conf;
-
-    # Load enabled sites.
-    include /etc/nginx/sites-enabled/*;
-    server_names_hash_bucket_size 64;
-
-}
-
-```
-
-
-Add the above configuration at `/etc/nginx/sites-available/ckan.conf`.
-
-Enable the site:
-```
-sudo ln -s /etc/nginx/sites-available/ckan.conf /etc/nginx/sites-enabled/ckan.conf
-```
-
-Restart nginx:
-```
-sudo systemctl restart nginx
-```
-
-> If SE Linux, you must allow nginx to connect to upstream server. Execute:
->```
->sudo setsebool httpd_can_network_connect on -P
->```
-
-6. Enable CKAN site with Apache and nginx
-
-
-**Ubuntu Server**
-```bash
-sudo a2ensite ckan_default
-sudo a2dissite 000-default
-sudo rm -vi /etc/nginx/sites-enabled/default
-sudo ln -s /etc/nginx/sites-available/ckan /etc/nginx/sites-enabled/ckan_default
-sudo service apache2 reload
-sudo service nginx reload
-```
-
-**CentOS**
-
-```bash
-sudo systemctl restart httpd
-sudo systemctl restart nginx
-```
 
 ## Add CKAN Admin user
 

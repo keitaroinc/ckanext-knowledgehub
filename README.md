@@ -17,6 +17,7 @@ This is the main repo for the Knowledge Hub on Displaced Populations in the MENA
      - [Running the Tests](#running-the-tests)
  - [Install spaCy](#install-spacy)
  - [User Intents](#user-intents)
+ - [Production Deployment](#full-portal-production-deployment)
 
 
 # Getting started
@@ -30,7 +31,7 @@ This extension requires CKAN 2.8.x version.
 
 * [Data Requests](https://github.com/conwetlab/ckanext-datarequests)
 * [Validation](https://github.com/frictionlessdata/ckanext-validation)
-* [Disqus](https://github.com/ckan/ckanext-disqus)
+* [OAuth2 (login with Azure accounts)](https://github.com/keitaroinc/ckanext-oauth2)
 
 ### Installation
 
@@ -336,4 +337,10 @@ ckan.oauth2.authorization_header = Authorization
 Note: The authorization endpoint, as well as the token endpoint, can be found in the Azure AD. After you navigate to your application, in the Overview tab, there will be a button called Endpoints. After you click it, a new tab will be opened with the information you need. Alternatively, the data can be found in the OpenID Connect metadata document. 
 Below this Overview tab, there will be one called Certificates and Secrets, where you can create a secret and add it in the .ini file.
 
-```
+
+# Full Portal Production Deployment
+
+For setting up full CKAN instance of Knowledgehub portal for production use,
+please refer to the [Installation Guide](docs/installation-guide.md).
+
+The guide contains instruction on how to install and deploy the portal for production use on Ubuntu Server 18.04 or CentOS 7.
