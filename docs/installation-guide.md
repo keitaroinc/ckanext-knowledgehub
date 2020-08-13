@@ -94,6 +94,18 @@ sudo systemctl start postgresql
 sudo systemctl enable postgresql
 ```
 
+Also enable and start other service, they are not enabled by default on Cent OS:
+```bash
+sudo systemctl enable redis
+sudo systemctl enable httpd
+sudo systemctl enable nginx
+
+sudo systemctl start redis
+sudo systemctl start httpd
+sudo systemctl start nginx
+
+```
+
 
 ## 2. Create folder structure
 
