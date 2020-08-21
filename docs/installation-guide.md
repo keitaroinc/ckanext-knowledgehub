@@ -14,10 +14,10 @@ on Ubuntu Server 18.04 or CentOS 7 (2003).
     + [3.3 Create CKAN DataStore database](#33-create-ckan-datastore-database)
     + [3.4 Install Solr](#34-install-solr)
     + [3.4.3 Create CKAN core and configuration](#343-create-ckan-core-and-configuration)
-    + [3.4 Create CKAN configuration files](#34-create-ckan-configuration-files)
-    + [3.5 Create CKAN Database tables](#35-create-ckan-database-tables)
-    + [3.6 Create DataStore tables and permissions](#36-create-datastore-tables-and-permissions)
-    + [3.7 Test the setup](#37-test-the-setup)
+    + [3.5 Create CKAN configuration files](#35-create-ckan-configuration-files)
+    + [3.6 Create CKAN Database tables](#36-create-ckan-database-tables)
+    + [3.7 Create DataStore tables and permissions](#37-create-datastore-tables-and-permissions)
+    + [3.8 Test the setup](#38-test-the-setup)
 - [Install Required CKAN Extensions](#install-required-ckan-extensions)
   * [Install ckanext-validation](#install-ckanext-validation)
   * [Install ckanext-datarequests](#install-ckanext-datarequests)
@@ -475,7 +475,7 @@ sudo systemctl restart solr
 ```
 
 
-### 3.4 Create CKAN configuration files
+### 3.5 Create CKAN configuration files
 
 Create the directory that will contain the configuration files (in `/etc`):
 
@@ -545,7 +545,7 @@ Link to `who.ini` file:
 ln -s /usr/lib/ckan/default/src/ckan/who.ini /etc/ckan/default/who.ini
 ```
 
-### 3.5 Create CKAN Database tables
+### 3.6 Create CKAN Database tables
 
 This step is important to be performed immeditely after installing CKAN, before any additional extensions are installed.
 
@@ -588,7 +588,7 @@ sudo systemctl restart postgresql
 ```
 
 
-### 3.6 Create DataStore tables and permissions
+### 3.7 Create DataStore tables and permissions
 
 CKAN provides paster command that generates the SQL for setting permissions on the datastore database.
 You can pipe the SQL to `psql` connected to the database, by executing the following command:
@@ -596,7 +596,7 @@ You can pipe the SQL to `psql` connected to the database, by executing the follo
 paster --plugin=ckan datastore set-permissions -c /etc/ckan/default/production.ini | psql -h localhost -U ckan_default -d ckan_default 
 ```
 
-### 3.7 Test the setup
+### 3.8 Test the setup
 
 Run CKAN in development mode with paster:
 
