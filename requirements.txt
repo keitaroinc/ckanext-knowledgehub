@@ -9,3 +9,4 @@ goodtables==1.5.1
 hdx-python-api==4.3.0
 humanize==1.0.0
 pycountry==19.8.18
+pyrsistent == 0.16.0
