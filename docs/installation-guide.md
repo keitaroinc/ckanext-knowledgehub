@@ -640,6 +640,7 @@ sudo su -s /bin/bash - ckan  # Centos
 pip install --no-cache-dir -e "git+https://github.com/frictionlessdata/ckanext-validation.git#egg=ckanext-validation"
 
 cd /usr/lib/ckan/default/
+echo "pyrsisten==0.16.0" >> src/ckanext-validation/requirements.txt
 pip install -r src/ckanext-validation/requirements.txt
 
 ```
