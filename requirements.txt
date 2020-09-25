@@ -1,6 +1,6 @@
 pymssql==2.1.4
 functools32==3.2.3.post2
-tensorflow==1.6.0
+tensorflow==1.15.4
 keras==2.2.4
 h5py==2.9.0
 filelock==3.0.12
