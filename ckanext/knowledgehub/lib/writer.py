@@ -12,7 +12,7 @@ class WriterService():
 
         d = str(delimiter).lower()
 
-        columns = [x['id'].encode("utf-8") for x in fields]
+        columns = [str(x['id']).encode("utf-8") for x in fields]
         output = cStringIO.StringIO()
 
         if d == 'semicolon':
@@ -25,7 +25,7 @@ class WriterService():
             writer = csv.writer(output, delimiter=',')
 
         # Writing headers
-        writer.writerow([f['id'].encode("utf-8") for f in fields])
+        writer.writerow([str(f['id']).encode("utf-8") for f in fields])
 
         # Writing records
         for record in records:
