@@ -99,6 +99,11 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'knowledgehub')
+
+        # Eliminates the need to re-initialize the database when model changes.
+        _init_knowledgehub_database()
+        _patch_ckan_base_controller()
+
         # patch the CKAN core functionality
         patch_ckan_core_search()
         # Extend CKAN Tag table
@@ -121,9 +126,6 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
             hdx_key=hdx_api_key
         )
 
-        # Eliminates the need to re-initialize the database when model changes.
-        _init_knowledgehub_database()
-        _patch_ckan_base_controller()
 
     # IBlueprint
     def get_blueprint(self):
