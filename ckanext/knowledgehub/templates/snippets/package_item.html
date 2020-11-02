@@ -59,7 +59,7 @@
 {% set country_code_displacement = package.country_code_displacement %}
 {% endif %}
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country of displacement:
-    </span><span class="text-muted">{{ country_code_displacement }}</span></h5></a>
+    </span><span class="text-muted text-word-wrap">{{ country_code_displacement }}</span></h5></a>
 {% endif %}
 
 {% if package.country_code_origin %}
@@ -71,7 +71,7 @@
 {% endif %}
 
 <h5 class="dataset-text-wrap text-muted"><span style="color: #000">Country of origin:
-    </span><span class="text-muted">{{ country_code_origin }}</span></h5></a>
+    </span><span class="text-muted text-word-wrap">{{ country_code_origin }}</span></h5></a>
 {% endif %}
 
 {% if package.organization %}
