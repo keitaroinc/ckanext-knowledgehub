@@ -488,7 +488,7 @@ def get_last_visuals():
     try:
         toolkit.check_access('user_profile_show', _get_context())
     except toolkit.NotAuthorized:
-        log.error('Not Authorized')
+        log.debug('Not Authorized')
         data_dict_format = {}
     return data_dict_format
 
@@ -1733,7 +1733,7 @@ def check_if_dataset_is_on_hdx(dataset_name):
             return False
         return True
     except Exception as e:
-        log.error('Failed to read from HDX. Error: %s', str(e))
+        log.debug('Failed to read from HDX. Error: %s', str(e))
         log.exception(e)
     return False
 
@@ -1969,7 +1969,7 @@ def log_request():
                         # IPv6
                         remote_ip = x_fwd
         except Exception as e:
-            log.error('Failed to get REMOTE IP while examining header: %s',
+            log.debug('Failed to get REMOTE IP while examining header: %s',
                       header)
             log.exception(e)
 
