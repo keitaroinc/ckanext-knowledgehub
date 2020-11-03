@@ -45,6 +45,12 @@ def _prepare_search_query(query):
         query['fq'] = []
     query['fq'] = _to_pysolr_arg(query['fq'])
 
+    # remove quotes from query to avoid literal searches
+    # i.e. text:"trends funding" -> text:trends funding
+    q = query.pop('q', 'text:*')
+    q = q.replace('"', '')
+    query['q'] = q
+
     return query
 
 
