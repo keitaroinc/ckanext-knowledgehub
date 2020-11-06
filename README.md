@@ -155,8 +155,13 @@ ckanext.knowledgehub.dashboards_per_page = 20
     # ( mandatory )
     ckanext.knowledgehub.hdx.maintainer = <HDX_MAINTAINER>
     ```
-
-
+   
+7. Advanced solr search parameters
+    - Set the mm (minimum should match) DisMax query parameter
+    ```
+    # ( optional, default: 1<30% )
+    ckanext.knowledgehub.search.mm = 1
+    ```
 
 # Development
 
