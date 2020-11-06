@@ -1991,6 +1991,12 @@ def package_search(context, data_dict=None):
         data_dict = data_dict or {}
         data_dict['boost_for'] = user.id
     data_dict['include_private'] = True
+
+    # https://lucene.apache.org/solr/guide/6_6/the-dismax-query-parser.html#TheDisMaxQueryParser-Themm_MinimumShouldMatch_Parameter
+    # set default min should match param
+    # mm: DisMax query parser parameter
+    data_dict['mm'] = config.get('ckanext.knowledgehub.search.mm', '1<30%')
+
     return ckan_package_search(context, data_dict)
 
 
