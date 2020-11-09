@@ -8,20 +8,23 @@
                     <img src="{{notification.image or h.url_for('fanstatic/knowledgehub/img/icons8-notification-64.png')}}" class="notification-image img-responsive img-circle"></img>
                     <img src="{{h.url_for('fanstatic/knowledgehub/img/icons8-notification-64.png')}}" class="notification-image-default img-responsive img-circle" style="display: none;"></img>
                 </div>
+
                 <div class="col-md-7 col-sm-7 col-7 notification-info">
-                    <a href="{% if notification.link %}{{ h.url_for(notification.link) }}{% else %}javascript:void(0){% endif%}"
-                        class="notification-title">
+                    <a href="{% if notification.link %}{{ h.url_for(notification.link) }}{% else %}javascript:void(0){% endif%}" class="notification-title" notification="{{notification.id}}">
                         {{notification.title}}
                     </a>
                     {% if notification.description or notification.image %}
                     <div class="notification-content">
+                       <a href="{% if notification.link %}{{ h.url_for(notification.link) }}{% else %}javascript:void(0){% endif%}" class="notification-content" notification="{{notification.id}}">
                         {{ notification.description }}
+                       </a>
                     </div>
                     {% endif %}
                     
                     {{ h.calculate_time_passed(notification.created_at) }}
 
                 </div>
+
                 <div class="col-md-1 col-sm-1 col-1">
                     <a href="#" class="notification-mark-read" notification="{{notification.id}}"
                         title="{{ _('Mark as read.') }}">
