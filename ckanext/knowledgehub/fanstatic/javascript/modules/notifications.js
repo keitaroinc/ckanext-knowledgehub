@@ -86,6 +86,18 @@ ckan.module('notifications', function($){
             });
         }
 
+        $('.notification-content, .notification-title').click(function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            var href = $(this).attr('href');
+            var notificationId = $(this).attr('notification');
+            markAsRead(notificationId).done(function(){
+                    setTimeout( function() {
+                        window.location = href;
+                    }, 500);
+            });
+        });
+
         $('.notifications-show-more').click(function(ev){
             ev.stopPropagation();
             ev.preventDefault();
@@ -104,6 +116,6 @@ ckan.module('notifications', function($){
                 decreaseNotificationCount()
             }.bind(this));
         })
-
+        
     });
 });
