@@ -1,30 +1,25 @@
-FROM keitaro/ckan:2.8.2-bionic
+FROM keitaro/ckan:2.8.6-focal
 
 MAINTAINER Keitaro <info@keitaro.com>
 
 USER root
 
-ENV TZ=Europe/Skopje
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
 RUN apt-get update && apt-get install -y \
-    libgeos-dev \
-    g++ \
-    gcc \
-    libffi-dev \
-    libxml2-dev \
-    libxslt1.1 \
-    libxslt1-dev \
-    make \
-    musl-dev \
-    libpcre3 \
-    python-dev \
-    unixodbc-dev \
-    freetds-dev \
-    sudo \
-    tzdata
-
-RUN dpkg-reconfigure -f noninteractive tzdata
+        libgeos-dev \
+	git \
+        g++ \
+        gcc \
+        libffi-dev \
+        libxml2-dev \
+        libxslt1.1 \
+        libxslt1-dev \
+        make \
+        musl-dev \
+        libpcre3 \
+        python-dev \
+        unixodbc-dev \
+        freetds-dev \
+        sudo 
 
 # Install Cython needed for pymssql
 RUN pip install cython && \
@@ -41,7 +36,6 @@ RUN pip install cython && \
     pip uninstall psycopg2-binary -y && \
     pip uninstall psycopg2 -y && \
     pip install --no-cache-dir psycopg2==2.7.3.2 && \
-
     # oauth2
     pip install --no-cache-dir -e "git+https://github.com/keitaroinc/ckanext-oauth2.git@kh_stable#egg=ckanext-oauth2"
 
@@ -57,8 +51,7 @@ ENV CKAN__PLUGINS envvars \
                   datastore \
                   datapusher \
                   datarequests \
-                  oauth2
-
+		  oauth2
 
 RUN mkdir -p /var/lib/ckan/default && chown -R ckan:ckan /var/lib/ckan/default
 VOLUME /var/lib/ckan/default
@@ -78,7 +71,6 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.max_resourc
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "search.facets = organization groups tags"
 # Set facets for research questions, visualizations and dashboards
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "knowledgehub.search.facets = organizations groups tags"
-
 
 COPY prerun.py /srv/app/prerun.py
 COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
