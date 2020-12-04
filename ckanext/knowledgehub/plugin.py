@@ -111,7 +111,7 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
         # Extend CKAN ResourceView table
         # extend_resource_view_table()
         # Upgrade the dashboard table.
-        dashboard_table_upgrade()
+        #dashboard_table_upgrade()
 
         DatastoreBackend.register_backends()
         # DatastoreBackend.set_active_backend(config)
