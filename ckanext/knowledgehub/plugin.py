@@ -107,9 +107,9 @@ class KnowledgehubPlugin(plugins.SingletonPlugin, DefaultDatasetForm,
         # patch the CKAN core functionality
         patch_ckan_core_search()
         # Extend CKAN Tag table
-        extend_tag_table()
+        # extend_tag_table()
         # Extend CKAN ResourceView table
-        extend_resource_view_table()
+        # extend_resource_view_table()
         # Upgrade the dashboard table.
         dashboard_table_upgrade()
 
