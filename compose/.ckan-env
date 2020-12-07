@@ -1,0 +1,52 @@
+# Runtime configuration of CKAN enabled through ckanext-envvars
+# Information about how it works: https://github.com/okfn/ckanext-envvars
+# Note that variables here take presedence over build/up time variables in .env
+
+# Set to true to disable CKAN from starting and serve a maintenance page
+MAINTENANCE_MODE=False
+
+# General Settings
+CKAN_SITE_ID=default
+CKAN_SITE_URL=http://localhost:5000
+CKAN_PORT=5000
+CKAN_MAX_UPLOAD_SIZE_MB=10
+# CKAN Plugins
+CKAN__PLUGINS=envvars recline_view validation knowledgehub stats datastore datapusher datarequests
+# CKAN Default views
+CKAN__VIEWS__DEFAULT_VIEWS=recline_view
+# CKAN requires storage path to be set in order for filestore to be enabled
+CKAN__STORAGE_PATH=/srv/app/data
+CKAN__WEBASSETS__PATH=/srv/app/data/webassets
+# SYSADMIN settings, a sysadmin user is created automatically with the below credentials
+CKAN_SYSADMIN_NAME=sysadmin
+CKAN_SYSADMIN_PASSWORD=password
+CKAN_SYSADMIN_EMAIL=sysadmin@ckantest.com
+
+# Email settings
+CKAN_SMTP_SERVER=smtp.corporateict.domain:25
+CKAN_SMTP_STARTTLS=True
+CKAN_SMTP_USER=user
+CKAN_SMTP_PASSWORD=pass
+CKAN_SMTP_MAIL_FROM=ckan@localhost
+
+# Datapusher configuration
+CKAN__DATAPUSHER__URL=http://datapusher:8000
+CKAN__DATAPUSHER__CALLBACK_URL_BASE=http://ckan:5000
+
+
+# Extensions settings
+CKAN__DATAREQUESTS.SHOW_DATAREQUESTS_BADGE=True
+
+CKAN__MAX_RESOURCE_SIZE=500
+
+CKAN___SEARCH__FACETS=organization groups tags
+
+CKANEXT__KNOWLEDGEHUB__HDX__API_KEY=api-key
+CKANEXT__KNOWLEDGEHUB__HDX__SITE=prod
+CKANEXT__KNOWLEDGEHUB__HDX__OWNER_ORG=owner
+CKANEXT__KNOWLEDGEHUB__HDX__DATASET_SOURCE=source
+CKANEXT__KNOWLEDGEHUB__HDX__MAINTAINER=maintainer
+
+
+SCHEMING__DATASET_SCHEMAS=ckanext.validation.examples:ckan_default_schema.json
+SCHEMING__PRESETS=ckanext.scheming:presets.json ckanext.validation:presets.json

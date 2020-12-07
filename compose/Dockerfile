@@ -1,4 +1,7 @@
-FROM keitaro/ckan:2.8.2-bionic
+###################
+### Extensions ####
+###################
+FROM keitaro/ckan:2.8.6-focal as extbuild
 
 MAINTAINER Keitaro <info@keitaro.com>
 
@@ -8,6 +11,7 @@ ENV TZ=Europe/Skopje
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && apt-get install -y \
+    git \
     libgeos-dev \
     g++ \
     gcc \
@@ -56,12 +60,8 @@ ENV CKAN__PLUGINS envvars \
                   stats \
                   datastore \
                   datapusher \
-                  datarequests \
-                  oauth2
+                  datarequests
 
-
-RUN mkdir -p /var/lib/ckan/default && chown -R ckan:ckan /var/lib/ckan/default
-VOLUME /var/lib/ckan/default
 
 # Load envvars plugin on ini file
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "ckan.plugins = ${CKAN__PLUGINS}"
@@ -79,8 +79,9 @@ RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "search.facets = 
 # Set facets for research questions, visualizations and dashboards
 RUN paster --plugin=ckan config-tool ${APP_DIR}/production.ini "knowledgehub.search.facets = organizations groups tags"
 
+# Add afterinit script
+COPY ./afterinit.d/00_validation.sh ${APP_DIR}/docker-afterinit.d/00_validation.sh
+COPY ./afterinit.d/00_knowledgehub.sh ${APP_DIR}/docker-afterinit.d/00_knowledgehub.sh
 
-COPY prerun.py /srv/app/prerun.py
-COPY extra_scripts.sh /srv/app/docker-entrypoint.d/extra_scripts.sh
 
-CMD ["/srv/app/start_ckan.sh"]
+USER ckan

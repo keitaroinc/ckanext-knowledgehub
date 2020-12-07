@@ -45,6 +45,8 @@ docs/_build/
 
 .vscode
 
+.idea
+
 # Keras model files
 history.p
 keras_model*
