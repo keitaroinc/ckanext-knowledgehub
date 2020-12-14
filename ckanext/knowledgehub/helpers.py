@@ -1245,7 +1245,8 @@ def update_rqs_in_dataset(old_data, res_view):
 def get_single_dash(data_dict):
     single_dash = toolkit.get_action('dashboard_show')(
         _get_context(),
-        {'id': data_dict.get('id')}
+        {'id': data_dict.get('id')} if data_dict.get('id')
+        else {'name': data_dict.get('name')}
     )
     return single_dash
 

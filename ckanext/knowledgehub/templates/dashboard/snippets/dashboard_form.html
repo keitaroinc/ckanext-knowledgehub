@@ -13,7 +13,7 @@
   {% endblock %}
 
   {% block basic_fields %}
-    {% set dashboard_options = [{'text': 'Choose type', 'value': ''}, {'text': 'Internal', 'value': 'internal'}, {'text': 'External', 'value': 'external'}] %}
+    {% set dashboard_options = [{'text': 'Choose type', 'value': ''}, {'text': 'Metrics', 'value': 'internal'}, {'text': 'PowerBI', 'value': 'external'}] %}
     {% set attrs = {'data-module': 'slug-preview-target', 'class': 'form-control'} %}
     {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
     {{ form.input('title', label=_('Title'), id='field-name', placeholder=_('My Dashboard'), value=data.title, error=errors.title, classes=['control-full'], attrs=attrs, is_required=true) }}

@@ -100,7 +100,10 @@
                                             <small>{{ h.truncate(description, truncate_description) }}</small></p>
                                         <div class="dashboard-created">
                                             <i class="fa fa-table"></i>
-                                            {{ h.format_date(dashboard.created_at) }}
+                                            {% if dashboard %}
+                                              {% set dashboard_additional_info = h.get_single_dash(dashboard) %}
+                                              {{ h.format_date(dashboard_additional_info.created_at) }}
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </a>
@@ -282,9 +285,16 @@
                                 <li class="dataset-item">
                                     <div id="tabs-dashboards" class="dataset-content">
                                         {% set additional_info_dash = h.get_single_dash(dashboard) %}
+                                        {% if additional_info_dash.type == 'internal' %}
+                                          {% set dashboard_type = 'metrics' %}
+                                        {% elif additional_info_dash.type == 'external' %}
+                                          {% set dashboard_type = 'power bi' %}
+                                        {% else %}
+                                          {% set dashboard_type = additional_info_dash.type %}
+                                        {% endif %}
                                         <h3 class="dataset-heading text-ellipsis dashboard-heading">
                                             <span
-                                                class="dataset-private label label-info text-ellipsis">{{ additional_info_dash.type }}</span>
+                                                class="dataset-private label label-info text-ellipsis">{{ dashboard_type }}</span>
                                             <a
                                                 href="{{ h.url_for('dashboards.view', name=dashboard.name) }}">{{ dashboard.title }}</a>
                                         </h3>
