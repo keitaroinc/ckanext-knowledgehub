@@ -1883,11 +1883,20 @@ def generate_ref_type_url(ref_type, ref):
             log.exception(e)
             return h.url_for('/')
 
+    def _rq_url():
+        rq = toolkit.get_action('research_question_show')({
+            'ignore_auth': True,
+        }, {
+            'id': ref,
+        })
+        return h.url_for('research_question.read', name=rq['name'])
+
     generators = {
         'post': _post_url,
         'dataset': _dataset_url,
         'dashboard': _dashboard_url,
         'visualization': _visualization_url,
+        'research-question': _rq_url,
     }
     if ref_type not in generators:
         raise ValidationError({'ref_type': [_('Invalid value')]})
