@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 """
 Copyright (c) 2018 Keitaro AB
 
@@ -15,9 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-# encoding: utf-8
-
-# this is a namespace package
 try:
     import pkg_resources
     pkg_resources.declare_namespace(__name__)
